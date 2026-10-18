@@ -2,6 +2,8 @@
 
 当前实现是固定样例驱动的运行骨架。它只支持 `mock-*` 模型：没有网络抓取、真实模型客户端、Git/PR 执行器、定时工作流或公众号发布。测试状态为 `test_accepted`，不表示正式 `accepted` 或真实模型审阅通过。
 
+这是纯离线模块的范围；后来新增的[真实采集入口](real-source-collection.md)负责联网取得短证据，再交给同一模拟运行骨架。真实来源使用独立横幅，不标成虚构样例。
+
 实现位于 [researchdesk_offline.py](../scripts/researchdesk_offline.py)，自包含离线配置与虚构证据/模型响应位于 [offline.yaml](test/agent-memory/fixtures/offline.yaml)。仍只依赖 Python 3.9+ 和现有 PyYAML，不增加数据库或 Agent 框架。
 
 ## 测试目录和研究方向
@@ -56,4 +58,4 @@ git diff --check
 
 ## 后续接入顺序
 
-离线验收稳定后，再按总体架构分别实现真实原文获取、两个模型适配器和受限 PR 自动入库，核实模型/费用与仓库合并规则。真实手动验收通过且另获启用授权后，才配置周二、周五北京时间 09:00 的定时入口。Insight、Writing 和公众号发布不在本轮范围。
+真实来源采集测试已实现，模型仍为模拟。下一步按[ChatGPT 会员分析设计](chatgpt-analysis-handoff.md)验证官方授权、两个独立模型与用量边界，再考虑真实推理和受限 PR 自动入库。真实验收通过且另获启用授权后，才配置周二、周五北京时间 09:00 的定时入口。Insight、Writing 和公众号发布不在当前范围。

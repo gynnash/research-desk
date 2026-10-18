@@ -49,3 +49,5 @@
 正式资料的既有文件保持原位；以后新资料按主要研究方向放入 `sources/papers/<primary-topic>/` 或 `sources/blogs/<primary-topic>/`，多主题仍共用一个 ID。测试来源放在 `sources/<papers|blogs>/test/<topic>/<id>.md`，严格使用同一 Schema，`topics` 必须包含所在方向，正文须有统一 TEST 虚构横幅。
 
 测试审阅结果记在运行清单，不增加 Frontmatter 字段；通过模拟门禁的来源仍初始化 `inbox`。正式与测试来源的 ID 全局唯一，身份重复在各自区域分别检查，Frontmatter 的 `related_sources`/`related_notes` 不得跨区。默认校验正式资料，`--include-test` 同时检查测试资料；测试目录不是旧资料豁免。具体见[离线说明](offline-research.md)。
+
+真实来源采集测试不标成虚构原文，其统一横幅为 `> TEST：真实来源采集，分析与审阅均为模拟，不可作为正式研究结论。`。原始元数据与模拟分析必须区分，正文只保留必要短证据。详见[真实采集说明](real-source-collection.md)。

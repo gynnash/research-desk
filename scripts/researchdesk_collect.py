@@ -207,6 +207,35 @@ def export_bundle(topic, records, batch_id):
     return '\n'.join(lines)
 
 
+def verify_analysis(root, topic, receipt):
+    """A cached success must still have the complete bound analysis chain."""
+    if not receipt.get('analysis_batch'):
+        return
+    batch_dir = 'reports/test/%s/%s' % (topic, receipt['analysis_batch'])
+    manifest = offline.checked_yaml(root, batch_dir + '/manifest.yaml')
+    fixture_path = receipt['artifacts']['fixture']
+    if manifest['fixture_sha256'] != offline.digest(offline.safe_path(root, fixture_path).read_bytes()):
+        raise offline.OfflineError('分析清单与采集输入不匹配')
+    events = offline.read_events(root, batch_dir)
+    expected = receipt['analysis']
+    if offline.spend(events) != (expected['calls'], expected['cost_units']):
+        raise offline.OfflineError('分析事件账本缺失或不匹配')
+    finished = {e['item_key']: e for e in events if e['type'] == 'item_finished'}
+    ids = {i['key']: i['reserved_id'] for i in manifest['items']}
+    if set(finished) != {i['key'] for i in expected['items']}:
+        raise offline.OfflineError('分析终态事件缺失')
+    for item in expected['items']:
+        if ids.get(item['key']) != item['reserved_id'] or finished[item['key']]['status'] != item['status']:
+            raise offline.OfflineError('分析身份或状态与回执不匹配')
+    if receipt.get('analysis_summary_path'):
+        summaries = [offline.safe_path(root, receipt['analysis_summary_path'])]
+    else:
+        # Compatibility for the first collection receipt, before explicit path binding.
+        summaries = list(offline.safe_path(root, batch_dir).glob('summary-attempt-*.yaml'))
+    if not summaries or not any(offline.checked_yaml(root, p.relative_to(root)) == expected for p in summaries):
+        raise offline.OfflineError('分析摘要缺失或不匹配')
+
+
 def collect(root, config_path, batch_id, fetcher=None, fail_after=None):
     root, config_path = Path(root).resolve(), Path(config_path).resolve()
     if not isinstance(batch_id, str) or not offline.SAFE_ID.fullmatch(batch_id) or len(batch_id) > 60:
@@ -235,8 +264,7 @@ def collect(root, config_path, batch_id, fetcher=None, fail_after=None):
             if last['status'] == 'complete':
                 for ref in last.get('checkpoint_paths', []):
                     offline.checked_yaml(root, ref)
-                if last.get('analysis_batch'):
-                    offline.read_events(root, 'reports/test/%s/%s' % (topic, last['analysis_batch']))
+                verify_analysis(root, topic, last)
                 bundle = offline.safe_path(root, last['artifacts']['bundle'])
                 if not bundle.is_file() or offline.digest(bundle.read_bytes()) != last['artifacts']['bundle_sha256']:
                     raise offline.OfflineError('分析交接包已被修改，保留现场')
@@ -273,6 +301,11 @@ def collect(root, config_path, batch_id, fetcher=None, fail_after=None):
     offline.save_yaml(root, fixture_path, fixture)
     analysis_batch = 'collect-%s-a%s' % (batch_id, attempt)
     analysis = offline.run(root, root / fixture_path, analysis_batch) if fixture['candidates'] else None
+    analysis_summary_path = None
+    if analysis:
+        summaries = sorted(offline.safe_path(root, 'reports/test/%s/%s' % (topic, analysis_batch)).glob('summary-attempt-*.yaml'),
+                           key=lambda p: int(p.stem.rsplit('-', 1)[1]))
+        analysis_summary_path = summaries[-1].relative_to(root).as_posix()
     with offline.topic_lock(root, topic):
         if offline.protected_snapshot(root) != plan['protected_files']:
             raise offline.OfflineError('正式资料基线变化，不发布采集回执')
@@ -289,7 +322,8 @@ def collect(root, config_path, batch_id, fetcher=None, fail_after=None):
                    'sources': [{k: v for k, v in s.items() if k != 'records'} for s in sources],
                    'records': records, 'changes': {k: sum(r['change'] == k for r in records) for k in ('new', 'unchanged', 'updated', 'duplicate', 'blocked')},
                    'checkpoint_paths': refs + [pending_path, fixture_path, analysis_manifest], 'analysis_batch': analysis_batch if analysis else None,
-                   'analysis': analysis, 'artifacts': {'bundle': bundle_path, 'bundle_sha256': bundle_hash, 'fixture': fixture_path,
+                   'analysis': analysis, 'analysis_summary_path': analysis_summary_path,
+                   'artifacts': {'bundle': bundle_path, 'bundle_sha256': bundle_hash, 'fixture': fixture_path,
                                                      'receipt': '%s/receipt-attempt-%s.yaml' % (base, attempt)}}
         offline.save_yaml(root, receipt['artifacts']['receipt'], receipt)
         text = '# 真实资料采集验收回执\n\n%s\n\n- 采集批次：`%s`\n- 状态：`%s`\n- 实际模型调用：0\n- 会员授权/模型调用：未执行\n\n' % (offline.REAL_NOTICE, batch_id, receipt['status'])

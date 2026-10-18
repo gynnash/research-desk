@@ -100,7 +100,7 @@ def save_yaml(root, relative, value):
 def checked_yaml(root, relative):
     path = safe_path(root, relative)
     marker = safe_path(root, str(relative) + '.sha256')
-    if not marker.is_file() or marker.read_text().strip() != digest(path.read_bytes()):
+    if not path.is_file() or not marker.is_file() or marker.read_text().strip() != digest(path.read_bytes()):
         raise OfflineError('检查点被修改或写入未完成，保留现场: %s' % relative)
     return load_yaml(path)
 

@@ -468,6 +468,32 @@ class CollectionIntegrationAcceptance(unittest.TestCase):
         self.assertEqual(self.notes(), [])
         self.assertEqual(existing, self.snapshot(list(self.root.glob("sources/blogs/*.md"))))
 
+    def assert_missing_analysis_checkpoint_stops_resume(self, relative):
+        self.one_blog()
+        result = self.run_batch()
+        directory = self.root / "reports/test/agent-memory" / result["analysis_batch"]
+        path = directory / relative
+        self.assertTrue(path.exists())
+        if path.is_dir():
+            shutil.rmtree(path)
+        else:
+            path.unlink()
+        remaining = self.snapshot([item for item in self.root.rglob("*") if item.is_file()])
+        calls = list(self.fetcher.calls)
+        with self.assertRaises(self.collector.offline.OfflineError):
+            self.run_batch()
+        self.assertEqual(calls, self.fetcher.calls)
+        self.assertEqual(remaining, self.snapshot([item for item in self.root.rglob("*") if item.is_file()]))
+
+    def test_deleted_analysis_event_directory_cannot_reuse_complete_receipt(self):
+        self.assert_missing_analysis_checkpoint_stops_resume("events")
+
+    def test_deleted_analysis_manifest_cannot_reuse_complete_receipt(self):
+        self.assert_missing_analysis_checkpoint_stops_resume("manifest.yaml")
+
+    def test_deleted_analysis_summary_cannot_reuse_complete_receipt(self):
+        self.assert_missing_analysis_checkpoint_stops_resume("summary-attempt-1.yaml")
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -1,0 +1,27 @@
+id: letta
+status: complete
+discovered: 28
+selected: 1
+discovery_mode: seed_and_list
+records:
+- kind: blog
+  metadata:
+    title: Why Memory Isn't a Plugin
+    source: Letta
+    source_url: https://www.letta.com/blog/why-memory-isnt-a-plugin/
+    authors:
+    - SARAH WOODERS
+    published_at: '2026-04-03'
+  coverage: excerpt
+  upstream_updated_at: null
+  content_hash: 08d58a39ed157d3098f44eb6a54c6e58a50cb7c048271872fce7c082280b9987
+  source_id: letta
+  captured_at: '2026-10-18T16:01:35.559710+00:00'
+  requested_entry_url: https://www.letta.com/blog/
+  identity_keys:
+  - url:https://www.letta.com/blog/why-memory-isnt-a-plugin/
+  metadata_hash: e87bfe50ef28d269e8502be50474b82e6efb46302518a1fe5465ba0f9213d8ec
+  extraction_coverage: fulltext
+  excerpt: 'Ever since we''ve been working on MemGPT (now @Letta_AI ), a common question
+    @charlespacker and I have gotten is: “How can I plug your memory'
+warnings: []

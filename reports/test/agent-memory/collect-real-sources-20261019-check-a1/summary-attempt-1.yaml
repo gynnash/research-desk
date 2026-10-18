@@ -1,0 +1,28 @@
+schema_version: 1
+mode: offline
+production_accepted: false
+batch_id: collect-real-sources-20261019-check-a1
+data_origin: real_collection
+status: complete
+counts:
+  test_accepted: 0
+  duplicate: 3
+  update_proposed: 0
+  rejected: 0
+  blocked: 0
+  deferred: 0
+calls: 0
+cost_units: 0
+items:
+- key: arxiv-0
+  reserved_id: paper-a5a3171a-9891-4dea-8bfc-cdf0cf15bce0
+  status: duplicate
+  output: null
+- key: letta-1
+  reserved_id: blog-56521361-c491-428a-b75e-3c92c603161e
+  status: duplicate
+  output: null
+- key: langchain-2
+  reserved_id: blog-be47c817-56d3-4fa5-bb9a-bd19be5c68df
+  status: duplicate
+  output: null

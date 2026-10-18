@@ -1,0 +1,153 @@
+schema_version: 1
+mode: collect_test
+batch_id: real-sources-20261019-check
+topic: agent-memory
+status: complete
+sources:
+- id: arxiv
+  status: complete
+  discovered: 5
+  selected: 1
+  discovery_mode: api
+  warnings: []
+- id: letta
+  status: complete
+  discovered: 28
+  selected: 1
+  discovery_mode: seed_and_list
+  warnings: []
+- id: langchain
+  status: complete
+  discovered: 19
+  selected: 1
+  discovery_mode: seed_and_list
+  warnings: []
+records:
+- kind: paper
+  metadata:
+    title: 'Beyond Downstream QA: Rethinking How We Evaluate Agent Memory'
+    source: arXiv
+    source_url: https://arxiv.org/abs/2610.22209
+    authors:
+    - Sebastian-Antonio Toma
+    - Jean de Kernier
+    - Mike Ply
+    - Oliviu Matei
+    published_at: '2026-10-15'
+    arxiv_id: '2610.22209'
+    source_version: v1
+  coverage: abstract_only
+  upstream_updated_at: '2026-10-15T16:58:12Z'
+  content_hash: a11351e13b004fe042d543110fe7cd46a3f66d476f5f6643f65b5166e36a7441
+  source_id: arxiv
+  captured_at: '2026-10-18T16:01:34.127807+00:00'
+  requested_entry_url: https://export.arxiv.org/api/query?search_query=all%3A%22agent%20memory%22&sortBy=lastUpdatedDate&sortOrder=descending&max_results=5
+  identity_keys:
+  - arxiv:2610.22209
+  - url:https://arxiv.org/abs/2610.22209
+  metadata_hash: f0aa1262adee57cb0e6504ef1d0c21af28a320300c1f42b0d6cef7c7d25c8eff
+  extraction_coverage: abstract_only
+  excerpt: Agent memory benchmarks evaluate whether an agent's responses reflect correct
+    knowledge, measuring downstream question-answering accuracy as a proxy for memory
+    quality. We show this evaluation
+  change: unchanged
+  previous_content_hash: a11351e13b004fe042d543110fe7cd46a3f66d476f5f6643f65b5166e36a7441
+  previous_metadata_hash: f0aa1262adee57cb0e6504ef1d0c21af28a320300c1f42b0d6cef7c7d25c8eff
+  previous_capture: '2026-10-18T15:59:05.927295+00:00'
+- kind: blog
+  metadata:
+    title: Why Memory Isn't a Plugin
+    source: Letta
+    source_url: https://www.letta.com/blog/why-memory-isnt-a-plugin/
+    authors:
+    - SARAH WOODERS
+    published_at: '2026-04-03'
+  coverage: excerpt
+  upstream_updated_at: null
+  content_hash: 08d58a39ed157d3098f44eb6a54c6e58a50cb7c048271872fce7c082280b9987
+  source_id: letta
+  captured_at: '2026-10-18T16:01:35.559710+00:00'
+  requested_entry_url: https://www.letta.com/blog/
+  identity_keys:
+  - url:https://www.letta.com/blog/why-memory-isnt-a-plugin/
+  metadata_hash: e87bfe50ef28d269e8502be50474b82e6efb46302518a1fe5465ba0f9213d8ec
+  extraction_coverage: fulltext
+  excerpt: 'Ever since we''ve been working on MemGPT (now @Letta_AI ), a common question
+    @charlespacker and I have gotten is: “How can I plug your memory'
+  change: unchanged
+  previous_content_hash: 08d58a39ed157d3098f44eb6a54c6e58a50cb7c048271872fce7c082280b9987
+  previous_metadata_hash: e87bfe50ef28d269e8502be50474b82e6efb46302518a1fe5465ba0f9213d8ec
+  previous_capture: '2026-10-18T15:59:06.594661+00:00'
+- kind: blog
+  metadata:
+    title: 'Context Engineering: How Deep Agents Remember'
+    source: LangChain
+    source_url: https://www.langchain.com/blog/context-engineering-deep-agents-remember
+    authors:
+    - Jess Weng
+    published_at: '2026-10-14'
+  coverage: excerpt
+  upstream_updated_at: '2026-10-14T17:39:32.799Z'
+  content_hash: 87028f98102403d97acf9b08c15672775800b7036277489f71835a9b6cb7bf81
+  source_id: langchain
+  captured_at: '2026-10-18T16:01:41.005504+00:00'
+  requested_entry_url: https://www.langchain.com/blog
+  identity_keys:
+  - url:https://www.langchain.com/blog/context-engineering-deep-agents-remember
+  metadata_hash: fdbe9f86f01065219de46db184e45e693e912aee131965b2e3d50f7201986fd8
+  extraction_coverage: fulltext
+  excerpt: 'If you''ve ever crammed for an exam the night before, you know the feeling:
+    the more you study, the more the early chapters start to'
+  change: unchanged
+  previous_content_hash: 87028f98102403d97acf9b08c15672775800b7036277489f71835a9b6cb7bf81
+  previous_metadata_hash: fdbe9f86f01065219de46db184e45e693e912aee131965b2e3d50f7201986fd8
+  previous_capture: '2026-10-18T15:59:07.580283+00:00'
+changes:
+  new: 0
+  unchanged: 3
+  updated: 0
+  duplicate: 0
+  blocked: 0
+checkpoint_paths:
+- reports/test/agent-memory/collections/real-sources-20261019-check/sources/arxiv/attempt-1.yaml
+- reports/test/agent-memory/collections/real-sources-20261019-check/sources/letta/attempt-1.yaml
+- reports/test/agent-memory/collections/real-sources-20261019-check/sources/langchain/attempt-1.yaml
+- reports/test/agent-memory/collections/real-sources-20261019-check/collection-attempt-1.yaml
+- reports/test/agent-memory/collections/real-sources-20261019-check/mock-analysis-attempt-1.yaml
+- reports/test/agent-memory/collections/real-sources-20261019-check/analysis-manifest-attempt-1.yaml
+analysis_batch: collect-real-sources-20261019-check-a1
+analysis:
+  schema_version: 1
+  mode: offline
+  production_accepted: false
+  batch_id: collect-real-sources-20261019-check-a1
+  data_origin: real_collection
+  status: complete
+  counts:
+    test_accepted: 0
+    duplicate: 3
+    update_proposed: 0
+    rejected: 0
+    blocked: 0
+    deferred: 0
+  calls: 0
+  cost_units: 0
+  items:
+  - key: arxiv-0
+    reserved_id: paper-a5a3171a-9891-4dea-8bfc-cdf0cf15bce0
+    status: duplicate
+    output: null
+  - key: letta-1
+    reserved_id: blog-56521361-c491-428a-b75e-3c92c603161e
+    status: duplicate
+    output: null
+  - key: langchain-2
+    reserved_id: blog-be47c817-56d3-4fa5-bb9a-bd19be5c68df
+    status: duplicate
+    output: null
+analysis_summary_path: reports/test/agent-memory/collect-real-sources-20261019-check-a1/summary-attempt-1.yaml
+artifacts:
+  bundle: reports/test/agent-memory/collections/real-sources-20261019-check/analysis-bundle-attempt-1.md
+  bundle_sha256: bb258a774fff44130085adef9e25f35badd1e235401c2ee3dcd153fdf6d381eb
+  fixture: reports/test/agent-memory/collections/real-sources-20261019-check/mock-analysis-attempt-1.yaml
+  receipt: reports/test/agent-memory/collections/real-sources-20261019-check/receipt-attempt-1.yaml

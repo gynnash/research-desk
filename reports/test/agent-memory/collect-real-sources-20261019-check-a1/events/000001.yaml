@@ -1,0 +1,4 @@
+type: item_finished
+item_key: arxiv-0
+status: duplicate
+reason: same_evidence_already_processed
