@@ -2,7 +2,7 @@
 
 ResearchDesk 是一个长期积累的 AI 技术研究知识库：保存论文与技术博客的来源、阅读笔记和研究结论，发现技术趋势，并为微信公众号文章提供可追溯的素材。
 
-当前已完成知识库基础设施、离线运行骨架，以及 arXiv、Letta、LangChain 的真实资料采集测试。分析与审阅仍使用模拟模型，所有新结果只写各方向的隔离测试目录。正式资料保持原样；没有真实模型调用、会员登录、定时任务、自动 PR 入库或公众号发布，不使用数据库和复杂 Agent 框架；已有 Vault 备份设置保持原样。
+当前已完成知识库基础设施、离线运行骨架，以及 arXiv、Letta、LangChain 的真实资料采集测试。本轮增加本地官方 ChatGPT 会员授权后端，支持单篇 arXiv 摘要研究与独立模型审阅；账户资格、可用模型及真实试跑是否成功，以实际授权和测试回执为准。模拟分析继续保留，所有新研究结果只写各方向的隔离测试目录。正式资料保持原样；没有定时任务、自动 PR 入库或公众号发布，不使用数据库和复杂 Agent 框架；已有 Vault 备份设置保持原样。
 
 可以结合 Codex 维护仓库、配置和校验，使用 ChatGPT Work 辅助论文阅读、研究讨论与文章草稿。两者共用 Markdown/YAML 约定；直接访问本地仓库的能力取决于使用环境和授权。研究成果需明确保存到本仓库并审阅提交，设备间同步沿用下述 Git 流程。[Codex 官方说明](https://developers.openai.com/codex/cli/)与 [ChatGPT Work 官方说明](https://learn.chatgpt.com/docs/get-started-with-work)可供参考。
 
@@ -24,17 +24,20 @@ research-desk/
 │   ├── maintenance.md         # 去重、更新和人工笔记保护规范
 │   ├── templates/             # 论文、博客模板；不是真实资料
 │   ├── requirements.txt       # 离线运行及校验的 PyYAML 依赖
+│   ├── requirements-membership.txt # 本地会员后端的签名验证依赖
 │   └── validate.py            # 只读检查，不收集或修改研究资料
 ├── scripts/
 │   ├── researchdesk_offline.py # 固定样例与模拟模型的离线运行骨架
 │   ├── researchdesk_sources.py # 官方公开来源的受限抓取与解析
-│   └── researchdesk_collect.py # 真实采集与模拟分析，只写 test
+│   ├── researchdesk_collect.py # 真实采集与模拟分析，只写 test
+│   ├── researchdesk_membership.py # 本应用官方 OAuth 与会员推理
+│   └── researchdesk_analyze.py # 单篇摘要研究与独立审阅，只写 test
 └── tests/                     # 临时仓库中的自动验收
 ```
 
 各核心目录均新增 `test/<topic>/`，论文和博客对应 `sources/papers/test/<topic>/`、`sources/blogs/test/<topic>/`；目前分别保留 `agent-memory` 和停用的 `agent-rl` 子目录。测试记录标记 TEST，不作为正式研究依据。结构、演练和验收命令见[离线运行说明](workflows/offline-research.md)。
 
-[真实采集说明](workflows/real-source-collection.md)包含入口、查重与更新识别、短证据和测试回执。未来模型分析优先评估官方 ChatGPT 会员授权方式，见[会员分析设计](workflows/chatgpt-analysis-handoff.md)；当前只生成待分析交接包，未发送或调用模型。
+[真实采集说明](workflows/real-source-collection.md)包含入口、查重与更新识别、短证据和测试回执。[会员分析设计](workflows/chatgpt-analysis-handoff.md)说明官方授权与资料交接边界；[本地会员分析说明](workflows/local-membership-analysis.md)提供登录、账户模型核实、单篇摘要测试、有限修订及补跑流程。本轮真实分析默认最多 4 次请求、月度最多预留 10 次；研究与审阅必须使用账户可用目录中的两个不同实际模型。完整摘要仅作内存输入，研究报告与脱敏回执另存于 `reports/test/agent-memory/membership/<batch-id>/`，不覆盖已有测试来源。
 
 以后每个研究方向使用单独目录：新正式来源拟保存到 `sources/papers/<primary-topic>/` 或 `sources/blogs/<primary-topic>/`，报告、洞察和文章对应 `<folder>/<primary-topic>/`；当前不写入这些正式目录，也不迁移已有资料。多主题仍通过 Frontmatter 的 `topics` 表达，同一来源只保存一份，以主要方向决定目录，不为多个主题复制文件。主题启用不触发任务；`agent-rl` 继续停用。Obsidian 直接将仓库根目录作为 Vault 打开，因此 GitHub 和 Obsidian 使用同一套目录。
 
@@ -70,6 +73,8 @@ git diff --check
 环境已具备 PyYAML 时，也可以执行 `python3 workflows/validate.py`。检查覆盖目录、配置和模板的 YAML 语法（含重复键）、主题字段、资料字段类型与状态、日期、全库 ID/来源重复，以及关联资料和研究文件是否存在。检查失败返回非零退出码，成功返回 `0`；旧资料豁免显示为警告。检查器不会联网或写文件，也不判断研究结论的质量。
 
 默认检查正式来源；使用 `python3 workflows/validate.py --include-test` 同时严格检查测试来源，分别查重计数，禁止正式与测试互相引用。离线验收执行 `python3 -m unittest discover -s tests -v` 和 `python3 workflows/test/agent-memory/test_validate_isolation.py`。
+
+会员后端另用 `workflows/requirements-membership.txt` 安装 PyJWT/cryptography 等签名验证依赖，再运行同样的离线验收；这些测试不会调用真实模型。实际登录及小规模试跑命令见[本地会员分析说明](workflows/local-membership-analysis.md)。授权文件必须放在本仓库和 Obsidian Vault 之外，不能交给 GitHub 同步；会员余额、金额或用量无法核实时保留未知值，不自动切换普通付费 API。
 
 ## GitHub 与 Obsidian 同步
 

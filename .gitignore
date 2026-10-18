@@ -25,9 +25,17 @@ secrets.yml
 id_rsa
 id_ed25519
 
+# ResearchDesk OAuth credentials must live outside this repository and Vault.
+# These patterns only defend against accidental local copies.
+/.researchdesk-auth/
+/.researchdesk-membership/
+researchdesk-oauth*.json
+researchdesk-membership-profile*.json
+
 # Local dependencies and caches.
 node_modules/
 .venv/
+.venv-membership/
 venv/
 .cache/
 __pycache__/

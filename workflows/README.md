@@ -11,9 +11,11 @@
 
 [离线运行与验收](offline-research.md)说明固定样例、两个独立模拟模型、测试目录、预算记录及中断补跑。
 
-## 真实来源采集与会员分析设计
+## 真实来源采集与本地会员分析
 
-[真实采集与模拟验收](real-source-collection.md)已接入 arXiv、Letta、LangChain，结果仅保存到各研究方向的 `test` 目录，分析仍为模拟。未来按[ChatGPT 会员分析设计](chatgpt-analysis-handoff.md)评估官方授权后端；当前只生成交接包，没有会员登录或真实推理。GitHub 自动入库和定时执行仍未实现或启用。
+[真实采集与模拟验收](real-source-collection.md)已接入 arXiv、Letta、LangChain，模拟分析结果继续保留。[ChatGPT 会员分析设计](chatgpt-analysis-handoff.md)说明官方授权边界；[本地会员分析与独立审阅](local-membership-analysis.md)说明本轮后端、登录、账户可用模型核实、预算和补跑。
+
+本轮仅用一篇已采集 arXiv 论文的完整摘要测试真实研究与独立模型审阅，另存到 `reports/test/agent-memory/membership/<batch-id>/`；成功状态须由实际授权、不同模型身份及运行回执证明。默认每批最多 4 次推理，最多一次修订，不重写已有来源或人工笔记。GitHub 自动入库和定时执行仍未实现或启用。
 
 ## 人工研究流程
 
@@ -23,4 +25,4 @@
 4. 阅读原文并维护状态和笔记；需要时手动整理到 `reports/`、`insights/` 或 `articles/`。
 5. 执行 `python3 workflows/validate.py`（在仓库根目录，需 PyYAML），检查差异，再提交并同步。
 
-这里包含设计、约定、模板、只读校验工具及测试样例；`scripts/` 包含受限真实采集器与模拟运行骨架，只写测试目录。没有调度器或自动研究任务。
+这里包含设计、约定、模板、只读校验工具及测试样例；`scripts/` 包含受限真实采集器、模拟骨架和本地官方会员后端，研究产物只写测试目录。没有调度器或自动研究任务。
