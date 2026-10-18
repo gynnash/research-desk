@@ -1,8 +1,8 @@
 # ResearchDesk 三 Agent 总体架构
 
-- 版本：0.6；修订日期：2026-10-19。
-- 状态：**Research / Insight 与 GitHub 到 Mac 的真实研究已验收；正式准入已实现并通过本地验收，调度代码已准备。定时最终开关以 `config/automation.yaml` 为准；Writing 仍为离线模拟，未确认真实选题或发布公众号**。
-- 实施进度：已有[离线骨架](offline-research.md)、[真实资料采集测试](real-source-collection.md)和[本地会员真实研究与独立审阅](local-membership-analysis.md)。[配置驱动的 Research 批次闭环](configurable-research-batch.md)已通过一篇论文摘要与一篇博客节选的真实验收，共 4 次请求，独立审阅均通过，计划中断后补跑与完整缓存补跑均未重复调用；[验收记录](../reports/test/agent-memory/research-batches/configured-research-20261019/acceptance.md)只在测试区。[Insight 测试闭环](insight-agent-test.md)也已通过[真实验收](../reports/test/agent-memory/insight-runs/insight-agent-memory-20261019/acceptance.md)：两份已审阅 Research 与五份显式历史基线生成综合报告、2 条洞察和 2 张待确认选题卡，独立模型审阅通过；4 次请求含一次修订、语法规范化及独立格式确认，补跑未增加调用。[Writing 离线闭环](writing-agent-offline.md)已通过[虚构样例验收](../reports/test/agent-memory/writing-runs/writing-offline-20261019/acceptance.md)：三阶段独立模拟审阅通过，初稿修订一次，共 8 次模拟调用，三个断点恢复及缓存补跑未追加调用，会员调用为 0。[正式准入](formal-admission.md)已实现，本地 7 份 Markdown、0 新增模型调用验收通过；远端准入成功需核实实际回执。固定时间槽调度读取 `automation.yaml`，正式验收后再开启。真实人工确认入口及会员 Writing 后端仍待实现。
+- 版本：0.7；修订日期：2026-10-19。
+- 状态：**Research / Insight、GitHub 到 Mac、正式入库与 Obsidian 同步均已验收；每周二/周五北京时间09:00已启用，首次定时结果尚待发生。Writing 仍为离线模拟，未确认真实选题或发布公众号**。
+- 实施进度：已有[离线骨架](offline-research.md)、[真实资料采集测试](real-source-collection.md)和[本地会员真实研究与独立审阅](local-membership-analysis.md)。[配置驱动的 Research 批次闭环](configurable-research-batch.md)已通过一篇论文摘要与一篇博客节选的真实验收，共 4 次请求，独立审阅均通过，计划中断后补跑与完整缓存补跑均未重复调用；[验收记录](../reports/test/agent-memory/research-batches/configured-research-20261019/acceptance.md)只在测试区。[Insight 测试闭环](insight-agent-test.md)也已通过[真实验收](../reports/test/agent-memory/insight-runs/insight-agent-memory-20261019/acceptance.md)：两份已审阅 Research 与五份显式历史基线生成综合报告、2 条洞察和 2 张待确认选题卡，独立模型审阅通过；4 次请求含一次修订、语法规范化及独立格式确认，补跑未增加调用。[Writing 离线闭环](writing-agent-offline.md)已通过[虚构样例验收](../reports/test/agent-memory/writing-runs/writing-offline-20261019/acceptance.md)：三阶段独立模拟审阅通过，初稿修订一次，共 8 次模拟调用，三个断点恢复及缓存补跑未追加调用，会员调用为 0。[正式准入及定时启用](formal-admission-acceptance-2026-10-19.md)已完成：GitHub 新增 7 份正式 Markdown 并同步 Obsidian，0 新增模型调用；固定时间槽调度读取 `automation.yaml`，已在正式验收后开启。真实人工确认入口及会员 Writing 后端仍待实现。
 - 目标：构建长期运行的 AI 技术研究与内容创作系统，持续收集一手资料、积累研究证据、发现技术变化，并为微信公众号提供可追溯的选题与文章。
 - 基础：沿用 Markdown、YAML、GitHub 与 Obsidian；不引入数据库或复杂 Agent 框架。
 

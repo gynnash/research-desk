@@ -38,3 +38,7 @@ gh workflow run researchdesk-manual.yml --ref main \
 `run` 研究操作按配置衔接准入；`health`、`discover` 不准入。发布使用独立 Ubuntu job 的受限 Git 权限，分析端使用仓库外会员授权。遇到仓库规则或内容冲突停止，不强推或覆盖。
 
 选题始终保留 `proposed`、要求人工确认且未启动写作。真实用户确认入口与会员 Writing 后端仍待实现；正式准入、定时启用或模型审阅都不授予写作和公众号发布权限。
+
+## 实际部署
+
+2026-10-19 已完成[GitHub 正式回存与 Obsidian 同步验收](formal-admission-acceptance-2026-10-19.md)，随后启用每周二、周五北京时间 09:00 的研究；实际首个定时结果须以运行回执为准。

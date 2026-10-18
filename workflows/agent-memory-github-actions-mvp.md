@@ -1,8 +1,8 @@
 # Agent Memory 定时研究任务 MVP 设计
 
-- 版本：0.6；修订日期：2026-10-19。
-- 状态：**Research / Insight 的 GitHub 到 Mac 真实研究已验收；create-only 正式准入已实现并通过本地验收，定时代码已准备**。远端准入及首个定时成功以实际回执为准，最终启用值读取 `config/automation.yaml`。
-- 实施进度：已有[离线骨架](offline-research.md)、[真实来源采集](real-source-collection.md)、[配置驱动 Research](configurable-research-batch.md)与[真实 Insight 闭环](insight-agent-test.md)。[GitHub → 当前 Mac → Research / Insight → 测试结果回存 → Obsidian](../reports/test/agent-memory/cycles/cycle-agent-memory-gh-20261019/acceptance.md)已通过手动真实验收，按方向发现资料、读取历史、生成与独立审阅，并校验保存测试检查点。本地/远程主机通过 YAML 配置；本次实际验证当前 Mac。[正式准入](formal-admission.md)已完成本地 7 份 Markdown、0 新增模型调用验收；启用配置在远端验收前保持关闭。Writing 仅有离线样例闭环，真实人工确认入口及会员 Writing 仍待交付。
+- 版本：0.7；修订日期：2026-10-19。
+- 状态：**Research / Insight、GitHub 正式入库与 Obsidian 同步已验收；周二/周五北京时间09:00已启用**。[远端准入回执](formal-admission-acceptance-2026-10-19.md)已保存；首个定时成功仍须等待实际执行，启用值读取 `config/automation.yaml`。
+- 实施进度：已有[离线骨架](offline-research.md)、[真实来源采集](real-source-collection.md)、[配置驱动 Research](configurable-research-batch.md)与[真实 Insight 闭环](insight-agent-test.md)。[GitHub → 当前 Mac → Research / Insight → 测试结果回存 → Obsidian](../reports/test/agent-memory/cycles/cycle-agent-memory-gh-20261019/acceptance.md)已通过手动真实验收，按方向发现资料、读取历史、生成与独立审阅，并校验保存测试检查点。本地/远程主机通过 YAML 配置；本次实际验证当前 Mac。[正式准入](formal-admission.md)已完成远端 7 份 Markdown、0 新增模型调用验收并同步回 Obsidian；启用配置随后设为 true。Writing 仅有离线样例闭环，真实人工确认入口及会员 Writing 仍待交付。
 - 目标：GitHub Actions 定时发现 Agent Memory 资料，生成带证据的研究记录，经独立审阅模型与规则校验通过后自动入库。
 - 总体架构见[三 Agent 总体架构](three-agent-architecture.md)。沿用[主题配置](../config/research_topics.yaml)、[Schema v1](source-schema.md)、[维护规范](maintenance.md)和现有模板，保持 Markdown + YAML。
 
@@ -27,7 +27,7 @@
 | 项目 | MVP 决策 |
 | --- | --- |
 | 主入口 | **每周二、周五北京时间 09:00**，每周两次。UTC cron 为 `0 1 * * 2,5`，对应 `Asia/Shanghai`；workflow 已包含该事件，`automation.yaml` 的 `enabled` 控制是否派发真实研究。 |
-| 执行环境 | GitHub Actions 手动派发、任务记录及受限测试结果回存已验证；会员分析使用当前 Mac 自托管执行器，授权与依赖保存在仓库外。提供远程主机配置，用户在所选主机自行部署授权。定时、长期在线可用性与其他主机资格仍待验收，不假设 GitHub 临时 runner 可直接使用会员。 |
+| 执行环境 | GitHub Actions 手动派发、任务记录及受限测试结果回存已验证；会员分析使用当前 Mac 自托管执行器，授权与依赖保存在仓库外。提供远程主机配置，用户在所选主机自行部署授权。定时已配置启用，首轮实际定时、长期在线可用性与其他主机资格仍待验收，不假设 GitHub 临时 runner 可直接使用会员。 |
 | 辅助入口 | 已提供 `workflow_dispatch` 的 health/discover/run/admit/catchup；补跑保留固定槽 ID、历史预留和已保存阶段，未知请求不自动重发。 |
 | 扫描时间窗 | 首次最近 7 天；随后从各来源最后已合并的完整扫描游标向前重叠 48 小时，扫描到本批固定截止时间。周二覆盖上次周五以来，周五覆盖上次周二以来，不能只查运行当天。 |
 | 发现上限 | 每个来源每批最多检查 50 条候选元数据，超额保存续扫线索；不能标记为已完整扫描。 |

@@ -10,7 +10,7 @@ ResearchDesk 是一个以 Markdown、YAML、GitHub 和 Obsidian 为基础的 AI 
 
 [Research → Insight 研究轮次](workflows/research-cycle.md)按方向发现资料并串联两个阶段。[自托管执行器](workflows/self-hosted-worker.md)支持当前 Mac 及用户配置的远程主机：主机使用自己的会员授权分析，独立作业校验并保存检查点，再按 [admission.yaml](config/admission.yaml) 准入新正式资料；授权与运行环境留在仓库外。`ResearchDesk checks` 单独执行离线检查。调度器支持固定时间槽、14 天范围内每次一个槽的补跑及同槽恢复；`enabled: false` 时不会自动派研究，正式验收后再改为 `true`。
 
-正式准入已在本地完成 7 份 Markdown 的验收，包含两条来源、两份单来源研究、一份综合报告、一条洞察和一张待确认选题，新增模型调用为 0。`reports/<topic>/admissions/<cycle-id>/` 保存计划、测试到正式的 ID 映射及输入输出散列；本地准入通过不等于已经提交到远端，GitHub/Obsidian 共享入库以远端 `main` 的确切文件和回执为准。
+[正式入库与启用验收](workflows/formal-admission-acceptance-2026-10-19.md)已完成：GitHub 自动创建 7 份正式 Markdown 并同步回现有 Obsidian 库，包含两条来源、两份单来源研究、一份综合报告、一条洞察和一张待确认选题，新增模型调用为 0。定时开关已启用，每周二、周五北京时间 09:00；首次计划为 2026-10-20 09:00，实际首个定时执行尚未发生。`reports/<topic>/admissions/<cycle-id>/` 保存计划、身份映射及输入输出散列，原有笔记保持不变；Writing 仍需人工确认后另行接入。
 
 [首个自动发现轮次](reports/test/agent-memory/cycles/cycle-agent-memory-20261019/acceptance-local.yaml)已完成本地真实验收：两份研究、综合报告、两条洞察及两张待确认选题，8 次会员请求；Research 后中断恢复及完整缓存重放没有重复调用。来源仅扫描有限列表，整体回执保留 `partial`，不声称全量覆盖。
 

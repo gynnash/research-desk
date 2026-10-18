@@ -1,6 +1,6 @@
-# Enable only after the formal admission deployment has passed acceptance.
+# Enabled after real GitHub formal admission and Obsidian sync passed.
 schema_version: 1
-enabled: false
+enabled: true
 timezone: Asia/Shanghai
 schedule_utc: '0 1 * * 2,5'
 activated_at: '2026-10-19T00:00:00+08:00'
