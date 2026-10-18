@@ -26,6 +26,7 @@ related_notes:
   - insights/2026-10-18-agent-memory-usable-memory.md
   - insights/2026-10-18-agent-memory-traceable-updates.md
   - articles/2026-10-18-agent-memory-saving-vs-remembering-outline.md
+  - articles/2026-10-18-agent-memory-saving-vs-remembering-draft.md
 arxiv_id: "2310.08560"
 doi: 10.48550/arxiv.2310.08560
 source_version: v2
@@ -66,3 +67,4 @@ source_version: v2
 
 - 2026-10-18：核验原始来源、首发日期及 v2；完成首轮分析和博客互链。标记 `analyzed` 仅表示已完成本轮阅读分析，不表示复现成功。
 - 2026-10-18：补充首轮报告、两条洞察及公众号大纲的关联，保留原阅读笔记。
+- 2026-10-18：补充公众号文章初稿关联，原文事实与写作推断在初稿中分别标示。
