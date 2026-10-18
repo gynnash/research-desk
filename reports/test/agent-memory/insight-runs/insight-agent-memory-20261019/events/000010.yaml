@@ -1,0 +1,12 @@
+type: call_completed
+reservation_id: format_review-1
+role: format_review
+revision: 1
+model_id: gpt-6.1-sol
+response_path: reports/test/agent-memory/insight-runs/insight-agent-memory-20261019/checkpoints/format_review-1.yaml
+response_sha256: d7fdda7cf25e2456dd38fb5f1b6e9ac02547d76217fc867a6a473d78bd5294e0
+usage:
+  input_tokens: 4235
+  output_tokens: 157
+  total_tokens: 4392
+at: '2026-10-18T17:08:58.490926+00:00'

@@ -4,6 +4,10 @@
 
 完整业务流程仍是自动 Research → 自动 Insight 与选题 → 用户确认选题、角度、受众及输入版本 → Writing；独立审阅通过只允许保存测试结果，不能代替写作授权。总体边界见[三 Agent 架构](three-agent-architecture.md)。
 
+2026-10-19 北京时间已完成[本轮真实验收](../reports/test/agent-memory/insight-runs/insight-agent-memory-20261019/acceptance.md)。`gpt-6-luna` 生成、`gpt-6.1-sol` 独立审阅，得到 [1 份综合报告](../reports/test/agent-memory/insight-runs/insight-agent-memory-20261019/report.md)、[洞察 1](../insights/test/agent-memory/insight-agent-memory-20261019/insight-1.md)、[洞察 2](../insights/test/agent-memory/insight-agent-memory-20261019/insight-2.md)、[选题卡 1](../articles/test/agent-memory/insight-agent-memory-20261019/topic-1.md)和[选题卡 2](../articles/test/agent-memory/insight-agent-memory-20261019/topic-2.md)。两张卡均待用户确认，未启动写作。
+
+实际共 4 次请求、43,163 tokens（输入 37,931，输出 5,232），含格式失败响应、一次模型修订、一次严格语法规范化及额外独立格式确认。审阅通过检查点保存后的计划中断退出 `3`；关闭推理能力后恢复并再次完整缓存重放，预留调用数均保持 4，见[恢复证明](../reports/test/agent-memory/insight-runs/insight-agent-memory-20261019/replay-verification.yaml)与[批次回执](../reports/test/agent-memory/insight-runs/insight-agent-memory-20261019/receipt.yaml)。共享月度请求预算已达 10/10，会员剩余额度未知；现有预算下停止新的真实推理，保留只读检查与缓存恢复。
+
 ## 配置与输入
 
 本轮配置位于 `config/test/agent-memory/insight.yaml`，通用示例位于 `config/examples/insight.yaml`。用户配置研究方向、Research 输入、历史基线、生成/审阅模型、请求预算和提示词协议；配置不包含账户信息或凭据，不能扩大程序的写入目录及权限。
@@ -51,6 +55,10 @@ Research 已通过审阅不等于阅读了完整论文或验证了作者实验�
 审阅结果为 `pass / revise / reject / blocked`。仅当确定性规则及独立审阅都通过，才创建报告、洞察和选题卡。允许至多一次修订与一次完整复审，即本批最多四次请求；仍有问题则保存状态并停止，不让生成模型自审，不通过换批次重置修订或请求次数。
 
 生成响应已明确完成但 JSON 语法失败或不是单一 JSON 对象时，先完整保留原始检查点并记录 `local_validation_failed`；这是程序校验失败，不能伪造为独立模型审阅。若仍有一次修订机会及足够预算，可将本地格式错误反馈给生成端修订一次，再由独立模型完整审阅，通常共三次请求。这个修订与审阅要求的修订共用同一个机会，不额外增加一轮。合法 JSON 但 Schema、引用或确认门禁校验失败时停止；超时、断流、模型身份不符或终态不明也不按格式错误自动重发。
+
+仅对已用完一次格式修订的 `generation-1`，允许一种无额外模型调用的确定性恢复：响应必须是一个完整且可严格解析的 JSON 对象，后面仅多出单个 `}`。拒绝重复键、`NaN`、`Infinity`、第二个对象及其他尾随文本；不修补字段、引用、内容或语义错误。原始检查点保持原样，追加 `format_normalized` 事件，绑定原始响应与规范化候选的 SHA-256。独立审阅同时收到原始响应、候选和处理说明，必须明确返回 `format_normalization_acknowledged: true`，并通过通常的完整审阅与确定性规则，才能保存产物；否则停止。此处理不增加修订次数，不将格式失败的请求从用量账本扣除。
+
+若完整独立审阅已通过全部内容与引用检查，唯一缺项是上述格式确认字段，允许在原批次和月度预算仍有空间时，向同一独立审阅模型追加一次 `format_review` 请求，只核对原始响应与规范化候选是否仅存在获准的单尾 `}` 差异。必须返回 `pass`、明确的确认 `true` 及理由，且原内容审阅仍有效，才可保存；原审阅被完整保留。明确确认 `false`、内容审阅未通过、还有其他缺项或格式确认失败时停止，不用这个窄入口重审内容或推翻拒绝决定。额外请求也计入本批最多四次及月度十次的上限，预算不足不能继续。
 
 月度请求上限为 10，与单篇会员分析和 Research 批次共用预算与并发锁，包含此前累计的 6 次请求。调用前先持久化预留；未知、断流或超时请求仍占额度，不自动重发，不切换普通付费 API。月度剩余额度不足以完成必要审阅时停止，不先生成无法审阅的内容。输入、输出字符与等待时间另由 YAML 约束；它们不能保证服务端会员消耗的硬上限。会员金额、余额或用量比例无法核实时保留未知。
 

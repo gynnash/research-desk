@@ -30,6 +30,8 @@ class FakeInsightClient(research_test.FakeMemberClient):
         super().__init__()
         self.generation_text_overrides = []
         self.generation_count = 0
+        self.format_confirmation_decision = 'pass'
+        self.format_confirmation_ack = True
 
     @staticmethod
     def synthesis():
@@ -69,7 +71,12 @@ class FakeInsightClient(research_test.FakeMemberClient):
                            'input_text': input_text, 'payload': payload, 'limits': limits})
         if len(self.calls) == self.fail_on_call:
             raise OSError('Synthetic unknown request outcome')
-        if 'candidate' in payload:
+        format_confirmation = payload.get('stage') == 'format_review'
+        if format_confirmation:
+            result = {'decision': self.format_confirmation_decision,
+                      'format_normalization_acknowledged': self.format_confirmation_ack,
+                      'reason': '对照原始响应与候选，仅移除一个多余结尾括号，语义保持一致。'}
+        elif 'candidate' in payload:
             candidate = payload['candidate']
             decision = (self.review_decisions[self.review_count]
                         if self.review_count < len(self.review_decisions) else 'pass')
@@ -86,6 +93,8 @@ class FakeInsightClient(research_test.FakeMemberClient):
                       'topic_gate_confirmed': True, 'issues': [],
                       'checks': [{'target': target, 'verdict': 'supported', 'evidence_ids': evidence}
                                  for target, evidence in targets]}
+            if 'format_recovery' in payload:
+                result['format_normalization_acknowledged'] = True
             if decision == 'revise':
                 result['issues'] = [{'severity': 'warning', 'location': 'report.summary',
                                      'reason': '需要明确比较的样本范围',
@@ -97,7 +106,7 @@ class FakeInsightClient(research_test.FakeMemberClient):
             if self.research_mutator:
                 self.research_mutator(result)
         text = json.dumps(result, ensure_ascii=False)
-        if 'candidate' not in payload:
+        if 'candidate' not in payload and not format_confirmation:
             if self.generation_count < len(self.generation_text_overrides):
                 text = self.generation_text_overrides[self.generation_count]
             self.generation_count += 1
@@ -450,7 +459,7 @@ class InsightLoop(unittest.TestCase):
         self.assertEqual(len(self.client.calls), 3)
 
     def test_second_malformed_generation_does_not_get_another_retry(self):
-        invalid = json.dumps(FakeInsightClient.synthesis()) + '}'
+        invalid = json.dumps(FakeInsightClient.synthesis()) + '}}'
         self.client.generation_text_overrides = [invalid, invalid]
         self.assert_blocked()
         self.assertEqual(len(self.client.calls), 2)
@@ -458,6 +467,110 @@ class InsightLoop(unittest.TestCase):
         self.assert_blocked()
         self.assertEqual(len(self.client.calls), 2)
         self.assertFalse((self.directory() / 'report.md').exists())
+
+    def test_one_redundant_final_brace_is_audited_and_independently_reviewed(self):
+        candidate = FakeInsightClient.synthesis()
+        raw = json.dumps(candidate, ensure_ascii=False) + '}'
+        self.client.generation_text_overrides = [raw, raw]
+        result = self.run_insight()
+        self.assertEqual(result['status'], 'test_accepted')
+        self.assertEqual(result['completed_calls'], 3)
+        self.assertEqual([call['model'] for call in self.client.calls],
+                         ['fixture-research', 'fixture-research', 'fixture-review'])
+        checkpoint = store.checked_yaml(self.root,
+            self.directory().relative_to(self.root).as_posix() + '/checkpoints/generation-1.yaml')
+        self.assertEqual(checkpoint['result']['text'], raw)
+        events = store.read_events(self.root, self.directory().relative_to(self.root).as_posix())
+        normalized = [event for event in events if event['type'] == 'format_normalized']
+        self.assertEqual(len(normalized), 1)
+        self.assertEqual(normalized[0]['revision'], 1)
+        self.assertEqual(normalized[0]['operation'], 'remove_single_redundant_final_object_brace')
+        self.assertEqual(normalized[0]['raw_sha256'], store.digest(raw.encode()))
+        self.assertEqual(normalized[0]['candidate_sha256'], store.digest(candidate))
+        payload = self.client.calls[-1]['payload']
+        self.assertEqual(payload['candidate'], candidate)
+        self.assertEqual(payload['format_recovery']['raw_response'], raw)
+        self.assertEqual(payload['format_recovery']['raw_sha256'], store.digest(raw.encode()))
+        self.assertEqual(payload['format_recovery']['candidate_sha256'], store.digest(candidate))
+        self.assertTrue(payload['format_recovery']['notice'])
+        self.run_insight()
+        self.assertEqual(len(self.client.calls), 3)
+
+    def test_narrow_brace_normalizer_rejects_other_malformed_json(self):
+        insight = importlib.import_module('researchdesk_insight')
+        valid = json.dumps(FakeInsightClient.synthesis(), ensure_ascii=False)
+        invalid = [valid + '}}', valid + valid, valid + ' trailing text',
+                   '{"broken": "missing comma" "value": 1}}',
+                   '{"duplicate": 1, "duplicate": 2}}',
+                   '{"nonfinite": NaN}}', '{"nonfinite": Infinity}}']
+        for raw in invalid:
+            with self.subTest(raw=raw[:80]), self.assertRaises(store.OfflineError):
+                insight.normalize_final_object_brace(raw)
+
+    def test_normalized_format_requires_explicit_independent_acknowledgement(self):
+        insight = importlib.import_module('researchdesk_insight')
+        self.write_config()
+        config = insight.inputs.load_config(self.root, self.config_path)
+        bundle = insight.inputs.prepare_bundle(self.root, config, fetcher=self.fetcher)
+        candidate = FakeInsightClient.synthesis()
+        review = json.loads(FakeInsightClient().infer('fixture-review', 'validation fixture',
+            json.dumps({'candidate': candidate, 'format_recovery': {}}))['text'])
+        self.assertEqual(insight.validate_review(candidate, review, bundle, format_recovery=True), 'pass')
+        for value in (None, False):
+            invalid_review = copy.deepcopy(review)
+            if value is None:
+                invalid_review.pop('format_normalization_acknowledged')
+            else:
+                invalid_review['format_normalization_acknowledged'] = value
+            with self.subTest(value=value), self.assertRaises(store.OfflineError):
+                insight.validate_review(candidate, invalid_review, bundle, format_recovery=True)
+
+    def normalized_response_without_review_ack(self, explicit_false=False):
+        raw = json.dumps(FakeInsightClient.synthesis(), ensure_ascii=False) + '}'
+        self.client.generation_text_overrides = [raw, raw]
+        if explicit_false:
+            self.client.review_mutator = lambda review: review.update(
+                format_normalization_acknowledged=False)
+        else:
+            self.client.review_mutator = lambda review: review.pop(
+                'format_normalization_acknowledged', None)
+
+    def test_missing_normalization_ack_uses_one_bounded_independent_confirmation(self):
+        self.normalized_response_without_review_ack()
+        result = self.run_insight()
+        self.assertEqual(result['status'], 'test_accepted')
+        self.assertEqual(result['completed_calls'], 4)
+        self.assertEqual([call['model'] for call in self.client.calls],
+                         ['fixture-research', 'fixture-research', 'fixture-review', 'fixture-review'])
+        self.run_insight()
+        self.assertEqual(len(self.client.calls), 4)
+
+    def test_explicit_false_normalization_ack_does_not_request_confirmation(self):
+        self.normalized_response_without_review_ack(explicit_false=True)
+        self.assert_blocked()
+        self.assertEqual(len(self.client.calls), 3)
+        self.assertFalse((self.directory() / 'report.md').exists())
+        self.assert_blocked()
+        self.assertEqual(len(self.client.calls), 3)
+
+    def test_normalization_confirmation_reject_never_creates_outputs(self):
+        self.normalized_response_without_review_ack()
+        self.client.format_confirmation_decision = 'reject'
+        self.assert_blocked()
+        self.assertEqual(len(self.client.calls), 4)
+        self.assertFalse((self.directory() / 'report.md').exists())
+        self.assertFalse((self.root / 'articles/test/custom-topic/first').exists())
+        self.assert_blocked()
+        self.assertEqual(len(self.client.calls), 4)
+
+    def test_normalization_confirmation_cannot_exceed_three_call_budget(self):
+        self.normalized_response_without_review_ack()
+        self.config['budget']['max_calls'] = 3
+        self.assert_blocked()
+        self.assertEqual(len(self.client.calls), 3)
+        self.assertFalse((self.directory() / 'report.md').exists())
+        self.assert_blocked()
+        self.assertEqual(len(self.client.calls), 3)
 
     def test_second_revision_is_not_retried(self):
         self.client.review_decisions = ['revise', 'revise', 'pass']

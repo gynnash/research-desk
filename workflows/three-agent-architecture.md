@@ -2,7 +2,7 @@
 
 - 版本：0.3；修订日期：2026-10-19。
 - 状态：**Research 与 Insight 正在分阶段验证测试闭环；未启用自动任务，不启动 Writing，不连接公众号发布**。
-- 实施进度：已有[离线骨架](offline-research.md)、[真实资料采集测试](real-source-collection.md)和[本地会员真实研究与独立审阅](local-membership-analysis.md)。[配置驱动的 Research 批次闭环](configurable-research-batch.md)已通过一篇论文摘要与一篇博客节选的真实验收，共 4 次请求，独立审阅均通过，计划中断后补跑与完整缓存补跑均未重复调用；[验收记录](../reports/test/agent-memory/research-batches/configured-research-20261019/acceptance.md)只在测试区。当前增加 [Insight 测试闭环](insight-agent-test.md)，读取已审阅 Research 与显式历史基线，生成综合报告、洞察和待确认选题。真实状态以运行回执为准；人工确认入口、Writing、自动正式入库及定时任务尚未实现或启用。
+- 实施进度：已有[离线骨架](offline-research.md)、[真实资料采集测试](real-source-collection.md)和[本地会员真实研究与独立审阅](local-membership-analysis.md)。[配置驱动的 Research 批次闭环](configurable-research-batch.md)已通过一篇论文摘要与一篇博客节选的真实验收，共 4 次请求，独立审阅均通过，计划中断后补跑与完整缓存补跑均未重复调用；[验收记录](../reports/test/agent-memory/research-batches/configured-research-20261019/acceptance.md)只在测试区。[Insight 测试闭环](insight-agent-test.md)也已通过[真实验收](../reports/test/agent-memory/insight-runs/insight-agent-memory-20261019/acceptance.md)：两份已审阅 Research 与五份显式历史基线生成综合报告、2 条洞察和 2 张待确认选题卡，独立模型审阅通过；4 次请求含一次修订、语法规范化及独立格式确认，补跑未增加调用。全部产物只在测试区；人工确认入口、Writing、自动正式入库及定时任务尚未实现或启用。
 - 目标：构建长期运行的 AI 技术研究与内容创作系统，持续收集一手资料、积累研究证据、发现技术变化，并为微信公众号提供可追溯的选题与文章。
 - 基础：沿用 Markdown、YAML、GitHub 与 Obsidian；不引入数据库或复杂 Agent 框架。
 
@@ -127,7 +127,7 @@ Research 拟在**每周二、周五北京时间 09:00**运行；UTC cron 为 `0 
 ## 8. 分阶段实施与验收
 
 1. **配置驱动的 Research 测试批次**：已验收 YAML 主题、来源、模型和预算下的一篇论文摘要与一篇博客节选，接通真实会员研究、独立审阅、失败补跑与测试回执，既有资料保持不变。
-2. **综合研究、Insight 与选题测试**：当前阶段增加已审阅 Research 与显式历史基线的跨来源综合报告、1–2 条洞察和待确认选题，继续使用小额度会员及独立模型审阅；验收历史观点关联、来源支持、无选题结果、一次修订和失败补跑，全部结果只写测试目录。
+2. **综合研究、Insight 与选题测试**：已用两份已审阅 Research 与五份显式历史基线，完成跨来源综合报告、2 条洞察和 2 张待确认选题卡的真实独立审阅，并验证中断恢复与缓存补跑不追加请求。证据不足、无选题、拒绝、预算及门禁失败另由离线测试覆盖；全部结果只写测试目录，不将模拟场景冒称真实模型验收。
 3. **正式运行与入库**：接通持久任务、固定扫描窗口、受限 PR 自动合并与恢复；验证授权续期、主机在线和 GitHub 规则，另获授权后启用每周两次 Research 与后续 Insight 调度。
 4. **选题确认与 Writing**：实现可审计的人工确认，再按确认的版本生成大纲、初稿和候选稿，逐级引用与审阅；公众号发布继续作为独立授权能力。
 5. **开源交付**：从配置边界开始保持可移植性，再补齐初始化、部署说明、许可证与贡献约定；示例不包含个人凭据、账户信息或研究库私有内容。

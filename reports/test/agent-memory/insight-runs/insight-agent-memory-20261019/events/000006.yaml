@@ -1,0 +1,6 @@
+type: format_normalized
+revision: 1
+operation: remove_single_redundant_final_object_brace
+raw_sha256: 33c98665c83bd7d64229259b5758c5dcf3baa1a4dc8696ab580c21ab4ca205b0
+candidate_sha256: 1bca6d93ba2ae5ec748f01c7b320aec3a0bcfba357b37f23f6bc68239ded5ebd
+at: '2026-10-18T17:07:15.515170+00:00'

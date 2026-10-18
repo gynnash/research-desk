@@ -13,6 +13,8 @@
 
 正常两次会员请求，最多四次，包含一次修订与复审；月度十次与单篇分析、Research 批次共享，未知调用不自动重发。报告、洞察和选题分别只写各目录的 `test/<topic>/`，既有资料不可覆盖。选题由程序固定为 `proposed`、`approval_required: true`、`writing_started: false`，本轮不提供确认或 Writing 入口；真实通过状态以回执为准。
 
+2026-10-19 [真实验收](../reports/test/agent-memory/insight-runs/insight-agent-memory-20261019/acceptance.md)已通过：综合报告、2 条洞察和 2 张待确认选题卡，生成 `gpt-6-luna`，独立审阅 `gpt-6.1-sol`。共 4 次请求、43,163 tokens，含失败响应、一次模型修订、一次严格语法规范化及额外独立格式确认；恢复和缓存补跑均没有追加推理。共享月度请求预算已达 10/10，会员剩余额度保留未知。正式入库、确认入口、Writing 和调度仍未启用。
+
 ## 配置驱动的 Research 批次
 
 [批次运行与验收](configurable-research-batch.md)说明如何通过 YAML 配置主题、来源、两个不同模型和预算，以及一篇论文加一篇博客的采集、研究、独立审阅和中断补跑。通用示例供开源用户自行配置并使用自己的官方授权 profile；当前配置只生成 `reports/test/<topic>/research-batches/<batch-id>/` 中的结果。

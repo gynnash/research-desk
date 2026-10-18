@@ -1,0 +1,69 @@
+schema_version: 1
+mode: insight_test
+topic: agent-memory
+batch_id: insight-agent-memory-20261019
+status: test_accepted
+task_start_git_commit: e139f77a93ccec3e043ba61099c1b14613433021
+receipt: receipt.yaml
+receipt_sha256: f208aa326a60bf3022e29ce1515ec0f7511f55fdcdbe671dba1d82d0cdb45e12
+replay_verification: replay-verification.yaml
+replay_verification_sha256: 9223d970e6d470867b7bb1a8688c2fd6696a307a7bc9ed96be40e54f16ed10ce
+existing_files_baseline: existing-files-baseline.yaml
+existing_files_baseline_sha256: 1c74d067097f4b73a373457d883c580d51b87a3a8e141b124debe786af7084cb
+inputs:
+  accepted_research_records: 2
+  explicit_human_baselines: 5
+  original_paper_coverage: abstract_only
+  original_blog_coverage: excerpt
+  historical_sources_reverified: false
+models:
+  generation: gpt-6-luna
+  review: gpt-6.1-sol
+reserved_calls: 4
+completed_calls: 4
+model_revisions: 1
+deterministic_format_normalizations: 1
+separate_format_confirmation_calls: 1
+content_review: pass
+format_review: pass
+format_normalization_acknowledged: true
+usage:
+  input_tokens: 37931
+  output_tokens: 5232
+  total_tokens: 43163
+monthly_reserved_calls: 10
+effective_month_max_calls: 10
+membership_remaining_quota: null
+api_billed_cost: null
+outputs:
+  report: reports/test/agent-memory/insight-runs/insight-agent-memory-20261019/report.md
+  insights:
+  - insights/test/agent-memory/insight-agent-memory-20261019/insight-1.md
+  - insights/test/agent-memory/insight-agent-memory-20261019/insight-2.md
+  topics:
+  - articles/test/agent-memory/insight-agent-memory-20261019/topic-1.md
+  - articles/test/agent-memory/insight-agent-memory-20261019/topic-2.md
+output_hashes:
+  reports/test/agent-memory/insight-runs/insight-agent-memory-20261019/report.md: 6b5db92c0c2c7e20454444d2451e160c4ecceb7ea2c70d623ea30325deadb679
+  insights/test/agent-memory/insight-agent-memory-20261019/insight-1.md: 86ccd8f53df37c0634c469d98919b00d8c19781bcb2b36e5871749337afd15dd
+  insights/test/agent-memory/insight-agent-memory-20261019/insight-2.md: da721c6d0d0ea1785f59576323947b3da0039dcfb07e0b7e2571e3a519e4431c
+  articles/test/agent-memory/insight-agent-memory-20261019/topic-1.md: 133749e927a6e32e8d63fea8d0cd151c2d0b607ea8550cec672d37f2ee8f8190
+  articles/test/agent-memory/insight-agent-memory-20261019/topic-2.md: 158caed10e51afb85d9527fe76f2a698b661d92456f2904d121d6962f673d4bf
+checks:
+  unit_tests_passed: 257
+  insight_tests_in_unit_suite: 65
+  isolation_tests_passed: 14
+  schema_validation_passed: true
+  include_test_validation_passed: true
+  output_hashes_verified: 5
+  local_links_valid: true
+  sensitive_artifact_keys_absent: true
+  existing_files_unchanged: 275
+  planned_interruption_exit_code: 3
+  new_inference_calls_during_resume: 0
+  new_inference_calls_during_replay: 0
+production_accepted: false
+approval_required: true
+writing_started: false
+schedule_enabled: false
+publish_authorized: false
