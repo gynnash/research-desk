@@ -8,6 +8,16 @@
 
 本轮配置位于 `config/test/agent-memory/insight.yaml`，通用示例位于 `config/examples/insight.yaml`。用户配置研究方向、Research 输入、历史基线、生成/审阅模型、请求预算和提示词协议；配置不包含账户信息或凭据，不能扩大程序的写入目录及权限。
 
+| YAML 字段 | 当前约定 |
+| --- | --- |
+| `schema_version`、`mode`、`backend` | 版本 `1`、`insight_test`、`chatgpt_plan`；不因真实调用失败自动降级模拟。 |
+| `topic`、`topics_file` | 同一已启用研究方向的稳定 ID，及 `config/` 内的方向 YAML。 |
+| `models.generation`、`models.review` | 当前账户目录中的两个不同实际模型；示例占位符须由各用户自行替换。 |
+| `research_inputs` | 明确登记 1–4 个同方向 Research 批次，逐项给出 `receipt` 和原始 `config` 路径。 |
+| `historical_inputs` | 明确登记 1–10 份正式来源、报告或洞察，逐项给出 `path`、`sha256` 和 `origin: human_baseline`；不读取历史文章或测试笔记充当人工基线。 |
+| `budget` | `max_calls`、`month_max_calls`、输入/输出字符限制、等待秒数及 `max_revisions`。 |
+| `prompts.version` | 当前协议 `insight-v1`；不能用任意版本字符串跳过提示词协议校验。 |
+
 输入有两种不同的信任标识，不能互相替代：
 
 | 输入 | 纳入条件与使用限制 |
@@ -16,6 +26,8 @@
 | `human_baseline` 历史资料 | 在配置中明确登记已有路径、内容散列及关联原始来源。保留人工资料身份，不修改旧文，不伪造已接受或已由模型核实的状态。历史作者主张与我们的推断继续区分；其被引用不代表已重新核查原文。 |
 
 本轮 Research 输入沿用[配置驱动批次](configurable-research-batch.md)中已通过的 A-MEM 论文摘要和 Letta 博客节选；历史输入可包括 MemGPT、Memory Blocks 的资料笔记、综合报告与既有洞察。所用文件由 YAML 显式选择，并将实际内容散列固化到本次清单；不会无边界读取全库或将旧文章当作新的原始证据。
+
+对 Research 的原始来源进行受限重取，核对原文、元数据、证据范围及原研究请求的绑定；同一份原文材料在内存中同时交给生成与独立审阅，原文不另存镜像。若来源变化、不可取得或与既有散列不一致，则停止当前输入，不能拿旧研究摘要冒充已核实的同版本原文。历史 `human_baseline` 不在本轮逐篇重抓，因此保留其不同的证据地位。
 
 Research 已通过审阅不等于阅读了完整论文或验证了作者实验。Insight 必须保留 `abstract_only`、博客节选以及历史资料未经本轮原文复核的限制，不能扩写成全文、实现或行业趋势结论。历史报告和洞察中的重复引用不能增加独立来源数；MemGPT 与 Letta 等有技术沿革关系的材料，也不能仅凭来源 ID 不同就声称相互独立验证。
 
@@ -38,7 +50,11 @@ Research 已通过审阅不等于阅读了完整论文或验证了作者实验�
 
 审阅结果为 `pass / revise / reject / blocked`。仅当确定性规则及独立审阅都通过，才创建报告、洞察和选题卡。允许至多一次修订与一次完整复审，即本批最多四次请求；仍有问题则保存状态并停止，不让生成模型自审，不通过换批次重置修订或请求次数。
 
+生成响应已明确完成但 JSON 语法失败或不是单一 JSON 对象时，先完整保留原始检查点并记录 `local_validation_failed`；这是程序校验失败，不能伪造为独立模型审阅。若仍有一次修订机会及足够预算，可将本地格式错误反馈给生成端修订一次，再由独立模型完整审阅，通常共三次请求。这个修订与审阅要求的修订共用同一个机会，不额外增加一轮。合法 JSON 但 Schema、引用或确认门禁校验失败时停止；超时、断流、模型身份不符或终态不明也不按格式错误自动重发。
+
 月度请求上限为 10，与单篇会员分析和 Research 批次共用预算与并发锁，包含此前累计的 6 次请求。调用前先持久化预留；未知、断流或超时请求仍占额度，不自动重发，不切换普通付费 API。月度剩余额度不足以完成必要审阅时停止，不先生成无法审阅的内容。输入、输出字符与等待时间另由 YAML 约束；它们不能保证服务端会员消耗的硬上限。会员金额、余额或用量比例无法核实时保留未知。
+
+本轮每次请求输入最多 30,000 字符、输出最多 8,000 字符、等待最多 120 秒。生成、修订和审阅使用同一套实际请求组装与预检，确保加入完整候选及错误反馈后仍在限制内；不能只计算原始材料长度而漏算提示词或审阅候选。
 
 ## 中断、补跑与人工笔记保护
 
@@ -48,9 +64,35 @@ Research 已通过审阅不等于阅读了完整论文或验证了作者实验�
 
 验收应区分“保存审阅检查点之后的模拟中断”和真实模型失败。模拟中断证明恢复路径，不能据此宣称真实服务没有故障；未知请求也不能假定服务端没有消费额度。
 
-## 可复现检查
+## 运行与补跑
 
 使用既有会员环境，依赖和登录步骤见[本地会员说明](local-membership-analysis.md)。每位开源用户都需独立完成官方授权并核实自身资格与可用模型；本轮不重新读取浏览器 Cookie、Codex session 或其他应用的登录状态。
+
+先配置自己的方向、已审阅批次和历史资料散列。`--root` 可以选择另一工作台，`--profile` 指向仓库与 Obsidian Vault 之外的个人授权目录；都不能扩大输出白名单。下方为本轮有限测试及补跑入口；未完成阶段可能消耗会员额度，不属于离线检查：
+
+```sh
+researchdesk_profile_dir="$HOME/Library/Application Support/ResearchDesk/chatgpt"
+.venv-membership/bin/python scripts/researchdesk_insight.py \
+  --config config/test/agent-memory/insight.yaml \
+  --batch-id insight-agent-memory-20261019 \
+  --profile "$researchdesk_profile_dir" \
+  --fail-after after_review
+```
+
+仅在完整独立审阅通过且检查点持久化后，验收断点才会以退出码 `3` 停止；非零退出不一定是这个断点，须核对实际事件和错误类型。保持相同配置、批次与 profile 去掉故障参数补跑：
+
+```sh
+.venv-membership/bin/python scripts/researchdesk_insight.py \
+  --config config/test/agent-memory/insight.yaml \
+  --batch-id insight-agent-memory-20261019 \
+  --profile "$researchdesk_profile_dir"
+```
+
+重复执行第二条命令应复用已有检查点，完整结果返回 `cached: true`，调用账本不增加。已有相同输入的其他批次时应使用原批次 ID，而不是按示例新建一轮；已在别处登记完成、拒绝或未知请求时，程序会要求恢复原批次。真实模型、请求数、用量和恢复结果必须以本轮回执证明，命令示例本身不代表验收成功。
+
+通过时 `receipt.yaml` 记录 `test_accepted`、输入与输出绑定、实际模型、调用账本、用量及待确认状态，`artifact-plan.yaml` 记录待创建文件的散列；`manifest.yaml`、`checkpoints/generation-0.yaml`、`checkpoints/review-0.yaml` 和 `events/` 保留恢复依据。已有回执及内容被改动时停止；`production_accepted`、`writing_started` 和 `publish_authorized` 始终为 `false`。
+
+## 可复现检查
 
 以下检查不请求模型，在仓库根目录执行：
 

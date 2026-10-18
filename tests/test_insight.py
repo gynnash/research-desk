@@ -26,6 +26,11 @@ import researchdesk_offline as store
 class FakeInsightClient(research_test.FakeMemberClient):
     """Returns a bounded synthesis; its claims never assert a population trend."""
 
+    def __init__(self):
+        super().__init__()
+        self.generation_text_overrides = []
+        self.generation_count = 0
+
     @staticmethod
     def synthesis():
         return {
@@ -91,7 +96,12 @@ class FakeInsightClient(research_test.FakeMemberClient):
             result = self.synthesis()
             if self.research_mutator:
                 self.research_mutator(result)
-        return {'text': json.dumps(result, ensure_ascii=False),
+        text = json.dumps(result, ensure_ascii=False)
+        if 'candidate' not in payload:
+            if self.generation_count < len(self.generation_text_overrides):
+                text = self.generation_text_overrides[self.generation_count]
+            self.generation_count += 1
+        return {'text': text,
                 'model': self.actual_model or model,
                 'response_id': 'fixture-insight-%s' % len(self.calls),
                 'usage': {'input_tokens': 100, 'output_tokens': 80, 'total_tokens': 180}}
@@ -171,6 +181,157 @@ class InsightLoop(unittest.TestCase):
                 'type': 'call_reserved', 'reservation_id': 'old-unknown-%s' % index,
                 'month': research_batch.now()[:7], 'usage_status': 'unknown'})
 
+    def interrupted_ledger(self):
+        with self.assertRaises(store.SimulatedInterruption):
+            self.run_insight(fail_after='after_review')
+        base = self.directory().relative_to(self.root).as_posix()
+        return base, store.read_events(self.root, base)
+
+    def replace_test_ledger(self, base, events):
+        """Re-sign attacker-controlled fixture bytes to exercise semantic gates."""
+        directory = self.root / base / 'events'
+        for path in directory.iterdir():
+            path.unlink()
+        for index, event in enumerate(events, 1):
+            store.save_yaml(self.root, '%s/events/%06d.yaml' % (base, index), event)
+
+    def assert_ledger_attack_stopped(self):
+        self.assert_blocked()
+        self.assertEqual(len(self.client.calls), 2)
+        self.assertFalse((self.directory() / 'report.md').exists())
+        self.assertFalse((self.root / 'insights/test/custom-topic/first').exists())
+        self.assertFalse((self.root / 'articles/test/custom-topic/first').exists())
+
+    def test_duplicate_reservation_in_ledger_cannot_create_outputs(self):
+        base, events = self.interrupted_ledger()
+        reservation = next(e for e in events if e['type'] == 'call_reserved')
+        events.append(copy.deepcopy(reservation))
+        self.replace_test_ledger(base, events)
+        self.assert_ledger_attack_stopped()
+
+    def test_forged_revision_reservation_in_ledger_is_rejected(self):
+        base, events = self.interrupted_ledger()
+        reservation = copy.deepcopy(next(e for e in events if e['type'] == 'call_reserved'))
+        reservation.update(reservation_id='generation-9', revision=9)
+        events.append(reservation)
+        self.replace_test_ledger(base, events)
+        self.assert_ledger_attack_stopped()
+
+    def test_pending_extra_revision_after_pass_cannot_create_outputs(self):
+        base, events = self.interrupted_ledger()
+        reservation = copy.deepcopy(next(e for e in events if e['type'] == 'call_reserved'))
+        reservation.update(reservation_id='generation-1', revision=1)
+        events.append(reservation)
+        self.replace_test_ledger(base, events)
+        self.assert_ledger_attack_stopped()
+
+    def test_duplicate_completion_in_ledger_cannot_create_outputs(self):
+        base, events = self.interrupted_ledger()
+        completion = next(e for e in events if e['type'] == 'call_completed')
+        events.append(copy.deepcopy(completion))
+        self.replace_test_ledger(base, events)
+        self.assert_ledger_attack_stopped()
+
+    def test_completion_without_earlier_reservation_is_rejected(self):
+        base, events = self.interrupted_ledger()
+        events = [e for e in events if not (e['type'] == 'call_reserved'
+                                          and e['role'] == 'generation')]
+        self.replace_test_ledger(base, events)
+        self.assert_ledger_attack_stopped()
+
+    def test_completion_model_cannot_differ_from_reserved_model(self):
+        base, events = self.interrupted_ledger()
+        completion = next(e for e in events if e['type'] == 'call_completed')
+        completion['model_id'] = 'fixture-review'
+        self.replace_test_ledger(base, events)
+        self.assert_ledger_attack_stopped()
+
+    def test_completion_usage_cannot_differ_from_checkpoint(self):
+        base, events = self.interrupted_ledger()
+        completion = next(e for e in events if e['type'] == 'call_completed')
+        completion['usage'] = {'total_tokens': 0}
+        self.replace_test_ledger(base, events)
+        self.assert_ledger_attack_stopped()
+
+    def test_completion_checkpoint_must_belong_to_same_role_and_revision(self):
+        base, events = self.interrupted_ledger()
+        generation, review = [e for e in events if e['type'] == 'call_completed']
+        generation['response_path'] = review['response_path']
+        generation['response_sha256'] = review['response_sha256']
+        self.replace_test_ledger(base, events)
+        self.assert_ledger_attack_stopped()
+
+    def test_unknown_ledger_event_cannot_approve_writing_or_outputs(self):
+        base, events = self.interrupted_ledger()
+        events.append({'type': 'writing_approved', 'approved': True,
+                       'at': research_batch.now()})
+        self.replace_test_ledger(base, events)
+        self.assert_ledger_attack_stopped()
+
+    def test_fake_local_validation_failure_on_valid_generation_is_rejected(self):
+        base, events = self.interrupted_ledger()
+        generation = next(e for e in events if e['type'] == 'call_completed'
+                          and e['role'] == 'generation')
+        checkpoint = store.checked_yaml(self.root, generation['response_path'])
+        # Remove review0's records so the forged event must be rejected because
+        # generation0 is valid, not merely because review0 already happened.
+        events = [e for e in events if e.get('role') != 'review'
+                  and e['type'] != 'acceptance_interruption']
+        events.append({'type': 'local_validation_failed', 'revision': 0,
+                       'response_sha256': store.digest(checkpoint['result']['text'].encode()),
+                       'at': research_batch.now()})
+        self.replace_test_ledger(base, events)
+        self.assert_ledger_attack_stopped()
+
+    def test_manifest_fields_are_rebound_even_when_fingerprint_is_unchanged(self):
+        base, _ = self.interrupted_ledger()
+        path = self.root / base / 'manifest.yaml'
+        sidecar = path.with_name(path.name + '.sha256')
+        original_bytes, original_sidecar = path.read_bytes(), sidecar.read_bytes()
+        original = yaml.safe_load(original_bytes)
+        models = dict(original['models'], generation='fixture-unbound-model')
+        budget = dict(original['budget'], month_max_calls=1000)
+        authorization = dict(original['authorization'], account_fingerprint='another-account')
+        changes = [
+            ('models', models), ('budget', budget), ('authorization', authorization),
+            ('input_fingerprint', '0' * 64),
+            ('provenance', {'research_inputs': [], 'historical_inputs': []}),
+            ('topic', 'another-topic'), ('batch_id', 'another-batch'),
+            ('mode', 'production'), ('backend', 'mock'),
+            ('writing_started', True), ('schema_version', 2)]
+        try:
+            for key, value in changes:
+                manifest = dict(copy.deepcopy(original), **{key: value})
+                self.assertEqual(manifest['fingerprint'], original['fingerprint'])
+                path.write_text(yaml.safe_dump(manifest, allow_unicode=True, sort_keys=False))
+                sidecar.write_text(store.digest(path.read_bytes()) + '\n')
+                with self.subTest(field=key):
+                    self.assert_ledger_attack_stopped()
+        finally:
+            path.write_bytes(original_bytes)
+            sidecar.write_bytes(original_sidecar)
+
+    def test_duplicate_acceptance_interruption_is_rejected(self):
+        base, events = self.interrupted_ledger()
+        events.append(copy.deepcopy(next(e for e in events
+                                        if e['type'] == 'acceptance_interruption')))
+        self.replace_test_ledger(base, events)
+        self.assert_ledger_attack_stopped()
+
+    def test_completed_extra_revision_after_pass_cannot_create_outputs(self):
+        base, events = self.interrupted_ledger()
+        reservation = copy.deepcopy(next(e for e in events if e['type'] == 'call_reserved'))
+        completion = copy.deepcopy(next(e for e in events if e['type'] == 'call_completed'))
+        original_checkpoint = store.checked_yaml(self.root, completion['response_path'])
+        path = base + '/checkpoints/generation-1.yaml'
+        sha = store.save_yaml(self.root, path, original_checkpoint)
+        reservation.update(reservation_id='generation-1', revision=1)
+        completion.update(reservation_id='generation-1', revision=1,
+                          response_path=path, response_sha256=sha)
+        events.extend([reservation, completion])
+        self.replace_test_ledger(base, events)
+        self.assert_ledger_attack_stopped()
+
     def test_old_membership_unknown_calls_are_in_shared_monthly_budget(self):
         self.old_unknown_reservations(2)
         result = self.run_insight()
@@ -231,16 +392,27 @@ class InsightLoop(unittest.TestCase):
         self.run_insight()
         generation, review = [c['payload'] for c in self.client.calls]
         for key in ('evidence', 'research_context', 'topic'):
-            if key in generation:
-                self.assertEqual(generation[key], review[key])
+            self.assertEqual(generation[key], review[key])
         serialized = json.dumps(generation, ensure_ascii=False)
         self.assertIn('R1', serialized)
         self.assertIn('H1', serialized)
         self.assertIn('abstract_only', serialized)
         self.assertIn('excerpt', serialized)
 
+    def test_member_response_must_respect_configured_output_limit(self):
+        self.config['budget']['max_output_chars'] = 1000
+        self.assert_blocked()
+        self.assertEqual(len(self.client.calls), 1)
+
     def test_completed_replay_spends_no_additional_calls(self):
         first = self.run_insight()
+        second = self.run_insight()
+        self.assertEqual(first['outputs'], second['outputs'])
+        self.assertEqual(len(self.client.calls), 2)
+
+    def test_completed_replay_survives_other_runs_using_monthly_budget(self):
+        first = self.run_insight()
+        self.old_unknown_reservations(2)
         second = self.run_insight()
         self.assertEqual(first['outputs'], second['outputs'])
         self.assertEqual(len(self.client.calls), 2)
@@ -264,6 +436,29 @@ class InsightLoop(unittest.TestCase):
         self.run_insight()
         self.assertEqual(len(self.client.calls), 4)
 
+    def test_malformed_initial_json_gets_one_revision_and_independent_review(self):
+        self.client.generation_text_overrides = [json.dumps(FakeInsightClient.synthesis()) + '}']
+        result = self.run_insight()
+        self.assertEqual(result['status'], 'test_accepted')
+        self.assertEqual(result['revision_count'], 1)
+        self.assertEqual(result['reserved_calls'], 3)
+        self.assertEqual(result['completed_calls'], 3)
+        self.assertEqual([call['model'] for call in self.client.calls],
+                         ['fixture-research', 'fixture-research', 'fixture-review'])
+        self.assertEqual(self.client.review_count, 1)
+        self.run_insight()
+        self.assertEqual(len(self.client.calls), 3)
+
+    def test_second_malformed_generation_does_not_get_another_retry(self):
+        invalid = json.dumps(FakeInsightClient.synthesis()) + '}'
+        self.client.generation_text_overrides = [invalid, invalid]
+        self.assert_blocked()
+        self.assertEqual(len(self.client.calls), 2)
+        self.assertEqual(self.client.review_count, 0)
+        self.assert_blocked()
+        self.assertEqual(len(self.client.calls), 2)
+        self.assertFalse((self.directory() / 'report.md').exists())
+
     def test_second_revision_is_not_retried(self):
         self.client.review_decisions = ['revise', 'revise', 'pass']
         self.assert_blocked()
@@ -271,9 +466,18 @@ class InsightLoop(unittest.TestCase):
         self.run_insight()
         self.assertLessEqual(len(self.client.calls), 4)
 
+    def test_two_call_budget_does_not_begin_a_revision(self):
+        self.config['budget']['max_calls'] = 2
+        self.client.review_decisions = ['revise', 'pass']
+        self.assert_blocked()
+        self.assertEqual(len(self.client.calls), 2)
+        self.run_insight()
+        self.assertEqual(len(self.client.calls), 2)
+
     def test_unknown_model_outcome_is_reserved_and_never_resent(self):
         self.client.fail_on_call = 1
-        self.assert_blocked()
+        with self.assertRaises(OSError):
+            self.run_insight()
         self.assertEqual(len(self.client.calls), 1)
         self.client.fail_on_call = None
         self.assert_blocked()
@@ -289,13 +493,19 @@ class InsightLoop(unittest.TestCase):
         self.assertFalse((self.root / 'articles/test/custom-topic/first').exists())
 
     def test_model_cannot_self_approve_or_start_writing(self):
+        insight = importlib.import_module('researchdesk_insight')
+        self.write_config()
+        config = insight.inputs.load_config(self.root, self.config_path)
+        bundle = insight.inputs.prepare_bundle(self.root, config, fetcher=self.fetcher)
         for key, value in (('status', 'approved'), ('approved', True),
                            ('writing_started', True), ('publish_authorized', True)):
-            self.client = FakeInsightClient()
-            self.client.research_mutator = lambda result, k=key, v=value: result['topics'][0].update({k: v})
-            with self.subTest(key=key):
-                self.assert_blocked('forbid-' + key.replace('_', '-'))
-                self.assertEqual(len(self.client.calls), 1)
+            candidate = FakeInsightClient.synthesis()
+            candidate['topics'][0][key] = value
+            with self.subTest(key=key), self.assertRaises((store.OfflineError, ValueError)):
+                insight.validate_candidate(candidate, bundle)
+        self.client.research_mutator = lambda result: result['topics'][0].update(status='approved')
+        self.assert_blocked()
+        self.assertEqual(len(self.client.calls), 1)
 
     def test_unknown_evidence_cannot_reach_review_or_output(self):
         self.client.research_mutator = lambda result: result['report']['comparisons'][0].update(
@@ -311,6 +521,12 @@ class InsightLoop(unittest.TestCase):
     def test_more_than_two_insights_is_rejected(self):
         self.client.research_mutator = lambda result: result['insights'].extend(
             [copy.deepcopy(result['insights'][0]), copy.deepcopy(result['insights'][0])])
+        self.assert_blocked()
+        self.assertEqual(len(self.client.calls), 1)
+
+    def test_more_than_two_topic_cards_is_rejected(self):
+        self.client.research_mutator = lambda result: result['topics'].extend(
+            [copy.deepcopy(result['topics'][0]), copy.deepcopy(result['topics'][0])])
         self.assert_blocked()
         self.assertEqual(len(self.client.calls), 1)
 
@@ -348,12 +564,21 @@ class InsightLoop(unittest.TestCase):
         self.assertEqual(len(self.client.calls), 2)
 
     def test_pass_requires_coverage_and_topic_gate_acknowledgement(self):
+        insight = importlib.import_module('researchdesk_insight')
+        self.run_insight()
+        self.write_config()
+        config = insight.inputs.load_config(self.root, self.config_path)
+        bundle = insight.inputs.prepare_bundle(self.root, config, fetcher=self.fetcher)
+        candidate = self.client.calls[1]['payload']['candidate']
+        review = FakeInsightClient().infer('fixture-review', 'validation fixture',
+                                           json.dumps({'candidate': candidate}))
+        review = json.loads(review['text'])
         for flag in ('coverage_acknowledged', 'topic_gate_confirmed'):
-            self.client = FakeInsightClient()
-            self.client.review_mutator = lambda result, key=flag: result.update({key: False})
-            with self.subTest(flag=flag):
-                self.assert_blocked('missing-' + flag.replace('_', '-'))
-                self.assertEqual(len(self.client.calls), 2)
+            invalid_review = copy.deepcopy(review)
+            invalid_review[flag] = False
+            with self.subTest(flag=flag), self.assertRaises((store.OfflineError, ValueError)):
+                insight.validate_review(candidate, invalid_review, bundle)
+        self.assertEqual(len(self.client.calls), 2)
 
     def test_same_models_are_rejected_before_call(self):
         self.config['models']['review'] = self.config['models']['generation']
@@ -474,6 +699,34 @@ class InsightLoop(unittest.TestCase):
                 self.assert_blocked()
                 self.assertEqual(path.read_bytes(), before)
                 self.assertEqual(len(self.client.calls), 2)
+
+    def test_checkpoint_edit_is_preserved_and_never_reissued(self):
+        self.run_insight()
+        path = self.directory() / 'checkpoints/generation-0.yaml'
+        path.write_text(path.read_text() + '\nmanual_edit: true\n')
+        before = path.read_bytes()
+        self.assert_blocked()
+        self.assertEqual(path.read_bytes(), before)
+        self.assertEqual(len(self.client.calls), 2)
+
+    def test_same_batch_cannot_change_budget_to_reset_its_calls(self):
+        self.run_insight()
+        self.config['budget']['max_calls'] = 2
+        self.assert_blocked()
+        self.assertEqual(len(self.client.calls), 2)
+
+    def test_symlink_topic_output_cannot_write_formal_articles(self):
+        target = self.root / 'articles/human'
+        target.mkdir()
+        note = target / 'topic-1.md'
+        note.write_text('已有正式人工文章，必须保留。\n')
+        link = self.root / 'articles/test/custom-topic/first'
+        link.parent.mkdir(parents=True, exist_ok=True)
+        link.symlink_to(target, target_is_directory=True)
+        before = note.read_bytes()
+        self.assert_blocked()
+        self.assertEqual(note.read_bytes(), before)
+        self.assertEqual(list(target.iterdir()), [note])
 
     def test_existing_notes_unchanged_and_new_outputs_are_only_test_paths(self):
         before = {path: path.read_bytes() for path in self.root.rglob('*') if path.is_file()}

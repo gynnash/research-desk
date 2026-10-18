@@ -1,0 +1,27 @@
+# Copy into config/, then replace all placeholders with your own accepted Research
+# receipt, matching Research config, explicit historical files and their SHA-256.
+# This example deliberately cannot run until its inputs and account models exist.
+schema_version: 1
+mode: insight_test
+backend: chatgpt_plan
+topic: my-research
+topics_file: config/examples/research_topics.yaml
+models:
+  generation: generation-model-from-your-account
+  review: different-review-model-from-your-account
+budget:
+  max_calls: 4
+  month_max_calls: 10
+  max_input_chars: 30000
+  max_output_chars: 8000
+  timeout_seconds: 120
+  max_revisions: 1
+prompts:
+  version: insight-v1
+research_inputs:
+  - receipt: reports/test/my-research/research-batches/your-batch/receipt-attempt-1.yaml
+    config: config/your-research-batch.yaml
+historical_inputs:
+  - path: sources/papers/your-source-id.md
+    sha256: replace-with-your-file-sha256
+    origin: human_baseline

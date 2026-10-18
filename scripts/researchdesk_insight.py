@@ -26,6 +26,21 @@ REVIEW_INSTRUCTIONS = '''你是独立 Insight 审阅模型，未参与生成。�
 report目标核查整份报告（摘要、问题、限制等），并另逐条核查每个comparison、每条insight和每个topic，下标从0开始。pass必须所有对象被核查且受证据支持，checks引用至少覆盖该对象所有引用；report根覆盖全部comparisons引用。存在阻塞问题、假设变事实或写作已被批准不能pass；需要修改revise；信息不足blocked。'''
 
 
+class GenerationFormatError(store.OfflineError):
+    def __init__(self, response):
+        super().__init__('生成响应不是单一合法 JSON 对象；必须修正格式，不能删改原始响应或直接入库')
+        self.response = response
+
+
+def parse_response(response, role):
+    try:
+        return shared.parse_result(response)
+    except store.OfflineError:
+        if role == 'generation':
+            raise GenerationFormatError(response)
+        raise
+
+
 def fields(value, keys, label):
     if not isinstance(value, dict) or set(value) != set(keys):
         raise store.OfflineError(label + ' 字段缺失或包含未知字段')
@@ -56,6 +71,22 @@ def targets(candidate):
     result.update({'insights.%s' % i: set(c['evidence_ids']) for i, c in enumerate(candidate['insights'])})
     result.update({'topics.%s' % i: set(c['evidence_ids']) for i, c in enumerate(candidate['topics'])})
     return result
+
+
+def original_source_count(evidence):
+    """Merge aliases/notes of the same original before counting cross-source support."""
+    groups = []
+    for item in evidence:
+        identities = item.get('source_identities') or [{'source_id': '|'.join(item['source_ids']),
+                                                       'identity_keys': item.get('identity_keys', [])}]
+        for identity in identities:
+            keys = set(identity['identity_keys']) | {'id:' + identity['source_id']}
+            overlaps = [group for group in groups if keys & group]
+            for group in overlaps:
+                keys |= group
+                groups.remove(group)
+            groups.append(keys)
+    return len(groups)
 
 
 def validate_candidate(candidate, bundle):
@@ -98,8 +129,7 @@ def validate_candidate(candidate, bundle):
         for key in ('counterpoints', 'limitations', 'validation'):
             strings(insight[key], key)
         refs = references(insight['evidence_ids'], evidence)
-        source_ids = set().union(*(set(evidence[k]['source_ids']) for k in refs))
-        if not refs & research_ids or not refs & historical_ids or len(source_ids) < 2:
+        if not refs & research_ids or not refs & historical_ids or original_source_count([evidence[k] for k in refs]) < 2:
             raise store.OfflineError('洞察须结合新研究和历史，且跨至少两个不同原始来源')
     if not isinstance(candidate['topics'], list) or not 1 <= len(candidate['topics']) <= 2:
         raise store.OfflineError('只允许1至2张待确认选题卡')
@@ -244,9 +274,11 @@ def call(root, base, events, client, manifest, config, role, revision, instructi
         if len(completed) != 1:
             raise store.OfflineError('重复完成记录')
         checkpoint = store.checked_yaml(root, completed[0]['response_path'])
-        if checkpoint['binding'] != binding or checkpoint['result']['model'] != manifest['models'][role]:
+        if (checkpoint['binding'] != binding or checkpoint['result']['model'] != manifest['models'][role]
+                or checkpoint['result'].get('usage') != completed[0].get('usage')
+                or len(checkpoint['result']['text']) > config['budget']['max_output_chars']):
             raise store.OfflineError('模型输入或实际身份发生变化')
-        return shared.parse_result(checkpoint['result']['text'])
+        return parse_response(checkpoint['result']['text'], role)
     done = {e['reservation_id'] for e in events if e['type'] == 'call_completed'}
     if any(e['reservation_id'] not in done for e in events if e['type'] == 'call_reserved'):
         raise store.OfflineError('存在结果未知的真实请求，不自动重发')
@@ -258,7 +290,9 @@ def call(root, base, events, client, manifest, config, role, revision, instructi
                        'revision': revision, 'model_id': manifest['models'][role], 'month': shared.now()[:7], 'at': shared.now()})
     result = client.infer(manifest['models'][role], instructions, serialized,
                           max_output_chars=config['budget']['max_output_chars'], timeout_seconds=config['budget']['timeout_seconds'])
-    if not isinstance(result, dict) or result.get('model') != manifest['models'][role] or not isinstance(result.get('text'), str):
+    if (not isinstance(result, dict) or result.get('model') != manifest['models'][role]
+            or not isinstance(result.get('text'), str) or not result['text'].strip()
+            or len(result['text']) > config['budget']['max_output_chars']):
         raise store.OfflineError('Insight 实际模型或输出身份不一致')
     usage = result.get('usage')
     usage = ({k: v for k, v in usage.items() if k in {'input_tokens', 'output_tokens', 'total_tokens'}
@@ -270,13 +304,75 @@ def call(root, base, events, client, manifest, config, role, revision, instructi
     store.append_event(root, base, events, {'type': 'call_completed', 'reservation_id': reservation, 'role': role,
                        'revision': revision, 'model_id': result['model'], 'response_path': path,
                        'response_sha256': sha, 'usage': usage, 'at': shared.now()})
-    return shared.parse_result(result['text'])
+    return parse_response(result['text'], role)
 
 
 def room(root, config, events, count):
     monthly, cap = shared.monthly_budget(root, config)
     if sum(e['type'] == 'call_reserved' for e in events) + count > config['budget']['max_calls'] or monthly + count > cap:
         raise store.OfflineError('Insight 批次或共享月度请求预算不足')
+
+
+def verify_ledger(root, base, events, manifest, bundle):
+    """Require every completion to match one prior reservation and checkpoint."""
+    reserved, completed, failures, interruptions = {}, set(), set(), 0
+    for event in events:
+        kind = event.get('type')
+        if kind == 'acceptance_interruption':
+            interruptions += 1
+            if interruptions > 1:
+                raise store.OfflineError('重复的验收中断记录')
+            continue
+        if kind == 'local_validation_failed':
+            revision = event.get('revision')
+            if type(revision) is not int or revision != 0 or revision in failures or 'generation-0' not in completed or 'review-0' in reserved:
+                raise store.OfflineError('确定性失败事件缺少匹配的生成结果')
+            raw = store.checked_yaml(root, base + '/checkpoints/generation-0.yaml')['result']['text']
+            if event.get('response_sha256') != store.digest(raw.encode()):
+                raise store.OfflineError('确定性失败未绑定原始响应')
+            try:
+                parse_response(raw, 'generation')
+            except GenerationFormatError:
+                failures.add(revision)
+            else:
+                raise store.OfflineError('合法候选不能伪造确定性失败来额外修订')
+            continue
+        if kind not in {'call_reserved', 'call_completed'}:
+            raise store.OfflineError('未知 Insight 账本事件')
+        role, revision = event.get('role'), event.get('revision')
+        if role not in manifest['models'] or type(revision) is not int or not 0 <= revision <= manifest['budget']['max_revisions']:
+            raise store.OfflineError('账本角色或修订次数无效')
+        identity = '%s-%s' % (role, revision)
+        if event.get('reservation_id') != identity or event.get('model_id') != manifest['models'][role]:
+            raise store.OfflineError('账本请求身份不一致')
+        if kind == 'call_reserved':
+            if identity in reserved:
+                raise store.OfflineError('重复预留请求')
+            if role == 'review' and 'generation-%s' % revision not in completed:
+                raise store.OfflineError('审阅缺少本次已完成的生成请求')
+            if role == 'generation' and revision:
+                prior = 'review-%s' % (revision - 1)
+                if prior in completed:
+                    checkpoint = store.checked_yaml(root, '%s/checkpoints/%s.yaml' % (base, prior))
+                    if shared.parse_result(checkpoint['result']['text']).get('decision') != 'revise':
+                        raise store.OfflineError('前一轮未要求修订，拒绝额外模型请求')
+                elif revision - 1 not in failures:
+                    raise store.OfflineError('修订缺少前一轮独立审阅或确定性失败')
+            reserved[identity] = event
+            continue
+        if identity not in reserved or identity in completed:
+            raise store.OfflineError('完成记录缺少唯一的前置预留')
+        expected_path = '%s/checkpoints/%s.yaml' % (base, identity)
+        if event.get('response_path') != expected_path:
+            raise store.OfflineError('检查点不属于本次请求')
+        checkpoint = store.checked_yaml(root, expected_path)
+        result = checkpoint.get('result', {})
+        if result.get('model') != event['model_id'] or result.get('usage') != event.get('usage'):
+            raise store.OfflineError('完成账本与模型检查点不一致')
+        completed.add(identity)
+    if len(reserved) > manifest['budget']['max_calls']:
+        raise store.OfflineError('账本已超过请求预算')
+    return set(reserved) == completed
 
 
 def run(root, config_path, batch_id, client, fetcher=None, fail_after=None):
@@ -293,7 +389,12 @@ def run(root, config_path, batch_id, client, fetcher=None, fail_after=None):
         manifest_path = base + '/manifest.yaml'
         if store.safe_path(root, manifest_path).exists():
             manifest = store.checked_yaml(root, manifest_path)
-            if manifest['fingerprint'] != fingerprint:
+            bound = {'schema_version': 1, 'mode': 'insight_test', 'backend': 'chatgpt_plan',
+                     'topic': config['topic'], 'batch_id': batch_id, 'fingerprint': fingerprint,
+                     'input_fingerprint': bundle['input_fingerprint'], 'provenance': bundle['provenance'],
+                     'models': config['models'], 'budget': config['budget'], 'authorization': auth,
+                     'writing_started': False}
+            if any(manifest.get(key) != value for key, value in bound.items()):
                 raise store.OfflineError('批次绑定的输入、配置、模型或账户改变，不能重置预算')
             shared.verify_notes(root, manifest['protected_notes'])
         else:
@@ -308,6 +409,8 @@ def run(root, config_path, batch_id, client, fetcher=None, fail_after=None):
                         'protected_notes': shared.notes_snapshot(root), 'writing_started': False}
             store.save_yaml(root, manifest_path, manifest)
         events = store.read_events(root, base)
+        verify_ledger(root, base, events, manifest, bundle)
+        model_bundle = inputs.model_payload(bundle)
         candidate, review, revision = None, None, 0
         for revision in range(config['budget']['max_revisions'] + 1):
             if not any(e['type'] == 'call_completed' and e['role'] == 'generation' and e['revision'] == revision for e in events):
@@ -318,17 +421,42 @@ def run(root, config_path, batch_id, client, fetcher=None, fail_after=None):
                         raise
                     revision -= 1
                     break
-            request = {'topic': config['topic'], 'bundle': bundle}
+            request = dict(model_bundle)
             if revision:
                 request.update(previous_candidate=candidate, previous_review=review)
-            candidate = call(root, base, events, client, manifest, config, 'generation', revision, GENERATION_INSTRUCTIONS, request)
-            if not validate_candidate(candidate, bundle):
-                break
+            try:
+                candidate = call(root, base, events, client, manifest, config, 'generation', revision, GENERATION_INSTRUCTIONS, request)
+                if not validate_candidate(candidate, bundle):
+                    break
+            except GenerationFormatError as exc:
+                # Repair only a known completed generation. Transport/unknown calls
+                # still stop; the original checkpoint is never edited or normalized.
+                path = '%s/checkpoints/generation-%s.yaml' % (base, revision)
+                known = any(e['type'] == 'call_completed' and e.get('role') == 'generation' and e.get('revision') == revision for e in events)
+                if not known or revision >= config['budget']['max_revisions']:
+                    raise
+                checkpoint = store.checked_yaml(root, path)
+                raw = checkpoint['result']['text']
+                try:
+                    parse_response(raw, 'generation')
+                except GenerationFormatError:
+                    pass
+                else:
+                    raise exc
+                candidate = raw
+                review = {'decision': 'revise', 'origin': 'deterministic_validation',
+                          'issues': [{'reason': str(exc), 'suggestion': '仅返回一个符合约定字段的合法 JSON 对象；修正结束括号及结构，不使用围栏或附加文字。'}]}
+                if not any(e['type'] == 'local_validation_failed' and e.get('revision') == revision for e in events):
+                    store.append_event(root, base, events, {'type': 'local_validation_failed', 'revision': revision,
+                                       'response_sha256': store.digest(raw.encode()), 'at': shared.now()})
+                continue
             review = call(root, base, events, client, manifest, config, 'review', revision, REVIEW_INSTRUCTIONS,
-                          {'topic': config['topic'], 'bundle': bundle, 'candidate': candidate})
+                          dict(model_bundle, candidate=candidate))
             if validate_review(candidate, review, bundle) != 'revise':
                 break
-        status = 'blocked' if candidate['outcome'] == 'insufficient_evidence' else review['decision']
+        status = 'revise' if isinstance(candidate, str) else ('blocked' if candidate['outcome'] == 'insufficient_evidence' else review['decision'])
+        if not verify_ledger(root, base, events, manifest, bundle):
+            raise store.OfflineError('仍有结果未知的请求，停止创建产物')
         if fail_after == 'after_review' and status == 'pass' and not any(e['type'] == 'acceptance_interruption' for e in events):
             store.append_event(root, base, events, {'type': 'acceptance_interruption', 'at': shared.now()})
             raise store.SimulatedInterruption('Insight 独立审阅已持久化，按计划中断；补跑不增加模型调用')
@@ -336,7 +464,7 @@ def run(root, config_path, batch_id, client, fetcher=None, fail_after=None):
         outputs, hashes = {'report': None, 'insights': [], 'topics': []}, {}
         if status == 'pass':
             outputs, contents = render_outputs(root, base, config, batch_id, candidate, bundle)
-            plan_path = base + '/publication-plan.yaml'
+            plan_path = base + '/artifact-plan.yaml'
             expected = {path: store.digest(content.encode()) for path, content in contents.items()}
             store.save_yaml(root, plan_path, {'files': expected})
             for path, content in contents.items():
@@ -352,9 +480,11 @@ def run(root, config_path, batch_id, client, fetcher=None, fail_after=None):
         receipt_path = base + '/receipt.yaml'
         if store.safe_path(root, receipt_path).exists():
             previous = store.checked_yaml(root, receipt_path)
-            if previous != result:
+            if {k: previous.get(k) for k in result} != result or set(previous) != set(result) | {'monthly_reserved_calls', 'effective_month_max_calls'}:
                 raise store.OfflineError('已有 Insight 回执与当前账本或产物不一致')
             return dict(previous, cached=True)
+        monthly, monthly_cap = shared.monthly_budget(root, config)
+        result.update(monthly_reserved_calls=monthly, effective_month_max_calls=monthly_cap)
         store.save_yaml(root, receipt_path, result)
         return result
 

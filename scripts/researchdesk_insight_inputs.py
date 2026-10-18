@@ -49,13 +49,17 @@ def _receipt_path(root, value, topic):
     return path
 
 
-def _history_path(root, value):
+def _history_path(root, value, topic=None):
     path = _relative(root, value, '历史资料')
     parts = Path(value).parts
     allowed = ((len(parts) >= 3 and parts[:2] in {('sources', 'papers'), ('sources', 'blogs')})
                or (len(parts) >= 2 and parts[0] in {'reports', 'insights'}))
     if (not allowed or 'test' in parts or path.suffix != '.md' or path.name == 'README.md'):
         raise store.OfflineError('历史输入仅允许显式登记的正式 source/report/insight Markdown')
+    topic_directory = parts[2] if parts[0] == 'sources' and len(parts) > 3 else (
+        parts[1] if parts[0] in {'reports', 'insights'} and len(parts) > 2 else None)
+    if topic is not None and topic_directory is not None and topic_directory != topic:
+        raise store.OfflineError('历史资料不可来自其他研究方向的目录')
     return path
 
 
@@ -116,6 +120,9 @@ def load_config(root, path):
     for entry in config['research_inputs']:
         research_inputs.fields(entry, {'receipt', 'config'}, 'Research 输入')
         _receipt_path(root, entry['receipt'], topic)
+        if (not isinstance(entry['config'], str) or Path(entry['config']).is_absolute()
+                or Path(entry['config']).as_posix() != entry['config']):
+            raise store.OfflineError('Research 配置必须使用 config 下的规范相对路径')
         research_inputs.config_path(root, entry['config'])
         if entry['receipt'] in receipts:
             raise store.OfflineError('Research 输入回执重复')
@@ -125,7 +132,7 @@ def load_config(root, path):
     histories = set()
     for entry in config['historical_inputs']:
         research_inputs.fields(entry, {'path', 'sha256', 'origin'}, '历史输入')
-        _history_path(root, entry['path'])
+        _history_path(root, entry['path'], topic)
         if entry['origin'] != 'human_baseline' or not isinstance(entry['sha256'], str) or not HASH.fullmatch(entry['sha256']):
             raise store.OfflineError('历史输入必须明确标为 human_baseline 并固定 SHA-256')
         if entry['path'] in histories:
@@ -164,11 +171,12 @@ def _checked_research(root, config, entry):
                 or value.get('topic') != config['topic']):
             raise store.OfflineError('Insight 仅接受同主题真实会员 Research 批次')
     auth = manifest.get('authorization', {})
-    if (auth.get('authenticated') is not True or auth.get('plan_permission') is not True
+    if (not isinstance(auth, dict) or auth.get('authenticated') is not True or auth.get('plan_permission') is not True
             or auth.get('authorization') != 'official_chatgpt_oauth'
             or not isinstance(auth.get('account_fingerprint'), str) or not auth['account_fingerprint']):
         raise store.OfflineError('Research 缺少已验证的官方会员授权记录')
-    if (manifest.get('schema_version') != 1 or receipt.get('schema_version') != 1
+    if (type(manifest.get('schema_version')) is not int or manifest.get('schema_version') != 1
+            or type(receipt.get('schema_version')) is not int or receipt.get('schema_version') != 1
             or manifest.get('production_accepted') is not False or receipt.get('production_accepted') is not False
             or receipt.get('status') != 'test_accepted' or receipt.get('receipt_path') != entry['receipt']
             or receipt.get('batch_id') != Path(base).name or manifest.get('batch_id') != Path(base).name
@@ -195,7 +203,7 @@ def _checked_research(root, config, entry):
             or receipt.get('reserved_calls') != len(reserved) or receipt.get('completed_calls') != len(completed)
             or receipt.get('actual_models') != actual_models or actual_models != sorted(set(manifest['models'].values()))
             or receipt.get('usage') != [event.get('usage') for event in completed]
-            or not isinstance(receipt.get('items'), list)
+            or not isinstance(receipt.get('items'), list) or any(not isinstance(item, dict) for item in receipt['items'])
             or [item.get('key') for item in receipt['items']] != expected_keys
             or len(finished) != len(expected_keys) or {event['key'] for event in finished} != set(expected_keys)):
         raise store.OfflineError('Research 汇总与真实请求及逐项终态不一致')
@@ -257,7 +265,8 @@ def _research_evidence(root, config, fetcher):
             plan = store.checked_yaml(root, path)
             candidate = plan.get('candidate', {})
             source_id = candidate.get('source_id')
-            if (not isinstance(source_id, str) or not SOURCE_ID.fullmatch(source_id)
+            if (plan.get('action') not in {'research', 'update'}
+                    or not isinstance(source_id, str) or not SOURCE_ID.fullmatch(source_id)
                     or source_id != item.get('source_id') or candidate.get('key') != item['key']
                     or candidate.get('topic') != config['topic'] or candidate.get('kind') != source['kind']
                     or not source_id.startswith(source['kind'] + '-')
@@ -287,6 +296,8 @@ def _research_evidence(root, config, fetcher):
             report = store.safe_path(root, item['report_path'])
             if not report.is_file() or store.digest(report.read_bytes()) != item.get('report_sha256'):
                 raise store.OfflineError('Research 报告已修改，拒绝沿用旧审阅')
+            if report.read_text(encoding='utf-8') != batch.render(manifest, candidate, research, review, item['revision_count']):
+                raise store.OfflineError('Research 报告不再对应已审阅的结构化结果')
             identifier = 'R%s' % (len(evidence) + 1)
             source_url = candidate['metadata']['source_url']
             if candidate['kind'] == 'paper' and candidate['metadata'].get('arxiv_id'):
@@ -295,6 +306,7 @@ def _research_evidence(root, config, fetcher):
                 'sha256': item['report_sha256'], 'source_ids': [source_id], 'source_id': source_id,
                 'source_url': source_url, 'source_urls': [source_url], 'coverage': candidate['evidence']['coverage'],
                 'identity_keys': candidate['identity_keys'],
+                'source_identities': [{'source_id': source_id, 'identity_keys': candidate['identity_keys']}],
                 'independently_reviewed': True, 'can_support_original_facts': True,
                 'metadata': candidate['metadata'], 'text': report.read_text(encoding='utf-8'),
                 'research_summary': research['summary'], 'research_claims': research['claims'],
@@ -304,6 +316,7 @@ def _research_evidence(root, config, fetcher):
             provenance.append({'id': identifier, **proof, 'path': record['path'], 'sha256': record['sha256'],
                 'source_id': source_id, 'source_ids': [source_id], 'source_url': source_url,
                 'identity_keys': candidate['identity_keys'],
+                'source_identities': [{'source_id': source_id, 'identity_keys': candidate['identity_keys']}],
                 'coverage': record['coverage'], 'origin': record['origin'],
                 'candidate_path': path, 'candidate_sha256': store.digest(store.safe_path(root, path).read_bytes()),
                 'content_sha256': candidate['content_hash'], 'metadata_sha256': candidate['metadata_hash'],
@@ -315,7 +328,9 @@ def _research_evidence(root, config, fetcher):
 def _historical_evidence(root, config):
     entries, sources = [], {}
     for entry in config['historical_inputs']:
-        path = _history_path(root, entry['path'])
+        path = _history_path(root, entry['path'], config['topic'])
+        if path.stat().st_size > 100000:
+            raise store.OfflineError('历史资料超过单份输入界限')
         payload = path.read_bytes()
         if len(payload) > 100000 or store.digest(payload) != entry['sha256']:
             raise store.OfflineError('历史资料超出界限或与显式登记的 SHA-256 不一致')
@@ -337,7 +352,8 @@ def _historical_evidence(root, config):
             sources[metadata['id']] = metadata
         elif not re.search(r'(?:研究主题|主题)\s*[:：]\s*(?:%s|%s)(?:\s|$)' % (
                 re.escape(config['topic_name']), re.escape(config['topic'])), text):
-            if not isinstance(metadata, dict) or config['topic'] not in metadata.get('topics', []):
+            if (not isinstance(metadata, dict) or not isinstance(metadata.get('topics'), list)
+                    or config['topic'] not in metadata['topics']):
                 raise store.OfflineError('历史报告或洞察未明确属于当前研究主题')
         entries.append((entry, text, metadata))
     evidence, provenance = [], []
@@ -351,10 +367,28 @@ def _historical_evidence(root, config):
         proof = {'id': identifier, 'origin': 'human_baseline', 'path': entry['path'], 'sha256': entry['sha256'],
                  'source_ids': source_ids, 'source_urls': urls, 'source_url': urls[0] if len(urls) == 1 else None,
                  'identity_keys': sorted({key for source_id in source_ids for key in store.identities(sources[source_id])}),
+                 'source_identities': [{'source_id': source_id, 'identity_keys': store.identities(sources[source_id])}
+                                       for source_id in source_ids],
                  'coverage': 'historical_note', 'independently_reviewed': False, 'can_support_original_facts': False}
         evidence.append(dict(proof, text=text, historical_status='历史人工基线，含 AI 辅助内容；未经本次独立原文审阅。推断与旧主张均不可升格为新核验事实。'))
         provenance.append(proof)
     return evidence, provenance
+
+
+def model_payload(bundle):
+    """One shared projection for generation, review and input-size preflight.
+
+    Evidence text is never truncated. Research reports duplicate the structured
+    claims and original material, so their rendered text and integrity proofs
+    stay in the full bundle instead of being sent a second time to the model.
+    """
+    payload = {'topic': bundle['topic'], 'research_context': bundle['research_context'], 'evidence': []}
+    for record in bundle['evidence']:
+        keys = {'id', 'origin', 'path', 'source_ids', 'source_url', 'source_urls', 'coverage', 'historical_status'}
+        keys |= ({'metadata', 'research_summary', 'research_claims', 'research_limitations', 'original_material'}
+                 if record['origin'] == 'reviewed_research' else {'text'})
+        payload['evidence'].append({key: value for key, value in record.items() if key in keys})
+    return payload
 
 
 def prepare_bundle(root, config, fetcher=None):
@@ -369,8 +403,7 @@ def prepare_bundle(root, config, fetcher=None):
         'description': config['topic_description'], 'scope': config['topic_scope'], 'keywords': config['topic_keywords']},
         'evidence': research + historical,
         'provenance': {'research_inputs': research_provenance, 'historical_inputs': historical_provenance}}
-    model_material = {key: value for key, value in bundle.items() if key != 'provenance'}
-    if len(json.dumps(model_material, ensure_ascii=False)) > config['budget']['max_input_chars']:
+    if len(json.dumps(model_payload(bundle), ensure_ascii=False)) > config['budget']['max_input_chars']:
         raise store.OfflineError('显式登记输入超过字符预算；停止而不截断原文或隐瞒覆盖范围')
     bundle['input_fingerprint'] = store.digest(bundle)
     return bundle

@@ -1,0 +1,305 @@
+schema_version: 1
+mode: insight_test
+backend: chatgpt_plan
+topic: agent-memory
+batch_id: insight-agent-memory-20261019
+created_at: '2026-10-18T17:01:30.308620+00:00'
+fingerprint: aead041c8a44e2c7ec0595843e39e1d7e748a266c15b4a171828b6345570c73f
+input_fingerprint: 1cb9130b84092022b76fb94e128d086e8e0d14936fb72275d3770a39c805c974
+provenance:
+  research_inputs:
+  - id: R1
+    receipt: reports/test/agent-memory/research-batches/configured-research-20261019/receipt-attempt-1.yaml
+    receipt_sha256: 1cda803fea25707160dc35da096245061542338f70d63202738055e5d412cdfc
+    manifest: reports/test/agent-memory/research-batches/configured-research-20261019/manifest.yaml
+    manifest_sha256: 391e13da3898b6da570c59bbbafec2eab08dd915fb9117b13862b0d245863515
+    config: config/test/agent-memory/research_batch.yaml
+    config_sha256: 7ac04b459bb6f45b7be2dc824601dbc598c3b73a055a959dffe5712dd04c580b
+    topics_sha256: 651cea40a6dbfa2568b324491a102b785230a3c63a7ce03f03252ff3b0cdf18d
+    models: &id002
+      research: gpt-6-luna
+      review: gpt-6.1-sol
+    events: &id003
+    - path: reports/test/agent-memory/research-batches/configured-research-20261019/events/000001.yaml
+      sha256: df55b2c5c2b64842eca5393a64df893a194685210c975dd93e6e797742a52d92
+    - path: reports/test/agent-memory/research-batches/configured-research-20261019/events/000002.yaml
+      sha256: e3e1e10d66e6cabac7b0d530133380eca272ad69a61fe9e045777adc710231e1
+    - path: reports/test/agent-memory/research-batches/configured-research-20261019/events/000003.yaml
+      sha256: d36d99d41f58288afbb9f504b871dbee58f91c998d1826bcd726e8b23175b354
+    - path: reports/test/agent-memory/research-batches/configured-research-20261019/events/000004.yaml
+      sha256: db7b6143608be9bb86c146b056b6c14325df409366ca69e4ab0b7c5d29cc6e49
+    - path: reports/test/agent-memory/research-batches/configured-research-20261019/events/000005.yaml
+      sha256: 10d4b37a46fb18b0adb87efb03af3ba6d0db33ebca4983de0ba06538048db1b0
+    - path: reports/test/agent-memory/research-batches/configured-research-20261019/events/000006.yaml
+      sha256: 58961da7006cf68705f76757dba29e263d4f833c886b1c363598fa3d623f7fd9
+    - path: reports/test/agent-memory/research-batches/configured-research-20261019/events/000007.yaml
+      sha256: 8364e66c1081bf72f52c37d85c77d2e23a249f8dcb0204e3d78cfd4ff05c610c
+    - path: reports/test/agent-memory/research-batches/configured-research-20261019/events/000008.yaml
+      sha256: 3a09b905aa7cfeb3560e62ef875dc8b964269d5acc6b3473031b56da4e07b94b
+    - path: reports/test/agent-memory/research-batches/configured-research-20261019/events/000009.yaml
+      sha256: 1004a39fb9ad11b1b009f114fb3167d092d96f3422578487134d2848248547cf
+    - path: reports/test/agent-memory/research-batches/configured-research-20261019/events/000010.yaml
+      sha256: 3e18fad9d853c39b196d62fc3a4a13e2473d3719fb212321498627fffde66c55
+    - path: reports/test/agent-memory/research-batches/configured-research-20261019/events/000011.yaml
+      sha256: dc6a93076dcbfbb264bb0aee985f267848ece44617b045e019fffc23b9dd3d9a
+    path: reports/test/agent-memory/research-batches/configured-research-20261019/items/amem-paper/report.md
+    sha256: d64aee8548e44dee1bacf359d162e3ac33b184f8d61447328366941333ba62e2
+    source_id: paper-562de50e-e5fa-49a4-8c35-67ccc4880c97
+    source_ids:
+    - paper-562de50e-e5fa-49a4-8c35-67ccc4880c97
+    source_url: https://arxiv.org/abs/2502.12110v1
+    identity_keys: &id001
+    - arxiv:2502.12110
+    - url:https://arxiv.org/abs/2502.12110
+    source_identities:
+    - source_id: paper-562de50e-e5fa-49a4-8c35-67ccc4880c97
+      identity_keys: *id001
+    coverage: abstract_only
+    origin: reviewed_research
+    candidate_path: reports/test/agent-memory/research-batches/configured-research-20261019/items/amem-paper/candidate.yaml
+    candidate_sha256: 89ff891576146024d19885e0692e12bbaf39bfa764669214223a3a8fad4abf2a
+    content_sha256: 8425aeba2cf857a7a3c3b548cbd5a445bd13f4e6a62dab30aa6209a7800debb1
+    metadata_sha256: 98cfb59b73f6a8693418bc505dbee9abde5cbd75b98e746345faae3e8bd4a7fd
+    evidence_sha256: e400ff9a164edc7be576970be8d476371e1f3c519f8015cebe67f6d5be4de0e6
+    original_material_sha256: e400ff9a164edc7be576970be8d476371e1f3c519f8015cebe67f6d5be4de0e6
+    checkpoints:
+    - role: research
+      revision: 0
+      path: reports/test/agent-memory/research-batches/configured-research-20261019/items/amem-paper/checkpoints/research-0.yaml
+      sha256: 83d3aa1c1ef27df14c1b09ef7d6e6a313e3572cf6edb3b4c32bdf083b1a10c28
+    - role: review
+      revision: 0
+      path: reports/test/agent-memory/research-batches/configured-research-20261019/items/amem-paper/checkpoints/review-0.yaml
+      sha256: 148b6ca32d1121a1659b5b37743b32bf39701d1eb8a5177c4b9dcc1b834f1d42
+  - id: R2
+    receipt: reports/test/agent-memory/research-batches/configured-research-20261019/receipt-attempt-1.yaml
+    receipt_sha256: 1cda803fea25707160dc35da096245061542338f70d63202738055e5d412cdfc
+    manifest: reports/test/agent-memory/research-batches/configured-research-20261019/manifest.yaml
+    manifest_sha256: 391e13da3898b6da570c59bbbafec2eab08dd915fb9117b13862b0d245863515
+    config: config/test/agent-memory/research_batch.yaml
+    config_sha256: 7ac04b459bb6f45b7be2dc824601dbc598c3b73a055a959dffe5712dd04c580b
+    topics_sha256: 651cea40a6dbfa2568b324491a102b785230a3c63a7ce03f03252ff3b0cdf18d
+    models: *id002
+    events: *id003
+    path: reports/test/agent-memory/research-batches/configured-research-20261019/items/letta-memory-blog/report.md
+    sha256: fb84fd764c0a422cb67f0104dfe38a16a4426cb3f4807071bf5d96ad114a2ae5
+    source_id: blog-56521361-c491-428a-b75e-3c92c603161e
+    source_ids:
+    - blog-56521361-c491-428a-b75e-3c92c603161e
+    source_url: https://www.letta.com/blog/why-memory-isnt-a-plugin/
+    identity_keys: &id004
+    - url:https://www.letta.com/blog/why-memory-isnt-a-plugin/
+    source_identities:
+    - source_id: blog-56521361-c491-428a-b75e-3c92c603161e
+      identity_keys: *id004
+    coverage: excerpt
+    origin: reviewed_research
+    candidate_path: reports/test/agent-memory/research-batches/configured-research-20261019/items/letta-memory-blog/candidate.yaml
+    candidate_sha256: fe653618c83a2123708a81e4409d2f7dfe28320b46021e72ef1008ea447b43ec
+    content_sha256: 08d58a39ed157d3098f44eb6a54c6e58a50cb7c048271872fce7c082280b9987
+    metadata_sha256: e87bfe50ef28d269e8502be50474b82e6efb46302518a1fe5465ba0f9213d8ec
+    evidence_sha256: bc33cfed5058452e616eb80294d97b2ab4631f87cada999b3ca84c82d238ee8e
+    original_material_sha256: bc33cfed5058452e616eb80294d97b2ab4631f87cada999b3ca84c82d238ee8e
+    checkpoints:
+    - role: research
+      revision: 0
+      path: reports/test/agent-memory/research-batches/configured-research-20261019/items/letta-memory-blog/checkpoints/research-0.yaml
+      sha256: 28e76c7c0494027058e40980be8f8c46f670db1bc2971e7be5e3c8a3cfd53cea
+    - role: review
+      revision: 0
+      path: reports/test/agent-memory/research-batches/configured-research-20261019/items/letta-memory-blog/checkpoints/review-0.yaml
+      sha256: a3731cdefbe9b9cb0edb2aec293d6d0aee4d6b3e3eb80e23b5efc0acb25a290c
+  historical_inputs:
+  - id: H1
+    origin: human_baseline
+    path: sources/papers/paper-4eb3be4b-7189-49aa-bafd-f88f77a972f4.md
+    sha256: 2fca02def277430ea06e35c370b56b895c82d01b14099c3cea4cb55a1e410274
+    source_ids:
+    - paper-4eb3be4b-7189-49aa-bafd-f88f77a972f4
+    source_urls:
+    - https://arxiv.org/abs/2310.08560
+    source_url: https://arxiv.org/abs/2310.08560
+    identity_keys:
+    - arxiv:2310.08560
+    - doi:10.48550/arxiv.2310.08560
+    - url:https://arxiv.org/abs/2310.08560
+    source_identities:
+    - source_id: paper-4eb3be4b-7189-49aa-bafd-f88f77a972f4
+      identity_keys:
+      - arxiv:2310.08560
+      - doi:10.48550/arxiv.2310.08560
+      - url:https://arxiv.org/abs/2310.08560
+    coverage: historical_note
+    independently_reviewed: false
+    can_support_original_facts: false
+  - id: H2
+    origin: human_baseline
+    path: sources/blogs/blog-fec9a2e1-6812-425a-83cd-e6a2464a1110.md
+    sha256: 1c05f28a21a3cef08ff0fc966970a4eed70e2510d0d17468437fb4ff0fa7e99f
+    source_ids:
+    - blog-fec9a2e1-6812-425a-83cd-e6a2464a1110
+    source_urls:
+    - https://www.letta.com/blog/memory-blocks/
+    source_url: https://www.letta.com/blog/memory-blocks/
+    identity_keys:
+    - url:https://www.letta.com/blog/memory-blocks/
+    source_identities:
+    - source_id: blog-fec9a2e1-6812-425a-83cd-e6a2464a1110
+      identity_keys:
+      - url:https://www.letta.com/blog/memory-blocks/
+    coverage: historical_note
+    independently_reviewed: false
+    can_support_original_facts: false
+  - id: H3
+    origin: human_baseline
+    path: reports/2026-10-18-agent-memory-memgpt-memory-blocks.md
+    sha256: 02b197e040a40022a004e692395b0f5e6ce3b1e3611ea9b374f440bb7ba23e96
+    source_ids:
+    - blog-fec9a2e1-6812-425a-83cd-e6a2464a1110
+    - paper-4eb3be4b-7189-49aa-bafd-f88f77a972f4
+    source_urls:
+    - https://arxiv.org/abs/2310.08560
+    - https://www.letta.com/blog/memory-blocks/
+    source_url: null
+    identity_keys:
+    - arxiv:2310.08560
+    - doi:10.48550/arxiv.2310.08560
+    - url:https://arxiv.org/abs/2310.08560
+    - url:https://www.letta.com/blog/memory-blocks/
+    source_identities:
+    - source_id: blog-fec9a2e1-6812-425a-83cd-e6a2464a1110
+      identity_keys:
+      - url:https://www.letta.com/blog/memory-blocks/
+    - source_id: paper-4eb3be4b-7189-49aa-bafd-f88f77a972f4
+      identity_keys:
+      - arxiv:2310.08560
+      - doi:10.48550/arxiv.2310.08560
+      - url:https://arxiv.org/abs/2310.08560
+    coverage: historical_note
+    independently_reviewed: false
+    can_support_original_facts: false
+  - id: H4
+    origin: human_baseline
+    path: insights/2026-10-18-agent-memory-usable-memory.md
+    sha256: 6bdbac554506f14147aebdcbbb35a8ea62e4800f9f2a804f1d84ecc414b54212
+    source_ids:
+    - blog-fec9a2e1-6812-425a-83cd-e6a2464a1110
+    - paper-4eb3be4b-7189-49aa-bafd-f88f77a972f4
+    source_urls:
+    - https://arxiv.org/abs/2310.08560
+    - https://www.letta.com/blog/memory-blocks/
+    source_url: null
+    identity_keys:
+    - arxiv:2310.08560
+    - doi:10.48550/arxiv.2310.08560
+    - url:https://arxiv.org/abs/2310.08560
+    - url:https://www.letta.com/blog/memory-blocks/
+    source_identities:
+    - source_id: blog-fec9a2e1-6812-425a-83cd-e6a2464a1110
+      identity_keys:
+      - url:https://www.letta.com/blog/memory-blocks/
+    - source_id: paper-4eb3be4b-7189-49aa-bafd-f88f77a972f4
+      identity_keys:
+      - arxiv:2310.08560
+      - doi:10.48550/arxiv.2310.08560
+      - url:https://arxiv.org/abs/2310.08560
+    coverage: historical_note
+    independently_reviewed: false
+    can_support_original_facts: false
+  - id: H5
+    origin: human_baseline
+    path: insights/2026-10-18-agent-memory-traceable-updates.md
+    sha256: 5996061dc64dea1ff86ac9275b40ac20b813f95c95fa370fcfc3ba453d5929a2
+    source_ids:
+    - blog-fec9a2e1-6812-425a-83cd-e6a2464a1110
+    - paper-4eb3be4b-7189-49aa-bafd-f88f77a972f4
+    source_urls:
+    - https://arxiv.org/abs/2310.08560
+    - https://www.letta.com/blog/memory-blocks/
+    source_url: null
+    identity_keys:
+    - arxiv:2310.08560
+    - doi:10.48550/arxiv.2310.08560
+    - url:https://arxiv.org/abs/2310.08560
+    - url:https://www.letta.com/blog/memory-blocks/
+    source_identities:
+    - source_id: blog-fec9a2e1-6812-425a-83cd-e6a2464a1110
+      identity_keys:
+      - url:https://www.letta.com/blog/memory-blocks/
+    - source_id: paper-4eb3be4b-7189-49aa-bafd-f88f77a972f4
+      identity_keys:
+      - arxiv:2310.08560
+      - doi:10.48550/arxiv.2310.08560
+      - url:https://arxiv.org/abs/2310.08560
+    coverage: historical_note
+    independently_reviewed: false
+    can_support_original_facts: false
+models:
+  generation: gpt-6-luna
+  review: gpt-6.1-sol
+budget:
+  max_calls: 4
+  month_max_calls: 10
+  max_input_chars: 30000
+  max_output_chars: 8000
+  timeout_seconds: 120
+  max_revisions: 1
+authorization:
+  authenticated: true
+  plan_permission: true
+  authorization: official_chatgpt_oauth
+  account_fingerprint: 658c777b3a755463
+catalog:
+- slug: gpt-6.1-sol
+  display_name: GPT-6.1-Sol
+- slug: gpt-6-astra
+  display_name: GPT-6-Astra
+- slug: gpt-6-sol
+  display_name: GPT-6-Sol
+- slug: gpt-6-luna
+  display_name: GPT-6-Luna
+- slug: gpt-5.6-sol
+  display_name: GPT-5.6-Sol
+- slug: gpt-5.6-terra
+  display_name: GPT-5.6-Terra
+- slug: gpt-5.6-luna
+  display_name: GPT-5.6-Luna
+protected_notes:
+  sources/README.md: ea97baad3b8b4e68c5c0dfa81611a92d257bcf2023f3810b039624f3ff1cd517
+  sources/blogs/blog-fec9a2e1-6812-425a-83cd-e6a2464a1110.md: 1c05f28a21a3cef08ff0fc966970a4eed70e2510d0d17468437fb4ff0fa7e99f
+  sources/blogs/test/agent-memory/blog-2ba2d1cb-b637-4842-afd7-efab7210fd2f.md: bf6cf9fa1c1b4879316cf23c419ebcc9f2f34d9a9e41d5d12f98cc2b0158609f
+  sources/blogs/test/agent-memory/blog-56521361-c491-428a-b75e-3c92c603161e.md: 4dd2745bcc4ae45256cbc0b1260d070c375b9950418e0b59ed740bd8fc0a4bd7
+  sources/blogs/test/agent-memory/blog-be47c817-56d3-4fa5-bb9a-bd19be5c68df.md: 622374debc4763b7ba8e6ca8777784a411244361bc692618ce2ec11bd4a0b1db
+  sources/test/README.md: 32b0263d9fd210ccd50354362b98e86102e842d1e8abb600a013bd76ec61655d
+  sources/papers/paper-4eb3be4b-7189-49aa-bafd-f88f77a972f4.md: 2fca02def277430ea06e35c370b56b895c82d01b14099c3cea4cb55a1e410274
+  sources/papers/test.md: 52bf9809aa70dbc3fc8ee55dd96a58a7b85c45717a21e5f7c557a70b4ee07115
+  sources/papers/test/agent-memory/paper-b45f152e-83b7-43ca-9ff5-0e2e7c66e5f9.md: d96bae1c966846f600d98b0d2285dc58ec7078bf83626a45c9b10e5fddc94663
+  sources/papers/test/agent-memory/paper-a5a3171a-9891-4dea-8bfc-cdf0cf15bce0.md: 357373843b03679cf7a0241fac42bada0cfeeb447c430e2edabb344c29a96126
+  reports/2026-10-18-agent-memory-memgpt-memory-blocks.md: 02b197e040a40022a004e692395b0f5e6ce3b1e3611ea9b374f440bb7ba23e96
+  reports/README.md: 901c94e139c67ba26c99451c2f0b6f7fcb0280a70e4a82f2f1416b6c1f02b77b
+  reports/test/README.md: 6ef91886517177cf196851c9cbfcab564f209143e618a42af6678d1e6b7bf15f
+  reports/test/agent-memory/collect-real-sources-20261019-check-a1/summary-attempt-1.md: 4f02a33bcbb3be3240a0681e7ca3f7e494c1821ccf5233bdcca595ad5631efd6
+  reports/test/agent-memory/offline-acceptance-20261018/summary-attempt-1.md: 920a438b21b036923bb8fc6b291af824d4d2c5441bbe16d55f2b8cefc82f0191
+  reports/test/agent-memory/offline-acceptance-20261018/summary-attempt-2.md: 920a438b21b036923bb8fc6b291af824d4d2c5441bbe16d55f2b8cefc82f0191
+  reports/test/agent-memory/offline-acceptance-20261018/acceptance.md: bbcc12d9ca0a95ecd68a55fef5554f0f8486aef25b9a625e9574fe3b4e597db6
+  reports/test/agent-memory/research-batches/configured-research-20261019/acceptance.md: 48d3d28bc2ff961b36f25f36f9fe812d71e0ac1691680d0798f68df76905f526
+  reports/test/agent-memory/research-batches/configured-research-20261019/items/letta-memory-blog/report.md: fb84fd764c0a422cb67f0104dfe38a16a4426cb3f4807071bf5d96ad114a2ae5
+  reports/test/agent-memory/research-batches/configured-research-20261019/items/amem-paper/report.md: d64aee8548e44dee1bacf359d162e3ac33b184f8d61447328366941333ba62e2
+  reports/test/agent-memory/collect-real-sources-20261018-a1/summary-attempt-1.md: 62a11b23f22bae24616d3486dc7eff9b69762d4e623e2f4b841eba6d7e84ff05
+  reports/test/agent-memory/collections/real-sources-20261019-check/summary-attempt-1.md: 6f208dc265b50fc30d7d07e2d4293253159a9bf1922669f0135551f6a6959cd3
+  reports/test/agent-memory/collections/real-sources-20261019-check/analysis-bundle-attempt-1.md: bb258a774fff44130085adef9e25f35badd1e235401c2ee3dcd153fdf6d381eb
+  reports/test/agent-memory/collections/real-sources-20261018/summary-attempt-1.md: ca2ac6c74d10ab3e7be4db1e7fa4b4f23023219dfa85261a5de1846983dcb3a1
+  reports/test/agent-memory/collections/real-sources-20261018/analysis-bundle-attempt-1.md: b80f2ca5a5e7c3f13dbe11bd9e3d0ceeb926be59cdaa25f0a56e346fef7cab78
+  reports/test/agent-memory/collections/real-sources-20261018/acceptance.md: e42877b6de62360ee9af6c762899b0cc172597570fb1b413656656185d8d9764
+  reports/test/agent-memory/membership/member-arxiv-20261019/report.md: c38e9209e92d97731385777bba9663ebd606ce2f1085e16167e295506815c003
+  reports/test/agent-memory/membership/member-arxiv-20261019/acceptance.md: 79eb32c015ca56dda28f9ef2ceabf142f6b13a46a56bb61f47c0539f16ec9f27
+  insights/2026-10-18-agent-memory-traceable-updates.md: 5996061dc64dea1ff86ac9275b40ac20b813f95c95fa370fcfc3ba453d5929a2
+  insights/2026-10-18-agent-memory-usable-memory.md: 6bdbac554506f14147aebdcbbb35a8ea62e4800f9f2a804f1d84ecc414b54212
+  insights/README.md: 2a639098b6adaa6cc549d1831065c544afaf03293495a68776e68452f1fabd95
+  insights/test/README.md: 00d6f9133d46c5c4641f1e6ef24a0e358cebbc6c86336fe849052f3385e4e2c7
+  articles/2026-10-18-agent-memory-saving-vs-remembering-outline.md: 9505994ab7c1a55a71e07f052caa9e9dccb6e7474b607f2ce5e668ca5df27775
+  articles/README.md: 1a221c8239e8b298a621752e0e440f0acf701ae0fba012462fe501dd629ee571
+  articles/2026-10-18-agent-memory-saving-vs-remembering-release-candidate.md: f74992ec6c9a408eb74600648939e4baf54c21698f2a30fcb98fc284b21afaac
+  articles/2026-10-18-agent-memory-saving-vs-remembering-draft.md: f73efed024a6dff196588ae90f43fe26b360b60d3f859334455399b2a17a83d3
+  articles/test/README.md: f18fb8cb94b0181266c3d3c52c21de0b6fdce2b58f08fe98be4616169fbedd45
+writing_started: false
