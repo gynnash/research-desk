@@ -77,8 +77,11 @@ jobs:
         shell: 'bash --noprofile --norc -eo pipefail "{0}"'
     permissions:
       contents: read
+    outputs:
+      artifact_id: ${{ steps.artifact.outputs.artifact-id }}
     steps:
       - uses: actions/checkout@v7
+        timeout-minutes: 3
         with:
           ref: main
           path: researchdesk-worker
@@ -112,7 +115,8 @@ jobs:
           "$RUNNER_TEMP/researchdesk-bootstrap-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT/bin/python" scripts/researchdesk_job.py export \
             --state "$RUNNER_TEMP/researchdesk-state-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT" \
             --destination "$RUNNER_TEMP/researchdesk-export-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
-      - name: Preserve append-only test checkpoints
+      - name: Preserve checkpoints and reviewed admission files
+        id: artifact
         if: always() && steps.export.outcome == 'success'
         uses: actions/upload-artifact@v7
         with:
@@ -123,7 +127,7 @@ jobs:
 
   save-checkpoints:
     needs: [plan, analyze]
-    if: always() && github.ref == 'refs/heads/main' && needs.analyze.result != 'skipped' && needs.plan.outputs.operation != 'health'
+    if: always() && github.ref == 'refs/heads/main' && needs.analyze.outputs.artifact_id != '' && needs.plan.outputs.operation != 'health'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
@@ -141,5 +145,5 @@ jobs:
         with:
           name: researchdesk-test-checkpoints
           path: ${{ runner.temp }}/researchdesk-test-checkpoints
-      - name: Validate and save test results without overwriting existing files
+      - name: Validate and save reviewed files without overwriting existing notes
         run: python scripts/researchdesk_job.py apply --artifact "$RUNNER_TEMP/researchdesk-test-checkpoints"

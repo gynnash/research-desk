@@ -27,6 +27,10 @@ import researchdesk_offline as store
 from researchdesk_membership import DEFAULT_PROFILE
 
 
+PROXY_NAMES = ('http_proxy', 'https_proxy', 'all_proxy', 'HTTP_PROXY', 'HTTPS_PROXY', 'ALL_PROXY',
+               'no_proxy', 'NO_PROXY')
+
+
 class RunnerError(RuntimeError):
     """Only fixed, sanitized diagnostic codes may leave this module."""
 
@@ -236,6 +240,79 @@ def _permissions(path):
             'owned_by_current_user': info.st_uid == os.getuid(), 'symlink': stat.S_ISLNK(info.st_mode)}
 
 
+def _runner_environment(directory):
+    """Read the owner-controlled dotenv without exposing its values."""
+    path = directory / '.env'
+    if path.is_symlink():
+        raise RunnerError('runner_environment_symlink')
+    try:
+        descriptor = os.open(str(path), os.O_RDONLY | os.O_NOFOLLOW)
+    except FileNotFoundError:
+        return None
+    with os.fdopen(descriptor, 'rb') as handle:
+        info = os.fstat(handle.fileno())
+        if not stat.S_ISREG(info.st_mode) or info.st_uid != os.getuid():
+            raise RunnerError('runner_environment_owner_invalid')
+        payload = handle.read(1_000_001)
+    if len(payload) > 1_000_000:
+        raise RunnerError('runner_environment_too_large')
+    try:
+        return payload.decode('utf-8')
+    except UnicodeError as exc:
+        raise RunnerError('runner_environment_encoding_invalid') from exc
+
+
+def _proxy_environment_configured(directory):
+    text = _runner_environment(directory)
+    return any(name in PROXY_NAMES[:6] and bool(value.strip())
+               for line in (text or '').splitlines()
+               for name, separator, value in (line.partition('='),) if separator)
+
+
+def _sync_proxy_environment(directory):
+    """Persist only explicitly supplied proxy keys; preserve absent keys."""
+    selected = {name: os.environ[name] for name in PROXY_NAMES if name in os.environ}
+    if any(any(char in value for char in '\r\n\x00') for value in selected.values()):
+        raise RunnerError('runner_proxy_environment_invalid')
+    original = _runner_environment(directory)
+    if not selected:
+        return False
+    info = directory.lstat()
+    if not stat.S_ISDIR(info.st_mode) or info.st_uid != os.getuid():
+        raise RunnerError('runner_directory_owner_invalid')
+    lines, seen = [], set()
+    for line in (original or '').splitlines(keepends=True):
+        name, separator, value = line.rstrip('\r\n').partition('=')
+        if separator and name in selected:
+            if name not in seen:
+                # Leave an unchanged assignment byte-for-byte intact.
+                lines.append(line if value == selected[name] else name + '=' + selected[name] + '\n')
+                seen.add(name)
+        else:
+            lines.append(line)
+    missing = [name for name in selected if name not in seen]
+    if missing and lines and not lines[-1].endswith(('\n', '\r')):
+        lines.append('\n')
+    lines += [name + '=' + selected[name] + '\n' for name in missing]
+    updated = ''.join(lines)
+    if updated == original:
+        return False
+    descriptor, temporary = tempfile.mkstemp(prefix='.researchdesk-proxy-', dir=str(directory))
+    try:
+        os.fchmod(descriptor, 0o600)
+        with os.fdopen(descriptor, 'w', encoding='utf-8', newline='') as handle:
+            handle.write(updated)
+            handle.flush()
+            os.fsync(handle.fileno())
+        if _runner_environment(directory) != original:
+            raise RunnerError('runner_environment_changed_during_setup')
+        os.replace(temporary, directory / '.env')
+    finally:
+        if os.path.exists(temporary):
+            os.unlink(temporary)
+    return True
+
+
 def doctor(root, config):
     """Inspect only; no OAuth reads, login, model calls, SSH or network API."""
     directory, profile, venv = config['_directory'], config['_profile'], config['_venv']
@@ -251,7 +328,8 @@ def doctor(root, config):
             'execution': 'current_machine_no_ssh', 'platform': platform.system(),
             'runner': {'name': config['runner']['name'], 'labels': config['runner']['labels'],
                        'package_installed': (directory / 'config.sh').is_file(),
-                       'registered': (directory / '.runner').is_file(), 'service': _service_state(directory)},
+                       'registered': (directory / '.runner').is_file(), 'service': _service_state(directory),
+                       'proxy_environment_configured': _proxy_environment_configured(directory)},
             'python': {'venv_exists': (venv / 'pyvenv.cfg').is_file(), 'dependencies_ready': dependencies},
             'membership': {'profile': profile_info, 'credential_file': credential_info,
                            'contents_read': False, 'authorization_verified': False},
@@ -282,7 +360,7 @@ def setup(root, config):
     registration = directory / '.runner'
     if registration.is_file():
         try:
-            existing = json.loads(registration.read_text(encoding='utf-8'))
+            existing = json.loads(registration.read_text(encoding='utf-8-sig'))
         except (OSError, ValueError) as exc:
             raise RunnerError('existing_runner_registration_invalid') from exc
         if (existing.get('agentName') != config['runner']['name']
@@ -302,8 +380,12 @@ def setup(root, config):
             environment.pop('ACTIONS_RUNNER_INPUT_TOKEN', None)
             result.clear()
             token = None
+    proxy_changed = _sync_proxy_environment(directory)
     state = _service_state(directory)
     service_prefix = [] if system == 'osx' else ['sudo', '-n']
+    if proxy_changed and state == 'running':
+        _run(service_prefix + ['./svc.sh', 'stop'], directory, 'runner_service_stop_failed')
+        state = 'stopped'
     if state == 'not_installed':
         arguments = ['./svc.sh', 'install'] + ([getpass.getuser()] if system == 'linux' else [])
         _run(service_prefix + arguments, directory, 'runner_service_install_failed')

@@ -13,6 +13,8 @@
 
 `doctor` 不读取令牌内容、不联网或调用模型；`setup` 会在当前主机安装依赖、校验官方 runner 下载散列、向当前 GitHub 仓库注册，并安装/启动用户服务。Mac 使用当前登录用户的 LaunchAgent，无需 sudo。安装要求本机 Python 3.9+、Git、GitHub CLI、curl/tar 可用，且 GitHub CLI 已获该仓库 runner 管理权限；注册令牌只在内存传递，不放在命令参数或仓库中。
 
+每台主机的 `setup` 仅继承该次进程显式设置的代理变量，保存在仓库外的 runner `.env`，保留其他配置；代理变化时重启服务，本机代理需保持运行，缺失变量不会清除已有设置，地址不会写入仓库或诊断输出。
+
 ## 手动健康检查与研究
 
 [`ResearchDesk research cycle`](../.github/workflows/researchdesk-manual.yml) 支持定时和 `workflow_dispatch`，仅允许 `main`；自托管 job 需要 `self-hosted` 与 `researchdesk` 标签。手动入口默认 `health`，使用 `runtime.yaml` 的 Python 与 profile，检查官方授权、账户模型目录和配置模型可用性，**不调用推理**，不创建研究产物，也不需要上传 artifact 才能成功。
