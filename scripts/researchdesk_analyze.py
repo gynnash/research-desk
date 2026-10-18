@@ -17,6 +17,8 @@ from researchdesk_sources import SafeFetcher, SourceError, parse_arxiv_feed, par
 
 NOTICE = '> TEST：ChatGPT 会员真实研究与独立审阅；仅限摘要，不作为正式入库或全文核验。'
 PROMPT_VERSION = 'membership-abstract-v1'
+# Legacy month value remains bound to old runs; config/membership_budget.yaml
+# controls the current shared monthly ceiling without rewriting those records.
 LIMITS = {'max_calls': 4, 'month_max_calls': 10, 'max_input_chars': 16000,
           'max_output_chars': 12000, 'timeout_seconds': 120, 'max_revisions': 1}
 

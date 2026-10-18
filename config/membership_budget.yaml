@@ -1,0 +1,6 @@
+# Local workspace request ceiling, explicitly raised by the user on 2026-10-19.
+# Counts all real membership reservations, including unknown outcomes; no reset.
+# This is not a statement of the account's remaining ChatGPT membership quota.
+schema_version: 1
+backend: chatgpt_plan
+month_max_calls: 100

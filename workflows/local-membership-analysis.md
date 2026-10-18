@@ -29,7 +29,7 @@
 | 资料 | 一篇已采集论文，只读摘要；摘要最多 10,000 字符 |
 | 每次请求输入 | 指令与材料合计最多 16,000 字符 |
 | 每批真实推理 | 默认最多 4 次，可调低到 2 次；包含研究、审阅、最多一次修订及重新审阅 |
-| 月度累计 | 同一知识库 Agent Memory 真实分析最多预留 10 次；结果未知也占用预留次数 |
+| 月度累计 | 同一工作台的真实会员入口共享 `config/membership_budget.yaml`，当前最多预留 100 次；结果未知也占用预留次数 |
 | 单次客户端等待 | 最多 120 秒 |
 | 单次客户端输出 | 最多 12,000 字符，超过时停止接收并保留未知请求记录 |
 | 原文持久证据 | 合计最多 25 个英文单词的摘录、摘要/句子散列与定位；完整摘要只作内存输入 |
@@ -37,6 +37,8 @@
 会员端使用 `store: false`、`stream: true` 的官方 Responses API，只在收到完整 `response.completed` 终态后使用结果。当前会员预览不支持 `max_output_tokens`；这里的输出字符和时间限制是客户端停止条件，不能保证服务端生成 token 的硬上限，也不能据此承诺会员额度消耗上限。[官方预览限制](https://developers.openai.com/siwc/token-sharing-open-source/preview-limitations)
 
 每次请求前先追加不可变预留事件，成功后保存结果与用量；缺少可核实 token、余额或金额时写未知值。会员用量不按模拟单位或普通 API 价格换算。若授权撤销、限额、网络中断、超时或输出超限导致结果未知，保留预留且停止，不自动重发或切换计费方式。[官方恢复说明](https://developers.openai.com/siwc/token-sharing-open-source/errors-and-recovery)
+
+早期“每月 10 次”由本项目为小额度测试设置，并非来自 ChatGPT 官方会员额度。按用户后续授权，集中策略 [`config/membership_budget.yaml`](../config/membership_budget.yaml) 现设为 `month_max_calls: 100`，当前跨入口累计预留 10 次，即 10/100。调整上限不清零已消费或未知请求；单篇最多 4 次等批次限制保持原样。旧清单、配置和回执中的 10 次策略及 `10/10` 快照不改写，会员实际额度及限流仍由官方服务决定。
 
 ## 运行
 

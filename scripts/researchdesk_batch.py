@@ -80,12 +80,30 @@ def all_runs(root, include_insight=False):
             yield base, manifest, store.read_events(root, base)
 
 
+def membership_monthly_limit(root):
+    """Read the operator's current workspace policy, separate from bound run inputs."""
+    root = Path(root).resolve()
+    relative = Path('config/membership_budget.yaml')
+    path = root / relative
+    if (root / 'config').is_symlink() or path.is_symlink():
+        raise store.OfflineError('会员预算配置不可为符号链接')
+    if not path.exists():
+        return None
+    policy = store.load_yaml(inputs.config_path(root, relative))
+    inputs.fields(policy, {'schema_version', 'backend', 'month_max_calls'}, '共享会员预算')
+    if type(policy['schema_version']) is not int or policy['schema_version'] != 1 or policy['backend'] != 'chatgpt_plan':
+        raise store.OfflineError('共享会员预算仅支持版本 1 与 chatgpt_plan')
+    inputs.positive(policy['month_max_calls'], 2, 1000, 'month_max_calls')
+    return policy['month_max_calls']
+
+
 def monthly_budget(root, config):
-    """Count real reservations, including unknown outcomes, in both generation paths."""
+    """Count every real reservation; explicit workspace policy can revise old caps."""
     configured = config['budget']['month_max_calls']
     if config['backend'] == 'mock':
         return 0, configured
-    month, total, cap = now()[:7], 0, configured
+    workspace_limit = membership_monthly_limit(root)
+    month, total, cap = now()[:7], 0, workspace_limit if workspace_limit is not None else configured
     for _, manifest, events in all_runs(root, include_insight=True):
         if manifest.get('backend') != 'chatgpt_plan':
             continue
@@ -95,7 +113,8 @@ def monthly_budget(root, config):
             prior = manifest.get('budget', manifest.get('limits', {})).get('month_max_calls')
             if type(prior) is not int or prior < 1:
                 raise store.OfflineError('已有真实月度预算记录无效')
-            cap = min(cap, prior)
+            if workspace_limit is None:
+                cap = min(cap, prior)
     return total, cap
 
 

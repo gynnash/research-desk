@@ -35,7 +35,7 @@
 3. 该会员路径使用官方 Responses API，要求 `store: false`、`stream: true`，仅完整终态才算完成；当前预览不支持 `max_output_tokens`、持久会话及部分托管工具。不能直接套用普通 API 的参数或令牌硬上限；先设计客户端输入、请求次数、时间与额度控制，明确无法硬限输出的部分。[官方预览限制](https://developers.openai.com/siwc/token-sharing-open-source/preview-limitations)
 4. 用量记录区分 `mock`、`chatgpt_plan` 与普通 API。会员实际额度/费用不可观测时保留未知值，不伪造零费用或将模拟单位换算成会员 tokens；沿用请求前预留、有限修订及未知结果保守记账。会员限额、授权撤销、刷新失败进入待补跑，不自动转付费 API。[官方错误与恢复](https://developers.openai.com/siwc/token-sharing-open-source/errors-and-recovery)
 
-本轮实际账户资格与模型选择由授权后端核实，不能由文档、模型自述或当前 Codex 的模型设置推断。单批最多 4 次推理，月度最多预留 10 次，最多一次修订并重新独立审阅；120 秒和输出字符限制是客户端停止条件，不是服务端 token 硬上限。可核实余额不可获得时保留未知值。
+本轮实际账户资格与模型选择由授权后端核实，不能由文档、模型自述或当前 Codex 的模型设置推断。单批最多 4 次推理，最多一次修订并重新独立审阅；共享月度请求上限统一读取 [`config/membership_budget.yaml`](../config/membership_budget.yaml)，按用户后续授权现为 100。早期的 10 次是本项目的小额度测试策略，并非来自会员官方额度；原有 10 次累计预留继续记账，旧配置与回执保持原样。120 秒和输出字符限制是客户端停止条件，不是服务端 token 硬上限。可核实余额不可获得时保留未知值。
 
 ## 4. ChatGPT / Work 文件交接作为过渡
 
