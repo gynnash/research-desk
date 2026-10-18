@@ -1,0 +1,5 @@
+# 只登记初始化前已存在、尚未迁移的资料；不得用来跳过新资料校验。
+schema_version: 1
+files:
+  - path: sources/papers/test.md
+    reason: 初始化前已有测试笔记，原样保留；人工补齐 Frontmatter 后移除此项。

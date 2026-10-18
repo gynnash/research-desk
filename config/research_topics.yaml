@@ -1,0 +1,28 @@
+# 主题 ID 是长期标识；停用时保留条目，避免历史资料失去引用。
+schema_version: 1
+topics:
+  agent-memory:
+    name: Agent Memory
+    enabled: true
+    description: 研究 AI Agent 如何存储、检索、更新并使用长期经验。
+    scope:
+      - 记忆架构、工作记忆与长期记忆
+      - 记忆写入、检索、压缩、更新与遗忘
+      - 情景记忆、语义记忆与程序性记忆
+      - 记忆评测、可靠性、隐私与安全
+    keywords:
+      - agent memory
+      - long-term memory
+      - episodic memory
+      - memory retrieval
+      - memory consolidation
+  agent-rl:
+    name: Agent RL
+    enabled: false
+    description: 预留方向；研究强化学习如何改进 Agent 的决策与工具使用。
+    scope:
+      - 强化学习训练与奖励设计
+      - 长程决策、工具使用与评测
+    keywords:
+      - agent reinforcement learning
+      - tool-use reinforcement learning
