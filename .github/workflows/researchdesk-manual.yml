@@ -35,6 +35,10 @@ jobs:
     if: github.ref == 'refs/heads/main'
     runs-on: [self-hosted, researchdesk]
     timeout-minutes: 30
+    defaults:
+      run:
+        # The runner's Application Support path contains spaces.
+        shell: 'bash --noprofile --norc -eo pipefail "{0}"'
     permissions:
       contents: read
     steps:
@@ -57,7 +61,6 @@ jobs:
           CYCLE_ID: ${{ inputs.cycle_id }}
           CYCLE_CONFIG: ${{ inputs.config }}
           FAIL_AFTER: ${{ inputs.fail_after }}
-        shell: bash
         run: |
           args=()
           if [ "$FAIL_AFTER" = after_research ]; then args+=(--fail-after after_research); fi

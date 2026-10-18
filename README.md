@@ -4,11 +4,13 @@ ResearchDesk 是一个以 Markdown、YAML、GitHub 和 Obsidian 为基础的 AI 
 
 当前已完成知识库基础设施、离线骨架、arXiv/Letta/LangChain 真实采集与本地官方 ChatGPT 会员接入。2026-10-19 已通过 YAML 配置驱动的一篇论文摘要与一篇博客节选研究，两项独立审阅通过，4 次请求，中断补跑未重复调用，详见[批次真实验收](reports/test/agent-memory/research-batches/configured-research-20261019/acceptance.md)。[上一阶段单篇测试](reports/test/agent-memory/membership/member-arxiv-20261019/acceptance.md)和模拟结果继续保留，所有新研究结果只写各方向的隔离测试目录。正式资料保持原样；没有定时任务、自动 PR 入库或公众号发布，不使用数据库和复杂 Agent 框架；已有 Vault 备份设置保持原样。
 
-同日已完成 [Insight 真实测试](reports/test/agent-memory/insight-runs/insight-agent-memory-20261019/acceptance.md)：基于上述两份 Research 结果和五份历史基线，生成 1 份综合报告、2 条洞察和 2 张待确认选题卡，实际生成与审阅模型不同。共 4 次会员请求、43,163 tokens，包含格式失败响应、一次模型修订及额外独立格式确认；禁用推理的中断恢复与完整缓存补跑均未增加调用。新产物仍只在 `test`，未启动 Writing。验收时的 `10/10` 保留为历史快照；按用户后续授权，当前本仓库月度请求预算已调为 100，累计预留仍为 10，即 **10/100**；会员剩余额度未知。
+同日已完成 [Insight 真实测试](reports/test/agent-memory/insight-runs/insight-agent-memory-20261019/acceptance.md)：基于上述两份 Research 结果和五份历史基线，生成 1 份综合报告、2 条洞察和 2 张待确认选题卡，实际生成与审阅模型不同。共 4 次会员请求、43,163 tokens，包含格式失败响应、一次模型修订及额外独立格式确认；禁用推理的中断恢复与完整缓存补跑均未增加调用。新产物仍只在 `test`，未启动 Writing。验收时的 `10/10` 保留为历史快照；按用户后续授权，当前本仓库月度请求预算已调为 100，累计值随后续研究增加，以账本复核为准；会员剩余额度未知。
 
 目标流程由三个业务 Agent 完成：每周二、周五北京时间 09:00 自动 **Research 采集、研究与归纳 → Insight 综合历史、提炼洞察和公众号候选选题 → 用户确认选题、角度与受众 → Writing 生成大纲、初稿及候选稿**。各阶段共用独立模型审阅和确定性校验，日常研究、洞察和选题无需人工逐篇审批；写作必须绑定用户明确确认的选题版本，发布由用户另行决定。总体边界见[三 Agent 架构](workflows/three-agent-architecture.md)与[定时研究 MVP](workflows/agent-memory-github-actions-mvp.md)。[Insight 测试闭环](workflows/insight-agent-test.md)已生成待确认选题；当前增加 [Writing 离线闭环](workflows/writing-agent-offline.md)，只演练虚构选题的确认及模拟写作。真实人工确认入口与会员 Writing 后端仍待实现，定时仅保留设计。
 
 [Research → Insight 研究轮次](workflows/research-cycle.md)按方向发现资料并串联两个阶段，所有新结果仍保存到 `test`。[自托管执行器](workflows/self-hosted-worker.md)支持当前 Mac 及用户自行配置的远程主机：GitHub 手动派发，主机使用自己的会员授权分析，独立作业校验后保存测试检查点；授权与运行环境留在仓库外。`ResearchDesk checks` 单独执行离线检查。真实执行及恢复情况以轮次回执为准；正式入库与定时尚未启用。
+
+[首个自动发现轮次](reports/test/agent-memory/cycles/cycle-agent-memory-20261019/acceptance-local.yaml)已完成本地真实验收：两份研究、综合报告、两条洞察及两张待确认选题，8 次会员请求；Research 后中断恢复及完整缓存重放没有重复调用。来源仅扫描有限列表，整体回执保留 `partial`，不声称全量覆盖。
 
 可以结合 Codex 维护仓库、配置和校验，使用 ChatGPT Work 辅助论文阅读、研究讨论与文章草稿。两者共用 Markdown/YAML 约定；直接访问本地仓库的能力取决于使用环境和授权。研究成果需明确保存到本仓库并审阅提交，设备间同步沿用下述 Git 流程。[Codex 官方说明](https://developers.openai.com/codex/cli/)与 [ChatGPT Work 官方说明](https://learn.chatgpt.com/docs/get-started-with-work)可供参考。
 
