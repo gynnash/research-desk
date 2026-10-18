@@ -1,8 +1,11 @@
 # 研究工作流
 
-## 定时研究设计
+## 总体架构与定时研究设计
 
-[Agent Memory GitHub Actions MVP](agent-memory-github-actions-mvp.md) 定义首个定时研究任务的频率、来源、研究执行、去重更新、笔记保护、失败补跑和 PR 审阅流程。目前仅保存设计，尚未实现或启用。
+- [Research、Insight、Writing 三 Agent 总体架构](three-agent-architecture.md)：定义最终系统、角色分工、共享知识与独立模型审阅机制。
+- [Agent Memory GitHub Actions MVP](agent-memory-github-actions-mvp.md)：每周二、周五北京时间 09:00 触发；独立审阅模型与规则校验通过后，经 PR 自动合并入库，保留人工笔记保护及失败补跑。
+
+以上均为设计文档，尚未实现或启用。首个任务只覆盖来源研究，Insight、Writing 和综合报告自动化留待后续阶段；公众号发布继续停用。
 
 ## 人工研究流程
 
