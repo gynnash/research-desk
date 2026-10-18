@@ -2,7 +2,9 @@
 
 ResearchDesk 是一个长期积累的 AI 技术研究知识库：保存论文与技术博客的来源、阅读笔记和研究结论，发现技术趋势，并为微信公众号文章提供可追溯的素材。
 
-当前只建设知识库基础设施。资料收集、阅读、分析和 Git 同步均由人工执行；尚未开发 Research Agent、抓取程序、定时任务或自动发布功能。不使用数据库和 Agent 框架。
+当前只建设知识库基础设施，默认采用人工收集、阅读、分析和 Git 同步流程。本次未开发 Research Agent、抓取程序、定时任务或自动发布功能，不使用数据库和 Agent 框架；已有的 Vault 备份设置继续保留。
+
+可以结合 Codex 维护仓库、配置和校验，使用 ChatGPT Work 辅助论文阅读、研究讨论与文章草稿。两者共用 Markdown/YAML 约定；直接访问本地仓库的能力取决于使用环境和授权。研究成果需明确保存到本仓库并审阅提交，设备间同步沿用下述 Git 流程。[Codex 官方说明](https://developers.openai.com/codex/cli/)与 [ChatGPT Work 官方说明](https://learn.chatgpt.com/docs/get-started-with-work)可供参考。
 
 ## 目录结构
 
@@ -61,6 +63,8 @@ git diff --check
 ## GitHub 与 Obsidian 同步
 
 GitHub 保存仓库中的 Markdown、YAML、规范和历史版本；Obsidian 直接编辑同一份本地文件。Obsidian 本身不会把这些文件自动同步到 GitHub。本仓库保留原有 `.git` 和 `.obsidian`，不修改已有远程地址，也不配置自动同步插件。
+
+如果已启用 Obsidian Git 等备份插件，继续按原配置管理提交与同步；在其他设备编辑前确认资料已同步。下方提供不依赖插件的手动流程。
 
 每次在一台设备开始编辑前，先查看本地是否有未提交改动。在工作区干净时按以下顺序操作；首次使用且未配置远程或分支跟踪关系时，先自行完成 GitHub 仓库连接。
 

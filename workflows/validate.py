@@ -74,7 +74,7 @@ def check(root):
     def load_yaml(text, label):
         try:
             data = yaml.load(text, Loader=UniqueKeyLoader)
-        except yaml.YAMLError as exc:
+        except (yaml.YAMLError, ValueError, OverflowError) as exc:
             fail(label, f"YAML 无效：{exc}")
             return {}
         if not isinstance(data, dict):
@@ -123,14 +123,17 @@ def check(root):
     def local_note(path, folders):
         if not isinstance(path, str):
             return False
-        relative = Path(path)
-        return (
-            not relative.is_absolute() and ".." not in relative.parts
-            and len(relative.parts) > 1 and relative.parts[0] in folders
-            and relative.suffix == ".md" and relative.as_posix() == path
-            and (root / relative).resolve().is_relative_to(root)
-            and (root / relative).is_file()
-        )
+        try:
+            relative = Path(path)
+            return (
+                not relative.is_absolute() and ".." not in relative.parts
+                and len(relative.parts) > 1 and relative.parts[0] in folders
+                and relative.suffix == ".md" and relative.as_posix() == path
+                and (root / relative).resolve().is_relative_to(root)
+                and (root / relative).is_file()
+            )
+        except (ValueError, OSError, RuntimeError):
+            return False
 
     for directory in ("config", "sources", "sources/papers", "sources/blogs", "reports", "insights", "articles", "workflows", "workflows/templates"):
         if not (root / directory).is_dir():
