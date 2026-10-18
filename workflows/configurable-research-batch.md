@@ -2,7 +2,7 @@
 
 本阶段将真实采集、本应用官方 ChatGPT 会员分析和独立审阅接成一个有限批次，验证开源用户可通过 YAML 配置自己的研究工作台。使用一篇论文与一篇博客，不实现 Insight、自动选题或 Writing；完整业务流程及人工确认边界见[三 Agent 架构](three-agent-architecture.md)。
 
-当前真实批次正在验收，成功状态必须由实际回执证明。上一阶段已通过[单篇 arXiv 摘要会员测试](local-membership-analysis.md)，不能用它代替本阶段两份资料的验收。
+当前真实批次已验收（2026-10-19 北京时间）：两项均独立审阅 `pass`，无修订，总计 4 次请求，响应报告 6,057 tokens；计划中断后恢复及完整缓存补跑均未重复请求。详见[真实验收](../reports/test/agent-memory/research-batches/configured-research-20261019/acceptance.md)与[批次回执](../reports/test/agent-memory/research-batches/configured-research-20261019/receipt-attempt-1.yaml)。上一阶段的[单篇 arXiv 摘要测试](local-membership-analysis.md)保持原样。
 
 ## 配置与用户边界
 
@@ -23,7 +23,7 @@
 | `budget` | 资料数、单项/批次/月度请求数、输入/输出字符、等待秒数和修订次数限制 |
 | `prompts.version` | 已实现提示词协议版本 `research-batch-v1`；修改任意版本字符串不能跳过协议校验 |
 
-通用示例使用 `config/examples/research_topics.yaml`，与现有 Agent Memory 配置分开；用户先填写自己的方向并显式启用，再选择自己的实际模型。配置文件与引用的方向文件均须位于选定工作台的 `config/`，拒绝重复 YAML 键、未知字段、目录穿越及符号链接。配置不能包含 token 或任意执行命令。
+通用示例使用 `config/examples/research_topics.yaml`，与现有 Agent Memory 配置分开。示例方向的 `enabled: true` 仅表示允许被手动选择，不创建任务；用户运行前应填写自己的方向和来源，核对启用意图，并将两个模型占位符替换为自己账户目录中的实际 slug。配置文件与引用的方向文件均须位于选定工作台的 `config/`，拒绝重复 YAML 键、未知字段、目录穿越及符号链接。配置不能包含 token 或任意执行命令。
 
 ## 小额度与审阅
 
@@ -36,7 +36,7 @@
 | 月度累计 | 最多预留 10 次，包含此前单篇测试的 2 次；换批次不返还或重置 |
 | 输入/输出/等待 | 本轮每次输入最多 20,000 字符、输出最多 10,000 字符、客户端等待最多 120 秒；每项原文证据最多 6,000 字符 |
 | 原文范围 | 论文明确标注 `abstract_only`；博客按实际取得的正文范围标注，不把节选当全文 |
-| 原文持久化 | 仅保留短摘录、定位及散列；完整原文只作为内存输入，不存整页镜像或完整请求 |
+| 原文持久化 | 每份最多合计 25 个英文单词且 400 字符的短摘录、定位及散列；完整原文只作为内存输入，不存整页镜像或完整请求 |
 
 每次调用前持久化预留事件；成功后记录实际返回模型和可获得的用量。超时、断流、输出超限或终态不明继续占用预留，不自动重发、不切换付费 API。会员剩余额度、金额无法核实时保持未知，不把调用数或 token 数换算为会员百分比。
 
@@ -52,9 +52,55 @@
 
 抓取失败逐项记录，健康项继续；批次状态必须区分全部完成、部分成功、失败和阻塞。来源失败不能计为零新增，也不允许以未核实的旧资料代替原文。已确认完成一项后故意中断，再沿用同一批次补跑，用调用账本确认第一项没有重复请求；未知结果仍需核对，不能通过换批次盲目重发。
 
-## 当前验收范围
+## 运行与中断补跑
 
-运行命令与产物清单将在批次入口稳定后补齐，实际结果以同一批次的不可变回执为准。本阶段需要观察两份资料的采集范围与来源核实、独立模型身份、审阅结论、实际请求数与用量、首次中断及补跑记录、已有资料散列保护。
+需要 Python 3.9+ 以及 `workflows/requirements-membership.txt` 中的依赖。安装环境和官方登录步骤见[本地会员分析说明](local-membership-analysis.md)。每位用户独立授权，先查看状态和模型目录；以下 profile 变量仅指仓库外目录，不将任何令牌写进命令：
+
+```sh
+researchdesk_profile_dir="$HOME/Library/Application Support/ResearchDesk/chatgpt"
+.venv-membership/bin/python scripts/researchdesk_membership.py \
+  --profile-dir "$researchdesk_profile_dir" status
+.venv-membership/bin/python scripts/researchdesk_membership.py \
+  --profile-dir "$researchdesk_profile_dir" models
+```
+
+状态不满足要求时先执行同一 profile 的 `login` 并由用户自行完成官方页面。模型 ID 需来自该账户目录；配置错误、资格不足、缺少不同审阅模型或额度不足时停止，不转向其他账户或 API Key。`--profile` 可省略以使用本机默认外部目录；其他安装应明确指定自己的目录。`--root` 可选择另一工作台根目录，配置和输出仍受该根目录内的边界约束。
+
+本轮先在第一项完成并持久化后主动中断，检查第一项的研究与审阅结果已经保存：
+
+```sh
+.venv-membership/bin/python scripts/researchdesk_batch.py \
+  --config config/test/agent-memory/research_batch.yaml \
+  --batch-id configured-research-20261019 \
+  --profile "$researchdesk_profile_dir" \
+  --fail-after after_first_item
+```
+
+该验收中断的预期退出码为 `3`，不是模型失败。随后保持相同批次、配置和 profile，去掉故障参数继续：
+
+```sh
+.venv-membership/bin/python scripts/researchdesk_batch.py \
+  --config config/test/agent-memory/research_batch.yaml \
+  --batch-id configured-research-20261019 \
+  --profile "$researchdesk_profile_dir"
+```
+
+第一项从散列校验过的结果复用，第二项继续采集及分析。完成后再次执行后一条命令，预期返回 `cached: true`，已有结果不重写，调用预留与实际完成计数不增加；重新读取账户目录不计模型推理调用。真实状态必须以回执证明，命令示例本身不代表已通过。如果第一项未完成或结果未知，不能把退出码或批次存在当成验收成功。
+
+## 产物与验收
+
+本轮目录为 `reports/test/agent-memory/research-batches/configured-research-20261019/`：
+
+- `manifest.yaml`：配置和方向文件散列、原始基线、独立模型、预算、授权身份脱敏标识及已有笔记保护基线。
+- `items/<source.id>/candidate.yaml`：稳定来源身份、已有来源关联、元数据、证据范围/定位/散列与处理决定；原文正文不落盘。
+- `items/<source.id>/checkpoints/`：绑定请求的研究、修订和审阅结果；`report.md` 为带 TEST 标识的通过报告，`result.yaml` 保存单项决定及产物散列。
+- `source-attempts/<source.id>/attempt-N.yaml`：不可变采集尝试；失败只保存错误类型，不泄露可能包含凭据的原始异常。
+- `events/`：调用预留、实际完成用量、单项完成和验收中断等追加事件；未知预留继续占用预算。
+- `receipt-attempt-N.yaml`：每次产生新状态的批次回执，包括单项结果、实际模型、调用数量、用量及保护结果；完整缓存补跑不新增同内容回执。
+
+各 YAML 与检查点附完整性散列；已有文件发生人工变化时停止并保留现场。批次结果仅为 `test_accepted`，`production_accepted` 必须是 `false`。
+
+本阶段验收需观察两份资料的采集范围与来源核实、实际研究/审阅模型不同、审阅结论、请求与用量记录、首次中断及补跑事件、已有资料散列保护。通常总计 4 次真实请求；发生一次修订与复审时最多 6 次。不能把“部分成功”写成两项均已通过，也不能声称博客节选或论文摘要支持全文结论。
 
 以下离线检查不消耗会员模型额度，在仓库根目录执行：
 

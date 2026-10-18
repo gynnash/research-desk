@@ -23,7 +23,7 @@ FIXTURES = REPOSITORY / 'workflows/test/agent-memory/fixtures/collection'
 sys.path.insert(0, str(REPOSITORY / 'scripts'))
 import researchdesk_batch as batch
 import researchdesk_offline as store
-from researchdesk_sources import SourceError
+from researchdesk_sources import SourceError, parse_arxiv_abstract
 
 
 class FixtureFetcher:
@@ -175,6 +175,8 @@ class ConfigDrivenResearchBatch(unittest.TestCase):
             self.assertEqual(call['limits']['timeout_seconds'], 120)
         for path in self.root.rglob('*'):
             if path.is_file() and path.relative_to(self.root).parts[0] not in {'config'}:
+                if path.relative_to(self.root).as_posix() == 'reports/test/custom-topic/.offline.lock':
+                    continue  # Existing shared test-only process lock is not research output.
                 self.assertTrue(str(path.relative_to(self.root)).startswith(
                     'reports/test/custom-topic/research-batches/'), path)
 
@@ -187,6 +189,12 @@ class ConfigDrivenResearchBatch(unittest.TestCase):
             self.assertEqual(research['metadata'], review['metadata'])
             self.assertEqual(research['coverage'], review['coverage'])
             self.assertEqual(len(review['candidate']['claims']), 3)
+
+    def test_research_direction_scope_and_keywords_reach_both_models(self):
+        self.run_batch()
+        expected = {'name': 'Custom Topic', 'scope': ['可重现的证据研究'], 'keywords': ['memory']}
+        for call in self.client.calls:
+            self.assertEqual(call['payload']['research_context'], expected)
 
     def test_paper_and_blog_evidence_coverages_are_explicit(self):
         self.run_batch()
@@ -303,6 +311,20 @@ class ConfigDrivenResearchBatch(unittest.TestCase):
         self.assertEqual(len(self.client.calls), 4)
         self.assertGreaterEqual(len(list(self.directory().glob('receipt-attempt-*.yaml'))), 2)
 
+    def test_arxiv_response_must_match_configured_paper_and_version(self):
+        self.fetcher.paper = self.fetcher.paper.replace('01234v2', '09999v3')
+        result = self.run_batch()
+        self.assertEqual(result['status'], 'partial')
+        self.assertEqual(len(self.client.calls), 2)
+        self.assertTrue(all(c['payload']['metadata']['source'] == 'Letta' for c in self.client.calls))
+
+    def test_arxiv_html_cannot_override_contradictory_declared_version(self):
+        html = (FIXTURES / 'arxiv-abstract.html').read_text().replace(
+            'name="citation_arxiv_id" content="2610.01234"',
+            'name="citation_arxiv_id" content="2610.01234v3"')
+        with self.assertRaisesRegex(SourceError, 'version mismatch'):
+            parse_arxiv_abstract(html, 'https://arxiv.org/abs/2610.01234v2')
+
     def test_unknown_request_never_retries_and_does_not_block_healthy_item(self):
         self.client.fail_on_call = 1
         first = self.run_batch()
@@ -341,6 +363,17 @@ class ConfigDrivenResearchBatch(unittest.TestCase):
         self.assertEqual(before, {p: p.read_bytes() for p in before})
         self.assertEqual(len(list(self.directory('updated').glob('items/*/report.md'))), 1)
 
+    def test_wider_blog_excerpt_is_new_evidence_instead_of_false_duplicate(self):
+        paragraph = '<p>This fictional parser fixture describes persistent memory blocks.</p>'
+        self.fetcher.blog = self.fetcher.blog.replace(paragraph, paragraph * 20)
+        self.config['sources'][1]['evidence_max_chars'] = 200
+        self.run_batch()
+        self.config['sources'][1]['evidence_max_chars'] = 6000
+        result = self.run_batch(batch_id='wider-excerpt')
+        self.assertEqual(result['completed_calls'], 2)
+        self.assertEqual(len(self.client.calls), 6)
+        self.assertEqual(len(list(self.directory('wider-excerpt').glob('items/*/report.md'))), 1)
+
     def test_monthly_cap_cannot_be_raised_by_starting_another_batch(self):
         self.config['budget']['month_max_calls'] = 4
         self.config['budget']['max_calls_per_batch'] = 4
@@ -352,6 +385,44 @@ class ConfigDrivenResearchBatch(unittest.TestCase):
         except (store.OfflineError, ValueError):
             pass
         self.assertEqual(len(self.client.calls), 4)
+
+    def test_monthly_reservations_are_shared_across_research_topics(self):
+        self.config['budget']['month_max_calls'] = 4
+        self.config['budget']['max_calls_per_batch'] = 4
+        self.run_batch()
+        topics = yaml.safe_load(self.topics_path.read_text())
+        topics['topics']['another-topic'] = copy.deepcopy(topics['topics']['custom-topic'])
+        self.topics_path.write_text(yaml.safe_dump(topics, allow_unicode=True))
+        self.config['topic'] = 'another-topic'
+        self.config['budget']['month_max_calls'] = 10
+        self.fetcher.paper = self.fetcher.paper.replace('memory blocks', 'revised memory boundaries')
+        self.fetcher.blog = self.fetcher.blog.replace('persistent memory blocks', 'revised memory boundaries')
+        result = self.run_batch(batch_id='different-topic')
+        self.assertEqual(result['effective_month_max_calls'], 4)
+        self.assertEqual(len(self.client.calls), 4)
+        self.assertEqual(result['status'], 'failed')
+
+    def test_existing_single_paper_membership_unknown_calls_consume_shared_budget(self):
+        config = batch.inputs.load_config(self.root, self.config_path)
+        candidate, _ = batch.inputs.fetch_candidate(self.root, config, self.config['sources'][0], self.fetcher)
+        candidate = copy.deepcopy(candidate)
+        candidate['metadata'].update(arxiv_id='2610.09999', source_url='https://arxiv.org/abs/2610.09999')
+        candidate['identity_keys'] = store.identities(candidate['metadata'])
+        base = 'reports/test/custom-topic/membership/historical-unknown'
+        store.save_yaml(self.root, base + '/manifest.yaml', {
+            'backend': 'chatgpt_plan', 'created_at': batch.now(),
+            'candidate': candidate, 'source_id': candidate['source_id'],
+            'limits': {'month_max_calls': 4}})
+        events = []
+        for index in range(2):
+            store.append_event(self.root, base, events, {'type': 'call_reserved',
+                'reservation_id': 'unknown-%s' % index, 'month': batch.now()[:7],
+                'usage_status': 'unknown'})
+        result = self.run_batch()
+        self.assertEqual(result['effective_month_max_calls'], 4)
+        self.assertEqual(result['monthly_reserved_calls'], 4)
+        self.assertEqual(result['completed_calls'], 2)
+        self.assertEqual(len(self.client.calls), 2)
 
     def test_same_batch_cannot_change_bound_model_or_budget(self):
         self.run_batch()
@@ -464,6 +535,8 @@ class ConfigDrivenResearchBatch(unittest.TestCase):
         self.run_batch()
         for path in self.root.rglob('*'):
             if path.is_file() and path.relative_to(self.root) not in before:
+                if path.relative_to(self.root).as_posix() == 'reports/test/custom-topic/.offline.lock':
+                    continue
                 self.assertTrue(path.relative_to(self.root).as_posix().startswith(
                     'reports/test/custom-topic/research-batches/'), path)
         self.assertFalse((self.root / '.github').exists())

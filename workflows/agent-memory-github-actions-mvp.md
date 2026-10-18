@@ -1,8 +1,8 @@
 # Agent Memory 定时研究任务 MVP 设计
 
 - 版本：0.4；修订日期：2026-10-19。
-- 状态：**正式定时与自动入库仍为设计；Research 本地后端已实现，配置驱动测试批次正在验收**。本文未来正式路径与定时参数不代表已经启用。
-- 实施进度：已有[离线骨架](offline-research.md)、[真实来源采集测试](real-source-collection.md)和[本地会员分析](local-membership-analysis.md)。官方授权、账户模型目录及单篇 arXiv 摘要真实研究与独立审阅已通过，使用 2 次请求。本阶段实现一篇论文加一篇博客的[配置驱动 Research 批次](configurable-research-batch.md)，结果仍只进 `test`；GitHub 自动正式入库、Insight、Writing 及定时任务未实现或启用。
+- 状态：**正式定时与自动入库仍为设计；Research 本地后端及配置驱动测试批次已验收**。本文未来正式路径与定时参数不代表已经启用。
+- 实施进度：已有[离线骨架](offline-research.md)、[真实来源采集测试](real-source-collection.md)和[本地会员分析](local-membership-analysis.md)。官方授权、账户模型目录及单篇 arXiv 摘要真实研究与独立审阅已通过。本阶段一篇论文加一篇博客的[配置驱动 Research 批次](configurable-research-batch.md)已验收，共 4 次真实请求、两项独立审阅通过、无修订，中断补跑和缓存补跑不增加重复请求；结果仍只进 `test`。GitHub 自动正式入库、Insight、Writing 及定时任务未实现或启用。
 - 目标：GitHub Actions 定时发现 Agent Memory 资料，生成带证据的研究记录，经独立审阅模型与规则校验通过后自动入库。
 - 总体架构见[三 Agent 总体架构](three-agent-architecture.md)。沿用[主题配置](../config/research_topics.yaml)、[Schema v1](source-schema.md)、[维护规范](maintenance.md)和现有模板，保持 Markdown + YAML。
 
@@ -168,7 +168,7 @@ arXiv 的 `published` 是首次版本日期，`updated` 是当前版本更新时
 
 ## 9. 后续实施与启用门槛
 
-当前已实现离线骨架、真实来源采集、官方会员本地后端及单篇摘要研究审阅。本轮继续实现 YAML 驱动的有限 Research 测试批次，用一篇论文和一篇博客验证采集、研究、独立审阅与中断补跑，结果只创建于 `reports/test/<topic>/research-batches/<batch-id>/`；已有正式及测试资料均不覆盖。不创建 GitHub workflow 或定时任务，不做正式自动入库，不调用 Insight/Writing，不发布公众号。测试状态为 `test_accepted`，不代表本文定义的 `accepted`，也不模拟已在 GitHub 合并。
+当前已实现离线骨架、真实来源采集、官方会员本地后端及单篇摘要研究审阅。本轮已实现并验收 YAML 驱动的有限 Research 测试批次，用一篇论文和一篇博客验证采集、研究、独立审阅与中断补跑，结果只创建于 `reports/test/<topic>/research-batches/<batch-id>/`；已有正式及测试资料均不覆盖。不创建 GitHub workflow 或定时任务，不做正式自动入库，不调用 Insight/Writing，不发布公众号。测试状态为 `test_accepted`，不代表本文定义的 `accepted`，也不模拟已在 GitHub 合并。
 
 面向开源，本轮提供通用批次 YAML 示例和 Agent Memory 测试配置：主题、来源、模型和预算均由配置决定，程序负责校验固定安全边界。个人研究资料、公开框架和仓库外授权 profile 保持分离；用户配置自己的方向和会员，不复制当前账户凭据。具体字段、命令、失败恢复及当前真实验收见[配置驱动 Research 批次](configurable-research-batch.md)。
 

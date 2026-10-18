@@ -57,7 +57,7 @@ def load_config(root, path):
     if config['mode'] != 'research_batch_test' or config['backend'] not in {'chatgpt_plan', 'mock'}:
         raise store.OfflineError('仅支持 research_batch_test 与显式会员/模拟后端')
     topic = config['topic']
-    if not isinstance(topic, str) or not re.fullmatch(r'[a-z][a-z0-9]*(?:-[a-z0-9]+)*', topic):
+    if not isinstance(topic, str) or not store.SAFE_ID.fullmatch(topic) or not re.fullmatch(r'[a-z][a-z0-9]*(?:-[a-z0-9]+)*', topic):
         raise store.OfflineError('主题必须是稳定的小写 ID')
     if not isinstance(config['topics_file'], str) or Path(config['topics_file']).is_absolute():
         raise store.OfflineError('topics_file 必须是 config 下的相对路径')
@@ -101,7 +101,7 @@ def load_config(root, path):
         if not isinstance(source['id'], str) or not store.SAFE_ID.fullmatch(source['id']) or source['id'] in ids:
             raise store.OfflineError('来源 ID 无效或重复')
         ids.add(source['id'])
-        if source['adapter'] not in {'arxiv', 'letta', 'langchain'}:
+        if not isinstance(source['adapter'], str) or source['adapter'] not in {'arxiv', 'letta', 'langchain'}:
             raise store.OfflineError('来源适配器未实现')
         expected = 'paper' if source['adapter'] == 'arxiv' else 'blog'
         if source['kind'] != expected:
@@ -122,6 +122,8 @@ def load_config(root, path):
                 query = parse_qs(parts.query)
                 if not query.get('id_list') and not query.get('search_query'):
                     raise store.OfflineError('arXiv 查询缺少 ID 或研究问题')
+                if query.get('id_list') and (len(query['id_list']) != 1 or ',' in query['id_list'][0]):
+                    raise store.OfflineError('一个 arXiv 来源项只选择一个明确 ID；多篇请分别配置')
         elif parts.hostname not in SOURCE_HOSTS[source['adapter']]:
             raise store.OfflineError('博客域名与来源适配器不匹配')
         positive(source['evidence_max_chars'], 200, 10000, 'evidence_max_chars')
@@ -143,6 +145,12 @@ def fetch_candidate(root, config, source, fetcher):
                 raise SourceError('arXiv query contains no selected paper')
             # Deliberately bounded selection, not a claim to have scanned all results.
             record = records[0]
+            requested = parse_qs(urlsplit(source['url']).query).get('id_list', [None])[0]
+            if requested:
+                match = re.fullmatch(r'((?:\d{4}\.\d{4,5}|[a-z][a-z0-9.-]*/\d{7}))(v[1-9]\d*)?', requested, re.I)
+                if (not match or record['metadata']['arxiv_id'] != match.group(1).lower()
+                        or (match.group(2) and record['metadata'].get('source_version') != match.group(2))):
+                    raise SourceError('arXiv response does not match requested paper/version')
         else:
             if content_type not in {'text/html', 'application/xhtml+xml'}:
                 raise SourceError('arXiv abstract did not return HTML')
@@ -166,11 +174,12 @@ def fetch_candidate(root, config, source, fetcher):
         if boundary > cap // 2:
             selected = selected[:boundary + 1]
     sentences = [s.strip() for s in re.split(r'(?<=[.!?。！？])\s+(?=[A-Z0-9\u4e00-\u9fff])', selected) if s.strip()]
-    locators, remaining, material = [], 25, []
+    locators, remaining, quote_chars, material = [], 25, 400, []
     for i, sentence in enumerate(sentences):
         locator = 'A%s' % (i + 1)
-        quote = ' '.join(sentence.split()[:remaining])[:400]
+        quote = ' '.join(sentence.split()[:remaining])[:quote_chars]
         remaining -= len(quote.split())
+        quote_chars -= len(quote)
         locators.append({'id': locator, 'location': '%s sentence %s' % (coverage, i + 1),
                          'text_sha256': store.digest(sentence.encode()), 'quote': quote})
         material.append('%s: %s' % (locator, sentence))
@@ -180,8 +189,9 @@ def fetch_candidate(root, config, source, fetcher):
     metadata = record['metadata']
     identity_keys = store.identities(metadata)
     matches = {}
+    index = store.source_index(Path(root).resolve())
     for key in identity_keys:
-        matches.update(store.source_index(Path(root).resolve()).get(key, {}))
+        matches.update(index.get(key, {}))
     if len(matches) > 1:
         raise store.OfflineError('来源身份键指向不同笔记，停止研究')
     if matches:

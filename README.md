@@ -2,7 +2,7 @@
 
 ResearchDesk 是一个以 Markdown、YAML、GitHub 和 Obsidian 为基础的 AI 技术研究工作台：保存论文与技术博客、研究证据和历史判断，发现技术变化，并为微信公众号提供可追溯的选题与文章。框架面向开源，用户可配置自己的研究方向、来源、模型和预算，并使用自己授权的 ChatGPT 会员。
 
-当前已完成知识库基础设施、离线运行骨架，以及 arXiv、Letta、LangChain 的真实资料采集测试。2026-10-19 已通过本地官方 ChatGPT 会员授权、账户模型目录核实，以及单篇 arXiv 摘要研究与独立模型审阅，详见[真实验收](reports/test/agent-memory/membership/member-arxiv-20261019/acceptance.md)。模拟分析继续保留，所有新研究结果只写各方向的隔离测试目录。正式资料保持原样；没有定时任务、自动 PR 入库或公众号发布，不使用数据库和复杂 Agent 框架；已有 Vault 备份设置保持原样。
+当前已完成知识库基础设施、离线骨架、arXiv/Letta/LangChain 真实采集与本地官方 ChatGPT 会员接入。2026-10-19 已通过 YAML 配置驱动的一篇论文摘要与一篇博客节选研究，两项独立审阅通过，4 次请求，中断补跑未重复调用，详见[批次真实验收](reports/test/agent-memory/research-batches/configured-research-20261019/acceptance.md)。[上一阶段单篇测试](reports/test/agent-memory/membership/member-arxiv-20261019/acceptance.md)和模拟结果继续保留，所有新研究结果只写各方向的隔离测试目录。正式资料保持原样；没有定时任务、自动 PR 入库或公众号发布，不使用数据库和复杂 Agent 框架；已有 Vault 备份设置保持原样。
 
 目标流程由三个业务 Agent 完成：每周二、周五北京时间 09:00 自动 **Research 采集、研究与归纳 → Insight 综合历史、提炼洞察和公众号候选选题 → 用户确认选题、角度与受众 → Writing 生成大纲、初稿及候选稿**。各阶段共用独立模型审阅和确定性校验，日常研究、洞察和选题无需人工逐篇审批；写作必须绑定用户明确确认的选题版本，发布由用户另行决定。总体边界见[三 Agent 架构](workflows/three-agent-architecture.md)与[定时研究 MVP](workflows/agent-memory-github-actions-mvp.md)。Insight、选题确认和 Writing 自动执行仍待实现，定时仅保留设计。
 

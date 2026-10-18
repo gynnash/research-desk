@@ -1,0 +1,14 @@
+type: call_completed
+key: amem-paper
+reservation_id: amem-paper:review:0
+role: review
+revision: 0
+model_id: gpt-6.1-sol
+at: '2026-10-18T16:45:00.340608+00:00'
+response_path: reports/test/agent-memory/research-batches/configured-research-20261019/items/amem-paper/checkpoints/review-0.yaml
+response_sha256: 148b6ca32d1121a1659b5b37743b32bf39701d1eb8a5177c4b9dcc1b834f1d42
+usage:
+  input_tokens: 1193
+  output_tokens: 170
+  total_tokens: 1363
+usage_status: reported

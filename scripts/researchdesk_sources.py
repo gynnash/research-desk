@@ -463,6 +463,8 @@ def parse_arxiv_abstract(text, url):
     actual, meta_version = _arxiv_identity(get('citation_arxiv_id') or '')
     if actual != base:
         raise SourceError('arXiv abstract identity mismatch')
+    if requested_version and meta_version and requested_version != meta_version:
+        raise SourceError('arXiv abstract version mismatch')
     version = requested_version or meta_version
     if not version:
         datelines = [n.text() for n in doc.nodes if n.has_class('dateline')]

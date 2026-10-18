@@ -12,6 +12,7 @@ import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import researchdesk_offline as store
+from researchdesk_batch import global_budget_lock, monthly_budget
 from researchdesk_sources import SafeFetcher, SourceError, parse_arxiv_feed, parse_arxiv_abstract
 
 NOTICE = '> TEST：ChatGPT 会员真实研究与独立审阅；仅限摘要，不作为正式入库或全文核验。'
@@ -130,9 +131,9 @@ def call(root, base, events, client, manifest, role, revision, instructions, inp
     if len(instructions) + len(input_text) > manifest['limits']['max_input_chars']:
         raise store.OfflineError('超过本轮输入字符上限')
     month = now()[:7]
-    monthly = sum(e['type'] == 'call_reserved' and e['month'] == month
-                  for _, _, es in all_events(root, manifest['topic']) for e in es)
-    if len(reservations) >= manifest['limits']['max_calls'] or monthly >= LIMITS['month_max_calls']:
+    monthly, monthly_cap = monthly_budget(root, {'backend': 'chatgpt_plan',
+                                                'budget': {'month_max_calls': LIMITS['month_max_calls']}})
+    if len(reservations) >= manifest['limits']['max_calls'] or monthly >= monthly_cap:
         raise store.OfflineError('达到真实会员请求上限，等待下一次明确授权')
     reservation = '%s-%s' % (role, revision)
     store.append_event(root, base, events, {'type': 'call_reserved', 'reservation_id': reservation,
@@ -211,7 +212,7 @@ def run(root, receipt_path, batch_id, client, research_model, review_model, fetc
     source_receipt, candidate, material, source_id, source_path = evidence_for(root, receipt_path, fetcher or SafeFetcher(retries=0))
     topic = 'agent-memory'
     base = 'reports/test/%s/membership/%s' % (topic, batch_id)
-    with store.topic_lock(root, topic):
+    with global_budget_lock(root), store.topic_lock(root, topic):
         manifest_path = base + '/manifest.yaml'
         fingerprint = store.digest({'candidate': candidate, 'source_id': source_id, 'prompt': PROMPT_VERSION})
         if store.safe_path(root, manifest_path).exists():

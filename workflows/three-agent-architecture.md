@@ -2,7 +2,7 @@
 
 - 版本：0.2；修订日期：2026-10-19。
 - 状态：**总体流程已设计，Research 正在分阶段实现；未启用自动任务，不连接公众号发布**。
-- 实施进度：已有[离线骨架](offline-research.md)、[真实资料采集测试](real-source-collection.md)和[本地会员真实研究与独立审阅](local-membership-analysis.md)。单篇 arXiv 摘要测试已完成 2 次真实请求并通过审阅；当前实施[配置驱动的 Research 批次闭环](configurable-research-batch.md)，结果仍只进入测试区。Insight、Writing、自动正式入库及定时任务尚未实现或启用。
+- 实施进度：已有[离线骨架](offline-research.md)、[真实资料采集测试](real-source-collection.md)和[本地会员真实研究与独立审阅](local-membership-analysis.md)。[配置驱动的 Research 批次闭环](configurable-research-batch.md)已通过一篇论文摘要与一篇博客节选的真实验收，共 4 次请求，独立审阅均通过，计划中断后补跑与完整缓存补跑均未重复调用；[验收记录](../reports/test/agent-memory/research-batches/configured-research-20261019/acceptance.md)只在测试区。Insight、Writing、自动正式入库及定时任务尚未实现或启用。
 - 目标：构建长期运行的 AI 技术研究与内容创作系统，持续收集一手资料、积累研究证据、发现技术变化，并为微信公众号提供可追溯的选题与文章。
 - 基础：沿用 Markdown、YAML、GitHub 与 Obsidian；不引入数据库或复杂 Agent 框架。
 
@@ -59,7 +59,7 @@ flowchart TD
 
 现有人工入库的来源、报告、洞察和文章作为 `human_baseline` 单独登记路径、散列及来源，不修改旧文件或伪造模型审阅记录；它们与后续 `accepted` 自动产物均可作为研究输入。人工新增或修改的资料按只读校验更新基线登记，保留人工来源标识。全库身份查重仍覆盖所有来源，不因缺少机器审阅回执而跳过旧资料。
 
-GitHub 是共享资料与版本记录的主线，`main` 表示已正式入库的版本；Obsidian 保持现有 Git 同步，用于本地阅读、检索、批注与人工研究。云端任务不依赖本机在线，也不改变现有同步设置。
+GitHub 是共享资料与版本记录的主线，`main` 表示已正式入库的版本；Obsidian 保持现有 Git 同步，用于本地阅读、检索、批注与人工研究。GitHub 触发不依赖个人 Vault 在线；若选用本地会员执行器，该主机必须在线才能分析，离线时保留任务并在恢复后补跑。使用长期自托管主机的可用性需要单独验收，现有 Obsidian 同步设置保持原样。
 
 ## 4. 共用审阅与自动入库
 

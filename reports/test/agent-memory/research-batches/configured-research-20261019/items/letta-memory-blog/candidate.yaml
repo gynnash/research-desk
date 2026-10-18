@@ -1,0 +1,147 @@
+candidate:
+  key: letta-memory-blog
+  kind: blog
+  topic: agent-memory
+  metadata:
+    title: Why Memory Isn't a Plugin
+    source: Letta
+    source_url: https://www.letta.com/blog/why-memory-isnt-a-plugin/
+    authors:
+    - SARAH WOODERS
+    published_at: '2026-04-03'
+  evidence:
+    coverage: excerpt
+    extraction_coverage: fulltext
+    source_url: https://www.letta.com/blog/why-memory-isnt-a-plugin/
+    source_version: null
+    content_hash: 08d58a39ed157d3098f44eb6a54c6e58a50cb7c048271872fce7c082280b9987
+    evidence_sha256: bc33cfed5058452e616eb80294d97b2ab4631f87cada999b3ca84c82d238ee8e
+    locators:
+    - id: A1
+      location: excerpt sentence 1
+      text_sha256: 58cbb30b38a118dfe7d3e8448bfd0b58e8f8068b1b961a64a03ed0542db3dd2f
+      quote: 'Ever since we''ve been working on MemGPT (now @Letta_AI ), a common
+        question @charlespacker and I have gotten is: “How can I plug your memory'
+    - id: A2
+      location: excerpt sentence 2
+      text_sha256: a655e2667e9cab9598591678bbe27865cafed772428cc038233a273782c26414
+      quote: ''
+    - id: A3
+      location: excerpt sentence 3
+      text_sha256: 8cebd3a5dbeeff1b7c1f240d152652981938300266686bfcd8bcbc9a0c6e832c
+      quote: ''
+    - id: A4
+      location: excerpt sentence 4
+      text_sha256: 52466e1963d20014941186a2b4db0320404d6af0bd08fc47a7489469e864f7bc
+      quote: ''
+    - id: A5
+      location: excerpt sentence 5
+      text_sha256: faae4297938fb0ef380c6eac8dc68e08df2bf866f5d35ab85084cf2823103b1c
+      quote: ''
+    - id: A6
+      location: excerpt sentence 6
+      text_sha256: 87d252f28bfc6eab0ed38beb6178e34407073b4cb8f85e1b0aa608c85b87d5ef
+      quote: ''
+    - id: A7
+      location: excerpt sentence 7
+      text_sha256: 1011882a73fccc44560636200032ca2ac474baa3c868cb8d6bd8171d7b518c7c
+      quote: ''
+    - id: A8
+      location: excerpt sentence 8
+      text_sha256: 27320f74d1a5140468fc81ea156d0c82d31a42359930976931e78cf422d51ae2
+      quote: ''
+    - id: A9
+      location: excerpt sentence 9
+      text_sha256: af3b11d4cdf8609f4784dde71f63f0e7ac2facc94a5ef1fdd10e5f1c76c086a6
+      quote: ''
+    - id: A10
+      location: excerpt sentence 10
+      text_sha256: ecdeec4e1cad33c1d697802976acb8659954bff86d91b556a76adbd3d660afe2
+      quote: ''
+    - id: A11
+      location: excerpt sentence 11
+      text_sha256: 586c7cfb85b216605bd8aac15d572a8a4ccc40cf0303692688f794a710307433
+      quote: ''
+    - id: A12
+      location: excerpt sentence 12
+      text_sha256: 1656219a6f698569116567c790c428f53abebac30b569ff3b66a509f2c6cbfc4
+      quote: ''
+    - id: A13
+      location: excerpt sentence 13
+      text_sha256: 6e58e2b7b3e086feb2146162db04e34842845f02b9a950f9fc41a8d9e3edf491
+      quote: ''
+    - id: A14
+      location: excerpt sentence 14
+      text_sha256: b07cb5e51a37142e1bc69d54aadc250ecbfde86db40c55d2efaff37d5ef3acce
+      quote: ''
+    - id: A15
+      location: excerpt sentence 15
+      text_sha256: 98ac06b4ca7c7d1e081374ecc321ac1ea7b57ef6b233cf97ac35cc39d931ec12
+      quote: ''
+    - id: A16
+      location: excerpt sentence 16
+      text_sha256: 9e22475efedc25990be3f4479b84fd496a84c6ac72b36b1e0c6a23d952d52f44
+      quote: ''
+    - id: A17
+      location: excerpt sentence 17
+      text_sha256: d7c9ca89757bfb8dd5f49318b1363af50c4d2d6474bf2459c659fd75377380c7
+      quote: ''
+    - id: A18
+      location: excerpt sentence 18
+      text_sha256: d08f1f5f30b4b22cd0027a9baac6b68f248dd67b474296d80955ab2bfe83dc0c
+      quote: ''
+    - id: A19
+      location: excerpt sentence 19
+      text_sha256: 8d2f967f0bee8c0a32ed9ac0468c47d26ff752e5a6300cb3f5792f9720fbef60
+      quote: ''
+    - id: A20
+      location: excerpt sentence 20
+      text_sha256: 9bb09d03a2b7fa9234e669ddb100a15500d186643fd5d8fc183dc3abd0071e22
+      quote: ''
+    - id: A21
+      location: excerpt sentence 21
+      text_sha256: 9970f5c458f46c85f2fdc194e53f7ce3e3c68358f23a31b26ada9208b1232d78
+      quote: ''
+    - id: A22
+      location: excerpt sentence 22
+      text_sha256: fae7714dcb508975daaf96d7a7f5656388fe1f6f5359f9f8a004af38891ee53d
+      quote: ''
+    - id: A23
+      location: excerpt sentence 23
+      text_sha256: f51d255dfb9882ee6aabbf464b91bbad60280026b2ed73bfb119cc4a34c475ad
+      quote: ''
+    - id: A24
+      location: excerpt sentence 24
+      text_sha256: f43930d47288d7f90794d2f3101407369bda47ec3746f216eb9003718684bab4
+      quote: ''
+    - id: A25
+      location: excerpt sentence 25
+      text_sha256: e7b7313f475454de9e3d5fc374ae8defacd147d62beec3d5aab0486be2b1b904
+      quote: ''
+  identity_keys:
+  - url:https://www.letta.com/blog/why-memory-isnt-a-plugin/
+  source_id: blog-56521361-c491-428a-b75e-3c92c603161e
+  existing_source_path: sources/blogs/test/agent-memory/blog-56521361-c491-428a-b75e-3c92c603161e.md
+  existing_source_metadata:
+    schema_version: 1
+    id: blog-56521361-c491-428a-b75e-3c92c603161e
+    kind: blog
+    title: Why Memory Isn't a Plugin
+    source: Letta
+    source_url: https://www.letta.com/blog/why-memory-isnt-a-plugin/
+    authors:
+    - SARAH WOODERS
+    published_at: '2026-04-03'
+    collected_at: '2026-10-18'
+    updated_at: '2026-10-18'
+    topics:
+    - agent-memory
+    status: inbox
+    related_sources: []
+    related_notes: []
+  content_hash: 08d58a39ed157d3098f44eb6a54c6e58a50cb7c048271872fce7c082280b9987
+  metadata_hash: e87bfe50ef28d269e8502be50474b82e6efb46302518a1fe5465ba0f9213d8ec
+  upstream_updated_at: null
+material_sha256: bc33cfed5058452e616eb80294d97b2ab4631f87cada999b3ca84c82d238ee8e
+action: research
+reason: no_completed_real_research

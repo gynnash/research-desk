@@ -128,26 +128,69 @@ def item_events(events, key):
 
 
 def verify_events(root, base, events, manifest):
-    seen = set()
+    seen, completed_ids, finished_keys = {}, set(), set()
     for event in events:
         if event['type'] == 'call_reserved':
             reservation = event['reservation_id']
             if reservation in seen or event.get('model_id') != manifest['models'].get(event.get('role')):
                 raise store.OfflineError('真实请求账本的模型或预留编号不一致')
-            seen.add(reservation)
+            seen[reservation] = event
         if event['type'] == 'call_completed':
-            if event['reservation_id'] not in seen or event['model_id'] != manifest['models'].get(event['role']):
+            reservation = seen.get(event['reservation_id'])
+            if (not reservation or event['reservation_id'] in completed_ids
+                    or any(event.get(k) != reservation.get(k) for k in ('key', 'role', 'revision', 'model_id'))
+                    or event['model_id'] != manifest['models'].get(event['role'])):
                 raise store.OfflineError('完成请求缺少正确的模型预留')
+            completed_ids.add(event['reservation_id'])
+            expected_path = '%s/items/%s/checkpoints/%s-%s.yaml' % (
+                base, event['key'], event['role'], event['revision'])
+            if event['response_path'] != expected_path:
+                raise store.OfflineError('模型检查点不属于该单项/角色/修订')
             response = store.checked_yaml(root, event['response_path'])
             if (response['result']['model'] != event['model_id']
                     or response['result'].get('usage') != event.get('usage')):
                 raise store.OfflineError('模型检查点和请求账本不一致')
         if event['type'] == 'item_finished':
+            if event['key'] in finished_keys:
+                raise store.OfflineError('同一研究项存在重复终态')
+            finished_keys.add(event['key'])
             result = store.checked_yaml(root, event['result_path'])
             if store.digest(store.safe_path(root, event['result_path']).read_bytes()) != event['result_sha256']:
                 raise store.OfflineError('已有单项回执改变，停止覆盖')
             if result.get('status') != event.get('status') or result.get('key') != event.get('key'):
                 raise store.OfflineError('单项回执与终态账本不一致')
+            if result.get('production_accepted') is not False:
+                raise store.OfflineError('测试结果不可声明正式入库')
+            if result.get('report_path'):
+                relevant = item_events(events, event['key'])
+                calls = [e for e in relevant if e['type'] == 'call_completed']
+                revision = result.get('revision_count')
+                if type(revision) is not int or revision not in (0, 1):
+                    raise store.OfflineError('单项修订次数无效')
+                expected_pairs = {(role, n) for n in range(revision + 1) for role in ('research', 'review')}
+                if (len(calls) != len(expected_pairs)
+                        or {(e['role'], e['revision']) for e in calls} != expected_pairs
+                        or result.get('completed_calls') != len(calls)
+                        or result.get('reserved_calls') != sum(e['type'] == 'call_reserved' for e in relevant)
+                        or result['reserved_calls'] != len(calls)
+                        or result.get('actual_models') != sorted(set(manifest['models'].values()))):
+                    raise store.OfflineError('单项研究/审阅请求必须成对完成且与用量回执一致')
+                plan = store.checked_yaml(root, '%s/items/%s/candidate.yaml' % (base, event['key']))
+                previous_review = None
+                for n in range(revision + 1):
+                    if n and previous_review.get('decision') != 'revise':
+                        raise store.OfflineError('只有 revise 审阅允许一次修订')
+                    research = parse_result(store.checked_yaml(root,
+                        '%s/items/%s/checkpoints/research-%s.yaml' % (base, event['key'], n))['result']['text'])
+                    review = parse_result(store.checked_yaml(root,
+                        '%s/items/%s/checkpoints/review-%s.yaml' % (base, event['key'], n))['result']['text'])
+                    store.validate_research(plan['candidate'], research)
+                    decision = store.validate_review(plan['candidate'], research, review)
+                    if review.get('coverage_acknowledged') is not True:
+                        raise store.OfflineError('历史审阅未确认材料覆盖范围')
+                    previous_review = review
+                if result['status'] != ('test_accepted' if decision == 'pass' else decision):
+                    raise store.OfflineError('单项终态和独立审阅决定不一致')
 
 
 def ensure_room(root, config, events, key, count):
@@ -207,10 +250,19 @@ def call(root, base, events, client, manifest, config, candidate, material, role
     return checkpoint['result']
 
 
-def same_evidence(left, right):
-    return (left['metadata'] == right['metadata']
+def same_evidence(left, right, legacy=False):
+    same = (left['metadata'] == right['metadata']
             and left['evidence']['coverage'] == right['evidence']['coverage']
             and left['evidence']['content_hash'] == right['evidence']['content_hash'])
+    if not same:
+        return False
+    if legacy:
+        # The original one-paper runner supplied the complete abstract but had no
+        # material/metadata hash fields. Never extend this exception to blog excerpts.
+        return left['evidence']['coverage'] == 'abstract_only'
+    return (left.get('metadata_hash') == right.get('metadata_hash')
+            and bool(left['evidence'].get('evidence_sha256'))
+            and left['evidence']['evidence_sha256'] == right['evidence'].get('evidence_sha256'))
 
 
 def previous_candidates(root, base, backend):
@@ -227,6 +279,7 @@ def previous_candidates(root, base, backend):
                     raise store.OfflineError('历史会员报告被修改')
             yield prior_base, candidate, result, events
         else:
+            verify_events(root, prior_base, events, manifest)
             for path in sorted(store.safe_path(root, prior_base).glob('items/*/candidate.yaml')):
                 plan = store.checked_yaml(root, path.relative_to(root))
                 candidate = plan['candidate']
@@ -256,25 +309,35 @@ def classify(root, base, candidate, backend, seen):
         reservations = [e for e in events if e['type'] == 'call_reserved']
         if not result and reservations:
             return {'action': 'blocked', 'reason': 'resume_original_batch_first', 'prior_batch': prior_base}
-        if not same_evidence(candidate, prior):
+        if not same_evidence(candidate, prior, legacy='/membership/' in prior_base):
             continue
         if result and result.get('status') in {'test_accepted', 'duplicate'}:
             return {'action': 'duplicate', 'reason': 'same_evidence_already_researched',
                     'prior_batch': prior_base, 'prior_report': result.get('report_path') or result.get('prior_report')}
         if result and result.get('status') in {'rejected', 'reject', 'blocked', 'revise'}:
             return {'action': 'blocked', 'reason': 'same_evidence_terminal', 'prior_batch': prior_base}
-    return {'action': 'update' if matched else 'research',
-            'reason': 'changed_evidence_separate_report' if matched else 'no_completed_real_research'}
+    existing = candidate.get('existing_source_path')
+    is_formal = bool(existing and len(Path(existing).parts) >= 3 and Path(existing).parts[2] != 'test')
+    old_version = (candidate.get('existing_source_metadata') or {}).get('source_version')
+    new_version = candidate['metadata'].get('source_version')
+    if is_formal and not matched and (not new_version or new_version == old_version):
+        return {'action': 'blocked', 'reason': 'formal_note_requires_proven_update'}
+    updated = bool(matched or (is_formal and new_version and new_version != old_version))
+    return {'action': 'update' if updated else 'research',
+            'reason': 'changed_evidence_separate_report' if updated else 'no_completed_real_research'}
 
 
 def render(manifest, candidate, research, review, revision):
     metadata = candidate['metadata']
+    citation_url = metadata['source_url']
+    if candidate['kind'] == 'paper' and metadata.get('arxiv_id') and metadata.get('source_version'):
+        citation_url = 'https://arxiv.org/abs/' + metadata['arxiv_id'] + metadata['source_version']
     coverage = candidate['evidence']['coverage']
     scope = '仅论文摘要，未核验全文或实验数据' if coverage == 'abstract_only' else '仅博客节选，未核验完整原文或实现'
     backend = '官方 ChatGPT 会员真实研究与独立审阅' if manifest['backend'] == 'chatgpt_plan' else '模拟模型研究与独立审阅，不作为真实研究结论'
     lines = ['# ' + metadata['title'] + '：研究批次测试', '',
         '> TEST：%s；%s；未正式入库。' % (backend, scope), '',
-        '- 来源：[%s](%s)。' % (metadata['title'], metadata['source_url']),
+        '- 来源：[%s](%s)。' % (metadata['title'], citation_url),
         '- 资料标识：`%s`；已有资料：`%s`。' % (candidate['source_id'], candidate.get('existing_source_path') or '无；仅预留身份，未新建来源笔记'),
         '- 覆盖范围：%s。' % scope,
         '- 研究模型：`%s`；独立审阅：`%s`。' % (manifest['models']['research'], manifest['models']['review']),
@@ -283,7 +346,7 @@ def render(manifest, candidate, research, review, revision):
     labels = {'fact': '原文事实', 'author_claim': '作者声称（未独立核验）', 'inference': '我们的推断'}
     for claim in research['claims']:
         lines += ['- **%s**：%s（[%s](%s)）' % (labels[claim['kind']], claim['text'],
-                  '、'.join(claim['evidence_ids']), metadata['source_url'])]
+                  '、'.join(claim['evidence_ids']), citation_url)]
     lines += ['', '## 局限', ''] + ['- ' + text for text in research['limitations']]
     lines += ['', '## 独立审阅', '', '逐项核查、证据摘要与实际用量见同目录检查点及单项回执。']
     lines += ['- %s：%s；建议：%s' % (issue['location'], issue['reason'], issue['suggestion']) for issue in review['issues']]
@@ -316,7 +379,9 @@ def process(root, base, events, client, manifest, config, candidate, material):
                     revision -= 1
                     break
                 raise
-        request = {'topic': config['topic'], 'metadata': candidate['metadata'],
+        context = {'name': config['topic_name'], 'scope': config['topic_scope'],
+                   'keywords': config['topic_keywords']}
+        request = {'topic': config['topic'], 'research_context': context, 'metadata': candidate['metadata'],
                    'coverage': candidate['evidence']['coverage'], 'original_material': material}
         if revision:
             request['previous_research'] = research
@@ -329,7 +394,7 @@ def process(root, base, events, client, manifest, config, candidate, material):
         scope_words = ('摘要', 'abstract') if candidate['evidence']['coverage'] == 'abstract_only' else ('节选', 'excerpt')
         if not any(any(word in text.lower() for word in scope_words) for text in research['limitations']):
             raise store.OfflineError('研究局限必须明确摘要或节选范围')
-        request = {'topic': config['topic'], 'metadata': candidate['metadata'],
+        request = {'topic': config['topic'], 'research_context': context, 'metadata': candidate['metadata'],
                    'coverage': candidate['evidence']['coverage'], 'original_material': material, 'candidate': research}
         review = parse_result(call(root, base, events, client, manifest, config, candidate,
                                    material, 'review', revision, REVIEW_INSTRUCTIONS, request)['text'])
@@ -392,6 +457,8 @@ def run(root, config_path, batch_id, client, fetcher=None, fail_after=None):
                 continue
             done = {e['reservation_id'] for e in relevant if e['type'] == 'call_completed'}
             if any(e['reservation_id'] not in done for e in relevant if e['type'] == 'call_reserved'):
+                plan = store.checked_yaml(root, '%s/items/%s/candidate.yaml' % (base, key))
+                seen.update(plan['candidate']['identity_keys'])
                 results.append({'key': key, 'status': 'blocked', 'reason': 'unknown_request', 'production_accepted': False})
                 continue
             attempts_dir = store.safe_path(root, '%s/source-attempts/%s' % (base, key))

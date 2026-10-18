@@ -1,0 +1,17 @@
+key: amem-paper
+status: test_accepted
+source_id: paper-562de50e-e5fa-49a4-8c35-67ccc4880c97
+coverage: abstract_only
+revision_count: 0
+models:
+  research: gpt-6-luna
+  review: gpt-6.1-sol
+actual_models:
+- gpt-6-luna
+- gpt-6.1-sol
+reserved_calls: 2
+completed_calls: 2
+report_path: reports/test/agent-memory/research-batches/configured-research-20261019/items/amem-paper/report.md
+report_sha256: d64aee8548e44dee1bacf359d162e3ac33b184f8d61447328366941333ba62e2
+finished_at: '2026-10-18T16:45:00.346762+00:00'
+production_accepted: false

@@ -1,0 +1,14 @@
+type: call_completed
+key: letta-memory-blog
+reservation_id: letta-memory-blog:review:0
+role: review
+revision: 0
+model_id: gpt-6.1-sol
+at: '2026-10-18T16:45:57.609670+00:00'
+response_path: reports/test/agent-memory/research-batches/configured-research-20261019/items/letta-memory-blog/checkpoints/review-0.yaml
+response_sha256: a3731cdefbe9b9cb0edb2aec293d6d0aee4d6b3e3eb80e23b5efc0acb25a290c
+usage:
+  input_tokens: 1564
+  output_tokens: 232
+  total_tokens: 1796
+usage_status: reported
