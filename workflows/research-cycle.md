@@ -2,9 +2,9 @@
 
 本阶段把资料发现、Research 与 Insight 接成一个本地入口：读取研究方向和来源配置，发现候选并查重，生成研究与独立审阅结果，再以通过的输入生成综合报告、洞察和待人工确认的公众号选题。新产物只写各方向的 `test` 目录。真实运行的完成情况以轮次回执及关联阶段回执为准，命令退出或文件存在不能代替审阅通过。
 
-2026-10-19 已通过[本地断点与缓存验收](../reports/test/agent-memory/cycles/cycle-agent-memory-20261019/acceptance-local.yaml)，并完成[GitHub → 当前 Mac → 测试结果回存 → Obsidian 的真实验收](../reports/test/agent-memory/cycles/cycle-agent-memory-gh-20261019/acceptance.md)。来源扫描是有边界的候选列表；阶段通过不表示全量检索完成。正式自动入库与定时仍未启用。
+2026-10-19 已通过[本地断点与缓存验收](../reports/test/agent-memory/cycles/cycle-agent-memory-20261019/acceptance-local.yaml)，并完成[GitHub → 当前 Mac → 测试结果回存 → Obsidian 的真实验收](../reports/test/agent-memory/cycles/cycle-agent-memory-gh-20261019/acceptance.md)。来源扫描是有边界的候选列表；阶段通过不表示全量检索完成。本轮增加受限正式准入与定时入口，实际验收及启用状态以远端配置和回执为准。
 
-本地分析使用用户自己的官方 ChatGPT 会员授权。GitHub 的 `ResearchDesk checks` 只做离线校验；另有[自托管手动执行器](self-hosted-worker.md)，在当前 Mac 上使用仓库外配置执行健康检查或有限研究轮次，并通过独立发布 job 保存测试检查点。真实运行及云端到本机的接力仍以实际回执验收，不能把配置存在当成已成功。正式自动入库和每周二、周五北京时间 09:00 的无人值守调度仍待后续验收；没有 `schedule`，不启动 Writing 或发布公众号。
+本地分析使用用户自己的官方 ChatGPT 会员授权。GitHub 的 `ResearchDesk checks` 只做离线校验；[自托管执行器](self-hosted-worker.md)在当前 Mac 上使用仓库外配置执行健康检查或有限研究轮次，并通过独立发布 job 保存检查点。Research 与 Insight 先写测试区，准入规则通过后仅创建允许的正式新文件。每周二、周五北京时间 09:00 的 cron 由 `automation.yaml` 启用开关控制，正式准入验收后才开启，不启动 Writing 或发布公众号。
 
 ## 配置与运行
 

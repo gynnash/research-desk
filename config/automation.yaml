@@ -1,0 +1,11 @@
+# Enable only after the formal admission deployment has passed acceptance.
+schema_version: 1
+enabled: false
+timezone: Asia/Shanghai
+schedule_utc: '0 1 * * 2,5'
+activated_at: '2026-10-19T00:00:00+08:00'
+cycle_config: config/cycles/agent-memory.yaml
+admission_config: config/admission.yaml
+catchup:
+  lookback_days: 14
+  max_slots_per_run: 1

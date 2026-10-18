@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Trusted-main worker and append-only test checkpoint transfer for Actions."""
+"""Trusted-main worker, checkpoint transfer and reviewed create-only admission."""
 
 import argparse
 import hashlib
@@ -59,17 +59,18 @@ def safe(root, relative):
     return path
 
 
-def allowed(path, topic, cycle):
+def allowed(path, topic, cycle, formal_files=None):
     parts = Path(path).parts
     prefixes = [('reports', 'test', topic, stage, cycle)
                 for stage in ('cycles', 'research-batches', 'insight-runs')]
     prefixes += [(folder, 'test', topic, cycle) for folder in ('insights', 'articles')]
-    return (any(parts[:len(prefix)] == prefix and len(parts) > len(prefix) for prefix in prefixes)
+    return ((path in (formal_files or set()) or
+             any(parts[:len(prefix)] == prefix and len(parts) > len(prefix) for prefix in prefixes))
             and Path(path).suffix in ('.yaml', '.md', '.sha256')
             and not any(part.startswith('.') for part in parts))
 
 
-def check_text(payload, path):
+def check_text(payload, path, formal=False):
     if len(payload) > 2_000_000:
         raise JobError('transfer_file_too_large')
     try:
@@ -81,19 +82,56 @@ def check_text(payload, path):
             or re.search(r'\bsk-[A-Za-z0-9_-]{20,}', text)
             or re.search(r'(?<![\w:])/(?:Users|home|private|tmp|var|root)/', text)):
         raise JobError('possible_secret_in_transfer')
-    if path.endswith('.md') and '> TEST' not in text:
+    if path.endswith('.md') and not formal and '> TEST' not in text:
         raise JobError('test_notice_missing')
     return text
 
 
+def formal_plan(root, topic, cycle):
+    from researchdesk_offline import load_yaml
+    base = 'reports/%s/admissions/%s/' % (topic, cycle)
+    path = safe(root, base+'plan.yaml')
+    if not path.is_file():
+        return None, set()
+    value = load_yaml(path)
+    if not isinstance(value.get('files'), dict):
+        raise JobError('formal_plan_invalid')
+    result = set(value['files']) | {base+name for name in
+                                   ('plan.yaml','plan.yaml.sha256','accepted.yaml','accepted.yaml.sha256')}
+    # A plan cannot widen the transfer boundary to configuration or old notes.
+    for relative in value['files']:
+        parts = Path(relative).parts
+        source = len(parts)==4 and parts[:2] in {('sources','papers'),('sources','blogs')} and parts[2]==topic
+        derived = len(parts)>=3 and parts[0] in {'reports','insights','articles'} and parts[1]==topic
+        if not (source or derived) or Path(relative).suffix != '.md' or any(part.startswith('.') for part in parts):
+            raise JobError('formal_plan_path_invalid')
+        safe(root, relative)
+    return value, result
+
+
+def admission_enabled(root, topic):
+    import researchdesk_offline as store
+    import researchdesk_batch_inputs as common
+    path = common.config_path(root, 'config/admission.yaml')
+    policy = store.load_yaml(path)
+    common.fields(policy, {'schema_version','enabled','topics','require_independent_review','preserve_existing_files'}, '正式准入策略')
+    if (type(policy['schema_version']) is not int or policy['schema_version'] != 1
+            or type(policy['enabled']) is not bool
+            or policy['require_independent_review'] is not True or policy['preserve_existing_files'] is not True
+            or not isinstance(policy['topics'], list) or any(not isinstance(x,str) for x in policy['topics'])):
+        raise JobError('admission_policy_invalid')
+    return policy['enabled'] and topic in policy['topics']
+
+
 def inspect_files(root, files, topic, cycle):
+    _, formal_files = formal_plan(root, topic, cycle)
     for relative in files:
-        if not allowed(relative, topic, cycle):
-            raise JobError('transfer_outside_cycle_test_paths')
+        if not allowed(relative, topic, cycle, formal_files):
+            raise JobError('transfer_outside_cycle_paths')
         path = safe(root, relative)
         if not path.is_file() or not stat.S_ISREG(path.lstat().st_mode):
             raise JobError('transfer_not_regular_file')
-        check_text(path.read_bytes(), relative)
+        check_text(path.read_bytes(), relative, relative in formal_files)
         if relative.endswith('.yaml'):
             marker = safe(root, relative + '.sha256')
             if not marker.is_file() or marker.read_text().strip() != sha(path.read_bytes()):
@@ -121,7 +159,8 @@ def execute(root, state, config_path, cycle_id, operation, fail_after=None):
         raise JobError('worker_has_modified_tracked_files')
     untracked = [p.decode() for p in git(root, 'ls-files', '--others', '--exclude-standard', '-z').split(b'\0') if p]
     if operation != 'health':
-        if any(not allowed(path, config['topic'], cycle_id) for path in untracked):
+        _, formal_files = formal_plan(root, config['topic'], cycle_id)
+        if any(not allowed(path, config['topic'], cycle_id, formal_files) for path in untracked):
             raise JobError('unpublished_other_cycle_files_require_recovery')
         inspect_files(root, untracked, config['topic'], cycle_id)
     context = {'schema_version': 1, 'topic': config['topic'], 'cycle_id': cycle_id,
@@ -131,14 +170,29 @@ def execute(root, state, config_path, cycle_id, operation, fail_after=None):
     if operation == 'health':
         command = [str(python), str(root / 'scripts/researchdesk_job.py'), '--root', str(root),
                    'health', '--config', config_path]
+    elif operation == 'admit':
+        command = [str(python), str(root/'scripts/researchdesk_job.py'), '--root', str(root),
+                   'admit', '--config', config_path, '--cycle-id', cycle_id]
     else:
         command = [str(python), str(root / 'scripts/researchdesk_cycle.py'), '--root', str(root),
                    operation, '--config', config_path, '--cycle-id', cycle_id, '--profile', str(host['_profile'])]
         if fail_after:
             command += ['--fail-after', fail_after]
     result = subprocess.run(command, cwd=root, capture_output=True, text=True, check=False)
+    admission_status = 'not_requested'
+    if result.returncode == 0 and operation == 'run' and admission_enabled(root, config['topic']):
+        import researchdesk_offline as store
+        receipt = store.checked_yaml(root, cycle.base_path(config,cycle_id)+'/receipt.yaml')
+        if all(receipt.get('stages',{}).get(stage,{}).get('status')=='test_accepted' for stage in ('research','insight')):
+            result = subprocess.run([str(python),str(root/'scripts/researchdesk_job.py'),'--root',str(root),
+                                     'admit','--config',config_path,'--cycle-id',cycle_id],
+                                    cwd=root,capture_output=True,text=True,check=False)
+            admission_status = 'accepted' if result.returncode==0 else 'failed'
+        else:
+            admission_status = 'no_accepted_bundle'
     # No provider/model stdout, private paths or credential-bearing errors in Actions logs.
-    summary = {'operation': operation, 'cycle_id': cycle_id, 'exit_code': result.returncode}
+    summary = {'operation': operation, 'cycle_id': cycle_id, 'exit_code': result.returncode,
+               'admission': admission_status if operation!='admit' else ('accepted' if result.returncode==0 else 'failed')}
     if operation == 'health' and result.returncode == 0:
         summary['health'] = json.loads(result.stdout)
     print(json.dumps(summary))
@@ -214,6 +268,23 @@ def apply(root, artifact):
         descriptor = os.open(str(path), os.O_CREAT | os.O_EXCL | os.O_WRONLY | os.O_NOFOLLOW, 0o644)
         with os.fdopen(descriptor, 'wb') as handle:
             handle.write(content)
+    plan, _ = formal_plan(root, manifest['topic'], manifest['cycle_id'])
+    production_accepted = False
+    if plan is not None:
+        if not admission_enabled(root, manifest['topic']):
+            raise JobError('formal_admission_disabled')
+        import researchdesk_admission as admission
+        # Verify the hash-bound plan again on the publisher, and finish an
+        # interrupted create-only install before committing formal acceptance.
+        admission.run(root, manifest['topic'], manifest['cycle_id'])
+        production_accepted = True
+        known = {relative for relative,_ in additions}
+        _, formal_files = formal_plan(root,manifest['topic'],manifest['cycle_id'])
+        for relative in sorted(formal_files):
+            if relative not in current and relative not in known and safe(root,relative).is_file():
+                additions.append((relative,safe(root,relative).read_bytes()))
+                known.add(relative)
+        inspect_files(root,[relative for relative,_ in additions],manifest['topic'],manifest['cycle_id'])
     validate = subprocess.run([sys.executable, 'workflows/validate.py', '--include-test'], cwd=root,
                               capture_output=True, check=False)
     if validate.returncode:
@@ -225,10 +296,22 @@ def apply(root, artifact):
         staged = [p.decode() for p in git(root, 'diff', '--cached', '--name-only', '-z').split(b'\0') if p]
         if sorted(staged) != sorted(relative for relative, _ in additions):
             raise JobError('unexpected_staged_changes')
-        git(root, 'commit', '-m', 'Save ResearchDesk test checkpoints: ' + manifest['cycle_id'])
+        git(root, 'commit', '-m', ('Accept reviewed ResearchDesk cycle: ' if production_accepted else
+                                 'Save ResearchDesk test checkpoints: ') + manifest['cycle_id'])
         git(root, 'push', 'origin', 'HEAD:refs/heads/main')
-    print(json.dumps({'saved_test_files': len(additions), 'cycle_id': manifest['cycle_id'],
-                      'commit': git(root, 'rev-parse', 'HEAD').decode().strip(), 'production_accepted': False}))
+    print(json.dumps({'saved_files': len(additions), 'cycle_id': manifest['cycle_id'],
+                      'commit': git(root, 'rev-parse', 'HEAD').decode().strip(), 'production_accepted': production_accepted}))
+
+
+def admit(root, config_path, cycle_id):
+    import researchdesk_cycle as cycle
+    import researchdesk_admission as admission
+    config=cycle.load_config(root,config_path)
+    if not admission_enabled(root,config['topic']):
+        raise JobError('formal_admission_disabled')
+    result=admission.run(root,config['topic'],cycle_id)
+    print(json.dumps({'cycle_id':cycle_id,'production_accepted':True,'inference_calls':0}))
+    return result
 
 
 def main():
@@ -239,7 +322,7 @@ def main():
     start.add_argument('--state', type=Path, required=True)
     start.add_argument('--config', required=True)
     start.add_argument('--cycle-id', required=True)
-    start.add_argument('--operation', choices=('health', 'discover', 'run'), required=True)
+    start.add_argument('--operation', choices=('health', 'discover', 'run', 'admit'), required=True)
     start.add_argument('--fail-after', choices=('after_research',))
     pack = commands.add_parser('export')
     pack.add_argument('--state', type=Path, required=True)
@@ -248,6 +331,9 @@ def main():
     publish.add_argument('--artifact', type=Path, required=True)
     check = commands.add_parser('health')
     check.add_argument('--config', required=True)
+    promote = commands.add_parser('admit')
+    promote.add_argument('--config',required=True)
+    promote.add_argument('--cycle-id',required=True)
     args = parser.parse_args()
     try:
         if args.command == 'execute':
@@ -256,6 +342,8 @@ def main():
             export(args.root, args.state, args.destination)
         elif args.command == 'health':
             health(args.root, args.config)
+        elif args.command == 'admit':
+            admit(args.root,args.config,args.cycle_id)
         else:
             apply(args.root, args.artifact)
         return 0

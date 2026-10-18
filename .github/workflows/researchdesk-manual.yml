@@ -1,14 +1,16 @@
-name: ResearchDesk manual cycle
+name: ResearchDesk research cycle
 
 on:
+  schedule:
+    - cron: '0 1 * * 2,5'
   workflow_dispatch:
     inputs:
       operation:
-        description: Health check, discovery only, or a bounded real membership cycle
+        description: Health, discovery, bounded real cycle, or admit an existing reviewed cycle
         required: true
         default: health
         type: choice
-        options: [health, discover, run]
+        options: [health, discover, run, admit, catchup]
       cycle_id:
         description: Reuse the same ID to resume; empty uses this GitHub run ID
         type: string
@@ -31,8 +33,42 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  analyze:
+  plan:
     if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    outputs:
+      cycle_id: ${{ steps.plan.outputs.cycle_id }}
+      cycle_config: ${{ steps.plan.outputs.cycle_config }}
+      operation: ${{ steps.plan.outputs.operation }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: main
+          persist-credentials: false
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+      - name: Install planning dependency
+        run: python -m pip install -r workflows/requirements.txt
+      - name: Select a stable due slot or an explicit manual operation
+        id: plan
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          REQUESTED_CYCLE_ID: ${{ inputs.cycle_id }}
+          REQUESTED_CONFIG: ${{ inputs.config }}
+          REQUESTED_OPERATION: ${{ inputs.operation }}
+        run: |
+          python scripts/researchdesk_schedule.py plan \
+            --event "$EVENT_NAME" --requested-cycle-id "$REQUESTED_CYCLE_ID" \
+            --requested-config "$REQUESTED_CONFIG" --requested-operation "$REQUESTED_OPERATION" \
+            --github-output "$GITHUB_OUTPUT"
+
+  analyze:
+    needs: plan
+    if: github.ref == 'refs/heads/main' && needs.plan.outputs.cycle_id != ''
     runs-on: [self-hosted, researchdesk]
     timeout-minutes: 30
     defaults:
@@ -57,19 +93,19 @@ jobs:
         id: cycle
         working-directory: researchdesk-worker
         env:
-          OPERATION: ${{ inputs.operation }}
-          CYCLE_ID: ${{ inputs.cycle_id }}
-          CYCLE_CONFIG: ${{ inputs.config }}
+          OPERATION: ${{ needs.plan.outputs.operation }}
+          CYCLE_ID: ${{ needs.plan.outputs.cycle_id }}
+          CYCLE_CONFIG: ${{ needs.plan.outputs.cycle_config }}
           FAIL_AFTER: ${{ inputs.fail_after }}
         run: |
           args=()
           if [ "$FAIL_AFTER" = after_research ]; then args+=(--fail-after after_research); fi
           "$RUNNER_TEMP/researchdesk-bootstrap-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT/bin/python" scripts/researchdesk_job.py execute \
             --state "$RUNNER_TEMP/researchdesk-state-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT" \
-            --config "$CYCLE_CONFIG" --cycle-id "${CYCLE_ID:-agent-memory-gh-$GITHUB_RUN_ID}" \
+            --config "$CYCLE_CONFIG" --cycle-id "$CYCLE_ID" \
             --operation "$OPERATION" "${args[@]}"
       - name: Export safe checkpoints even after a research failure
-        if: always() && steps.cycle.outcome != 'skipped' && inputs.operation != 'health'
+        if: always() && steps.cycle.outcome != 'skipped' && needs.plan.outputs.operation != 'health'
         id: export
         working-directory: researchdesk-worker
         run: |
@@ -86,8 +122,8 @@ jobs:
           retention-days: 14
 
   save-checkpoints:
-    needs: analyze
-    if: always() && github.ref == 'refs/heads/main' && needs.analyze.result != 'skipped' && inputs.operation != 'health'
+    needs: [plan, analyze]
+    if: always() && github.ref == 'refs/heads/main' && needs.analyze.result != 'skipped' && needs.plan.outputs.operation != 'health'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
