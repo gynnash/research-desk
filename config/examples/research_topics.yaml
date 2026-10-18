@@ -1,0 +1,11 @@
+# Copy and edit this configuration for your own workspace; no task is enabled by a file.
+schema_version: 1
+topics:
+  my-research:
+    name: My research topic
+    enabled: true
+    description: Replace this description with the questions your workbench studies.
+    scope:
+      - Replace with the boundaries and exclusions of your research.
+    keywords:
+      - Replace with your discovery keywords.

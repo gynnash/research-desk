@@ -2,10 +2,16 @@
 
 ## 总体架构与定时研究设计
 
-- [Research、Insight、Writing 三 Agent 总体架构](three-agent-architecture.md)：定义最终系统、角色分工、共享知识与独立模型审阅机制。
-- [Agent Memory GitHub Actions MVP](agent-memory-github-actions-mvp.md)：每周二、周五北京时间 09:00 触发；独立审阅模型与规则校验通过后，经 PR 自动合并入库，保留人工笔记保护及失败补跑。
+- [Research、Insight、Writing 三 Agent 总体架构](three-agent-architecture.md)：定义自动研究、综合洞察、公众号选题，以及人工确认选题后才启动写作的完整流程；独立模型审阅是三者共用能力。
+- [Agent Memory GitHub Actions MVP](agent-memory-github-actions-mvp.md)：拟每周二、周五北京时间 09:00 触发；研究独立审阅与规则校验通过后受限自动入库，再逐步接通 Insight/选题。保留人工笔记保护及失败补跑。
 
-以上均为设计文档，尚未实现或启用。首个任务只覆盖来源研究，Insight、Writing 和综合报告自动化留待后续阶段；公众号发布继续停用。
+总体流程和正式入库仍按设计分阶段实现。已有真实采集、官方会员本地后端及单篇摘要真实研究审阅；当前新增 YAML 驱动的 Research 测试批次。Insight、综合报告、自动选题、人工确认入口和 Writing 自动执行留待后续阶段，没有定时任务或公众号发布。
+
+## 配置驱动的 Research 批次
+
+[批次运行与验收](configurable-research-batch.md)说明如何通过 YAML 配置主题、来源、两个不同模型和预算，以及一篇论文加一篇博客的采集、研究、独立审阅和中断补跑。通用示例供开源用户自行配置并使用自己的官方授权 profile；当前配置只生成 `reports/test/<topic>/research-batches/<batch-id>/` 中的结果。
+
+本轮最多 6 次请求、单项最多 4 次、至多一次修订，月度最多预留 10 次并包含此前会员测试。未知请求不自动重发；已通过的单项在同批补跑中复用，已有笔记与测试产物不覆盖。真实状态以批次回执为准，配置中启用方向不等于启用定时任务。
 
 ## 离线运行骨架
 
@@ -15,7 +21,7 @@
 
 [真实采集与模拟验收](real-source-collection.md)已接入 arXiv、Letta、LangChain，模拟分析结果继续保留。[ChatGPT 会员分析设计](chatgpt-analysis-handoff.md)说明官方授权边界；[本地会员分析与独立审阅](local-membership-analysis.md)说明本轮后端、登录、账户可用模型核实、预算和补跑。
 
-本轮仅用一篇已采集 arXiv 论文的完整摘要测试真实研究与独立模型审阅，另存到 `reports/test/agent-memory/membership/<batch-id>/`；成功状态须由实际授权、不同模型身份及运行回执证明。默认每批最多 4 次推理，最多一次修订，不重写已有来源或人工笔记。GitHub 自动入库和定时执行仍未实现或启用。
+上一阶段已用一篇已采集 arXiv 论文的完整摘要完成真实研究和独立审阅，使用 2 次请求，另存到 `reports/test/agent-memory/membership/member-arxiv-20261019/`。该单篇入口仍保留默认最多 4 次推理、一次修订；批次入口另读 YAML 限制。两者均不重写已有来源或人工笔记，GitHub 自动正式入库和定时执行仍未实现或启用。
 
 ## 人工研究流程
 
@@ -25,4 +31,4 @@
 4. 阅读原文并维护状态和笔记；需要时手动整理到 `reports/`、`insights/` 或 `articles/`。
 5. 执行 `python3 workflows/validate.py`（在仓库根目录，需 PyYAML），检查差异，再提交并同步。
 
-这里包含设计、约定、模板、只读校验工具及测试样例；`scripts/` 包含受限真实采集器、模拟骨架和本地官方会员后端，研究产物只写测试目录。没有调度器或自动研究任务。
+这里包含设计、约定、模板、只读校验工具及测试样例；`scripts/` 包含受限真实采集器、模拟骨架、本地官方会员后端和配置驱动批次，研究产物只写测试目录。没有已启用的调度器、正式自动入库或公众号发布能力。
