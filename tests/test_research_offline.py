@@ -113,6 +113,24 @@ class OfflineResearchAcceptance(unittest.TestCase):
         with mock.patch.object(socket, "create_connection", side_effect=AssertionError("network prohibited")), mock.patch.object(socket.socket, "connect", side_effect=AssertionError("network prohibited")):
             self.assertEqual(self.run_batch()["counts"]["test_accepted"], 2)
 
+    def test_reviewer_sees_candidate_and_revision_uses_review_feedback(self):
+        candidate = self.single(1)
+        self.run_batch()
+        directory = self.run_dir() / "checkpoints" / candidate["key"]
+        first_review = self.yaml_file(directory / "review-0.yaml")["input"]
+        revised_research = self.yaml_file(directory / "research-1.yaml")["input"]
+        final_review = self.yaml_file(directory / "review-1.yaml")["input"]
+        for role_input in (first_review, revised_research, final_review):
+            self.assertEqual(role_input["original_evidence"], candidate["evidence"])
+            self.assertIs(role_input["independent_context"], True)
+        self.assertEqual(first_review["candidate"]["metadata"], candidate["metadata"])
+        self.assertEqual(first_review["candidate"]["research"], candidate["research"][0])
+        self.assertIn(candidate["research"][0]["summary"], first_review["candidate"]["markdown"])
+        self.assertEqual(revised_research["revision_feedback"]["previous_research"], candidate["research"][0])
+        self.assertEqual(revised_research["revision_feedback"]["review"], candidate["reviews"][0])
+        self.assertEqual(final_review["candidate"]["research"], candidate["research"][1])
+        self.assertNotEqual(first_review["candidate"]["markdown"], final_review["candidate"]["markdown"])
+
     def test_repeat_batch_reuses_results_ids_and_budget(self):
         first = self.run_batch()
         immutable_paths = self.sources() + [self.run_dir() / "manifest.yaml"] + list(self.root.glob("reports/test/*/*/events/*.yaml"))
@@ -171,6 +189,22 @@ class OfflineResearchAcceptance(unittest.TestCase):
         self.assertEqual(second["calls"], 1)
         self.assertEqual(self.sources(), [])
 
+    def test_deferred_item_cannot_reset_role_attempts_in_new_batch(self):
+        self.single()
+        self.fixture["budget"]["max_calls"] = 1
+        self.save_fixture()
+        first = self.run_batch()
+        self.assertEqual(first["calls"], 1)
+        self.assertEqual(first["counts"]["deferred"], 1)
+        reserved_id = first["items"][0]["reserved_id"]
+        for batch in ("offline-second-try", "offline-third-try"):
+            result = self.run_batch(batch)
+            self.assertEqual(result["calls"], 0)
+            self.assertEqual(result["counts"]["test_accepted"], 0)
+            self.assertEqual(result["items"][0]["reserved_id"], reserved_id)
+        self.assertEqual(len([e for e in self.events() if e["type"] == "call_reserved"]), 1)
+        self.assertEqual(self.sources(), [])
+
     def test_monthly_budget_is_shared_across_batches(self):
         candidate = self.single()
         self.fixture["budget"]["month_max_cost_units"] = 20
@@ -187,6 +221,23 @@ class OfflineResearchAcceptance(unittest.TestCase):
         second = self.run_batch("offline-20261023-010000")
         self.assertEqual(second["calls"], 0)
         self.assertEqual(second["counts"]["deferred"], 1)
+
+    def test_new_fixture_cannot_raise_existing_monthly_budget(self):
+        candidate = self.single()
+        self.fixture["budget"]["month_max_cost_units"] = 20
+        candidate["research"][0]["usage"]["cost_units"] = 8
+        candidate["reviews"][0]["usage"]["cost_units"] = 8
+        self.save_fixture()
+        self.assertEqual(self.run_batch()["cost_units"], 16)
+        candidate["key"] = "raised-budget-paper"
+        candidate["metadata"]["source_url"] += "-raised-budget"
+        candidate["metadata"]["doi"] = "10.99999/raised-budget-paper"
+        self.fixture["budget"]["month_max_cost_units"] = 200
+        self.save_fixture()
+        result = self.run_batch("offline-20261023-010000")
+        self.assertEqual(result["calls"], 0)
+        self.assertEqual(result["counts"]["test_accepted"], 0)
+        self.assertEqual(result["counts"]["deferred"], 1)
 
     def test_same_model_configuration_is_rejected_before_calls(self):
         self.fixture["models"]["review"] = self.fixture["models"]["research"]
@@ -213,6 +264,48 @@ class OfflineResearchAcceptance(unittest.TestCase):
         candidate["reviews"][0]["checks"] = []
         self.save_fixture()
         self.assert_blocked()
+
+    def test_fatal_or_unknown_issue_severity_cannot_be_a_pass(self):
+        candidate = self.single()
+        for severity in ("fatal", "unrecognized-severity"):
+            with self.subTest(severity=severity):
+                candidate["key"] = severity + "-item"
+                candidate["metadata"]["doi"] = "10.99999/" + severity
+                candidate["metadata"]["source_url"] = "https://example.invalid/" + severity
+                candidate["reviews"][0]["issues"] = [{"location": "summary", "severity": severity, "reason": "unsupported", "suggestion": "remove"}]
+                self.save_fixture()
+                try:
+                    result = self.run_batch("severity-" + severity)
+                except offline.OfflineError:
+                    pass
+                else:
+                    self.assertEqual(result["counts"]["test_accepted"], 0)
+                    self.assertEqual(result["counts"]["blocked"], 1)
+        self.assertEqual(self.sources(), [])
+
+    def test_source_version_mapping_cannot_create_invalid_source_schema(self):
+        candidate = self.single()
+        candidate["metadata"]["source_version"] = {"version": "v1"}
+        self.save_fixture()
+        try:
+            result = self.run_batch()
+        except offline.OfflineError:
+            pass
+        else:
+            self.assertEqual(result["counts"]["test_accepted"], 0)
+        self.assertEqual(self.sources(), [])
+
+    def test_duplicate_authors_cannot_create_invalid_source_schema(self):
+        candidate = self.single()
+        candidate["metadata"]["authors"] = ["虚构作者甲", "虚构作者甲"]
+        self.save_fixture()
+        try:
+            result = self.run_batch()
+        except offline.OfflineError:
+            pass
+        else:
+            self.assertEqual(result["counts"]["test_accepted"], 0)
+        self.assertEqual(self.sources(), [])
 
     def test_second_revision_is_terminal_and_cannot_publish(self):
         candidate = self.single(1)
@@ -287,6 +380,21 @@ class OfflineResearchAcceptance(unittest.TestCase):
         self.assertEqual(len(updates), 1)
         self.assertIn(source_id, updates[0].read_text(encoding="utf-8"))
 
+    def test_same_update_evidence_is_not_researched_again_in_later_batch(self):
+        path, _ = self.formal_note(arxiv_id="2310.08560", source_url="https://arxiv.org/abs/2310.08560v2", source_version="v2")
+        before = path.read_bytes()
+        candidate = self.single()
+        candidate["metadata"].update(arxiv_id=None, doi=None, source_url="https://arxiv.org/pdf/2310.08560v9.pdf", source_version="v9")
+        self.save_fixture()
+        first = self.run_batch()
+        self.assertEqual(first["counts"]["update_proposed"], 1)
+        second = self.run_batch("later-update-check")
+        self.assertEqual(second["counts"]["update_proposed"], 0)
+        self.assertEqual(second["counts"]["duplicate"], 1)
+        self.assertEqual(second["calls"], 0)
+        self.assertEqual(path.read_bytes(), before)
+        self.assertEqual(len(list(self.root.glob("reports/test/*/*/updates/*.md"))), 1)
+
     def test_doi_link_and_case_match_existing_record(self):
         path, _ = self.formal_note(doi="10.99999/offline-memory-example")
         before = path.read_bytes()
@@ -297,6 +405,36 @@ class OfflineResearchAcceptance(unittest.TestCase):
         self.assertEqual(result["counts"]["duplicate"], 1)
         self.assertEqual(result["calls"], 0)
         self.assertEqual(path.read_bytes(), before)
+
+    def test_doi_url_tracking_and_fragment_do_not_create_new_identity(self):
+        self.formal_note(doi="10.99999/offline-memory-example")
+        candidate = self.single()
+        candidate["metadata"].update(doi=None, source_url="https://doi.org/10.99999/OFFLINE-MEMORY-EXAMPLE?utm_source=offline#abstract")
+        self.save_fixture()
+        result = self.run_batch()
+        self.assertEqual(result["counts"]["duplicate"], 1)
+        self.assertEqual(result["calls"], 0)
+        self.assertEqual(self.sources(), [])
+
+    def test_explicit_identity_conflicting_with_original_url_cannot_publish(self):
+        candidate = self.single()
+        cases = (
+            ("arxiv", {"arxiv_id": "2601.00001", "doi": None, "source_url": "https://arxiv.org/abs/2601.00002v1"}),
+            ("doi", {"arxiv_id": None, "doi": "10.99999/explicit-two", "source_url": "https://dx.doi.org/10.99999/url-one"}),
+        )
+        for name, metadata in cases:
+            with self.subTest(identity=name):
+                candidate["key"] = "conflicting-" + name
+                candidate["metadata"].update(metadata)
+                self.save_fixture()
+                try:
+                    result = self.run_batch("conflicting-" + name)
+                except offline.OfflineError:
+                    pass
+                else:
+                    self.assertEqual(result["counts"]["test_accepted"], 0)
+                    self.assertEqual(result["counts"]["blocked"], 1)
+        self.assertEqual(self.sources(), [])
 
     def test_canonical_url_strips_tracking_but_keeps_content_query_order(self):
         path, _ = self.formal_note(kind="blog", source_url="https://example.invalid/blog/item?a=1&b=2")
@@ -325,6 +463,23 @@ class OfflineResearchAcceptance(unittest.TestCase):
         result = self.assert_blocked()
         self.assertEqual(result["calls"], 0)
         self.assertEqual(before, self.snapshot([first, second]))
+
+    def test_identity_bridge_between_historical_rejections_is_blocked(self):
+        candidate = self.single(2)
+        candidate["metadata"].update(arxiv_id="2601.00001", doi="10.99999/history-one")
+        self.save_fixture()
+        self.assertEqual(self.run_batch("history-one")["counts"]["rejected"], 1)
+        candidate["key"] = "rejected-history-two"
+        candidate["metadata"].update(arxiv_id="2601.00002", doi="10.99999/history-two", source_url="https://example.invalid/history-two")
+        self.save_fixture()
+        self.assertEqual(self.run_batch("history-two")["counts"]["rejected"], 1)
+        candidate["key"] = "conflicting-history-bridge"
+        candidate["metadata"].update(arxiv_id="2601.00001", doi="10.99999/history-two", source_url="https://example.invalid/history-bridge")
+        self.save_fixture()
+        result = self.run_batch("history-bridge")
+        self.assertEqual(result["counts"]["blocked"], 1)
+        self.assertEqual(result["calls"], 0)
+        self.assertEqual(self.sources(), [])
 
     def test_human_edit_to_test_source_is_preserved_on_resume(self):
         self.single()

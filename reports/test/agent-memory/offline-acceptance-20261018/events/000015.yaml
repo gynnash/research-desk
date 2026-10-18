@@ -1,0 +1,8 @@
+type: call_reserved
+reservation_id: 3ed62829-bab2-4f7a-b388-9c4c4e2c3096
+item_key: rejected-paper
+role: research
+revision: 0
+model_id: mock-research-v1
+month: 2026-10
+cost_units: 10

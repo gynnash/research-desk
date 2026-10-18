@@ -1,0 +1,6 @@
+type: item_finished
+item_key: revised-blog
+status: test_accepted
+output: sources/blogs/test/agent-memory/blog-2ba2d1cb-b637-4842-afd7-efab7210fd2f.md
+output_sha256: bf6cf9fa1c1b4879316cf23c419ebcc9f2f34d9a9e41d5d12f98cc2b0158609f
+revision: 1

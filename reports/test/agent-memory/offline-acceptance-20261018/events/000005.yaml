@@ -1,0 +1,6 @@
+type: item_finished
+item_key: new-paper
+status: test_accepted
+output: sources/papers/test/agent-memory/paper-b45f152e-83b7-43ca-9ff5-0e2e7c66e5f9.md
+output_sha256: d96bae1c966846f600d98b0d2285dc58ec7078bf83626a45c9b10e5fddc94663
+revision: 0

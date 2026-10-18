@@ -43,3 +43,9 @@
 这些状态由人工判断，可以回退，不代表自动生成任务。主题停用不会使历史资料失效；不删除仍被资料引用的主题 ID。
 
 正文不设机器维护区：摘要、结论、证据、局限、人工笔记和更新记录全部视为人工内容。模板只提供建议标题，允许调整，不强制固定章节。未来如引入自动化，必须先制定单独的写入规则和审核流程；不得根据本 Schema 推定可以覆盖正文、研究状态或关联。
+
+## 离线测试与主题目录
+
+正式资料的既有文件保持原位；以后新资料按主要研究方向放入 `sources/papers/<primary-topic>/` 或 `sources/blogs/<primary-topic>/`，多主题仍共用一个 ID。测试来源放在 `sources/<papers|blogs>/test/<topic>/<id>.md`，严格使用同一 Schema，`topics` 必须包含所在方向，正文须有统一 TEST 虚构横幅。
+
+测试审阅结果记在运行清单，不增加 Frontmatter 字段；通过模拟门禁的来源仍初始化 `inbox`。正式与测试来源的 ID 全局唯一，身份重复在各自区域分别检查，Frontmatter 的 `related_sources`/`related_notes` 不得跨区。默认校验正式资料，`--include-test` 同时检查测试资料；测试目录不是旧资料豁免。具体见[离线说明](offline-research.md)。

@@ -35,6 +35,7 @@ __pycache__/
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
+/reports/test/*/.offline.lock
 
 # OS files, editor backups, and temporary files.
 .DS_Store

@@ -1,0 +1,9 @@
+type: call_completed
+reservation_id: 567f270d-ef0a-4b1e-bb7b-b7c5675fa32c
+item_key: new-paper
+role: research
+revision: 0
+month: 2026-10
+cost_units: 2
+response_path: reports/test/agent-memory/offline-acceptance-20261018/checkpoints/new-paper/research-0.yaml
+response_sha256: d19a2838b62f27128eb2b22886d8d04cb468e4d530b325fef01aeb2880fb2e41

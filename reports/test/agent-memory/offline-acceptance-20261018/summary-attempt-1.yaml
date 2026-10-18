@@ -1,0 +1,27 @@
+schema_version: 1
+mode: offline
+production_accepted: false
+batch_id: offline-acceptance-20261018
+status: complete
+counts:
+  test_accepted: 2
+  duplicate: 0
+  update_proposed: 0
+  rejected: 1
+  blocked: 0
+  deferred: 0
+calls: 8
+cost_units: 16
+items:
+- key: new-paper
+  reserved_id: paper-b45f152e-83b7-43ca-9ff5-0e2e7c66e5f9
+  status: test_accepted
+  output: sources/papers/test/agent-memory/paper-b45f152e-83b7-43ca-9ff5-0e2e7c66e5f9.md
+- key: revised-blog
+  reserved_id: blog-2ba2d1cb-b637-4842-afd7-efab7210fd2f
+  status: test_accepted
+  output: sources/blogs/test/agent-memory/blog-2ba2d1cb-b637-4842-afd7-efab7210fd2f.md
+- key: rejected-paper
+  reserved_id: paper-346745b3-17c6-483e-a954-bef80e7e9a46
+  status: rejected
+  output: null

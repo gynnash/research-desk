@@ -1,0 +1,5 @@
+mode: offline
+month: 2026-10
+max_cost_units: 240
+unit: virtual_fixture_unit
+real_api_cost: 0

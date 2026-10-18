@@ -12,6 +12,7 @@ import os
 from pathlib import Path
 import re
 import sys
+from urllib.parse import unquote, urlsplit
 from uuid import uuid4
 
 import yaml
@@ -140,25 +141,28 @@ def identities(metadata):
         keys.add('url:' + canonical_url(url))
     except ValueError as exc:
         raise OfflineError('来源 URL 无效') from exc
-    arxiv = metadata.get('arxiv_id')
-    if not arxiv:
-        match = re.search(r'https?://(?:www\.|export\.)?arxiv\.org/(?:abs|pdf|html)/([^?#]+)', url, re.I)
-        arxiv = match.group(1) if match else None
-    if arxiv:
+    match = re.search(r'https?://(?:www\.|export\.)?arxiv\.org/(?:abs|pdf|html)/([^?#]+)', url, re.I)
+    arxiv_values = [v for v in (metadata.get('arxiv_id'), match.group(1) if match else None) if v]
+    normalized_arxiv = set()
+    for arxiv in arxiv_values:
         arxiv = re.sub(r'\.pdf$', '', str(arxiv).strip(), flags=re.I)
         arxiv = re.sub(r'v\d+$', '', arxiv, flags=re.I).lower()
         if not re.fullmatch(r'(?:\d{4}\.\d{4,5}|[a-z][a-z0-9.-]*/\d{7})', arxiv):
             raise OfflineError('arXiv 身份无效')
+        normalized_arxiv.add(arxiv)
         keys.add('arxiv:' + arxiv)
-    doi = metadata.get('doi')
-    if not doi:
-        match = re.match(r'https?://(?:dx\.)?doi\.org/(.+)', url, re.I)
-        doi = match.group(1) if match else None
-    if doi:
+    if len(normalized_arxiv) > 1:
+        raise OfflineError('显式 arXiv ID 与来源 URL 冲突')
+    doi_url = unquote(urlsplit(url).path.lstrip('/')) if urlsplit(url).hostname.lower() in {'doi.org', 'dx.doi.org'} else None
+    normalized_doi = set()
+    for doi in [v for v in (metadata.get('doi'), doi_url) if v]:
         doi = re.sub(r'^(?:doi:\s*|https?://(?:dx\.)?doi\.org/)', '', str(doi).strip(), flags=re.I).lower()
         if not re.fullmatch(r'10\.\d{4,9}/\S+', doi):
             raise OfflineError('DOI 身份无效')
+        normalized_doi.add(doi)
         keys.add('doi:' + doi)
+    if len(normalized_doi) > 1:
+        raise OfflineError('显式 DOI 与来源 URL 冲突')
     return sorted(keys)
 
 
@@ -185,7 +189,9 @@ def protected_snapshot(root):
         for path in (root / folder).rglob('*.md'):
             parts = path.relative_to(root).parts
             # Tests are isolated, but the legacy sources/papers/test.md stays protected.
-            if 'test' in parts or path.name == 'README.md':
+            is_test = (parts[0] == 'sources' and len(parts) > 3 and parts[2] == 'test') or (
+                parts[0] != 'sources' and len(parts) > 2 and parts[1] == 'test')
+            if is_test or path.name == 'README.md':
                 continue
             if path.is_symlink():
                 raise OfflineError('正式资料不可为符号链接')
@@ -228,7 +234,6 @@ def spend(events):
 
 def monthly_spend(root, topic, month):
     total = 0
-    parent = safe_path(root, 'reports/test/%s/runs' % topic)
     # Batch directory is directly under topic; only directories containing manifest count.
     parent = safe_path(root, 'reports/test/%s' % topic)
     for manifest in sorted(parent.glob('*/manifest.yaml')):
@@ -238,6 +243,16 @@ def monthly_spend(root, topic, month):
         relevant = [e for e in events if e.get('month') == month]
         total += spend(relevant)[1]
     return total
+
+
+def monthly_limit(root, topic, month, configured):
+    relative = 'reports/test/%s/budget-%s.yaml' % (topic, month)
+    if safe_path(root, relative).exists():
+        policy = checked_yaml(root, relative)
+        return min(configured, policy['max_cost_units'])
+    save_yaml(root, relative, {'mode': 'offline', 'month': month, 'max_cost_units': configured,
+                             'unit': 'virtual_fixture_unit', 'real_api_cost': 0})
+    return configured
 
 
 def validate_fixture(root, fixture):
@@ -270,11 +285,20 @@ def validate_fixture(root, fixture):
         if c.get('kind') not in {'paper', 'blog'}:
             raise OfflineError('候选类型无效')
         m = c.get('metadata', {})
+        allowed = {'title', 'source', 'source_url', 'authors', 'published_at'}
+        if c['kind'] == 'paper':
+            allowed |= {'arxiv_id', 'doi', 'source_version'}
+        if set(m) - allowed:
+            raise OfflineError('元数据包含不支持的字段')
         for name in ('title', 'source', 'source_url'):
             if not isinstance(m.get(name), str) or not m[name].strip():
                 raise OfflineError('元数据缺少 %s' % name)
         if not isinstance(m.get('authors'), list) or any(not isinstance(x, str) or not x.strip() for x in m['authors']):
             raise OfflineError('作者必须是字符串列表')
+        if len(m['authors']) != len(set(m['authors'])):
+            raise OfflineError('作者不得重复')
+        if m.get('source_version') is not None and (not isinstance(m['source_version'], str) or not m['source_version'].strip()):
+            raise OfflineError('source_version 必须为非空字符串或 null')
         if m.get('published_at') is not None:
             try:
                 date.fromisoformat(m['published_at'])
@@ -305,7 +329,8 @@ def history(root, topic):
         events = read_events(root, path.parent.relative_to(root).as_posix())
         states = {e['item_key']: e['status'] for e in events if e['type'] == 'item_finished'}
         for item in manifest['items']:
-            result.append(dict(item, prior_status=states.get(item['key'], 'pending')))
+            calls = sum(e['type'] == 'call_reserved' and e['item_key'] == item['key'] for e in events)
+            result.append(dict(item, prior_status=states.get(item['key'], 'pending'), prior_calls=calls))
     return result
 
 
@@ -318,39 +343,48 @@ def plan(root, fixture, fixture_hash, topic, batch_id):
         matches = {}
         for key in keys:
             matches.update(index.get(key, {}))
+        previous = [p for p in prior if set(keys) & set(p['identity_keys'])]
+        known_ids = set(matches) | {p['reserved_id'] for p in previous if p['reserved_id']}
+        same_batch = set().union(*(seen.get(k, set()) for k in keys))
+        known_ids |= same_batch
+        stable_id = next(iter(known_ids)) if len(known_ids) == 1 else None
         item = {'key': candidate['key'], 'identity_keys': keys, 'evidence_sha256': evidence_hash,
-                'reserved_id': None, 'action': 'new', 'existing_path': None}
-        if len(matches) > 1:
-            item['action'] = 'blocked'
-            item['reason'] = 'identity_conflict'
+                'reserved_id': stable_id, 'action': 'new', 'existing_path': None,
+                'target_version': candidate['metadata'].get('source_version')}
+        same_evidence = [p for p in previous if p['evidence_sha256'] == evidence_hash
+                         and p.get('target_version') == item['target_version']]
+        if len(known_ids) > 1:
+            item.update(action='blocked', reason='identity_conflict')
+        elif same_batch:
+            item.update(action='duplicate', reason='same_batch_identity')
+        elif stable_id and not stable_id.startswith(candidate['kind'] + '-'):
+            item.update(action='blocked', reason='kind_conflict')
+        elif any(p['prior_status'] in {'rejected', 'blocked'} for p in same_evidence):
+            prior_state = next(p['prior_status'] for p in reversed(same_evidence)
+                               if p['prior_status'] in {'rejected', 'blocked'})
+            item.update(action=prior_state, reason='same_evidence_terminal')
+        elif any(p['prior_status'] in {'test_accepted', 'update_proposed'} for p in same_evidence):
+            item.update(action='duplicate', reason='same_evidence_already_processed')
+        elif any(p['prior_status'] == 'pending' or
+                 (p['prior_status'] == 'deferred' and p['prior_calls'] > 0) for p in previous):
+            item.update(action='blocked', reason='resume_original_batch_first')
         elif matches:
             record_id, (existing_path, data) = next(iter(matches.items()))
-            item.update(reserved_id=record_id, existing_path=existing_path)
+            item.update(reserved_id=record_id, existing_path=existing_path,
+                        existing_sha256=digest((root / existing_path).read_bytes()),
+                        existing_version=data.get('source_version'))
             version = candidate['metadata'].get('source_version')
             item['action'] = 'update' if version and version != data.get('source_version') else 'duplicate'
-        else:
-            previous = [p for p in prior if set(keys) & set(p['identity_keys'])]
-            if previous:
-                p = previous[-1]
-                item['reserved_id'] = p['reserved_id']
-                if p['evidence_sha256'] == evidence_hash and p['prior_status'] in {'rejected', 'blocked'}:
-                    item['action'], item['reason'] = p['prior_status'], 'same_evidence_terminal'
-                elif p['prior_status'] == 'pending':
-                    item['action'], item['reason'] = 'blocked', 'resume_original_batch_first'
-            if not item['reserved_id']:
-                item['reserved_id'] = candidate['kind'] + '-' + str(uuid4())
-        overlap = {seen[k] for k in keys if k in seen}
-        if overlap:
-            item['action'] = 'duplicate' if len(overlap) == 1 else 'blocked'
-            item['reserved_id'] = next(iter(overlap))
-            item['reason'] = 'same_batch_identity'
+        if not item['reserved_id'] and item['action'] == 'new':
+            item['reserved_id'] = candidate['kind'] + '-' + str(uuid4())
         for key in keys:
-            seen[key] = item['reserved_id']
+            seen.setdefault(key, set()).update(known_ids)
+            if item['reserved_id']:
+                seen[key].add(item['reserved_id'])
         if item['action'] in {'new', 'update'}:
             deep += 1
             if deep > 3:
-                item['action'] = 'deferred'
-                item['reason'] = 'research_quota'
+                item.update(action='deferred', reason='research_quota')
         planned.append(item)
     return {'schema_version': 1, 'mode': 'offline', 'production_accepted': False,
             'batch_id': batch_id, 'topic': topic, 'fixture_sha256': fixture_hash,
@@ -359,16 +393,18 @@ def plan(root, fixture, fixture_hash, topic, batch_id):
 
 
 def validate_research(candidate, response):
-    if not isinstance(response.get('summary'), str) or not response['summary'].strip() or not response.get('limitations'):
+    limitations = response.get('limitations')
+    if not isinstance(response.get('summary'), str) or not response['summary'].strip() or not isinstance(limitations, list) or not limitations or any(not isinstance(x, str) or not x.strip() for x in limitations):
         raise OfflineError('研究结果缺少摘要或限制')
     locators = {x['id']: x for x in candidate['evidence']['locators']}
     claims = response.get('claims')
     if not isinstance(claims, list) or not claims:
         raise OfflineError('研究结果必须有带证据的主张')
     for claim in claims:
-        if not isinstance(claim.get('text'), str) or not claim['text'].strip() or claim.get('kind') not in {'fact', 'inference', 'author_claim'}:
+        if not isinstance(claim, dict) or not isinstance(claim.get('text'), str) or not claim['text'].strip() or claim.get('kind') not in {'fact', 'inference', 'author_claim'}:
             raise OfflineError('主张文本或事实/推断标识无效')
-        if not claim.get('evidence_ids') or any(k not in locators for k in claim['evidence_ids']):
+        refs = claim.get('evidence_ids')
+        if not isinstance(refs, list) or not refs or any(not isinstance(k, str) or k not in locators for k in refs):
             raise OfflineError('主张引用缺失证据')
 
 
@@ -376,11 +412,16 @@ def validate_review(candidate, research, response):
     decision = response.get('decision')
     if decision not in {'pass', 'revise', 'reject', 'blocked'} or not isinstance(response.get('issues'), list):
         raise OfflineError('审阅结果格式不合法')
+    for issue in response['issues']:
+        if not isinstance(issue, dict) or issue.get('severity') not in {'info', 'warning', 'blocking', 'critical', 'error'}:
+            raise OfflineError('审阅问题的严重程度未知')
+        if any(not isinstance(issue.get(k), str) or not issue[k].strip() for k in ('location', 'reason', 'suggestion')):
+            raise OfflineError('审阅问题缺少位置、理由或建议')
     if decision == 'pass':
         if any(x.get('severity') in {'blocking', 'critical', 'error'} for x in response['issues']):
             raise OfflineError('带阻塞问题的 pass 无效')
         checks = response.get('checks')
-        if not isinstance(checks, list):
+        if not isinstance(checks, list) or any(not isinstance(c, dict) or not isinstance(c.get('evidence_ids'), list) or any(not isinstance(k, str) for k in c['evidence_ids']) for c in checks):
             raise OfflineError('pass 缺少逐项主张核查')
         for i, claim in enumerate(research['claims']):
             matching = [c for c in checks if type(c.get('claim_index')) is int and c['claim_index'] == i]
@@ -417,11 +458,13 @@ def render(candidate, item, research, manifest):
               '', '## 人工笔记', '', '## 更新记录', '', '离线验收创建；不修改任何正式资料。', '']
     if item['action'] == 'update':
         lines = [NOTICE, '', '# 独立更新建议（离线模拟）', '',
-                 '原记录：`%s`；原路径：`%s`。原文件保留。' % (item['reserved_id'], item['existing_path']), ''] + lines[5:]
+                 '原记录：`%s`；原路径：`%s`。原文件保留。' % (item['reserved_id'], item['existing_path']),
+                 '旧版本：`%s`；建议核查版本：`%s`；旧文件散列：`%s`。' % (
+                     item.get('existing_version'), item.get('target_version'), item.get('existing_sha256')), ''] + lines[5:]
     return '\n'.join(lines)
 
 
-def request(root, batch_dir, events, candidate, role, revision, manifest, binding, fail_after):
+def request(root, batch_dir, events, candidate, role, revision, manifest, binding, fail_after, role_input=None):
     key = candidate['key']
     completed = [e for e in events if e['type'] == 'call_completed' and e['item_key'] == key and e['role'] == role and e['revision'] == revision]
     if completed:
@@ -434,7 +477,8 @@ def request(root, batch_dir, events, candidate, role, revision, manifest, bindin
     budget = manifest['budget']
     reserve = budget['reservation_cost_units']
     month = datetime.now(timezone.utc).strftime('%Y-%m')
-    if len(used) >= 2 or calls >= budget['max_calls'] or cost + reserve > budget['max_cost_units'] or monthly_spend(root, manifest['topic'], month) + reserve > budget['month_max_cost_units']:
+    ceiling = monthly_limit(root, manifest['topic'], month, budget['month_max_cost_units'])
+    if len(used) >= 2 or calls >= budget['max_calls'] or cost + reserve > budget['max_cost_units'] or monthly_spend(root, manifest['topic'], month) + reserve > ceiling:
         return None
     reservation = str(uuid4())
     append_event(root, batch_dir, events, {'type': 'call_reserved', 'reservation_id': reservation, 'item_key': key,
@@ -459,8 +503,9 @@ def request(root, batch_dir, events, candidate, role, revision, manifest, bindin
     relative = '%s/checkpoints/%s/%s-%s.yaml' % (batch_dir, key, role, revision)
     # Save the original evidence separately in both role inputs: no shared conversation.
     response_hash = save_yaml(root, relative, {'binding': binding, 'response': response,
-                  'input': {'role': role, 'original_evidence': candidate['evidence'],
-                            'candidate_sha256': binding.get('candidate_sha256'), 'independent_context': True}})
+                  'input': dict({'role': role, 'original_evidence': candidate['evidence'],
+                                 'candidate_sha256': binding.get('candidate_sha256'),
+                                 'independent_context': True}, **(role_input or {}))})
     append_event(root, batch_dir, events, {'type': 'call_completed', 'reservation_id': reservation, 'item_key': key,
                  'role': role, 'revision': revision, 'month': month, 'cost_units': usage['cost_units'],
                  'response_path': relative, 'response_sha256': response_hash})
@@ -506,16 +551,19 @@ def run(root, fixture_path, batch_id, fail_after=None):
             c = by_key[key]
             status = 'deferred'
             output = None
+            feedback = None
             for revision in range(2):
                 binding = {'evidence_sha256': item['evidence_sha256'], 'baseline_sha256': digest(manifest['protected_files']), 'revision': revision}
-                research = request(root, batch_dir, events, c, 'research', revision, manifest, binding, fail_after)
+                research = request(root, batch_dir, events, c, 'research', revision, manifest, binding, fail_after,
+                                   {'metadata': c['metadata'], 'revision_feedback': feedback})
                 if research is None:
                     break
                 try:
                     validate_research(c, research)
                     note = render(c, item, research, manifest)
                     review_binding = dict(binding, candidate_sha256=digest(note.encode()))
-                    review = request(root, batch_dir, events, c, 'review', revision, manifest, review_binding, fail_after)
+                    review = request(root, batch_dir, events, c, 'review', revision, manifest, review_binding, fail_after,
+                                     {'candidate': {'metadata': c['metadata'], 'research': research, 'markdown': note}})
                     if review is None:
                         break
                     decision = validate_review(c, research, review)
@@ -526,6 +574,7 @@ def run(root, fixture_path, batch_id, fail_after=None):
                 if fail_after == 'after_review':
                     raise SimulatedInterruption('审阅已保存；模拟发布前中断')
                 if decision == 'revise' and revision == 0:
+                    feedback = {'previous_research': research, 'review': review}
                     continue
                 if decision != 'pass':
                     status = 'rejected' if decision in {'reject', 'revise'} else 'blocked'

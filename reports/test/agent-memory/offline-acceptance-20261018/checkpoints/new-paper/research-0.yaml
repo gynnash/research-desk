@@ -1,0 +1,44 @@
+binding:
+  evidence_sha256: 19fa48e0e736aa3437dda099186131bdc2a44824ae5b3e8c5671dbcc5fd8d1cb
+  baseline_sha256: 959024a827354c2a431f1bc28cc4d4334d65aa3eb90eb8856e7512b348292651
+  revision: 0
+response:
+  model_id: mock-research-v1
+  request_id: mock-research-paper-r1
+  summary: 虚构样例提出近期缓冲与长期档案两层记忆，没有效果实验。
+  claims:
+  - text: 样例将记忆分为近期缓冲区与长期档案。
+    kind: fact
+    evidence_ids:
+    - E1
+  limitations:
+  - 只有虚构节选，没有准确率或成本实验。
+  usage:
+    cost_units: 2
+    input_tokens: 120
+    output_tokens: 50
+input:
+  role: research
+  original_evidence:
+    coverage: excerpt
+    text: 本虚构样例将记忆分为近期缓冲区与长期档案。每次请求只检索两个档案片段。样例未进行准确率或成本实验。
+    locators:
+    - id: E1
+      location: 虚构正文第 1 段
+      quote: 本虚构样例将记忆分为近期缓冲区与长期档案。
+    - id: E2
+      location: 虚构正文第 1 段
+      quote: 样例未进行准确率或成本实验。
+  candidate_sha256: null
+  independent_context: true
+  metadata:
+    title: '[虚构] 分层记忆检索样例'
+    source: 虚构论文样例
+    source_url: https://example.invalid/papers/layered-memory
+    authors:
+    - 虚构作者甲
+    published_at: '2026-10-01'
+    arxiv_id: null
+    doi: 10.99999/offline-memory-example
+    source_version: v1
+  revision_feedback: null

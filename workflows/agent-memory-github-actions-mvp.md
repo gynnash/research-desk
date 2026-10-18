@@ -2,6 +2,7 @@
 
 - 版本：0.2；修订日期：2026-10-18。
 - 状态：**仅设计，尚未实现或启用**。本文中的频率、路径与参数是后续实施约定。
+- 实施进度：已有[离线骨架与验收](offline-research.md)，只支持固定虚构样例、模拟模型和隔离测试输出；本文的真实抓取、模型 API、GitHub 自动入库及定时任务仍未实现或启用。
 - 目标：GitHub Actions 定时发现 Agent Memory 资料，生成带证据的研究记录，经独立审阅模型与规则校验通过后自动入库。
 - 总体架构见[三 Agent 总体架构](three-agent-architecture.md)。沿用[主题配置](../config/research_topics.yaml)、[Schema v1](source-schema.md)、[维护规范](maintenance.md)和现有模板，保持 Markdown + YAML。
 
@@ -109,7 +110,7 @@ arXiv 的 `published` 是首次版本日期，`updated` 是当前版本更新时
 
 | 正式入库路径 | 规则 |
 | --- | --- |
-| `sources/papers/<paper-id>.md`、`sources/blogs/<blog-id>.md` | 只创建预留 ID 的通过产物；已有路径绝不覆盖。 |
+| `sources/papers/<primary-topic>/<paper-id>.md`、`sources/blogs/<primary-topic>/<blog-id>.md` | 按主要研究方向只创建预留 ID 的通过产物；多主题不复制，已有路径绝不覆盖。 |
 | `reports/research-runs/<batch-id>/manifest.yaml`、`attempt-<n>.yaml` | 创建批次与执行回执，记录时间窗、候选身份/预留 ID、各来源完整性、用量、决定、待办和结果散列；不携带未通过候选的完整正文。 |
 | 同批次下的 `reviews/<source-id>-r<n>.yaml` | 保存通过产物的结构化审阅记录；失败项保留理由和检查点引用，不能冒充已接受研究。 |
 | 同批次下的 `summary.md`、`updates/<existing-source-id>.md` | 确定性计数回执及通过审阅的独立更新材料；后续补充使用新 attempt 编号路径。 |
@@ -163,7 +164,7 @@ arXiv 的 `published` 是首次版本日期，`updated` 是当前版本更新时
 
 ## 9. 后续实施与启用门槛
 
-本轮仅修改总体架构、本文和工作流索引。**不创建执行脚本、模型配置、Secret、实际 GitHub workflow 或定时任务，不调用模型，不发布公众号。**
+当前已实现离线骨架、测试样例与隔离目录；不创建 Secret、实际 GitHub workflow 或定时任务，不调用真实模型，不改正式研究资料，不发布公众号。离线状态为 `test_accepted`，不代表本文定义的 `accepted`，也不模拟已在 GitHub 合并。
 
 后续实施预计增加来源/任务 YAML、轻量执行脚本和 GitHub workflow；先不含 schedule，完成固定样例演练，再经授权进行有限额度的真实手动验收。需要固定两个模型、预算和依赖，验证不同模型身份、独立证据审阅、失败闭环以及自动 PR 合并的规则兼容性。
 
@@ -183,7 +184,7 @@ arXiv 的 `published` 是首次版本日期，`updated` 是当前版本更新时
 | 部分来源失败、单份审阅失败 | 完整游标按来源推进，失败待办保留，不阻塞其他合格产物。 |
 | PR 已合并但响应丢失，或被外部关闭 | 查询实际状态后处理，无重复 PR/重复研究，不对抗人工关闭。 |
 | GitHub 要求人类审批、检查待批或规则不兼容 | 显式 blocked_configuration，不自动绕过；不会宣称无人值守已完成。 |
-| 本轮设计交付 | 仅三份 workflows Markdown 变更，没有可执行任务、实际 Secret 或公众号发布。 |
+| 离线阶段交付 | 运行骨架仅写隔离测试结果，不改正式研究资料，不创建实际 GitHub workflow、Secret 或公众号发布。 |
 
 ## 10. 当前设计的可复现检查
 

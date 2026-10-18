@@ -1,0 +1,81 @@
+binding:
+  evidence_sha256: 46696ca75bddbfc6415fcb24f3604e8cc9b1900e0dbaf22225dc5d9e80248bbc
+  baseline_sha256: 959024a827354c2a431f1bc28cc4d4334d65aa3eb90eb8856e7512b348292651
+  revision: 1
+response:
+  model_id: mock-research-v1
+  request_id: mock-research-blog-r2
+  summary: 虚构工程笔记介绍显式偏好字段，没有报告效果数据。
+  claims:
+  - text: 工程笔记使用显式字段保存用户偏好。
+    kind: fact
+    evidence_ids:
+    - E1
+  limitations:
+  - 没有延迟或准确率数据，不能推出效果提升。
+  usage:
+    cost_units: 2
+    input_tokens: 130
+    output_tokens: 55
+input:
+  role: research
+  original_evidence:
+    coverage: excerpt
+    text: 本虚构工程笔记使用显式字段保存用户偏好。作者没有报告延迟或准确率数据。
+    locators:
+    - id: E1
+      location: 虚构小节：字段设计
+      quote: 本虚构工程笔记使用显式字段保存用户偏好。
+    - id: E2
+      location: 虚构小节：限制
+      quote: 作者没有报告延迟或准确率数据。
+  candidate_sha256: null
+  independent_context: true
+  metadata:
+    title: '[虚构] 显式记忆块工程笔记'
+    source: 虚构工程博客
+    source_url: https://example.invalid/blog/memory-blocks
+    authors: []
+    published_at: null
+  revision_feedback:
+    previous_research:
+      model_id: mock-research-v1
+      request_id: mock-research-blog-r1
+      summary: 虚构工程笔记介绍显式偏好字段，并推测这可能降低延迟。
+      claims:
+      - text: 工程笔记使用显式字段保存用户偏好。
+        kind: fact
+        evidence_ids:
+        - E1
+      - text: 显式字段可能降低延迟，仍待验证。
+        kind: inference
+        evidence_ids:
+        - E1
+      limitations:
+      - 节选没有实验。
+      usage:
+        cost_units: 2
+        input_tokens: 110
+        output_tokens: 65
+    review:
+      model_id: mock-review-v1
+      request_id: mock-review-blog-r1
+      decision: revise
+      checks:
+      - claim_index: 0
+        evidence_ids:
+        - E1
+        verdict: supported
+      - claim_index: 1
+        evidence_ids:
+        - E2
+        verdict: uncertain
+      issues:
+      - location: claims[1]
+        severity: blocking
+        reason: 节选缺少延迟数据，推断对本记录没有必要。
+        suggestion: 删除延迟推断并明确没有效果数据。
+      usage:
+        cost_units: 2
+        input_tokens: 160
+        output_tokens: 60

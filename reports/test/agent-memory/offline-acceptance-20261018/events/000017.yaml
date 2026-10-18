@@ -1,0 +1,8 @@
+type: call_reserved
+reservation_id: 500f2fe8-1aab-404e-b475-79ec0f25c24b
+item_key: rejected-paper
+role: review
+revision: 0
+model_id: mock-review-v1
+month: 2026-10
+cost_units: 10

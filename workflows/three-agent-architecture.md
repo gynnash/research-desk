@@ -2,6 +2,7 @@
 
 - 版本：0.1；设计日期：2026-10-18。
 - 状态：**仅设计，尚未实现或启用自动任务，不连接公众号发布**。
+- 实施进度：已另行实现[离线运行骨架](offline-research.md)，仅用固定样例和模拟模型验收；本文中的真实运行与自动入库能力仍未实现或启用。
 - 目标：构建长期运行的 AI 技术研究与内容创作系统，持续收集一手资料、积累研究证据、发现技术变化，并为微信公众号提供可追溯的选题与文章。
 - 基础：沿用 Markdown、YAML、GitHub 与 Obsidian；不引入数据库或复杂 Agent 框架。
 
@@ -24,7 +25,7 @@ flowchart LR
     K <-->|现有 Git 同步| O[Obsidian 阅读与人工笔记]
 ```
 
-目前已手动验证“来源 → 报告 → 洞察 → 文章”链路。下一实施阶段仅建设 [Agent Memory Research MVP](agent-memory-github-actions-mvp.md)：新来源、更新建议与运行回执。自动综合报告、Insight 和 Writing 调度均属于后续阶段；本次仅保存设计，不创建执行脚本、Actions 配置或模型凭据。
+目前已手动验证“来源 → 报告 → 洞察 → 文章”链路，并实现[离线 Research 骨架](offline-research.md)。下一实施阶段按 [Agent Memory Research MVP](agent-memory-github-actions-mvp.md)逐步接入真实来源与模型：新来源、更新建议与运行回执。自动综合报告、Insight 和 Writing 调度均属于后续阶段；当前没有 Actions 配置或模型凭据。
 
 ## 2. 三个业务角色
 
@@ -37,6 +38,8 @@ flowchart LR
 `config/` 保存主题与后续任务配置，`workflows/` 保存规范、设计及验收流程；三 Agent 的日常运行无权修改这些配置、模板、校验器、`.obsidian/` 或 GitHub 权限。
 
 研究方向来自 [research_topics.yaml](../config/research_topics.yaml)。首期启用 `agent-memory`；未来可扩展 Agent RL 等方向，共用身份、引用和保护规则，不按主题复制同一来源。
+
+新增方向使用独立目录：正式来源拟按 `sources/<papers|blogs>/<primary-topic>/`，报告、洞察、文章按各自的 `<primary-topic>/`；测试数据统一放各目录的 `test/<topic>/`。旧资料保持原位，多主题来源以一个主要目录和 `topics` 列表表达，不复制文件。当前目录及离线输出边界见[离线运行说明](offline-research.md)。
 
 ## 3. 共享知识与逐级证据
 
@@ -108,4 +111,4 @@ GitHub 是共享资料与版本记录的主线，`main` 表示已正式入库的
 2. **综合研究与 Insight**：在稳定入库基础上增加跨来源报告和洞察，验收历史观点关联、反例与证据不足时的克制；不把每批新增强行解释为趋势。
 3. **Writing**：按选题产出大纲、初稿和候选稿，逐级引用和审阅；公众号发布始终是另行授权的独立能力。
 
-实施验收须覆盖：重复与新版识别、人工编辑保全、生成与审阅模型隔离、证据不足拒绝、候选变化使审阅失效、预算中断、部分失败补跑、PR 合并规则阻塞及 Obsidian 同步。本轮仅校验文档链接与现有资料规范，不宣称上述运行行为已经实现或验证。
+完整实施验收须覆盖：重复与新版识别、人工编辑保全、生成与审阅模型隔离、证据不足拒绝、候选变化使审阅失效、预算中断、部分失败补跑、PR 合并规则阻塞及 Obsidian 同步。当前已验证的范围限于[离线验收](offline-research.md)，不表示真实模型、自动 PR 或调度已经实现。

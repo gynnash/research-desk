@@ -1,0 +1,9 @@
+type: call_completed
+reservation_id: b9035557-0c2d-4ee6-b696-9fc0ce7e33e4
+item_key: revised-blog
+role: research
+revision: 0
+month: 2026-10
+cost_units: 2
+response_path: reports/test/agent-memory/offline-acceptance-20261018/checkpoints/revised-blog/research-0.yaml
+response_sha256: 73d4850b15df28e903994a84a0f37e0d21bb605e640a2a681c7ba4dd2448b097
