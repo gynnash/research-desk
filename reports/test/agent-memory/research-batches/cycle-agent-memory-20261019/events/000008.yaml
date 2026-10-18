@@ -1,0 +1,9 @@
+type: call_reserved
+key: langchain-fb2f55573b1a
+reservation_id: langchain-fb2f55573b1a:review:0
+role: review
+revision: 0
+model_id: gpt-6.1-sol
+month: 2026-10
+at: '2026-10-18T17:49:49.269629+00:00'
+usage_status: unknown

@@ -1,0 +1,88 @@
+candidate:
+  key: arxiv-54b2c1a25a4c
+  kind: paper
+  topic: agent-memory
+  metadata:
+    title: 'Beyond Downstream QA: Rethinking How We Evaluate Agent Memory'
+    source: arXiv
+    source_url: https://arxiv.org/abs/2610.22209
+    authors:
+    - Toma, Sebastian-Antonio
+    - de Kernier, Jean
+    - Ply, Mike
+    - Matei, Oliviu
+    published_at: '2026-10-15'
+    arxiv_id: '2610.22209'
+    source_version: v1
+  evidence:
+    coverage: abstract_only
+    extraction_coverage: abstract_only
+    source_url: https://arxiv.org/abs/2610.22209
+    source_version: v1
+    content_hash: a11351e13b004fe042d543110fe7cd46a3f66d476f5f6643f65b5166e36a7441
+    evidence_sha256: e9f4cccafca5ef177a771c70d234417fc96b9d59e835152bb15b0fa1bce07c1b
+    locators:
+    - id: A1
+      location: abstract_only sentence 1
+      text_sha256: 6ddd12d7d41ef7b3c5d47170c36766a8c0ea5545e06a750b5b1cd75c953beaba
+      quote: Agent memory benchmarks evaluate whether an agent's responses reflect
+        correct knowledge, measuring downstream question-answering accuracy as a proxy
+        for memory quality.
+    - id: A2
+      location: abstract_only sentence 2
+      text_sha256: 2eb99de716d0872bf84172026608f609e1bb9e3ec6af8e797da5b7e48982fdd4
+      quote: We show this evaluation
+    - id: A3
+      location: abstract_only sentence 3
+      text_sha256: 93a4b263ae14c7ed50d5f9382db6ed84f69ff0afa610cece83649966560e9221
+      quote: ''
+    - id: A4
+      location: abstract_only sentence 4
+      text_sha256: a920c00eb9f4e073eb1a3b438535bc71f032cd17cdf17621100f855244e6f521
+      quote: ''
+    - id: A5
+      location: abstract_only sentence 5
+      text_sha256: 6d9b1b680bd9c52003a3ba89fe5b22f5cea00c3a42b7919aa3c61f0ab54f2d47
+      quote: ''
+    - id: A6
+      location: abstract_only sentence 6
+      text_sha256: 0504976af9a8a84e73967ea95789dc04ddcb5d230a5fe3209d7de5abb8ecb3ed
+      quote: ''
+    - id: A7
+      location: abstract_only sentence 7
+      text_sha256: be1478a1385272e96a4937631b40cc9c209ee98a667e0ae24a6cbf9861c2b621
+      quote: ''
+  identity_keys:
+  - arxiv:2610.22209
+  - url:https://arxiv.org/abs/2610.22209
+  source_id: paper-a5a3171a-9891-4dea-8bfc-cdf0cf15bce0
+  existing_source_path: sources/papers/test/agent-memory/paper-a5a3171a-9891-4dea-8bfc-cdf0cf15bce0.md
+  existing_source_metadata:
+    schema_version: 1
+    id: paper-a5a3171a-9891-4dea-8bfc-cdf0cf15bce0
+    kind: paper
+    title: 'Beyond Downstream QA: Rethinking How We Evaluate Agent Memory'
+    source: arXiv
+    source_url: https://arxiv.org/abs/2610.22209
+    authors:
+    - Sebastian-Antonio Toma
+    - Jean de Kernier
+    - Mike Ply
+    - Oliviu Matei
+    published_at: '2026-10-15'
+    collected_at: '2026-10-18'
+    updated_at: '2026-10-18'
+    topics:
+    - agent-memory
+    status: inbox
+    related_sources: []
+    related_notes: []
+    arxiv_id: '2610.22209'
+    doi: null
+    source_version: v1
+  content_hash: a11351e13b004fe042d543110fe7cd46a3f66d476f5f6643f65b5166e36a7441
+  metadata_hash: 5a6389f2a982ede2269ad41b85ed6a3083cc6896f3b70a5bcbf756a41be39d9c
+  upstream_updated_at: '2026-10-15'
+material_sha256: e9f4cccafca5ef177a771c70d234417fc96b9d59e835152bb15b0fa1bce07c1b
+action: update
+reason: changed_evidence_separate_report

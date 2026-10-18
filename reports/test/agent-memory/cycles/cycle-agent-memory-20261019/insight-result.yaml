@@ -1,0 +1,53 @@
+schema_version: 1
+mode: insight_test
+backend: chatgpt_plan
+topic: agent-memory
+batch_id: cycle-agent-memory-20261019
+status: test_accepted
+production_accepted: false
+models:
+  generation: gpt-6-luna
+  review: gpt-6.1-sol
+actual_models:
+- gpt-6-luna
+- gpt-6.1-sol
+revision_count: 1
+reserved_calls: 4
+format_normalization_count: 0
+format_confirmation_calls: 0
+completed_calls: 4
+usage:
+- input_tokens: 9388
+  output_tokens: 2243
+  total_tokens: 11631
+- input_tokens: 11240
+  output_tokens: 824
+  total_tokens: 12064
+- input_tokens: 12041
+  output_tokens: 2186
+  total_tokens: 14227
+- input_tokens: 11366
+  output_tokens: 643
+  total_tokens: 12009
+outputs:
+  report: reports/test/agent-memory/insight-runs/cycle-agent-memory-20261019/report.md
+  insights:
+  - insights/test/agent-memory/cycle-agent-memory-20261019/insight-1.md
+  - insights/test/agent-memory/cycle-agent-memory-20261019/insight-2.md
+  topics:
+  - articles/test/agent-memory/cycle-agent-memory-20261019/topic-1.md
+  - articles/test/agent-memory/cycle-agent-memory-20261019/topic-2.md
+output_hashes:
+  reports/test/agent-memory/insight-runs/cycle-agent-memory-20261019/report.md: 9e6ebb9c72dfe91fcadcfa1b3f4be9ce69aea26c8b8ca6293def847726dbab8a
+  insights/test/agent-memory/cycle-agent-memory-20261019/insight-1.md: 17cecd7c7af170aa79e166306cfef299996cba13fb418b92814d6ab9a366b855
+  insights/test/agent-memory/cycle-agent-memory-20261019/insight-2.md: 6e1a640f87840a6767393a4ba66eaa1e5d1ef85aabde6b31374838d49e0127c8
+  articles/test/agent-memory/cycle-agent-memory-20261019/topic-1.md: b88239e326d9d826dbd96cb1f5a435e6106bf479368dd561228688630cfb5489
+  articles/test/agent-memory/cycle-agent-memory-20261019/topic-2.md: 38b22a1d263e6cc2d64e8fdbc7582f7aa6a99bfc012ff5595351280f301f4c84
+approval_required: true
+writing_started: false
+publish_authorized: false
+membership_remaining_quota: null
+api_billed_cost: null
+all_existing_notes_unchanged: true
+monthly_reserved_calls: 18
+effective_month_max_calls: 100

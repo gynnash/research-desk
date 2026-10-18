@@ -8,7 +8,7 @@ ResearchDesk 是一个以 Markdown、YAML、GitHub 和 Obsidian 为基础的 AI 
 
 目标流程由三个业务 Agent 完成：每周二、周五北京时间 09:00 自动 **Research 采集、研究与归纳 → Insight 综合历史、提炼洞察和公众号候选选题 → 用户确认选题、角度与受众 → Writing 生成大纲、初稿及候选稿**。各阶段共用独立模型审阅和确定性校验，日常研究、洞察和选题无需人工逐篇审批；写作必须绑定用户明确确认的选题版本，发布由用户另行决定。总体边界见[三 Agent 架构](workflows/three-agent-architecture.md)与[定时研究 MVP](workflows/agent-memory-github-actions-mvp.md)。[Insight 测试闭环](workflows/insight-agent-test.md)已生成待确认选题；当前增加 [Writing 离线闭环](workflows/writing-agent-offline.md)，只演练虚构选题的确认及模拟写作。真实人工确认入口与会员 Writing 后端仍待实现，定时仅保留设计。
 
-[Research → Insight 研究轮次](workflows/research-cycle.md)提供按方向发现资料并串联两个阶段的本地入口，所有新结果仍保存到 `test`；实际完成及恢复情况以轮次回执为准。新增 GitHub `ResearchDesk checks` 只在推送、PR 或手动触发时执行离线检查，不读取会员凭据、不研究新资料或写入仓库。长期执行主机、正式入库与定时启用仍需验收。
+[Research → Insight 研究轮次](workflows/research-cycle.md)按方向发现资料并串联两个阶段，所有新结果仍保存到 `test`。[自托管执行器](workflows/self-hosted-worker.md)支持当前 Mac 及用户自行配置的远程主机：GitHub 手动派发，主机使用自己的会员授权分析，独立作业校验后保存测试检查点；授权与运行环境留在仓库外。`ResearchDesk checks` 单独执行离线检查。真实执行及恢复情况以轮次回执为准；正式入库与定时尚未启用。
 
 可以结合 Codex 维护仓库、配置和校验，使用 ChatGPT Work 辅助论文阅读、研究讨论与文章草稿。两者共用 Markdown/YAML 约定；直接访问本地仓库的能力取决于使用环境和授权。研究成果需明确保存到本仓库并审阅提交，设备间同步沿用下述 Git 流程。[Codex 官方说明](https://developers.openai.com/codex/cli/)与 [ChatGPT Work 官方说明](https://learn.chatgpt.com/docs/get-started-with-work)可供参考。
 

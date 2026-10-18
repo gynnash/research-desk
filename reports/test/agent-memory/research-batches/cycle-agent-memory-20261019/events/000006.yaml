@@ -1,0 +1,9 @@
+type: call_reserved
+key: langchain-fb2f55573b1a
+reservation_id: langchain-fb2f55573b1a:research:0
+role: research
+revision: 0
+model_id: gpt-6-luna
+month: 2026-10
+at: '2026-10-18T17:49:39.202469+00:00'
+usage_status: unknown

@@ -1,0 +1,73 @@
+schema_version: 1
+mode: research_batch_test
+backend: chatgpt_plan
+topic: agent-memory
+batch_id: cycle-agent-memory-20261019
+status: test_accepted
+production_accepted: false
+models: &id001
+  research: gpt-6-luna
+  review: gpt-6.1-sol
+authorization:
+  authenticated: true
+  plan_permission: true
+  authorization: official_chatgpt_oauth
+  account_fingerprint: 658c777b3a755463
+items:
+- key: arxiv-54b2c1a25a4c
+  status: test_accepted
+  source_id: paper-a5a3171a-9891-4dea-8bfc-cdf0cf15bce0
+  coverage: abstract_only
+  revision_count: 0
+  models: *id001
+  actual_models:
+  - gpt-6-luna
+  - gpt-6.1-sol
+  reserved_calls: 2
+  completed_calls: 2
+  report_path: reports/test/agent-memory/research-batches/cycle-agent-memory-20261019/items/arxiv-54b2c1a25a4c/report.md
+  report_sha256: 6c92dbd34e1aa1be83d01cf1c3cd21f1d558a5e60c2fcac36bf734b8bf5dcb3d
+  finished_at: '2026-10-18T17:49:38.997872+00:00'
+  production_accepted: false
+- key: langchain-fb2f55573b1a
+  status: test_accepted
+  source_id: blog-5998abd8-039d-4211-9e8e-47a4c6d35fba
+  coverage: excerpt
+  revision_count: 0
+  models: *id001
+  actual_models:
+  - gpt-6-luna
+  - gpt-6.1-sol
+  reserved_calls: 2
+  completed_calls: 2
+  report_path: reports/test/agent-memory/research-batches/cycle-agent-memory-20261019/items/langchain-fb2f55573b1a/report.md
+  report_sha256: fdc8fa7ff4a022571803122c8eec9fa37b466c74fc969c9a0bcd15b972450c54
+  finished_at: '2026-10-18T17:49:55.802220+00:00'
+  production_accepted: false
+reserved_calls: 4
+completed_calls: 4
+actual_models:
+- gpt-6-luna
+- gpt-6.1-sol
+usage:
+- input_tokens: 760
+  output_tokens: 417
+  total_tokens: 1177
+- input_tokens: 1201
+  output_tokens: 188
+  total_tokens: 1389
+- input_tokens: 1400
+  output_tokens: 389
+  total_tokens: 1789
+- input_tokens: 1727
+  output_tokens: 192
+  total_tokens: 1919
+monthly_reserved_calls: 14
+effective_month_max_calls: 100
+membership_remaining_quota: null
+api_billed_cost: null
+cost_note: 真实会员共享额度不换算模拟单位或 API 金额；未知请求始终占用预算。
+all_existing_notes_unchanged: true
+formal_notes_unchanged: true
+receipt_path: reports/test/agent-memory/research-batches/cycle-agent-memory-20261019/receipt-attempt-1.yaml
+finished_at: '2026-10-18T17:49:55.889790+00:00'

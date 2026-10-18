@@ -1,0 +1,106 @@
+name: ResearchDesk manual cycle
+
+on:
+  workflow_dispatch:
+    inputs:
+      operation:
+        description: Health check, discovery only, or a bounded real membership cycle
+        required: true
+        default: health
+        type: choice
+        options: [health, discover, run]
+      cycle_id:
+        description: Reuse the same ID to resume; empty uses this GitHub run ID
+        type: string
+        default: ''
+      config:
+        description: Trusted research cycle YAML in this repository
+        type: string
+        default: config/cycles/agent-memory.yaml
+      fail_after:
+        description: Optional acceptance interruption; resume with none
+        type: choice
+        default: none
+        options: [none, after_research]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: researchdesk-membership-worker
+  cancel-in-progress: false
+
+jobs:
+  analyze:
+    if: github.ref == 'refs/heads/main'
+    runs-on: [self-hosted, researchdesk]
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: main
+          path: researchdesk-worker
+          clean: false
+          persist-credentials: false
+      - name: Prepare isolated bootstrap environment
+        working-directory: researchdesk-worker
+        run: |
+          python3 -m venv "$RUNNER_TEMP/researchdesk-bootstrap-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+          "$RUNNER_TEMP/researchdesk-bootstrap-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT/bin/python" -m pip install -r workflows/requirements.txt
+      - name: Run trusted main with configured external membership runtime
+        id: cycle
+        working-directory: researchdesk-worker
+        env:
+          OPERATION: ${{ inputs.operation }}
+          CYCLE_ID: ${{ inputs.cycle_id }}
+          CYCLE_CONFIG: ${{ inputs.config }}
+          FAIL_AFTER: ${{ inputs.fail_after }}
+        shell: bash
+        run: |
+          args=()
+          if [ "$FAIL_AFTER" = after_research ]; then args+=(--fail-after after_research); fi
+          "$RUNNER_TEMP/researchdesk-bootstrap-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT/bin/python" scripts/researchdesk_job.py execute \
+            --state "$RUNNER_TEMP/researchdesk-state-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT" \
+            --config "$CYCLE_CONFIG" --cycle-id "${CYCLE_ID:-agent-memory-gh-$GITHUB_RUN_ID}" \
+            --operation "$OPERATION" "${args[@]}"
+      - name: Export safe checkpoints even after a research failure
+        if: always() && steps.cycle.outcome != 'skipped' && inputs.operation != 'health'
+        id: export
+        working-directory: researchdesk-worker
+        run: |
+          "$RUNNER_TEMP/researchdesk-bootstrap-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT/bin/python" scripts/researchdesk_job.py export \
+            --state "$RUNNER_TEMP/researchdesk-state-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT" \
+            --destination "$RUNNER_TEMP/researchdesk-export-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+      - name: Preserve append-only test checkpoints
+        if: always() && steps.export.outcome == 'success'
+        uses: actions/upload-artifact@v7
+        with:
+          name: researchdesk-test-checkpoints
+          path: ${{ runner.temp }}/researchdesk-export-${{ github.run_id }}-${{ github.run_attempt }}/
+          if-no-files-found: error
+          retention-days: 14
+
+  save-checkpoints:
+    needs: analyze
+    if: always() && github.ref == 'refs/heads/main' && needs.analyze.result != 'skipped' && inputs.operation != 'health'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: main
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+      - name: Install validation dependency
+        run: python -m pip install -r workflows/requirements.txt
+      - uses: actions/download-artifact@v8
+        with:
+          name: researchdesk-test-checkpoints
+          path: ${{ runner.temp }}/researchdesk-test-checkpoints
+      - name: Validate and save test results without overwriting existing files
+        run: python scripts/researchdesk_job.py apply --artifact "$RUNNER_TEMP/researchdesk-test-checkpoints"

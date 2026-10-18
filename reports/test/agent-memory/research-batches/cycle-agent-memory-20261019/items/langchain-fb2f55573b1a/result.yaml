@@ -1,0 +1,17 @@
+key: langchain-fb2f55573b1a
+status: test_accepted
+source_id: blog-5998abd8-039d-4211-9e8e-47a4c6d35fba
+coverage: excerpt
+revision_count: 0
+models:
+  research: gpt-6-luna
+  review: gpt-6.1-sol
+actual_models:
+- gpt-6-luna
+- gpt-6.1-sol
+reserved_calls: 2
+completed_calls: 2
+report_path: reports/test/agent-memory/research-batches/cycle-agent-memory-20261019/items/langchain-fb2f55573b1a/report.md
+report_sha256: fdc8fa7ff4a022571803122c8eec9fa37b466c74fc969c9a0bcd15b972450c54
+finished_at: '2026-10-18T17:49:55.802220+00:00'
+production_accepted: false

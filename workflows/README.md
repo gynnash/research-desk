@@ -9,7 +9,7 @@
 
 ## Research → Insight 研究轮次
 
-[轮次入口与 GitHub 验收](research-cycle.md)将按方向发现资料、查重、Research 独立审阅和 Insight 选题串联，结果只写测试目录；真实执行及恢复结果以轮次回执为准。GitHub 的 `ResearchDesk checks` 只执行离线规范与关键轮次检查，不使用会员凭据、调用研究模型或写入仓库；真实研究由本地或后续验收的执行主机完成。每周二、周五 09:00 的定时与正式自动入库尚未启用。
+[轮次入口与 GitHub 验收](research-cycle.md)将按方向发现资料、查重、Research 独立审阅和 Insight 选题串联，结果只写测试目录；真实执行及恢复结果以轮次回执为准。GitHub 的 `ResearchDesk checks` 只执行离线检查；[手动执行器](self-hosted-worker.md)使用当前 Mac 或用户配置的远程主机运行真实研究，并将测试检查点保存回仓库。每周二、周五 09:00 的定时与正式自动入库尚未启用。
 
 ## Writing 离线闭环
 

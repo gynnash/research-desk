@@ -18,6 +18,7 @@ import researchdesk_batch_inputs as common
 import researchdesk_batch as research
 import researchdesk_insight as insight
 import researchdesk_cycle_discovery as discovery
+from researchdesk_sources import SafeFetcher
 
 
 def load_config(root, path):
@@ -126,12 +127,63 @@ def _cached(root, receipt):
     return dict(receipt, cached=True)
 
 
+class CycleFetcher:
+    """Keep a bounded cycle's source versions in memory, never in Git."""
+    def __init__(self, delegate=None):
+        self.delegate = delegate or SafeFetcher(retries=0)
+        self.responses = {}
+
+    def fetch(self, url):
+        if url not in self.responses:
+            self.responses[url] = self.delegate.fetch(url)
+        return dict(self.responses[url])
+
+
+def plan_candidates(root, config, cycle_id, snapshot, fetcher):
+    base = base_path(config, cycle_id)
+    path = base + '/selection.yaml'
+    if store.safe_path(root,path).exists():
+        return store.checked_yaml(root,path)
+    pool = []
+    for pending_path in sorted((root/('reports/test/'+config['topic']+'/cycles')).glob('*/pending.yaml')):
+        if pending_path.parent.name != cycle_id:
+            pool += [item for item in store.checked_yaml(root,pending_path.relative_to(root)).get('items',[]) if item.get('source')]
+    pool += snapshot['candidates'] + [item for item in snapshot.get('deferred',[]) if item.get('source')]
+    # Prefer the newest discovery for a stable identity. Otherwise an old
+    # version left in a previous pending list could hide every later update.
+    latest = {}
+    for item in pool:
+        latest[item['source']['id']] = item
+    selected, skipped, pending, per_source = [], [], [], {}
+    child_config = {'topic':config['topic']}
+    for item in list(latest.values())[:1000]:
+        source = item['source']
+        if len(selected)>=config['discovery']['max_documents'] or per_source.get(source['adapter'],0)>=config['discovery']['max_per_source']:
+            pending.append(dict(item,reason='cycle_capacity'))
+            continue
+        try:
+            candidate, _ = common.fetch_candidate(root,child_config,source,fetcher)
+            action = research.classify(root,'reports/test/%s/research-batches/%s'%(config['topic'],cycle_id),candidate,'chatgpt_plan',set())
+        except Exception as exc:
+            pending.append(dict(item,reason='preflight_source_failed',error_type=type(exc).__name__))
+            continue
+        if action['action'] in {'duplicate','blocked'}:
+            skipped.append({'source':source,**action})
+            continue
+        selected.append(item)
+        per_source[source['adapter']]=per_source.get(source['adapter'],0)+1
+    result={'candidates':selected,'skipped':skipped,'pending':pending}
+    store.save_yaml(root,path,result)
+    return result
+
+
 def run(root, config_path, cycle_id, client=None, fetcher=None, fail_after=None):
     root = Path(root).resolve()
     initial = load_config(root, config_path)
     base = base_path(initial, cycle_id)
     if fail_after not in (None, 'after_research'):
         raise store.OfflineError('无效轮次断点')
+    fetcher = CycleFetcher(fetcher)
     with cycle_lock(root, initial['topic']):
         config, manifest, snapshot = discover_cycle(root, config_path, cycle_id, fetcher=fetcher)
         receipt_path = base + '/receipt.yaml'
@@ -139,9 +191,11 @@ def run(root, config_path, cycle_id, client=None, fetcher=None, fail_after=None)
             return _cached(root, store.checked_yaml(root, receipt_path))
         input_hashes = {base+'/manifest.yaml':store.digest((root/base/'manifest.yaml').read_bytes()),
                         base+'/discovery.yaml':store.digest((root/base/'discovery.yaml').read_bytes())}
-        results, outputs, pending = {}, {}, list(snapshot.get('deferred', []))
-        candidates = snapshot['candidates']
-        status = 'no_new' if snapshot.get('status') == 'complete' else 'partial'
+        selection = plan_candidates(root,config,cycle_id,snapshot,fetcher)
+        input_hashes[base+'/selection.yaml']=store.digest((root/base/'selection.yaml').read_bytes())
+        results, outputs, pending = {}, {}, list(snapshot.get('deferred', [])) + selection['pending']
+        candidates = selection['candidates']
+        status = {'complete': 'no_new', 'failed': 'discovery_failed'}.get(snapshot.get('status'), 'partial')
         if candidates:
             history_path = base + '/history.yaml'
             if store.safe_path(root, history_path).exists():

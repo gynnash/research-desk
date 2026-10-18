@@ -1,0 +1,14 @@
+type: call_completed
+key: arxiv-54b2c1a25a4c
+reservation_id: arxiv-54b2c1a25a4c:review:0
+role: review
+revision: 0
+model_id: gpt-6.1-sol
+at: '2026-10-18T17:49:38.990908+00:00'
+response_path: reports/test/agent-memory/research-batches/cycle-agent-memory-20261019/items/arxiv-54b2c1a25a4c/checkpoints/review-0.yaml
+response_sha256: 1f43c423d8edd6058e5e79387fbcf2fc505ef964c01d827e1e68be103b6bdd8f
+usage:
+  input_tokens: 1201
+  output_tokens: 188
+  total_tokens: 1389
+usage_status: reported

@@ -48,6 +48,8 @@ def _outside(root, value):
     if not isinstance(value, str) or not value or '\x00' in value:
         raise RunnerError('runtime_path_invalid')
     path = Path(value).expanduser().absolute()
+    if not Path(value).expanduser().is_absolute():
+        raise RunnerError('runtime_path_must_be_absolute_or_home_relative')
     for entry in (path,) + tuple(path.parents):
         if entry.is_symlink():
             raise RunnerError('runtime_path_symlink')
@@ -75,8 +77,8 @@ def load_config(root, config_path='config/runtime.yaml'):
         raise RunnerError('runner_name_invalid')
     labels = runner['labels']
     if (not isinstance(labels, list) or not 1 <= len(labels) <= 10
-            or len(set(labels)) != len(labels)
-            or any(not isinstance(label, str) or not re.fullmatch(r'[A-Za-z0-9_.-]{1,64}', label) for label in labels)):
+            or any(not isinstance(label, str) or not re.fullmatch(r'[A-Za-z0-9_.-]{1,64}', label) for label in labels)
+            or len(set(labels)) != len(labels)):
         raise RunnerError('runner_labels_invalid')
     directory = _outside(root, runner['directory'])
     venv = _outside(root, python['venv'])
@@ -186,6 +188,23 @@ def _install_package(root, config, system, architecture):
 def _service_state(directory):
     if not (directory / 'svc.sh').is_file():
         return 'unavailable'
+    if platform.system() == 'Darwin':
+        marker = directory / '.service'
+        if not marker.is_file():
+            return 'not_installed'
+        plist = Path(marker.read_text(encoding='utf-8').strip())
+        if not plist.is_file():
+            return 'not_installed'
+        label = plist.stem
+        if not re.fullmatch(r'actions\.runner\.[A-Za-z0-9_.@-]+', label):
+            return 'unknown'
+        result = _run(['launchctl', 'list', label], directory,
+                      'runner_service_status_failed', check=False)
+        # svc.sh says Started when a label is loaded, even if its process has
+        # exited. Check the real PID instead of treating a loaded job as live.
+        if result.returncode:
+            return 'stopped'
+        return 'running' if re.search(r'"PID"\s*=\s*[1-9]\d*\s*;', result.stdout) else 'stopped'
     if platform.system() == 'Linux' and (directory / '.service').is_file():
         # The Linux svc wrapper requires root even for status. systemctl's
         # read-only is-active query does not need service mutation privileges.
@@ -223,7 +242,8 @@ def doctor(root, config):
     python = venv / 'bin/python'
     dependencies = False
     if python.is_file():
-        dependencies = _run([str(python), '-c', 'import yaml, jwt, cryptography'], root,
+        dependencies = _run([str(python), '-c',
+                             'import sys; assert sys.version_info >= (3, 9); import yaml, jwt, cryptography'], root,
                             'runtime_python_check_failed', check=False).returncode == 0
     profile_info = _permissions(profile)
     credential_info = _permissions(profile / 'credentials.json')
@@ -242,6 +262,8 @@ def doctor(root, config):
 def setup(root, config):
     """Install/register/start on this host; caller authorizes host mutations."""
     root = Path(root).resolve()
+    if sys.version_info < (3, 9):
+        raise RunnerError('python_3_9_or_newer_required')
     if os.getuid() == 0:
         raise RunnerError('run_setup_as_normal_user_not_root')
     if any(shutil.which(tool) is None for tool in ('git', 'gh', 'curl', 'tar')):
@@ -297,6 +319,8 @@ def main():
     parser.add_argument('command', choices=('doctor', 'setup'))
     args = parser.parse_args()
     try:
+        if sys.version_info < (3, 9):
+            raise RunnerError('python_3_9_or_newer_required')
         root = Path(args.root).resolve()
         config = load_config(root, args.config)
         result = doctor(root, config) if args.command == 'doctor' else setup(root, config)

@@ -1,4 +1,5 @@
-# Installed on the current Mac; all personal files stay outside Git and Obsidian.
+# Intended for the current Mac; this configuration does not install a runner.
+# All personal runtime files stay outside Git and Obsidian.
 # setup installs a user LaunchAgent; run as your normal user, without sudo.
 schema_version: 1
 environment: local

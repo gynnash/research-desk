@@ -1,0 +1,30 @@
+schema_version: 1
+mode: research_batch_test
+backend: chatgpt_plan
+topic: agent-memory
+topics_file: config/research_topics.yaml
+models:
+  research: gpt-6-luna
+  review: gpt-6.1-sol
+budget:
+  max_documents: 2
+  max_calls_per_item: 4
+  max_calls_per_batch: 6
+  month_max_calls: 100
+  max_input_chars: 30000
+  max_output_chars: 8000
+  timeout_seconds: 120
+  max_revisions: 1
+prompts:
+  version: research-batch-v1
+sources:
+- id: arxiv-54b2c1a25a4c
+  adapter: arxiv
+  kind: paper
+  url: https://arxiv.org/abs/2610.22209v1
+  evidence_max_chars: 6000
+- id: langchain-fb2f55573b1a
+  adapter: langchain
+  kind: blog
+  url: https://www.langchain.com/blog/october-2026-langchain-newsletter
+  evidence_max_chars: 6000
