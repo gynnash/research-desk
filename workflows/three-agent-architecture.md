@@ -1,8 +1,8 @@
 # ResearchDesk 三 Agent 总体架构
 
-- 版本：0.8；修订日期：2026-10-19。
+- 版本：0.9；修订日期：2026-10-19。
 - 状态：**Research / Insight、GitHub 到 Mac、正式入库与 Obsidian 同步均已验收；每周二/周五北京时间09:00已启用，首次定时结果尚待发生。Writing 仍为离线模拟，未确认真实选题或发布公众号**。
-- 实施进度：已有[离线骨架](offline-research.md)、[真实资料采集测试](real-source-collection.md)和[本地会员真实研究与独立审阅](local-membership-analysis.md)。[配置驱动的 Research 批次闭环](configurable-research-batch.md)已通过一篇论文摘要与一篇博客节选的真实验收，共 4 次请求，独立审阅均通过，计划中断后补跑与完整缓存补跑均未重复调用；[验收记录](../reports/test/agent-memory/research-batches/configured-research-20261019/acceptance.md)只在测试区。[Insight 测试闭环](insight-agent-test.md)也已通过[真实验收](../reports/test/agent-memory/insight-runs/insight-agent-memory-20261019/acceptance.md)：两份已审阅 Research 与五份显式历史基线生成综合报告、2 条洞察和 2 张待确认选题卡，独立模型审阅通过；4 次请求含一次修订、语法规范化及独立格式确认，补跑未增加调用。[Writing 离线闭环](writing-agent-offline.md)已通过[虚构样例验收](../reports/test/agent-memory/writing-runs/writing-offline-20261019/acceptance.md)：三阶段独立模拟审阅通过，初稿修订一次，共 8 次模拟调用，三个断点恢复及缓存补跑未追加调用，会员调用为 0。[正式准入及定时启用](formal-admission-acceptance-2026-10-19.md)已完成：GitHub 新增 7 份正式 Markdown 并同步 Obsidian，0 新增模型调用；固定时间槽调度读取 `automation.yaml`，已在正式验收后开启。真实人工确认入口及会员 Writing 后端仍待实现。
+- 实施进度：已有[离线骨架](offline-research.md)、[真实资料采集测试](real-source-collection.md)和[本地会员真实研究与独立审阅](local-membership-analysis.md)。[配置驱动的 Research 批次闭环](configurable-research-batch.md)已通过一篇论文摘要与一篇博客节选的真实验收，共 4 次请求，独立审阅均通过，计划中断后补跑与完整缓存补跑均未重复调用；[验收记录](../reports/test/agent-memory/research-batches/configured-research-20261019/acceptance.md)只在测试区。[Insight 测试闭环](insight-agent-test.md)也已通过[真实验收](../reports/test/agent-memory/insight-runs/insight-agent-memory-20261019/acceptance.md)：两份已审阅 Research 与五份显式历史基线生成综合报告、2 条洞察和 2 张待确认选题卡，独立模型审阅通过；4 次请求含一次修订、语法规范化及独立格式确认，补跑未增加调用。[Writing 离线闭环](writing-agent-offline.md)已通过[虚构样例验收](../reports/test/agent-memory/writing-runs/writing-offline-20261019/acceptance.md)：三阶段独立模拟审阅通过，初稿修订一次，共 8 次模拟调用，三个断点恢复及缓存补跑未追加调用，会员调用为 0。[正式准入及定时启用](formal-admission-acceptance-2026-10-19.md)已完成：GitHub 新增 7 份正式 Markdown 并同步 Obsidian，0 新增模型调用；固定时间槽调度读取 `automation.yaml`，已在正式验收后开启。真实人工确认页面及 Git 保存已实现；会员 Writing 后端仍待接通。
 - 目标：构建长期运行的 AI 技术研究与内容创作系统，持续收集一手资料、积累研究证据、发现技术变化，并为微信公众号提供可追溯的选题与文章。
 - 基础：沿用 Markdown、YAML、GitHub 与 Obsidian；不引入数据库或复杂 Agent 框架。
 
@@ -119,9 +119,9 @@ Research 已启用**每周二、周五北京时间 09:00**的 GitHub Actions 调
 
 选题卡必须给出稳定 ID、版本或内容散列、核心观点、写作角度、目标读者、主要依据、证据缺口和推荐范围。用户可在后续明确的确认入口接受或调整这些内容；仅编辑笔记、阅读选题、模型返回 `pass` 或没有回复均不是确认。
 
-当前 Insight 测试由程序将选题状态固定为 `proposed`、`approval_required: true`、`writing_started: false`；模型不能将候选标记为已确认。已生成的两张真实选题卡保持原样，不因测试审阅通过而启动 Writing。当前新增的离线写作只使用虚构选题的 `offline_fixture` 确认，不能冒称用户批准了这些真实选题；真实人工确认入口仍待实现。
+Insight 将选题状态固定为 `proposed`、`approval_required: true`、`writing_started: false`，模型不能将候选标记为已确认。[真实选题确认页](topic-confirmation-mvp.md)已接通正式选题、完整证明校验、冻结预览、用户确认与撤回，记录在独立工作目录创建并普通提交推送；本轮未代用户确认任何真实选题。既有离线 Writing 继续只读虚构 `offline_fixture` 确认；真实会员 Writing 尚未接通，用户确认后当前状态为等待接入。
 
-[真实选题确认入口设计](topic-confirmation-mvp.md)采用轻量 localhost 页面：用户查看证据范围、调整角度和受众、直接点击确认；受信任本机入口将确认绑定选题、证据及执行版本，追加确认、撤回和一次执行记录。Codex / ChatGPT Work 协助预览和打开页面，模型审阅不能代替点击。当前只完成设计，未创建页面、真实确认或会员写作任务。
+[真实选题确认入口](topic-confirmation-mvp.md)采用轻量 localhost 页面：用户查看证据范围、调整角度和受众、直接点击确认；受信任本机入口绑定选题、证据及配置版本，追加确认与撤回记录。Codex / ChatGPT Work 协助预览和打开页面，模型审阅不能代替点击。页面与 Git 保存已实现，真实写作执行及一次执行占用仍为下一阶段。
 
 确认记录由受信任程序根据用户明确操作创建，绑定选题卡及证据输入的路径、散列、角度和受众。模型不能创建或批准自己的确认记录。Writing 启动前再次核对绑定内容；选题、角度、受众或证据发生实质变化时，需要新确认，不能将旧确认套用到新主题。确认与文章版本一并保留，允许用户撤回尚未执行的确认。
 
@@ -136,8 +136,8 @@ Writing 离线骨架固定大纲、初稿、候选稿三个阶段：前置阶段
 1. **配置驱动的 Research 测试批次**：已验收 YAML 主题、来源、模型和预算下的一篇论文摘要与一篇博客节选，接通真实会员研究、独立审阅、失败补跑与测试回执，既有资料保持不变。
 2. **综合研究、Insight 与选题测试**：已用两份已审阅 Research 与五份显式历史基线，完成跨来源综合报告、2 条洞察和 2 张待确认选题卡的真实独立审阅，并验证中断恢复与缓存补跑不追加请求。证据不足、无选题、拒绝、预算及门禁失败另由离线测试覆盖；全部结果只写测试目录，不将模拟场景冒称真实模型验收。
 3. **Writing 确认门禁与离线骨架**：已通过虚构 `offline_fixture` 确认及大纲、初稿、候选稿逐级独立模拟审阅；初稿修订一次，总计 8 次模拟调用，三个断点恢复及完整缓存补跑未追加调用。真实选题保持待确认，会员调用为 0，产物只写测试目录；其他失败门禁由隔离离线测试覆盖。
-4. **真实确认与会员 Writing**：实现可信、可审计的人工确认入口，再按确认的真实选题版本小额度生成大纲、初稿和候选稿，逐级引用与独立审阅；公众号发布继续作为独立授权能力。
+4. **真实确认与会员 Writing**：本地人工确认页面及可审计 Git 保存已实现。下一步接入唯一会员写作通道，按有效确认的小额度生成大纲、初稿和候选稿，逐级引用、独立审阅和失败恢复；公众号发布继续单独授权。
 5. **正式运行与入库**：持久时间槽、受限 create-only 保存、Obsidian 同步及每周两次调度已启用；真实手动轮次通过，首个自然定时及长期在线尚待验证。PR 方案仍为可选后续扩展，不是当前依赖。
 6. **开源交付**：从配置边界开始保持可移植性，再补齐初始化、部署说明、许可证与贡献约定；示例不包含个人凭据、账户信息或研究库私有内容。
 
-完整实施验收须覆盖：重复与新版识别、人工编辑保全、生成与审阅模型隔离、证据不足拒绝、候选变化使审阅失效、预算中断、部分失败补跑、PR 合并规则阻塞、Obsidian 同步、自动选题和绑定版本的人工确认。已验证的范围包括离线闭环、真实采集及[单篇摘要会员分析](local-membership-analysis.md)；Research、Insight 与 Writing 离线批次状态分别以[配置驱动说明](configurable-research-batch.md)、[Insight 测试说明](insight-agent-test.md)、[Writing 离线说明](writing-agent-offline.md)及实际回执为准，不表示自动 PR、真实人工确认或会员 Writing 已实现；调度是否开启以 automation.yaml 为准，远端正式保存和首个定时结果须核对实际回执。
+完整实施验收须覆盖：重复与新版识别、人工编辑保全、生成与审阅模型隔离、证据不足拒绝、候选变化使审阅失效、预算中断、部分失败补跑、PR 合并规则阻塞、Obsidian 同步、自动选题和绑定版本的人工确认。已验证的范围包括离线闭环、真实采集及[单篇摘要会员分析](local-membership-analysis.md)；Research、Insight 与 Writing 离线批次状态分别以[配置驱动说明](configurable-research-batch.md)、[Insight 测试说明](insight-agent-test.md)、[Writing 离线说明](writing-agent-offline.md)及实际回执为准，不表示自动 PR 或会员 Writing 已实现，真实确认以页面及确认回执为准；调度是否开启以 automation.yaml 为准，远端正式保存和首个定时结果须核对实际回执。

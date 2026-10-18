@@ -37,3 +37,5 @@ jobs:
         run: python -m unittest discover -s tests -p 'test_url_history_dedup.py' -v
       - name: Check create-only admission without model calls
         run: python -m unittest discover -s tests -p 'test_admission.py' -v
+      - name: Check real topic confirmation and local Git recovery
+        run: python -m unittest discover -s tests -p 'test_confirmation.py' -v

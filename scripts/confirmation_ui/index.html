@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>ResearchDesk · 选题确认</title>
+  <link rel="stylesheet" href="/style.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <div class="app">
+    <header class="header">
+      <div class="logo" aria-hidden="true">R</div>
+      <div><div class="brand">ResearchDesk</div><div class="brand-sub">从研究证据，到值得写的文章</div></div>
+      <span class="local-badge">本地选题确认</span>
+    </header>
+    <div class="layout">
+      <aside class="sidebar" aria-label="工作台导航">
+        <div class="section-label">内容工作台</div>
+        <button class="nav" data-action="topics" aria-current="page"><span>待确认选题</span><span id="topic-count" class="count">—</span></button>
+        <button class="nav" data-action="records"><span>确认记录</span><span id="record-count" class="count">—</span></button>
+        <div class="sidebar-foot"><strong>决定写什么，由你确认</strong>研究资料保持原样。<br>确认后也不会发布公众号。</div>
+      </aside>
+      <main id="main" class="main">
+        <p class="service-note"><span class="status-dot" aria-hidden="true"></span>真实保存确认与撤回记录。Writing 尚未接通，当前不会启动写作。</p>
+        <div id="global-error" class="notice error" role="alert" hidden><p id="global-error-text"></p><button class="text-button" data-action="reload">重新加载</button></div>
+        <div id="loading" class="loading" role="status">正在读取工作台…</div>
+
+        <section data-screen="topics" hidden>
+          <div class="page-heading"><div><p class="eyebrow">自动研究之后，由你决定写什么</p><h1 tabindex="-1">选一篇你想写的文章</h1><p class="lead">先看依据，再调整角度，最后保存这一次的写作确认。</p></div><button class="secondary compact" data-action="reload">刷新</button></div>
+          <div id="topic-list" class="topic-list"></div>
+          <div id="topics-empty" class="empty card" hidden><h2>暂时没有待确认选题</h2><p>通过审阅并正式入库的选题会出现在这里。已有确认可以在“确认记录”中查看。</p></div>
+          <div class="process" aria-label="选题确认流程"><span>① 核对证据</span><span aria-hidden="true">→</span><span>② 调整写作要求</span><span aria-hidden="true">→</span><span>③ 保存确认</span></div>
+        </section>
+
+        <section data-screen="evidence" hidden>
+          <button class="back" data-action="topics">← 返回待确认选题</button>
+          <div class="stepper"><span aria-current="step">① 核对证据</span><span>② 写作要求</span><span>③ 最终确认</span></div>
+          <h1 tabindex="-1">这个选题，有哪些依据？</h1><p id="evidence-title" class="lead"></p>
+          <div class="two-col">
+            <div><h2 class="small-heading">研究与历史资料</h2><div id="evidence-list"></div><div class="notice warm"><strong>审阅通过，也要保留证据边界</strong><p>摘要、博客节选与历史笔记的阅读范围会保留到最终预览。文章仍需区分原文事实、作者主张和我们的推断。</p></div></div>
+            <aside class="side-box"><h2 class="small-heading">这篇文章拟回答</h2><ul id="evidence-questions" class="detail-list"></ul><h2 class="small-heading separated">当前证据缺口</h2><ul id="evidence-gaps" class="detail-list"></ul></aside>
+          </div>
+          <div class="actions"><span class="small">原选题和研究笔记保持不变</span><button class="primary" data-action="edit">调整写作要求 →</button></div>
+        </section>
+
+        <section data-screen="edit" hidden>
+          <button class="back" data-action="evidence">← 返回证据预览</button>
+          <div class="stepper"><span>① 核对证据</span><span aria-current="step">② 写作要求</span><span>③ 最终确认</span></div>
+          <h1 tabindex="-1">把它变成你想写的文章</h1><p class="lead">调整的是本次写作要求，原选题卡和研究笔记保持不变。</p>
+          <form id="edit-form">
+            <div class="two-col">
+              <div class="fields">
+                <label for="title">文章标题<input id="title" name="title" type="text" maxlength="120" required autocomplete="off"></label>
+                <label for="angle">写作角度<textarea id="angle" name="angle" maxlength="1200" required></textarea><span class="hint">修改标题或角度不代表新增判断已被核实。仍以现有证据为限，后续写作需要继续核查。</span></label>
+                <label for="audience">目标读者<input id="audience" name="audience" type="text" maxlength="240" required autocomplete="off"></label>
+                <label for="target-words">目标字数<input id="target-words" name="target_words" type="number" step="1" required><span id="words-hint" class="hint"></span></label>
+              </div>
+              <aside class="preview-paper"><span class="preview-label">文章定位 · 随输入更新</span><h2 id="draft-title"></h2><div class="preview-block"><strong>写给谁</strong><p id="draft-audience"></p></div><div class="preview-block"><strong>从什么角度写</strong><p id="draft-angle"></p></div><div class="preview-block"><strong>后续写作范围</strong><div class="phases"><span>大纲</span><span aria-hidden="true">→</span><span>初稿</span><span aria-hidden="true">→</span><span>候选稿</span></div><p>Writing 尚未接通。本页只保存确认，不会启动模型调用。</p></div></aside>
+            </div>
+            <p id="edit-error" class="inline-error" role="alert" hidden></p>
+            <div class="actions"><span class="small">下一步展示固定版本、证据和调用上限</span><button id="preview-button" class="primary" type="submit">查看最终预览 →</button></div>
+          </form>
+        </section>
+
+        <section data-screen="review" hidden>
+          <button class="back" data-action="edit">← 继续调整</button>
+          <div class="stepper"><span>① 核对证据</span><span>② 写作要求</span><span aria-current="step">③ 最终确认</span></div>
+          <h1 tabindex="-1">核对这个版本，再保存确认</h1><p class="lead">确认绑定这次预览；来源或写作要求变化后，需要重新确认。</p>
+          <article class="card review-sheet"><span class="preview-label">本次写作预览 · 固定版本</span><h2 id="final-title"></h2><div class="review-grid"><div class="review-item"><span>目标读者</span><p id="final-audience"></p></div><div class="review-item"><span>目标篇幅</span><p id="final-words"></p></div><div class="review-item wide"><span>写作角度</span><p id="final-angle"></p></div></div><div class="preview-block"><strong>证据范围</strong><div id="final-evidence"></div></div><div class="preview-block"><strong>待保留的证据缺口</strong><ul id="final-gaps" class="detail-list"></ul></div><div class="preview-block"><strong>拟回答的问题</strong><ul id="final-questions" class="detail-list"></ul></div><div class="preview-block"><strong>后续写作配置</strong><div class="phases"><span>大纲</span><span aria-hidden="true">→</span><span>初稿</span><span aria-hidden="true">→</span><span>候选稿</span></div><p id="final-models"></p><p id="final-budget"></p><p>首次真实写作将保存到测试区；公众号发布始终需要另行授权。</p></div></article>
+          <div class="notice warm"><strong>Writing 尚未接通</strong><p>保存后状态为“已确认 · 等待接通 Writing”。本次操作不会启动写作、消耗会员用量或发布公众号。</p></div>
+          <label class="agreement"><input id="acknowledged" type="checkbox"><span>我已核对标题、角度、受众与证据范围，确认按本次预览保存写作授权。<span class="hint">这是一次真实确认，可在确认记录中撤回。</span></span></label>
+          <p id="review-error" class="inline-error" role="alert" hidden></p>
+          <div class="actions"><span id="preview-expiry" class="small"></span><button id="confirm-button" class="primary" disabled>保存写作确认</button></div>
+        </section>
+
+        <section data-screen="records" hidden>
+          <div class="page-heading"><div><p class="eyebrow">每一次确认，都可以追溯</p><h1 tabindex="-1">确认记录</h1><p class="lead">当前只保存授权。Writing 尚未接通，未开始写作。</p></div><button class="secondary compact" data-action="reload-records">刷新记录</button></div>
+          <div id="records-message" class="notice success" role="status" hidden></div>
+          <div id="record-list" class="record-list"></div>
+          <div id="records-empty" class="empty card" hidden><h2>还没有确认记录</h2><p>选择一张选题，核对证据并保存确认后，会显示在这里。</p><button class="primary" data-action="topics">查看待确认选题 →</button></div>
+          <div class="notice quiet"><strong>撤回会保留历史记录</strong><p>撤回不会删除选题、研究笔记或已有稿件，也不会授予公众号发布权限。</p></div>
+        </section>
+        <p id="live" class="sr-only" role="status" aria-live="polite"></p>
+      </main>
+    </div>
+  </div>
+  <dialog id="revoke-dialog" aria-labelledby="revoke-heading">
+    <form id="revoke-form"><h2 id="revoke-heading">撤回这次写作确认</h2><p id="revoke-title" class="lead"></p><p>撤回将保存一条新记录，原确认和研究资料会保留。</p><label for="revoke-reason">撤回原因<textarea id="revoke-reason" maxlength="500" required placeholder="例如：想调整文章角度"></textarea></label><p id="revoke-error" class="inline-error" role="alert" hidden></p><div class="dialog-actions"><button class="secondary" type="button" data-action="cancel-revoke">保留确认</button><button id="revoke-button" class="danger" type="submit">确认撤回</button></div></form>
+  </dialog>
+  <dialog id="document-dialog" class="document-dialog" aria-labelledby="document-heading"><div class="document-heading"><div><h2 id="document-heading">证据笔记 · 只读</h2><p class="small">这里展示已入库笔记，阅读范围仍以来源记录为准。</p></div><button class="secondary compact" type="button" data-action="close-document">关闭</button></div><p id="document-path" class="source-path"></p><p id="document-error" class="inline-error" role="alert" hidden></p><pre id="document-content" class="document-content"></pre></dialog>
+</body>
+</html>
