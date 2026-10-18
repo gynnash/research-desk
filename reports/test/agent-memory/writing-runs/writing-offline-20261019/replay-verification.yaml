@@ -1,0 +1,26 @@
+schema_version: 1
+backend: mock
+real_inference_calls: 0
+observations:
+  after_outline:
+    exit_code: 3
+    reserved_calls: 2
+    markdown_created: false
+  after_review:
+    exit_code: 3
+    reserved_calls: 8
+  after_first_output:
+    exit_code: 3
+    reserved_calls: 8
+    only_outline_exists: true
+  complete_resume:
+    reserved_calls: 8
+    new_mock_calls: 0
+  cached_replay:
+    reserved_calls: 8
+    new_mock_calls: 0
+    cached: true
+  membership_budget_after:
+    reserved_calls: 10
+    month_max_calls: 100
+receipt_sha256: 9337e5c70fb576bfa7de21bf296b2d4178027ddf96d2ae2f1a7e9f7d69fc39f8

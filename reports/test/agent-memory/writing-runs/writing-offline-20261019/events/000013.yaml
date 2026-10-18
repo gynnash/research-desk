@@ -1,0 +1,7 @@
+type: call_reserved
+reservation_id: draft-review-1
+stage: draft
+role: review
+revision: 1
+model_id: mock-reviewer
+cost_units: 1

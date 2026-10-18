@@ -1,0 +1,13 @@
+binding: 14e2bc55636c331bbb1e744dc9338d873e370fced5d51880588cd68e2a7604bb
+result:
+  text: '{"title": "[虚构演练] 为什么保存的记忆仍需检查使用环节", "summary": "离线虚构发布候选稿，用清楚边界表达保存与使用之间的区别；未获发布授权。",
+    "sections": [{"heading": "从保存到使用", "paragraphs": [{"kind": "fact", "text": "虚构系统甲把历史记录放在外部文件里。回答时，它会选取其中一部分作为当前输入。",
+    "evidence_ids": ["E1"]}, {"kind": "author_claim", "text": "虚构项目说明提出，用途标签可能有助于挑选记录。但这只是说明中的主张，没有对照实验支持。",
+    "evidence_ids": ["E2"]}, {"kind": "inference", "text": "这给本演练留下一个待验证的问题：把保存、选取和使用分别检查，能否更清楚地说明失败发生在哪一步？这里没有答案，也不承诺准确率改善。",
+    "evidence_ids": ["E1", "E3"]}, {"kind": "analogy", "text": "可以把这段虚构流程类比为从笔记本中挑选几页放到桌上：这个比喻只帮助理解输入选择，不能证明系统真的理解或正确使用了内容。",
+    "evidence_ids": ["E1"]}]}], "limitations": ["全部资料与系统均为虚构，不构成真实研究或公众号发布材料。", "没有实验、行业调查或生产运行证据；发布候选仅为文件阶段名称。"]}'
+  model: mock-writer
+  response_id: mock-writing-candidate-responses-0
+  usage:
+    simulated: true
+    cost_units: 1

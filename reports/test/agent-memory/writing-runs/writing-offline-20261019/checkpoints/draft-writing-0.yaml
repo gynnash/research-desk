@@ -1,0 +1,12 @@
+binding: e0717ee9999fc63d08659dfd14bb1e090cc502ea936fa07f13f0dd93f2c402b1
+result:
+  text: '{"title": "[虚构演练] 为什么保存的记忆仍需检查使用环节", "summary": "离线虚构初稿，保留一处过度断言供独立模拟审阅发现。",
+    "sections": [{"heading": "从保存到使用", "paragraphs": [{"kind": "fact", "text": "虚构系统甲只要保存了历史记录，就一定能够在之后的回答中正确使用这些记录。",
+    "evidence_ids": ["E1"]}, {"kind": "author_claim", "text": "虚构项目说明认为，按用途标记记录可能有助于挑选输入；该说明没有提供对照实验。",
+    "evidence_ids": ["E2"]}, {"kind": "inference", "text": "本演练提出，可以分开记录保存、选取和使用环节，检查失败发生在哪里；这个方法尚未经过验证。",
+    "evidence_ids": ["E1", "E3"]}]}], "limitations": ["全部资料与系统均为虚构；未实施实验或验证效果。"]}'
+  model: mock-writer
+  response_id: mock-writing-draft-responses-0
+  usage:
+    simulated: true
+    cost_units: 1

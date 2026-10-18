@@ -1,0 +1,7 @@
+type: call_reserved
+reservation_id: candidate-review-0
+stage: candidate
+role: review
+revision: 0
+model_id: mock-reviewer
+cost_units: 1

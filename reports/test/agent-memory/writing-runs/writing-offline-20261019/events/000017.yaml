@@ -1,0 +1,9 @@
+type: call_completed
+reservation_id: candidate-writing-0
+stage: candidate
+role: writing
+revision: 0
+model_id: mock-writer
+cost_units: 1
+response_path: reports/test/agent-memory/writing-runs/writing-offline-20261019/checkpoints/candidate-writing-0.yaml
+response_sha256: 052d79d38a3c68f1ae73f7633377f83f80c3ae6b6e4eb19d7748faa635dc6007

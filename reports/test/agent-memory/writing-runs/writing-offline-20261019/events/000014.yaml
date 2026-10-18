@@ -1,0 +1,9 @@
+type: call_completed
+reservation_id: draft-review-1
+stage: draft
+role: review
+revision: 1
+model_id: mock-reviewer
+cost_units: 1
+response_path: reports/test/agent-memory/writing-runs/writing-offline-20261019/checkpoints/draft-review-1.yaml
+response_sha256: 2b0d9840f4d1237d3185b309a866ef33a4febdd193ca60451309f89bb062cdf1

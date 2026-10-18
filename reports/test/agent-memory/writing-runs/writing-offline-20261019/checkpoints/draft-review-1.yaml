@@ -1,0 +1,12 @@
+binding: e6eccc497ec3071fd88e256831d527b4c627ad75824cb39075587993089a48a8
+result:
+  text: '{"decision": "pass", "coverage_acknowledged": true, "issues": [], "checks":
+    [{"section_index": 0, "paragraph_index": 0, "verdict": "supported", "evidence_ids":
+    ["E1"]}, {"section_index": 0, "paragraph_index": 1, "verdict": "supported", "evidence_ids":
+    ["E2"]}, {"section_index": 0, "paragraph_index": 2, "verdict": "supported", "evidence_ids":
+    ["E1", "E3"]}]}'
+  model: mock-reviewer
+  response_id: mock-writing-draft-reviews-1
+  usage:
+    simulated: true
+    cost_units: 1

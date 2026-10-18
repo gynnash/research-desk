@@ -1,0 +1,45 @@
+stage: draft
+revision: 1
+candidate:
+  title: '[虚构演练] 为什么保存的记忆仍需检查使用环节'
+  summary: 离线虚构初稿修订版，去除保存后必然正确使用的过度断言。
+  sections:
+  - heading: 从保存到使用
+    paragraphs:
+    - kind: fact
+      text: 在虚构系统甲的设定中，历史记录保存在外部文件中；回答时，只有选出的内容会进入当前输入。
+      evidence_ids:
+      - E1
+    - kind: author_claim
+      text: 虚构项目说明认为，按用途标记记录可能有助于挑选输入；这一主张没有对照实验支持。
+      evidence_ids:
+      - E2
+    - kind: inference
+      text: 由此，本演练提出一个待验证假设：分开检查保存、选取和使用环节，可能更容易描述失败位置，尚不能据此保证回答正确。
+      evidence_ids:
+      - E1
+      - E3
+  limitations:
+  - 全部资料与系统均为虚构；未实施实验或验证效果。
+  - 分阶段检查只是演练中的假设，不能作为通用结论。
+review:
+  decision: pass
+  coverage_acknowledged: true
+  issues: []
+  checks:
+  - section_index: 0
+    paragraph_index: 0
+    verdict: supported
+    evidence_ids:
+    - E1
+  - section_index: 0
+    paragraph_index: 1
+    verdict: supported
+    evidence_ids:
+    - E2
+  - section_index: 0
+    paragraph_index: 2
+    verdict: supported
+    evidence_ids:
+    - E1
+    - E3

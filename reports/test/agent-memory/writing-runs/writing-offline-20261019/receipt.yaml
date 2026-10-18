@@ -1,0 +1,38 @@
+schema_version: 1
+mode: writing_offline_test
+backend: mock
+topic: agent-memory
+batch_id: writing-offline-20261019
+status: test_accepted
+confirmation_origin: offline_fixture
+confirmation_id: fixture-writing-20261019
+models:
+  writing: mock-writer
+  review: mock-reviewer
+stages:
+  outline:
+    status: test_accepted
+    revision_count: 0
+    checkpoint: reports/test/agent-memory/writing-runs/writing-offline-20261019/stages/outline.yaml
+  draft:
+    status: test_accepted
+    revision_count: 1
+    checkpoint: reports/test/agent-memory/writing-runs/writing-offline-20261019/stages/draft.yaml
+  candidate:
+    status: test_accepted
+    revision_count: 0
+    checkpoint: reports/test/agent-memory/writing-runs/writing-offline-20261019/stages/candidate.yaml
+reserved_calls: 8
+completed_calls: 8
+virtual_cost_units: 8
+real_inference_calls: 0
+membership_usage: null
+real_api_cost: 0
+output_hashes:
+  articles/test/agent-memory/writing-offline-20261019/outline.md: a70cd05aeb86ffa88afa90d3b0a75758d6bbe94b9372b58c26c8df3b029daa25
+  articles/test/agent-memory/writing-offline-20261019/draft.md: 6e6f5a567d62ad2589735871dc13d096fd4186441134b73eab98f4cab41e10cf
+  articles/test/agent-memory/writing-offline-20261019/candidate.md: 550f258a8e4c632adf027be184ec8200a2cdb1a65dc7c298dd5f3a39281faab3
+all_existing_notes_unchanged: true
+production_accepted: false
+real_topic_approved: false
+publish_authorized: false

@@ -1,0 +1,54 @@
+schema_version: 1
+mode: writing_offline_test
+backend: mock
+topic: agent-memory
+batch_id: writing-offline-20261019
+status: test_accepted
+task_start_git_commit: 83838d1ab283f5835beae73ad54273078f35fc0c
+confirmation_origin: offline_fixture
+confirmation_path: reports/test/agent-memory/writing-approvals/fixture-writing-20261019.yaml
+receipt: receipt.yaml
+receipt_sha256: 9337e5c70fb576bfa7de21bf296b2d4178027ddf96d2ae2f1a7e9f7d69fc39f8
+replay_verification: replay-verification.yaml
+replay_verification_sha256: 05b98d54997dde98847c1fd39a351601384862ba9c17e82ef1739b2275e87029
+existing_files_baseline: existing-files-baseline.yaml
+existing_files_baseline_sha256: a61f6c238cb91632eb8a0f2f29d01dfe8ddf5dead73cd0c644190285f8c9c359
+mock_models:
+  writing: mock-writer
+  review: mock-reviewer
+simulated_calls: 8
+virtual_cost_units: 8
+stage_revisions:
+  outline: 0
+  draft: 1
+  candidate: 0
+real_inference_calls: 0
+real_api_cost: 0
+membership_usage: null
+membership_reserved_calls_after: 10
+membership_month_max_calls: 100
+output_hashes:
+  articles/test/agent-memory/writing-offline-20261019/outline.md: a70cd05aeb86ffa88afa90d3b0a75758d6bbe94b9372b58c26c8df3b029daa25
+  articles/test/agent-memory/writing-offline-20261019/draft.md: 6e6f5a567d62ad2589735871dc13d096fd4186441134b73eab98f4cab41e10cf
+  articles/test/agent-memory/writing-offline-20261019/candidate.md: 550f258a8e4c632adf027be184ec8200a2cdb1a65dc7c298dd5f3a39281faab3
+checks:
+  unit_tests_passed: 317
+  writing_tests_in_unit_suite: 47
+  isolation_tests_passed: 14
+  schema_validation_passed: true
+  include_test_validation_passed: true
+  all_existing_files_unchanged: 326
+  output_hashes_verified: 3
+  local_links_valid: true
+  sensitive_artifact_keys_absent: true
+  planned_interruptions:
+  - after_outline
+  - after_review
+  - after_first_output
+  new_mock_calls_after_all_stages_reviewed: 0
+  new_mock_calls_during_cached_replay: 0
+  real_insight_topics_still_proposed: 2
+production_accepted: false
+real_topic_approved: false
+schedule_enabled: false
+publish_authorized: false

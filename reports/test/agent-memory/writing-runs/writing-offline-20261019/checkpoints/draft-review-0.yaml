@@ -1,0 +1,13 @@
+binding: b414c919a6f0f7cc34456869fda27563d0cbfabef8a61e7f9e43b9234402ec27
+result:
+  text: '{"decision": "revise", "coverage_acknowledged": true, "issues": [{"severity":
+    "blocking", "location": "sections.0.paragraphs.0", "reason": "虚构设定只说明存储与输入选择，不支持保存后必然正确使用。",
+    "suggestion": "删除必然正确的断言，改写为有范围的虚构流程描述，并保留未验证边界。"}], "checks": [{"section_index":
+    0, "paragraph_index": 0, "verdict": "unsupported", "evidence_ids": ["E1"]}, {"section_index":
+    0, "paragraph_index": 1, "verdict": "supported", "evidence_ids": ["E2"]}, {"section_index":
+    0, "paragraph_index": 2, "verdict": "supported", "evidence_ids": ["E1", "E3"]}]}'
+  model: mock-reviewer
+  response_id: mock-writing-draft-reviews-0
+  usage:
+    simulated: true
+    cost_units: 1

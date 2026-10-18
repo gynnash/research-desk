@@ -1,0 +1,9 @@
+type: call_completed
+reservation_id: candidate-review-0
+stage: candidate
+role: review
+revision: 0
+model_id: mock-reviewer
+cost_units: 1
+response_path: reports/test/agent-memory/writing-runs/writing-offline-20261019/checkpoints/candidate-review-0.yaml
+response_sha256: e0e539dd59ab5fb10a242ead40923098ea3fc578860635845e57cee275f2346e

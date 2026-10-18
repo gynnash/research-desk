@@ -1,0 +1,18 @@
+schema_version: 1
+mode: writing_offline_test
+backend: mock
+topic: agent-memory
+topics_file: config/research_topics.yaml
+models:
+  writing: mock-writer
+  review: mock-reviewer
+budget:
+  max_calls: 12
+  max_calls_per_stage: 4
+  max_revisions: 1
+  max_input_chars: 30000
+  max_output_chars: 12000
+fixture:
+  path: workflows/test/agent-memory/fixtures/writing.yaml
+  sha256: 34af4a00382ac2d5ed097660a27e12b41f708044867f68cd0e3d8c7e63c76643
+confirmation: reports/test/agent-memory/writing-approvals/fixture-writing-20261019.yaml

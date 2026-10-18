@@ -1,0 +1,44 @@
+stage: outline
+revision: 0
+candidate:
+  title: '[虚构演练] 为什么保存的记忆仍需检查使用环节'
+  summary: 离线虚构提纲；按保存、进入输入和使用三个环节组织讨论。
+  sections:
+  - heading: 从保存到使用
+    paragraphs:
+    - kind: fact
+      text: 交代虚构系统甲的设定：历史记录保存在外部文件中，回答时仅将选出的内容放入当前输入。
+      evidence_ids:
+      - E1
+    - kind: author_claim
+      text: 列出虚构项目说明中的主张，并明确它尚无对照实验支持。
+      evidence_ids:
+      - E2
+    - kind: inference
+      text: 提出分阶段检查的写作问题，把它表述为本演练的待验证假设。
+      evidence_ids:
+      - E1
+      - E3
+  limitations:
+  - 本提纲仅使用全虚构资料，不代表真实系统能力或研究结论。
+review:
+  decision: pass
+  coverage_acknowledged: true
+  issues: []
+  checks:
+  - section_index: 0
+    paragraph_index: 0
+    verdict: supported
+    evidence_ids:
+    - E1
+  - section_index: 0
+    paragraph_index: 1
+    verdict: supported
+    evidence_ids:
+    - E2
+  - section_index: 0
+    paragraph_index: 2
+    verdict: supported
+    evidence_ids:
+    - E1
+    - E3

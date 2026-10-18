@@ -1,0 +1,302 @@
+# TEST：全虚构离线写作样例；不含真实选题批准、外部来源或会员调用。
+schema_version: 1
+origin: offline_fixture
+topic: agent-memory
+topic_card:
+  id: fixture-agent-memory-writing-topic
+  title: '[虚构演练] 为什么保存的记忆仍需检查使用环节'
+  angle: 仅用虚构资料解释保存、选取与使用的区别，不声称效果已被验证。
+  audience: 用于离线验收的虚构读者。
+  status: proposed
+  approval_required: true
+  writing_started: false
+  publish_authorized: false
+evidence:
+- id: E1
+  kind: fact
+  text: 虚构系统甲将历史记录保存在外部文件中，回答时仅把选出的记录放入当前输入。
+  coverage: fixture
+  source_label: 虚构资料甲：系统设定
+- id: E2
+  kind: author_claim
+  text: 虚构项目说明认为，按用途标记记录可能有助于挑选输入，但没有提供对照实验。
+  coverage: fixture
+  source_label: 虚构资料乙：项目主张
+- id: E3
+  kind: inference
+  text: 本虚构演练提出待验证假设：分别检查保存、选取和使用环节，可能帮助描述失败位置；尚未验证效果。
+  coverage: fixture
+  source_label: 虚构资料丙：演练假设
+responses:
+  outline:
+  - title: '[虚构演练] 为什么保存的记忆仍需检查使用环节'
+    summary: 离线虚构提纲；按保存、进入输入和使用三个环节组织讨论。
+    sections:
+    - heading: 从保存到使用
+      paragraphs:
+      - kind: fact
+        text: 交代虚构系统甲的设定：历史记录保存在外部文件中，回答时仅将选出的内容放入当前输入。
+        evidence_ids:
+        - E1
+      - kind: author_claim
+        text: 列出虚构项目说明中的主张，并明确它尚无对照实验支持。
+        evidence_ids:
+        - E2
+      - kind: inference
+        text: 提出分阶段检查的写作问题，把它表述为本演练的待验证假设。
+        evidence_ids:
+        - E1
+        - E3
+    limitations:
+    - 本提纲仅使用全虚构资料，不代表真实系统能力或研究结论。
+  - title: '[虚构演练] 为什么保存的记忆仍需检查使用环节'
+    summary: 离线虚构提纲；按保存、进入输入和使用三个环节组织讨论。
+    sections:
+    - heading: 从保存到使用
+      paragraphs:
+      - kind: fact
+        text: 交代虚构系统甲的设定：历史记录保存在外部文件中，回答时仅将选出的内容放入当前输入。
+        evidence_ids:
+        - E1
+      - kind: author_claim
+        text: 列出虚构项目说明中的主张，并明确它尚无对照实验支持。
+        evidence_ids:
+        - E2
+      - kind: inference
+        text: 提出分阶段检查的写作问题，把它表述为本演练的待验证假设。
+        evidence_ids:
+        - E1
+        - E3
+    limitations:
+    - 本提纲仅使用全虚构资料，不代表真实系统能力或研究结论。
+  draft:
+  - title: '[虚构演练] 为什么保存的记忆仍需检查使用环节'
+    summary: 离线虚构初稿，保留一处过度断言供独立模拟审阅发现。
+    sections:
+    - heading: 从保存到使用
+      paragraphs:
+      - kind: fact
+        text: 虚构系统甲只要保存了历史记录，就一定能够在之后的回答中正确使用这些记录。
+        evidence_ids:
+        - E1
+      - kind: author_claim
+        text: 虚构项目说明认为，按用途标记记录可能有助于挑选输入；该说明没有提供对照实验。
+        evidence_ids:
+        - E2
+      - kind: inference
+        text: 本演练提出，可以分开记录保存、选取和使用环节，检查失败发生在哪里；这个方法尚未经过验证。
+        evidence_ids:
+        - E1
+        - E3
+    limitations:
+    - 全部资料与系统均为虚构；未实施实验或验证效果。
+  - title: '[虚构演练] 为什么保存的记忆仍需检查使用环节'
+    summary: 离线虚构初稿修订版，去除保存后必然正确使用的过度断言。
+    sections:
+    - heading: 从保存到使用
+      paragraphs:
+      - kind: fact
+        text: 在虚构系统甲的设定中，历史记录保存在外部文件中；回答时，只有选出的内容会进入当前输入。
+        evidence_ids:
+        - E1
+      - kind: author_claim
+        text: 虚构项目说明认为，按用途标记记录可能有助于挑选输入；这一主张没有对照实验支持。
+        evidence_ids:
+        - E2
+      - kind: inference
+        text: 由此，本演练提出一个待验证假设：分开检查保存、选取和使用环节，可能更容易描述失败位置，尚不能据此保证回答正确。
+        evidence_ids:
+        - E1
+        - E3
+    limitations:
+    - 全部资料与系统均为虚构；未实施实验或验证效果。
+    - 分阶段检查只是演练中的假设，不能作为通用结论。
+  candidate:
+  - title: '[虚构演练] 为什么保存的记忆仍需检查使用环节'
+    summary: 离线虚构发布候选稿，用清楚边界表达保存与使用之间的区别；未获发布授权。
+    sections:
+    - heading: 从保存到使用
+      paragraphs:
+      - kind: fact
+        text: 虚构系统甲把历史记录放在外部文件里。回答时，它会选取其中一部分作为当前输入。
+        evidence_ids:
+        - E1
+      - kind: author_claim
+        text: 虚构项目说明提出，用途标签可能有助于挑选记录。但这只是说明中的主张，没有对照实验支持。
+        evidence_ids:
+        - E2
+      - kind: inference
+        text: 这给本演练留下一个待验证的问题：把保存、选取和使用分别检查，能否更清楚地说明失败发生在哪一步？这里没有答案，也不承诺准确率改善。
+        evidence_ids:
+        - E1
+        - E3
+      - kind: analogy
+        text: 可以把这段虚构流程类比为从笔记本中挑选几页放到桌上：这个比喻只帮助理解输入选择，不能证明系统真的理解或正确使用了内容。
+        evidence_ids:
+        - E1
+    limitations:
+    - 全部资料与系统均为虚构，不构成真实研究或公众号发布材料。
+    - 没有实验、行业调查或生产运行证据；发布候选仅为文件阶段名称。
+  - title: '[虚构演练] 为什么保存的记忆仍需检查使用环节'
+    summary: 离线虚构发布候选稿，用清楚边界表达保存与使用之间的区别；未获发布授权。
+    sections:
+    - heading: 从保存到使用
+      paragraphs:
+      - kind: fact
+        text: 虚构系统甲把历史记录放在外部文件里。回答时，它会选取其中一部分作为当前输入。
+        evidence_ids:
+        - E1
+      - kind: author_claim
+        text: 虚构项目说明提出，用途标签可能有助于挑选记录。但这只是说明中的主张，没有对照实验支持。
+        evidence_ids:
+        - E2
+      - kind: inference
+        text: 这给本演练留下一个待验证的问题：把保存、选取和使用分别检查，能否更清楚地说明失败发生在哪一步？这里没有答案，也不承诺准确率改善。
+        evidence_ids:
+        - E1
+        - E3
+      - kind: analogy
+        text: 可以把这段虚构流程类比为从笔记本中挑选几页放到桌上：这个比喻只帮助理解输入选择，不能证明系统真的理解或正确使用了内容。
+        evidence_ids:
+        - E1
+    limitations:
+    - 全部资料与系统均为虚构，不构成真实研究或公众号发布材料。
+    - 没有实验、行业调查或生产运行证据；发布候选仅为文件阶段名称。
+reviews:
+  outline:
+  - decision: pass
+    coverage_acknowledged: true
+    issues: []
+    checks:
+    - section_index: 0
+      paragraph_index: 0
+      verdict: supported
+      evidence_ids:
+      - E1
+    - section_index: 0
+      paragraph_index: 1
+      verdict: supported
+      evidence_ids:
+      - E2
+    - section_index: 0
+      paragraph_index: 2
+      verdict: supported
+      evidence_ids:
+      - E1
+      - E3
+  - decision: pass
+    coverage_acknowledged: true
+    issues: []
+    checks:
+    - section_index: 0
+      paragraph_index: 0
+      verdict: supported
+      evidence_ids:
+      - E1
+    - section_index: 0
+      paragraph_index: 1
+      verdict: supported
+      evidence_ids:
+      - E2
+    - section_index: 0
+      paragraph_index: 2
+      verdict: supported
+      evidence_ids:
+      - E1
+      - E3
+  draft:
+  - decision: revise
+    coverage_acknowledged: true
+    issues:
+    - severity: blocking
+      location: sections.0.paragraphs.0
+      reason: 虚构设定只说明存储与输入选择，不支持保存后必然正确使用。
+      suggestion: 删除必然正确的断言，改写为有范围的虚构流程描述，并保留未验证边界。
+    checks:
+    - section_index: 0
+      paragraph_index: 0
+      verdict: unsupported
+      evidence_ids:
+      - E1
+    - section_index: 0
+      paragraph_index: 1
+      verdict: supported
+      evidence_ids:
+      - E2
+    - section_index: 0
+      paragraph_index: 2
+      verdict: supported
+      evidence_ids:
+      - E1
+      - E3
+  - decision: pass
+    coverage_acknowledged: true
+    issues: []
+    checks:
+    - section_index: 0
+      paragraph_index: 0
+      verdict: supported
+      evidence_ids:
+      - E1
+    - section_index: 0
+      paragraph_index: 1
+      verdict: supported
+      evidence_ids:
+      - E2
+    - section_index: 0
+      paragraph_index: 2
+      verdict: supported
+      evidence_ids:
+      - E1
+      - E3
+  candidate:
+  - decision: pass
+    coverage_acknowledged: true
+    issues: []
+    checks:
+    - section_index: 0
+      paragraph_index: 0
+      verdict: supported
+      evidence_ids:
+      - E1
+    - section_index: 0
+      paragraph_index: 1
+      verdict: supported
+      evidence_ids:
+      - E2
+    - section_index: 0
+      paragraph_index: 2
+      verdict: supported
+      evidence_ids:
+      - E1
+      - E3
+    - section_index: 0
+      paragraph_index: 3
+      verdict: supported
+      evidence_ids:
+      - E1
+  - decision: pass
+    coverage_acknowledged: true
+    issues: []
+    checks:
+    - section_index: 0
+      paragraph_index: 0
+      verdict: supported
+      evidence_ids:
+      - E1
+    - section_index: 0
+      paragraph_index: 1
+      verdict: supported
+      evidence_ids:
+      - E2
+    - section_index: 0
+      paragraph_index: 2
+      verdict: supported
+      evidence_ids:
+      - E1
+      - E3
+    - section_index: 0
+      paragraph_index: 3
+      verdict: supported
+      evidence_ids:
+      - E1
