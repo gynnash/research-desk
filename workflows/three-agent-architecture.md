@@ -42,7 +42,7 @@ flowchart TD
 
 研究方向来自 [research_topics.yaml](../config/research_topics.yaml)。首期启用 `agent-memory`；未来可扩展 Agent RL 等方向，共用身份、引用和保护规则，不按主题复制同一来源。
 
-模型分析使用用户自己的官方 ChatGPT 会员授权，具体资格、实际可用模型与执行主机分别验收；当前用户已完成本地授权与两个不同模型的真实推理。采集、分析和 Git 发布解耦，GitHub 负责定时触发及记录任务，本地或符合条件的自托管执行器处理会员调用。临时 runner 的会员资格尚未验证，不能把本地成功推广为全部部署环境可用。各安装独立登录，不分发维护者凭据、不读取既有 Codex 或浏览器会话。[官方适用范围](https://developers.openai.com/siwc/token-sharing-open-source)、[自托管指南](https://developers.openai.com/siwc/token-sharing-open-source/self-hosted-vms)
+模型分析使用用户自己的官方 ChatGPT 会员授权，具体资格、实际可用模型与执行主机分别验收；当前用户已完成本地授权与两个不同模型的真实推理。采集、分析和 Git 发布解耦，GitHub 负责触发及记录任务，本地或符合条件的自托管执行器处理会员调用。[当前 Mac 的 GitHub 手动派发与测试结果回存](../reports/test/agent-memory/cycles/cycle-agent-memory-gh-20261019/acceptance.md)已通过，授权和依赖位于仓库外，独立发布 job 只新增测试文件。部署由 `config/runtime.yaml` 选择，另有远程主机示例；本次没有验证另一台远程主机或 GitHub 临时 runner 的会员资格，不能把本地成功推广为全部部署环境可用。正式入库及每周两次调度仍待交付。各安装独立登录，不分发维护者凭据、不读取既有 Codex 或浏览器会话。[官方适用范围](https://developers.openai.com/siwc/token-sharing-open-source)、[自托管指南](https://developers.openai.com/siwc/token-sharing-open-source/self-hosted-vms)
 
 面向开源时，将框架代码、公共示例配置、个人研究资料和仓库外授权 profile 分开。主题、来源、模型与预算通过 YAML 配置，用户无需修改调度代码即可建立自己的研究工作台。配置不能扩大程序的路径、权限或覆盖边界；配置变更需要维护者明确操作，模型无权自行修改。
 

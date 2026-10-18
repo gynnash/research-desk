@@ -1,8 +1,8 @@
 # Agent Memory 定时研究任务 MVP 设计
 
-- 版本：0.4；修订日期：2026-10-19。
-- 状态：**正式定时与自动入库仍为设计；Research 本地后端及配置驱动测试批次已验收**。本文未来正式路径与定时参数不代表已经启用。
-- 实施进度：已有[离线骨架](offline-research.md)、[真实来源采集测试](real-source-collection.md)和[本地会员分析](local-membership-analysis.md)。官方授权、账户模型目录及单篇 arXiv 摘要真实研究与独立审阅已通过。本阶段一篇论文加一篇博客的[配置驱动 Research 批次](configurable-research-batch.md)已验收，共 4 次真实请求、两项独立审阅通过、无修订，中断补跑和缓存补跑不增加重复请求；结果仍只进 `test`。GitHub 自动正式入库、Insight、Writing 及定时任务未实现或启用。
+- 版本：0.5；修订日期：2026-10-19。
+- 状态：**Research / Insight 的 GitHub 手动派发与测试回存已验收；正式定时与自动入库仍为设计**。本文未来正式路径与定时参数不代表已经启用。
+- 实施进度：已有[离线骨架](offline-research.md)、[真实来源采集](real-source-collection.md)、[配置驱动 Research](configurable-research-batch.md)与[真实 Insight 闭环](insight-agent-test.md)。[GitHub → 当前 Mac → Research / Insight → 测试结果回存 → Obsidian](../reports/test/agent-memory/cycles/cycle-agent-memory-gh-20261019/acceptance.md)已通过手动真实验收，按方向发现资料、读取历史、生成与独立审阅，并校验保存测试检查点。本地/远程主机通过 YAML 配置；本次实际验证当前 Mac。Writing 仅有离线样例闭环；真实人工确认入口、会员 Writing、自动正式入库和定时尚未交付。
 - 目标：GitHub Actions 定时发现 Agent Memory 资料，生成带证据的研究记录，经独立审阅模型与规则校验通过后自动入库。
 - 总体架构见[三 Agent 总体架构](three-agent-architecture.md)。沿用[主题配置](../config/research_topics.yaml)、[Schema v1](source-schema.md)、[维护规范](maintenance.md)和现有模板，保持 Markdown + YAML。
 
@@ -10,7 +10,7 @@
 
 闭环为：**定时触发 → 发现与查重 → 固定原文证据 → 研究模型生成 → 独立模型审阅 → 规则校验 → PR 自动合并 → Obsidian 拉取**。
 
-本版重点实施 Research Agent 的来源研究批次：处理 YAML 启用的研究方向，首个测试为 `agent-memory`，`agent-rl` 继续停用。当前只创建隔离测试报告和批次回执；未来正式任务产出新来源笔记、已有来源的独立更新材料和回执。综合研究、Insight、自动选题和 Writing 按下述总体链路分阶段实现，本轮不生成自动洞察或文章，不连接公众号发布接口。
+本版已实施 Research / Insight 的配置驱动测试批次与 GitHub 手动派发：处理 YAML 启用的方向，首个方向为 `agent-memory`，`agent-rl` 继续停用。当前只创建隔离测试研究、综合报告、洞察、待确认选题及回执；未来正式任务再创建新来源笔记、独立更新材料和正式派生资料。真实 Writing、正式入库和调度按下述总体链路继续实现，不连接公众号发布接口。
 
 最终业务链路为：**周二/周五 09:00 自动 Research → 独立审阅后受限入库 → 自动综合与 Insight → 独立审阅后保存洞察和公众号候选选题 → 用户明确确认选题、角度、受众及输入版本 → Writing 生成并审阅大纲、初稿、候选稿 → 用户决定是否发布**。独立审阅是三个 Agent 共用的能力。正常研究、洞察和选题无需人工逐篇审阅；模型通过不能替用户确认选题。确认需绑定选题与证据散列，内容变化后重获确认，模型无权创建自己的批准记录。
 
@@ -25,7 +25,7 @@
 | 项目 | MVP 决策 |
 | --- | --- |
 | 主入口 | **每周二、周五北京时间 09:00**，每周两次。拟用 UTC cron 为 `0 1 * * 2,5`，对应 `Asia/Shanghai`；只记录设计，不创建实际配置。 |
-| 执行环境 | GitHub Actions 拟负责定时、任务记录及受限发布；会员分析使用用户授权的本地或符合资格的自托管执行器，与采集解耦。本地授权与推理已验证，临时 runner 的会员资格、常驻主机可用性及无人值守续期仍待验收，不假设所有阶段已能在 Actions 完成。 |
+| 执行环境 | GitHub Actions 手动派发、任务记录及受限测试结果回存已验证；会员分析使用当前 Mac 自托管执行器，授权与依赖保存在仓库外。提供远程主机配置，用户在所选主机自行部署授权。定时、长期在线可用性与其他主机资格仍待验收，不假设 GitHub 临时 runner 可直接使用会员。 |
 | 辅助入口 | 后续提供 `workflow_dispatch`，仅用于验收、恢复批次和指定区间补跑；共用查重、审阅、预算与写入保护。 |
 | 扫描时间窗 | 首次最近 7 天；随后从各来源最后已合并的完整扫描游标向前重叠 48 小时，扫描到本批固定截止时间。周二覆盖上次周五以来，周五覆盖上次周二以来，不能只查运行当天。 |
 | 发现上限 | 每个来源每批最多检查 50 条候选元数据，超额保存续扫线索；不能标记为已完整扫描。 |

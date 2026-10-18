@@ -12,6 +12,8 @@ ResearchDesk 是一个以 Markdown、YAML、GitHub 和 Obsidian 为基础的 AI 
 
 [首个自动发现轮次](reports/test/agent-memory/cycles/cycle-agent-memory-20261019/acceptance-local.yaml)已完成本地真实验收：两份研究、综合报告、两条洞察及两张待确认选题，8 次会员请求；Research 后中断恢复及完整缓存重放没有重复调用。来源仅扫描有限列表，整体回执保留 `partial`，不声称全量覆盖。
 
+[GitHub → Mac → Obsidian 验收](reports/test/agent-memory/cycles/cycle-agent-memory-gh-20261019/acceptance.md)也已通过：手动派发真实研究，7 次会员请求产出两份研究、综合报告、1 条洞察和1张待确认选题，工作流自动提交测试结果并同步回现有 Vault；跨工作副本缓存重放新增调用为 0。配置支持用户在自己的本地或远程主机部署，当前实际验证的是这台 Mac。
+
 可以结合 Codex 维护仓库、配置和校验，使用 ChatGPT Work 辅助论文阅读、研究讨论与文章草稿。两者共用 Markdown/YAML 约定；直接访问本地仓库的能力取决于使用环境和授权。研究成果需明确保存到本仓库并审阅提交，设备间同步沿用下述 Git 流程。[Codex 官方说明](https://developers.openai.com/codex/cli/)与 [ChatGPT Work 官方说明](https://learn.chatgpt.com/docs/get-started-with-work)可供参考。
 
 ## 目录结构
