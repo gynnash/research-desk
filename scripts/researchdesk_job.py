@@ -97,7 +97,8 @@ def formal_plan(root, topic, cycle):
     if not isinstance(value.get('files'), dict):
         raise JobError('formal_plan_invalid')
     result = set(value['files']) | {base+name for name in
-                                   ('plan.yaml','plan.yaml.sha256','accepted.yaml','accepted.yaml.sha256')}
+                                   ('plan.yaml','plan.yaml.sha256','accepted.yaml','accepted.yaml.sha256',
+                                    'link-repair.yaml','link-repair.yaml.sha256')}
     # A plan cannot widen the transfer boundary to configuration or old notes.
     for relative in value['files']:
         parts = Path(relative).parts

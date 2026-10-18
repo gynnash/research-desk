@@ -1,8 +1,9 @@
 """Four create-only admission checks using copied, genuinely reviewed proof.
 
 The first plan is prepared separately from the accepted GitHub research cycle.
-These checks replay its complete production gate in disposable vaults: no
-model response, pass decision, provenance reader or writer is replaced.
+These checks replay its complete production gate and any hash-bound link repair
+in disposable vaults: no model response, pass decision, provenance reader or
+writer is replaced. Historical plan/accepted bytes remain unchanged.
 """
 
 import importlib
@@ -77,7 +78,10 @@ class CreateOnlyAdmission(unittest.TestCase):
         self.fetch.assert_not_called()
 
     def assert_created(self):
-        for relative, content in self.original_plan['files'].items():
+        verified = self.admission.plan(self.root, TOPIC, CYCLE)
+        effective = self.admission.effective_files(self.root, verified)
+        self.assertEqual(set(effective), set(self.original_plan['files']))
+        for relative, content in effective.items():
             self.assertEqual((self.root / relative).read_bytes(), content.encode('utf-8'))
 
     def rewrite_yaml(self, relative, value):

@@ -230,6 +230,163 @@ def _frontmatter(metadata, body):
     return '---\n' + yaml.safe_dump(metadata, allow_unicode=True, sort_keys=False) + '---\n\n' + body
 
 
+def _receipt(root, value):
+    base = _base(value['topic'], value['cycle_id'])
+    return {'schema_version': 1, 'mode': 'formal_admission', 'topic': value['topic'], 'cycle_id': value['cycle_id'],
+        'status': 'accepted', 'production_accepted': True, 'source_id_map': value['source_id_map'],
+        'plan_path': base + '/plan.yaml', 'plan_sha256': store.digest(_location(root, base + '/plan.yaml').read_bytes()),
+        'input_hashes': value['input_hashes'], 'output_hashes': value['output_hashes'],
+        'writing_started': False, 'publish_authorized': False, 'new_model_calls': 0}
+
+
+def _repair_changes(value):
+    changes, contents = {}, {}
+    topic, cycle_id = value['topic'], value['cycle_id']
+    accepted_path = _base(topic, cycle_id) + '/accepted.yaml'
+    for relative, content in value['files'].items():
+        parts = Path(relative).parts
+        if len(parts) != 4 or parts[:2] not in {('sources', 'papers'), ('sources', 'blogs')} or parts[2] != topic:
+            continue
+        metadata = yaml.safe_load(content.split('---', 2)[1])
+        if metadata.get('id') != Path(relative).stem:
+            raise store.OfflineError('来源身份与准入目标不匹配')
+        report = metadata.get('related_notes', [None])[0]
+        if report not in value['files'] or not str(report).startswith('reports/%s/%s-research-' % (topic, cycle_id)):
+            raise store.OfflineError('来源没有绑定原机器研究报告')
+        corrected = _source_footer_links(content, relative, report, accepted_path)
+        if corrected != content:
+            changes[relative] = {'old_sha256': store.digest(content.encode()),
+                                 'new_sha256': store.digest(corrected.encode())}
+            contents[relative] = corrected
+    return changes, contents
+
+
+def _repair_record(root, value):
+    relative = _base(value['topic'], value['cycle_id']) + '/link-repair.yaml'
+    if not _location(root, relative).exists():
+        return None, {}
+    record = _checked(root, relative)
+    changes, contents = _repair_changes(value)
+    expected_receipt = _receipt(root, value)
+    receipt_bytes = yaml.safe_dump(expected_receipt, allow_unicode=True, sort_keys=False).encode()
+    expected = {'schema_version': 1, 'mode': 'formal_source_footer_link_repair',
+        'topic': value['topic'], 'cycle_id': value['cycle_id'],
+        'operation': 'rebase_two_generated_source_footer_links',
+        'plan_sha256': expected_receipt['plan_sha256'], 'accepted_sha256': store.digest(receipt_bytes),
+        'changes': changes, 'writing_started': False, 'publish_authorized': False}
+    if not changes or record != expected:
+        raise store.OfflineError('链接纠正记录不等于原计划的纯机械变换')
+    accepted_path = _base(value['topic'], value['cycle_id']) + '/accepted.yaml'
+    if _location(root, accepted_path).exists():
+        if (_checked(root, accepted_path) != expected_receipt
+                or store.digest(_location(root, accepted_path).read_bytes()) != record['accepted_sha256']):
+            raise store.OfflineError('旧准入回执与链接纠正证明不一致')
+    return record, contents
+
+
+def effective_files(root, value):
+    """Validate an append-only repair and return the intended current bytes."""
+    root = Path(root).resolve()
+    repair_path = _base(value['topic'], value['cycle_id']) + '/link-repair.yaml'
+    if _location(root, repair_path).exists():
+        # Public plan() may already expose effective bytes. The immutable plan,
+        # rather than the projection passed by a caller, proves the repair.
+        value = _checked(root, _base(value['topic'], value['cycle_id']) + '/plan.yaml')
+    _, corrected = _repair_record(root, value)
+    return dict(value['files'], **corrected)
+
+
+def effective_output_hashes(root, value):
+    return {path: store.digest(content.encode()) for path, content in effective_files(root, value).items()}
+
+
+def _check_links(root, files, accepted_path):
+    """Reject broken local Markdown references before formal files are installed."""
+    for relative, content in files.items():
+        for target in re.findall(r'\[[^\]]+\]\(([^)\n]+)\)', content):
+            if '://' in target or target.startswith(('#', 'mailto:')):
+                continue
+            target = target.split('#', 1)[0]
+            destination = posixpath.normpath(posixpath.join(posixpath.dirname(relative), target))
+            if destination == accepted_path or destination in files:
+                continue
+            path = _location(root, destination)
+            parts = Path(destination).parts
+            if (not parts or parts[0] not in {'sources', 'reports', 'insights', 'articles'}
+                    or not path.is_file() or path.suffix != '.md' or 'test' in parts):
+                raise store.OfflineError('正式材料相对链接无效: %s -> %s' % (relative, target))
+
+
+def repair(root, topic, cycle_id, dry_run=False):
+    """Correct only proven generated footer links, guarding old/new SHA bytes."""
+    root = Path(root).resolve()
+    with _lock(root):
+        base = _base(topic, cycle_id)
+        value = _checked(root, base + '/plan.yaml')
+        _verify_plan(root, value, topic, cycle_id)
+        original_receipt = _receipt(root, value)
+        if _checked(root, base + '/accepted.yaml') != original_receipt:
+            raise store.OfflineError('仅纠正已正式接受且证明未变的机器来源文件')
+        changes, contents = _repair_changes(value)
+        if not changes:
+            return {'status': 'not_needed', 'changes': {}, 'new_model_calls': 0}
+        receipt_bytes = yaml.safe_dump(original_receipt, allow_unicode=True, sort_keys=False).encode()
+        record = {'schema_version': 1, 'mode': 'formal_source_footer_link_repair',
+            'topic': topic, 'cycle_id': cycle_id, 'operation': 'rebase_two_generated_source_footer_links',
+            'plan_sha256': original_receipt['plan_sha256'], 'accepted_sha256': store.digest(receipt_bytes),
+            'changes': changes, 'writing_started': False, 'publish_authorized': False}
+        # Validate every target before persisting the recovery journal.
+        for relative, change in changes.items():
+            actual = store.digest(_location(root, relative).read_bytes())
+            if actual not in {change['old_sha256'], change['new_sha256']}:
+                raise store.OfflineError('来源已有人工变化，拒绝链接纠正: ' + relative)
+        _check_links(root, dict(value['files'], **contents), base + '/accepted.yaml')
+        if dry_run:
+            return dict(record, status='planned', new_model_calls=0)
+        _save(root, base + '/link-repair.yaml', record)
+        for relative, content in contents.items():
+            target = _location(root, relative)
+            expected = changes[relative]
+            if store.digest(target.read_bytes()) == expected['new_sha256']:
+                continue
+            temporary = None
+            try:
+                with tempfile.NamedTemporaryFile(dir=str(target.parent), prefix='.researchdesk-link-repair-', delete=False) as handle:
+                    temporary = Path(handle.name)
+                    os.fchmod(handle.fileno(), target.stat().st_mode & 0o777)
+                    handle.write(content.encode())
+                    handle.flush()
+                    os.fsync(handle.fileno())
+                if store.digest(_location(root, relative).read_bytes()) != expected['old_sha256']:
+                    raise store.OfflineError('纠正前发现人工修改，停止替换: ' + relative)
+                os.replace(str(temporary), str(target))
+                temporary = None
+            finally:
+                if temporary is not None:
+                    temporary.unlink()
+        _verify_plan(root, value, topic, cycle_id)
+        return dict(record, status='repaired', effective_output_hashes=effective_output_hashes(root, value), new_model_calls=0)
+
+
+def _source_footer_links(content, source_path, report_path, accepted_path, require_old=False):
+    """Relocate only the two generated footer links; preserve every other byte."""
+    metadata = yaml.safe_load(content.split('---', 2)[1])
+    identifier = metadata['id']
+    old_source = '正式来源：[%s](%s)。' % (
+        identifier, posixpath.relpath(source_path, posixpath.dirname(report_path)))
+    new_source = '正式来源：[%s](%s)。' % (
+        identifier, posixpath.relpath(source_path, posixpath.dirname(source_path)))
+    old_audit = '准入记录：[输入、审阅与输出散列](%s)。' % posixpath.relpath(
+        accepted_path, posixpath.dirname(report_path))
+    new_audit = '准入记录：[输入、审阅与输出散列](%s)。' % posixpath.relpath(
+        accepted_path, posixpath.dirname(source_path))
+    if content.count(old_source) == 1 and content.count(old_audit) == 1:
+        return content.replace(old_source, new_source).replace(old_audit, new_audit)
+    if not require_old and content.count(new_source) == 1 and content.count(new_audit) == 1:
+        return content
+    raise store.OfflineError('来源脚注不是预期的两条机器链接，拒绝自动纠正')
+
+
 def _render(root, topic, cycle_id, config, bundle, candidate, records, source_map=None):
     index = store.source_index(root)
     all_ids = {identifier for values in index.values() for identifier in values}
@@ -332,7 +489,9 @@ def _render(root, topic, cycle_id, config, bundle, candidate, records, source_ma
                 'published_at': original['metadata'].get('published_at'), 'collected_at': collected,
                 'updated_at': collected, 'topics': [topic], 'status': 'inbox',
                 'related_sources': [], 'related_notes': [target['report'], synthesis_path]}
-            files[target['path']] = _frontmatter(source, body + '\n## 人工笔记\n\n')
+            source_content = _frontmatter(source, body + '\n## 人工笔记\n\n')
+            files[target['path']] = _source_footer_links(
+                source_content, target['path'], target['report'], accepted_path)
     return files, source_map
 
 
@@ -344,13 +503,15 @@ def _verify_plan(root, value, topic, cycle_id):
     research.verify_notes(root, value['protected_notes'])
     if set(value['files']) != set(value['output_hashes']):
         raise store.OfflineError('准入文件清单与输出散列集合不同')
+    effective = effective_files(root, value)
     for relative, content in value['files'].items():
         if not _allowed(relative, topic, cycle_id) or not isinstance(content, str):
             raise store.OfflineError('准入计划包含未授权目标')
         if store.digest(content.encode()) != value['output_hashes'].get(relative):
             raise store.OfflineError('准入计划正文与输出散列不一致')
         target = _location(root, relative)
-        if target.exists() and (not target.is_file() or target.read_bytes() != content.encode()):
+        allowed = {content.encode(), effective[relative].encode()}
+        if target.exists() and (not target.is_file() or target.read_bytes() not in allowed):
             raise store.OfflineError('人工内容或同名文件冲突，停止覆盖: ' + relative)
     config = inputs.load_config(root, value['insight_config'])
     for entry in config['research_inputs']:
@@ -419,14 +580,20 @@ def _plan(root, topic, cycle_id, fetcher=None):
         'files': files, 'output_hashes': {path: store.digest(content.encode()) for path, content in files.items()},
         'writing_started': False, 'publish_authorized': False}
     _verify_plan(root, value, topic, cycle_id)
+    _check_links(root, value['files'], base + '/accepted.yaml')
     _save(root, stored_path, value)
     return value
 
 
 def plan(root, topic, cycle_id, fetcher=None):
+    """Return effective writer bytes; persisted plan/receipt hashes stay historical."""
     root = Path(root).resolve()
     with _lock(root):
-        return _plan(root, topic, cycle_id, fetcher=fetcher)
+        value = _plan(root, topic, cycle_id, fetcher=fetcher)
+        files = effective_files(root, value)
+        hashes = {path: store.digest(content.encode()) for path, content in files.items()}
+        return dict(value, files=files, output_hashes=hashes, effective_output_hashes=hashes,
+                    historical_output_hashes=value['output_hashes'], is_effective_projection=True)
 
 
 def run(root, topic, cycle_id, fail_after=None, fetcher=None):
@@ -436,20 +603,22 @@ def run(root, topic, cycle_id, fail_after=None, fetcher=None):
     with _lock(root):
         value = _plan(root, topic, cycle_id, fetcher=fetcher)
         accepted_path = _base(topic, cycle_id) + '/accepted.yaml'
-        result = {'schema_version': 1, 'mode': 'formal_admission', 'topic': topic, 'cycle_id': cycle_id,
-            'status': 'accepted', 'production_accepted': True, 'source_id_map': value['source_id_map'],
-            'plan_path': _base(topic, cycle_id) + '/plan.yaml',
-            'plan_sha256': store.digest(_location(root, _base(topic, cycle_id) + '/plan.yaml').read_bytes()),
-            'input_hashes': value['input_hashes'], 'output_hashes': value['output_hashes'],
-            'writing_started': False, 'publish_authorized': False, 'new_model_calls': 0}
+        result = _receipt(root, value)
+        files = effective_files(root, value)
+        effective_hashes = {path: store.digest(content.encode()) for path, content in files.items()}
+        _check_links(root, files, accepted_path)
         if _location(root, accepted_path).exists():
             previous = _checked(root, accepted_path)
             if previous != result:
                 raise store.OfflineError('旧准入回执与当前计划不一致')
-            return dict(previous, cached=True)
+            for relative, content in files.items():
+                target = _location(root, relative)
+                if not target.is_file() or target.read_bytes() != content.encode():
+                    raise store.OfflineError('正式产物缺失或链接纠正尚未完成；请先运行 repair 恢复: ' + relative)
+            return dict(previous, cached=True, effective_output_hashes=effective_hashes)
         if fail_after == 'after_plan':
             raise store.SimulatedInterruption('准入计划已保存，尚未创建正式资料')
-        for index, (relative, content) in enumerate(value['files'].items()):
+        for index, (relative, content) in enumerate(files.items()):
             _verify_hashes(root, value['input_hashes'])
             research.verify_notes(root, value['protected_notes'])
             _create(root, relative, content)
@@ -457,20 +626,24 @@ def run(root, topic, cycle_id, fail_after=None, fetcher=None):
                 raise store.SimulatedInterruption('首个正式文件已创建，补跑复用同SHA内容')
         _verify_plan(root, value, topic, cycle_id)
         _save(root, accepted_path, result)
-        return result
+        return dict(result, effective_output_hashes=effective_hashes)
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--root', type=Path, default=Path(__file__).resolve().parents[1])
-    parser.add_argument('command', choices=['plan', 'run'])
+    parser.add_argument('command', choices=['plan', 'run', 'repair'])
     parser.add_argument('--topic', required=True)
     parser.add_argument('--cycle-id', required=True)
     parser.add_argument('--fail-after', choices=['after_plan', 'after_first_output'])
+    parser.add_argument('--dry-run', action='store_true')
     args = parser.parse_args()
     try:
-        result = plan(args.root, args.topic, args.cycle_id) if args.command == 'plan' else run(
-            args.root, args.topic, args.cycle_id, fail_after=args.fail_after)
+        if args.command == 'repair':
+            result = repair(args.root, args.topic, args.cycle_id, dry_run=args.dry_run)
+        else:
+            result = plan(args.root, args.topic, args.cycle_id) if args.command == 'plan' else run(
+                args.root, args.topic, args.cycle_id, fail_after=args.fail_after)
     except store.SimulatedInterruption as exc:
         print(str(exc), file=sys.stderr)
         return 3

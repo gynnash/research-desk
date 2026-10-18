@@ -22,10 +22,14 @@
 
 首次远端准入在拉取代码时遇到 Mac 服务缺少终端代理的问题，未进入模型调用；停止后使用同一轮次补跑成功。执行器现从当前主机环境继承代理到仓库外的受保护 `.env`，注册文件兼容官方 UTF-8 BOM，不重新登录或复制会员凭据。此配置遵循 [GitHub 自托管代理说明](https://docs.github.com/en/actions/how-tos/manage-runners/use-proxy-servers)。
 
+入库后的链接核查发现，两份新来源笔记的机器页脚相对路径需要多返回一层目录。已仅修正这两份本轮生成文件的页脚链接，7 份正式 Markdown 的本地引用全部存在；原准入计划、accepted 回执、旧测试记录和受保护笔记的散列均保持不变。[追加的修复记录](../reports/agent-memory/admissions/cycle-agent-memory-gh-20261019/link-repair.yaml)绑定修正前后散列；同一修复重放无变化、无需网络或模型。后续生成已修正目录计算，并在准入前检查链接。
+
 ## 定时配置
 
 正式准入与同步通过后，[`automation.yaml`](../config/automation.yaml)设为 `enabled: true`；工作流 cron 为 `0 1 * * 2,5`，对应每周二、周五北京时间 09:00。当前启用时间不包含部署前的时间槽，下一次计划为 **2026-10-20 09:00（北京时间）**。实际首个 schedule 执行尚未发生，GitHub 可能延迟，Mac 需保持联网、唤醒、用户服务及本机所需代理运行。
 
 时间槽使用稳定轮次 ID，最多回看 14 天、每次恢复 1 个未完成槽。已准入、无新资料或已记录终结决定的槽不盲目重复付费；未知请求保留预留。恢复命令与主机配置见[部署说明](self-hosted-worker.md)，正式门槛见[准入说明](formal-admission.md)。
+
+[启用后的补跑计划验收](https://github.com/gynnash/research-desk/actions/runs/39153934408)通过：当前周一没有到期时间槽，计划 job 成功，分析与回存 job 跳过，未新增模型调用。此结果验证了空窗口门槛，不代表首个定时研究已经执行。
 
 选题保持 `proposed`、`approval_required: true`、`writing_started: false`、`publish_authorized: false`。本轮没有确认选题、启动 Writing 或发布公众号。
