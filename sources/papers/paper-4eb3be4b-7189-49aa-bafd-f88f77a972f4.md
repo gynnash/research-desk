@@ -21,7 +21,11 @@ topics:
 status: analyzed
 related_sources:
   - blog-fec9a2e1-6812-425a-83cd-e6a2464a1110
-related_notes: []
+related_notes:
+  - reports/2026-10-18-agent-memory-memgpt-memory-blocks.md
+  - insights/2026-10-18-agent-memory-usable-memory.md
+  - insights/2026-10-18-agent-memory-traceable-updates.md
+  - articles/2026-10-18-agent-memory-saving-vs-remembering-outline.md
 arxiv_id: "2310.08560"
 doi: 10.48550/arxiv.2310.08560
 source_version: v2
@@ -61,3 +65,4 @@ source_version: v2
 ## 更新记录
 
 - 2026-10-18：核验原始来源、首发日期及 v2；完成首轮分析和博客互链。标记 `analyzed` 仅表示已完成本轮阅读分析，不表示复现成功。
+- 2026-10-18：补充首轮报告、两条洞察及公众号大纲的关联，保留原阅读笔记。
