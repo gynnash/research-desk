@@ -190,7 +190,8 @@ def fetch_candidate(root, config, source, fetcher):
     metadata = record['metadata']
     identity_keys = store.identities(metadata)
     matches = {}
-    index = store.source_index(Path(root).resolve())
+    from researchdesk_identity import source_index
+    index = source_index(Path(root).resolve())
     for key in identity_keys:
         matches.update(index.get(key, {}))
     if len(matches) > 1:

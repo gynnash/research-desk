@@ -2,13 +2,15 @@
 
 ResearchDesk 是一个以 Markdown、YAML、GitHub 和 Obsidian 为基础的 AI 技术研究工作台：保存论文与技术博客、研究证据和历史判断，发现技术变化，并为微信公众号提供可追溯的选题与文章。框架面向开源，用户可配置自己的研究方向、来源、模型和预算，并使用自己授权的 ChatGPT 会员。
 
-当前已完成知识库基础设施、离线骨架、arXiv/Letta/LangChain 真实采集与本地官方 ChatGPT 会员接入。2026-10-19 已通过 YAML 配置驱动的一篇论文摘要与一篇博客节选研究，两项独立审阅通过，4 次请求，中断补跑未重复调用，详见[批次真实验收](reports/test/agent-memory/research-batches/configured-research-20261019/acceptance.md)。[上一阶段单篇测试](reports/test/agent-memory/membership/member-arxiv-20261019/acceptance.md)和模拟结果继续保留，所有新研究结果只写各方向的隔离测试目录。正式资料保持原样；没有定时任务、自动 PR 入库或公众号发布，不使用数据库和复杂 Agent 框架；已有 Vault 备份设置保持原样。
+当前已完成知识库基础设施、离线骨架、arXiv/Letta/LangChain 真实采集与本地官方 ChatGPT 会员接入。2026-10-19 已通过 YAML 配置驱动的一篇论文摘要与一篇博客节选研究，两项独立审阅通过，4 次请求，中断补跑未重复调用，详见[批次真实验收](reports/test/agent-memory/research-batches/configured-research-20261019/acceptance.md)。[上一阶段单篇测试](reports/test/agent-memory/membership/member-arxiv-20261019/acceptance.md)和模拟结果继续保留。Research 与 Insight 先写测试区，[正式准入](workflows/formal-admission.md)已实现：核实独立审阅及散列后仅创建新正式文件，保留旧资料和测试回执。定时代码已准备，最终启用值以 [automation.yaml](config/automation.yaml) 为准；远端准入与首个定时执行需看实际回执。未发布公众号，不使用数据库或复杂 Agent 框架，已有 Vault 设置保持原样。
 
 同日已完成 [Insight 真实测试](reports/test/agent-memory/insight-runs/insight-agent-memory-20261019/acceptance.md)：基于上述两份 Research 结果和五份历史基线，生成 1 份综合报告、2 条洞察和 2 张待确认选题卡，实际生成与审阅模型不同。共 4 次会员请求、43,163 tokens，包含格式失败响应、一次模型修订及额外独立格式确认；禁用推理的中断恢复与完整缓存补跑均未增加调用。新产物仍只在 `test`，未启动 Writing。验收时的 `10/10` 保留为历史快照；按用户后续授权，当前本仓库月度请求预算已调为 100，累计值随后续研究增加，以账本复核为准；会员剩余额度未知。
 
-目标流程由三个业务 Agent 完成：每周二、周五北京时间 09:00 自动 **Research 采集、研究与归纳 → Insight 综合历史、提炼洞察和公众号候选选题 → 用户确认选题、角度与受众 → Writing 生成大纲、初稿及候选稿**。各阶段共用独立模型审阅和确定性校验，日常研究、洞察和选题无需人工逐篇审批；写作必须绑定用户明确确认的选题版本，发布由用户另行决定。总体边界见[三 Agent 架构](workflows/three-agent-architecture.md)与[定时研究 MVP](workflows/agent-memory-github-actions-mvp.md)。[Insight 测试闭环](workflows/insight-agent-test.md)已生成待确认选题；当前增加 [Writing 离线闭环](workflows/writing-agent-offline.md)，只演练虚构选题的确认及模拟写作。真实人工确认入口与会员 Writing 后端仍待实现，定时仅保留设计。
+目标流程由三个业务 Agent 完成：每周二、周五北京时间 09:00 自动 **Research 采集、研究与归纳 → Insight 综合历史、提炼洞察和公众号候选选题 → 用户确认选题、角度与受众 → Writing 生成大纲、初稿及候选稿**。各阶段共用独立模型审阅和确定性校验，日常研究、洞察和选题无需人工逐篇审批；写作必须绑定用户明确确认的选题版本，发布由用户另行决定。总体边界见[三 Agent 架构](workflows/three-agent-architecture.md)与[定时研究 MVP](workflows/agent-memory-github-actions-mvp.md)。[Insight 测试闭环](workflows/insight-agent-test.md)已生成待确认选题；[Writing 离线闭环](workflows/writing-agent-offline.md)只演练虚构选题的确认及模拟写作。真实人工确认入口与会员 Writing 后端仍待实现。
 
-[Research → Insight 研究轮次](workflows/research-cycle.md)按方向发现资料并串联两个阶段，所有新结果仍保存到 `test`。[自托管执行器](workflows/self-hosted-worker.md)支持当前 Mac 及用户自行配置的远程主机：GitHub 手动派发，主机使用自己的会员授权分析，独立作业校验后保存测试检查点；授权与运行环境留在仓库外。`ResearchDesk checks` 单独执行离线检查。真实执行及恢复情况以轮次回执为准；正式入库与定时尚未启用。
+[Research → Insight 研究轮次](workflows/research-cycle.md)按方向发现资料并串联两个阶段。[自托管执行器](workflows/self-hosted-worker.md)支持当前 Mac 及用户配置的远程主机：主机使用自己的会员授权分析，独立作业校验并保存检查点，再按 [admission.yaml](config/admission.yaml) 准入新正式资料；授权与运行环境留在仓库外。`ResearchDesk checks` 单独执行离线检查。调度器支持固定时间槽、14 天范围内每次一个槽的补跑及同槽恢复；`enabled: false` 时不会自动派研究，正式验收后再改为 `true`。
+
+正式准入已在本地完成 7 份 Markdown 的验收，包含两条来源、两份单来源研究、一份综合报告、一条洞察和一张待确认选题，新增模型调用为 0。`reports/<topic>/admissions/<cycle-id>/` 保存计划、测试到正式的 ID 映射及输入输出散列；本地准入通过不等于已经提交到远端，GitHub/Obsidian 共享入库以远端 `main` 的确切文件和回执为准。
 
 [首个自动发现轮次](reports/test/agent-memory/cycles/cycle-agent-memory-20261019/acceptance-local.yaml)已完成本地真实验收：两份研究、综合报告、两条洞察及两张待确认选题，8 次会员请求；Research 后中断恢复及完整缓存重放没有重复调用。来源仅扫描有限列表，整体回执保留 `partial`，不声称全量覆盖。
 
@@ -23,6 +25,8 @@ research-desk/
 ├── config/
 │   ├── research_topics.yaml    # 研究方向及启用状态
 │   ├── membership_budget.yaml  # 本仓库会员调用的共享月度请求预算
+│   ├── admission.yaml         # 独立审阅后的受限正式准入
+│   ├── automation.yaml        # 定时开关、固定时间槽与补跑范围
 │   ├── cycles/                # 按方向配置发现、Research 与 Insight 轮次
 │   ├── legacy_sources.yaml     # 初始化前旧资料的明确兼容清单
 │   ├── examples/research_batch.yaml # 开源用户的通用 Research 配置示例
@@ -52,6 +56,8 @@ research-desk/
 │   ├── researchdesk_insight_inputs.py # 已审阅输入与历史基线核实
 │   ├── researchdesk_insight.py # 综合报告、洞察与待确认选题，只写 test
 │   ├── researchdesk_cycle.py   # 方向资料发现及 Research → Insight 轮次
+│   ├── researchdesk_admission.py # 只创建新文件的正式准入，不调用模型
+│   ├── researchdesk_schedule.py # 固定时间槽、启用门禁和漏跑选择
 │   ├── researchdesk_writing_inputs.py # 虚构输入、散列与确认门禁
 │   └── researchdesk_writing.py # 虚构确认与三阶段离线模拟写作
 └── tests/                     # 临时仓库中的自动验收
@@ -71,9 +77,9 @@ research-desk/
 
 配置优先级、缺失时的保守回退和不调用模型的复核命令见[共享会员请求预算](workflows/membership-budget.md)。模拟与离线虚拟单位预算不受该配置影响。
 
-各用户须自行通过官方会员授权并核实账户可用模型；当前用户本地验证不代表其他账户或 GitHub 临时 runner 已有资格。GitHub 定时与任务记录、符合资格的本地或自托管会员分析执行器及 Git 发布步骤在架构上分开，长期主机及自动入库仍待验收。[OpenAI 官方适用范围](https://developers.openai.com/siwc/token-sharing-open-source)、[自托管指南](https://developers.openai.com/siwc/token-sharing-open-source/self-hosted-vms)
+各用户须自行通过官方会员授权并核实账户可用模型；当前用户本地验证不代表其他账户或 GitHub 临时 runner 已有资格。GitHub 调度、符合资格的本地或自托管会员分析执行器及 Git 发布步骤分开；当前 Mac 已验证手动真实研究，长期在线、远端正式准入及定时实际运行分别验收。[OpenAI 官方适用范围](https://developers.openai.com/siwc/token-sharing-open-source)、[自托管指南](https://developers.openai.com/siwc/token-sharing-open-source/self-hosted-vms)
 
-以后每个研究方向使用单独目录：新正式来源拟保存到 `sources/papers/<primary-topic>/` 或 `sources/blogs/<primary-topic>/`，报告、洞察和文章对应 `<folder>/<primary-topic>/`；当前不写入这些正式目录，也不迁移已有资料。多主题仍通过 Frontmatter 的 `topics` 表达，同一来源只保存一份，以主要方向决定目录，不为多个主题复制文件。主题启用不触发任务；`agent-rl` 继续停用。Obsidian 直接将仓库根目录作为 Vault 打开，因此 GitHub 和 Obsidian 使用同一套目录。
+每个研究方向使用单独目录：正式准入的新来源保存到 `sources/papers/<primary-topic>/` 或 `sources/blogs/<primary-topic>/`，报告、洞察和选题对应 `<folder>/<primary-topic>/`，不迁移或覆盖已有资料。多主题仍通过 Frontmatter 的 `topics` 表达，同一来源只保存一份，以主要方向决定目录。测试 UUID 已被旧测试来源占用时，准入计划登记旧 ID 到新正式 UUID 的映射，保留旧记录；后续身份识别读取有效准入映射。主题启用与定时开关分开，`agent-rl` 继续停用。Obsidian 将仓库根目录作为 Vault，因此 GitHub 和 Obsidian 使用同一套目录。
 
 ## 录入一份资料
 

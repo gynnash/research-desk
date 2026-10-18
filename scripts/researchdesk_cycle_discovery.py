@@ -266,6 +266,9 @@ def select_history(root, topic, max_documents=6):
     if not isinstance(selected_topic, dict):
         raise store.OfflineError('历史资料研究方向不存在')
     name = selected_topic.get('name', topic)
+    from researchdesk_identity import accepted_records
+    admitted = {path for record in accepted_records(root) if record.get('topic')==topic
+                for path in record.get('output_hashes',{})}
     source_paths, notes = {}, []
     for folder in ('sources/papers', 'sources/blogs', 'reports', 'insights'):
         for path in sorted((root / folder).rglob('*.md')):
@@ -286,6 +289,11 @@ def select_history(root, topic, max_documents=6):
                 text = payload.decode('utf-8')
                 metadata = store.frontmatter(path)
             except (UnicodeError, store.OfflineError):
+                continue
+            # Marker-last admission can leave files after an interrupted
+            # install. Only admitted AI records may become later history.
+            # Human edits of an admitted note remain a new human baseline.
+            if '> AI 自动研究记录，已通过独立模型审阅' in text and relative.as_posix() not in admitted:
                 continue
             explicit = isinstance(metadata, dict) and isinstance(metadata.get('topics'), list) and topic in metadata['topics']
             if parts[0] == 'sources':

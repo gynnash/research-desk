@@ -320,7 +320,9 @@ def classify(root, base, candidate, backend, seen):
     for prior_base, prior, result, events in previous_candidates(root, base, backend):
         if keys & set(prior.get('identity_keys', store.identities(prior['metadata']))):
             matched.append((prior_base, prior, result, events))
-    ids = {p['source_id'] for _, p, _, _ in matched}
+    from researchdesk_identity import aliases, resolve
+    mapping = aliases(root)
+    ids = {resolve(p['source_id'], mapping) for _, p, _, _ in matched}
     if candidate.get('existing_source_path'):
         ids.add(candidate['source_id'])
     if len(ids) > 1:

@@ -112,7 +112,8 @@ def formal_plan(root, topic, cycle):
 def admission_enabled(root, topic):
     import researchdesk_offline as store
     import researchdesk_batch_inputs as common
-    path = common.config_path(root, 'config/admission.yaml')
+    from researchdesk_schedule import load_config
+    path = common.config_path(root, load_config(root)['admission_config'])
     policy = store.load_yaml(path)
     common.fields(policy, {'schema_version','enabled','topics','require_independent_review','preserve_existing_files'}, '正式准入策略')
     if (type(policy['schema_version']) is not int or policy['schema_version'] != 1
@@ -123,8 +124,9 @@ def admission_enabled(root, topic):
     return policy['enabled'] and topic in policy['topics']
 
 
-def inspect_files(root, files, topic, cycle):
-    _, formal_files = formal_plan(root, topic, cycle)
+def inspect_files(root, files, topic, cycle, formal_files=None):
+    if formal_files is None:
+        _, formal_files = formal_plan(root, topic, cycle)
     for relative in files:
         if not allowed(relative, topic, cycle, formal_files):
             raise JobError('transfer_outside_cycle_paths')
@@ -245,12 +247,17 @@ def apply(root, artifact):
             raise JobError('transfer_identity_invalid')
     if len(manifest['files']) > 1000 or manifest['schema_version'] != 1:
         raise JobError('transfer_manifest_invalid')
+    if manifest['operation'] not in {'discover','run','admit'}:
+        raise JobError('transfer_operation_invalid')
     current = tracked(root)
     if any(current.get(path) != blob for path, blob in manifest['baseline_blobs'].items()):
         raise JobError('main_inputs_changed_preserve_artifact')
     files = manifest['files']
     payload = artifact / 'payload'
-    inspect_files(payload, files, manifest['topic'], manifest['cycle_id'])
+    _, formal_files = formal_plan(payload, manifest['topic'], manifest['cycle_id'])
+    if not formal_files:
+        _, formal_files = formal_plan(root, manifest['topic'], manifest['cycle_id'])
+    inspect_files(payload, files, manifest['topic'], manifest['cycle_id'], formal_files)
     additions = []
     for relative, expected in files.items():
         content = safe(payload, relative).read_bytes()
@@ -270,7 +277,7 @@ def apply(root, artifact):
             handle.write(content)
     plan, _ = formal_plan(root, manifest['topic'], manifest['cycle_id'])
     production_accepted = False
-    if plan is not None:
+    if plan is not None and manifest['operation'] in {'run','admit'}:
         if not admission_enabled(root, manifest['topic']):
             raise JobError('formal_admission_disabled')
         import researchdesk_admission as admission

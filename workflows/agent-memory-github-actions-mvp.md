@@ -1,22 +1,24 @@
 # Agent Memory 定时研究任务 MVP 设计
 
-- 版本：0.5；修订日期：2026-10-19。
-- 状态：**Research / Insight 的 GitHub 手动派发与测试回存已验收；正式定时与自动入库仍为设计**。本文未来正式路径与定时参数不代表已经启用。
-- 实施进度：已有[离线骨架](offline-research.md)、[真实来源采集](real-source-collection.md)、[配置驱动 Research](configurable-research-batch.md)与[真实 Insight 闭环](insight-agent-test.md)。[GitHub → 当前 Mac → Research / Insight → 测试结果回存 → Obsidian](../reports/test/agent-memory/cycles/cycle-agent-memory-gh-20261019/acceptance.md)已通过手动真实验收，按方向发现资料、读取历史、生成与独立审阅，并校验保存测试检查点。本地/远程主机通过 YAML 配置；本次实际验证当前 Mac。Writing 仅有离线样例闭环；真实人工确认入口、会员 Writing、自动正式入库和定时尚未交付。
+- 版本：0.6；修订日期：2026-10-19。
+- 状态：**Research / Insight 的 GitHub 到 Mac 真实研究已验收；create-only 正式准入已实现并通过本地验收，定时代码已准备**。远端准入及首个定时成功以实际回执为准，最终启用值读取 `config/automation.yaml`。
+- 实施进度：已有[离线骨架](offline-research.md)、[真实来源采集](real-source-collection.md)、[配置驱动 Research](configurable-research-batch.md)与[真实 Insight 闭环](insight-agent-test.md)。[GitHub → 当前 Mac → Research / Insight → 测试结果回存 → Obsidian](../reports/test/agent-memory/cycles/cycle-agent-memory-gh-20261019/acceptance.md)已通过手动真实验收，按方向发现资料、读取历史、生成与独立审阅，并校验保存测试检查点。本地/远程主机通过 YAML 配置；本次实际验证当前 Mac。[正式准入](formal-admission.md)已完成本地 7 份 Markdown、0 新增模型调用验收；启用配置在远端验收前保持关闭。Writing 仅有离线样例闭环，真实人工确认入口及会员 Writing 仍待交付。
 - 目标：GitHub Actions 定时发现 Agent Memory 资料，生成带证据的研究记录，经独立审阅模型与规则校验通过后自动入库。
 - 总体架构见[三 Agent 总体架构](three-agent-architecture.md)。沿用[主题配置](../config/research_topics.yaml)、[Schema v1](source-schema.md)、[维护规范](maintenance.md)和现有模板，保持 Markdown + YAML。
 
 ## 1. 范围与成功标准
 
-闭环为：**定时触发 → 发现与查重 → 固定原文证据 → 研究模型生成 → 独立模型审阅 → 规则校验 → PR 自动合并 → Obsidian 拉取**。
+**当前落地方式**：研究与 Insight 先写测试检查点，`admission.yaml` 控制确定性正式准入，`reports/<topic>/admissions/<cycle-id>/` 记录计划、测试到正式的 UUID 映射及输入输出散列。独立 Ubuntu job 对新文件校验后普通提交推送，旧文件不覆盖；没有自动 PR 合并。下文第 6–8 节的分支/PR 方案保留为后续扩展设计，不能视为已实现或当前发布前提。当前实现与命令以[正式准入](formal-admission.md)、[轮次](research-cycle.md)和[自托管执行器](self-hosted-worker.md)为准。
 
-本版已实施 Research / Insight 的配置驱动测试批次与 GitHub 手动派发：处理 YAML 启用的方向，首个方向为 `agent-memory`，`agent-rl` 继续停用。当前只创建隔离测试研究、综合报告、洞察、待确认选题及回执；未来正式任务再创建新来源笔记、独立更新材料和正式派生资料。真实 Writing、正式入库和调度按下述总体链路继续实现，不连接公众号发布接口。
+闭环为：**定时触发 → 发现与查重 → 固定原文证据 → 研究模型生成 → 独立模型审阅 → 规则校验 → 受限正式准入与保存 → Obsidian 拉取**。
+
+本版已实施 Research / Insight 的配置驱动测试批次与 GitHub 手动派发：处理 YAML 启用的方向，首个方向为 `agent-memory`，`agent-rl` 继续停用。当前先创建隔离测试研究、综合报告、洞察、待确认选题及回执，再经独立审阅绑定与准入规则创建新的正式资料。真实 Writing 仍待实现，定时是否开启以自动化配置为准，不连接公众号发布接口。
 
 最终业务链路为：**周二/周五 09:00 自动 Research → 独立审阅后受限入库 → 自动综合与 Insight → 独立审阅后保存洞察和公众号候选选题 → 用户明确确认选题、角度、受众及输入版本 → Writing 生成并审阅大纲、初稿、候选稿 → 用户决定是否发布**。独立审阅是三个 Agent 共用的能力。正常研究、洞察和选题无需人工逐篇审阅；模型通过不能替用户确认选题。确认需绑定选题与证据散列，内容变化后重获确认，模型无权创建自己的批准记录。
 
-**正常入库流程不要求人工审阅或人工点击合并。** 内容须有可核实的原始来源、稳定身份、明确阅读范围、可定位的证据，并同时通过独立模型审阅和确定性检查。运行成功、模型通过、PR 创建和合并成功分别记录；只有通过的最终产物进入 `main` 并登记为 `accepted`，才算正式入库。研究消费者仅读取这些产物，不把检查点草稿或失败记录当成研究结论。
+**正常入库流程不要求人工审阅或人工点击合并。** 内容须有可核实的原始来源、稳定身份、明确阅读范围、可定位的证据，并同时通过独立模型审阅和确定性检查。运行成功、模型通过、准入验证与远端保存分别记录；只有通过的最终产物及准入清单进入 `main`，才算共享正式入库。研究消费者仅读取这些产物，不把检查点草稿或失败记录当成研究结论。
 
-没有合适的新资料也是合法结果，需要保存完整扫描回执。规则或权限阻碍自动合并时显式报错，不能把“模型说通过”当作已经入库。
+没有合适的新资料也是合法结果，需要保存完整扫描回执。规则或权限阻碍受限推送时显式报错，不能把“模型说通过”当作已经入库。
 
 启用前对现有人工入库资料做只读盘点，在独立基线清单登记 `human_baseline`、路径和散列，允许后续研究使用，不修改旧文件或补造模型审阅。后续人工新增/修改按只读校验更新基线登记。自动新产物必须满足 `accepted` 与审阅条件；身份查重始终覆盖全库。
 
@@ -24,20 +26,20 @@
 
 | 项目 | MVP 决策 |
 | --- | --- |
-| 主入口 | **每周二、周五北京时间 09:00**，每周两次。拟用 UTC cron 为 `0 1 * * 2,5`，对应 `Asia/Shanghai`；只记录设计，不创建实际配置。 |
+| 主入口 | **每周二、周五北京时间 09:00**，每周两次。UTC cron 为 `0 1 * * 2,5`，对应 `Asia/Shanghai`；workflow 已包含该事件，`automation.yaml` 的 `enabled` 控制是否派发真实研究。 |
 | 执行环境 | GitHub Actions 手动派发、任务记录及受限测试结果回存已验证；会员分析使用当前 Mac 自托管执行器，授权与依赖保存在仓库外。提供远程主机配置，用户在所选主机自行部署授权。定时、长期在线可用性与其他主机资格仍待验收，不假设 GitHub 临时 runner 可直接使用会员。 |
-| 辅助入口 | 后续提供 `workflow_dispatch`，仅用于验收、恢复批次和指定区间补跑；共用查重、审阅、预算与写入保护。 |
+| 辅助入口 | 已提供 `workflow_dispatch` 的 health/discover/run/admit/catchup；补跑保留固定槽 ID、历史预留和已保存阶段，未知请求不自动重发。 |
 | 扫描时间窗 | 首次最近 7 天；随后从各来源最后已合并的完整扫描游标向前重叠 48 小时，扫描到本批固定截止时间。周二覆盖上次周五以来，周五覆盖上次周二以来，不能只查运行当天。 |
 | 发现上限 | 每个来源每批最多检查 50 条候选元数据，超额保存续扫线索；不能标记为已完整扫描。 |
 | 研究上限 | 每批最多 3 份，优先 2 篇论文 + 1 篇博客，不足可互补；同一博客发布方最多 1 篇。更新材料也占名额。 |
 | 时间上限 | 每次执行最多 30 分钟，中断后读取远端清单恢复同一批次。 |
 | 模型上限 | 每份最多 4 次请求尝试：研究模型最多 2 次、审阅模型最多 2 次；每批累计最多 12 次。通常为研究 + 审阅，需要时再修订 + 复审一次。网络和恢复重试也占相应槽位，补跑不重置。 |
 | 输入输出 | 会员测试用客户端输入字符、输出字符和等待时间限制，具体值来自批次 YAML；模拟账本的 token 上限不适用于真实服务。会员预览不支持 `max_output_tokens`，客户端停止不能承诺服务端生成或会员额度的硬上限。超限须明确节选范围。 |
-| 并发上限 | 同时最多 1 个活动批次、1 个入库 PR。内容失败不阻塞其他合格项；配置或合并故障未解决时停止新增付费研究，优先恢复发布。 |
+| 并发上限 | 当前全流程共用一个并发组，最多一个活动研究/发布轮次。内容失败不阻塞其他合格项；配置或合并故障未解决时停止新增付费研究，优先恢复发布。 |
 
 运行前从 YAML 读取研究和审阅模型，**两者必须是账户实际可用目录中不同的具体模型 ID**，使用独立上下文；不能只换提示词或把同一模型重命名为审阅者。缺失审阅配置时不能退回研究模型自审。各用户使用自己的官方会员授权 profile，凭据目录通过运行参数指定且必须位于仓库外；示例不共享当前用户授权。当前默认会员后端，不自动回退普通付费 API。
 
-本阶段有意采用更小的测试上限：一篇论文加一篇博客，批次最多 6 次请求、每项最多 4 次、至多一次修订。此前验收的本地月度上限为 10 次（包含单篇测试的 2 次），并非来自会员官方额度；按用户后续授权，现由 [`config/membership_budget.yaml`](../config/membership_budget.yaml) 将共享月度上限设为 100，累计预留 10/100，旧 YAML 和回执保留当时快照，历史账本不清零。通常研究加审阅共 4 次，剩余 2 次仅用于一项修订与复审，不保证两项都可修订。正式每批 3 项/12 次是未来默认设计，不能覆盖本轮限制。
+本阶段有意采用更小的测试上限：一篇论文加一篇博客，批次最多 6 次请求、每项最多 4 次、至多一次修订。此前验收的本地月度上限为 10 次（包含单篇测试的 2 次），并非来自会员官方额度；按用户后续授权，现由 [`config/membership_budget.yaml`](../config/membership_budget.yaml) 将共享月度上限设为 100，累计预留以现有账本为准，旧 YAML 和回执保留当时快照，历史账本不清零。通常研究加审阅共 4 次，剩余 2 次仅用于一项修订与复审，不保证两项都可修订。正式每批 3 项/12 次是未来默认设计，不能覆盖本轮限制。
 
 研究、修订、审阅、复审和失败重试都计入调用及用量预算。请求前持久化调用预留，关闭隐式重试；结果未知不能返还预留。会员真实额度不可观测时标记未知，不将模拟单位换算成真实费用；具体用量门禁按会员后端验收。若以后另行采用付费 API，需另外预留最大费用。额度不足时留下待办，不能新建批次绕过限制或自动切换付费后端。
 
@@ -105,7 +107,7 @@ arXiv 的 `published` 是首次版本日期，`updated` 是当前版本更新时
 
 所有已有正文、批注、状态、主题、关联及人工修改过的机器人产物均受保护。新笔记的人工笔记章节留空；自动化只创建新文件。旧笔记的修改继续按维护规范逐段进行，不是自动入库的前置审批步骤。以后若需要自动维护指定段落，须另立明确所有权规则，不由本设计推定权限。
 
-## 6. 检查点与正式入库的写入边界
+## 6. 后续 PR 方案：检查点与写入边界
 
 首版采用两个用途明确的 Git 分支，不引入数据库：
 
@@ -125,7 +127,7 @@ arXiv 的 `published` 是首次版本日期，`updated` 是当前版本更新时
 
 `batch-id` 使用固定逻辑时间槽，如 `agent-memory-20261020T010000Z`（周二北京时间 09:00），`attempt` 递增并关联 GitHub run ID。补跑沿用批次时间窗、来源身份和预留 UUID；不得重新生成 ID 或重置额度。
 
-## 7. 状态、游标与失败补跑
+## 7. 后续 PR 方案：状态、游标与失败补跑
 
 - **批次**：`planned → researching → reviewing → ready_to_merge → merged`，另有 `partial`、`failed`、`blocked_configuration`。模型通过与 GitHub 合并成功分开。
 - **资料**：`discovered → queued → generated → reviewed_pass → validated → proposed → accepted`；审阅要求修改时仅允许一次 `revising → reviewing`，另有 `rejected`、`blocked`、`deferred`。`accepted` 由合并确认推导，不能在合并前写成已完成。
@@ -152,7 +154,7 @@ arXiv 的 `published` 是首次版本日期，`updated` 是当前版本更新时
 
 定时、补跑、检查点写入和发布采用同一 concurrency 组，`cancel-in-progress: false`；待运行队列不承担持久补跑职责，参见 [GitHub concurrency 文档](https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/control-workflow-concurrency)。Summary 显示来源覆盖、各决策数量、用量、待办、合并状态和最近完整扫描。首版只使用 GitHub 运行状态/PR，不增加外部消息渠道。
 
-## 8. PR 自动入库、权限与审计
+## 8. 后续 PR 方案：权限与审计
 
 1. 读取受信任的 `main` 代码和配置，检查并恢复活动批次；fork PR 或原文中的指令不能触发带密钥的研究。
 2. 按执行职责隔离权限：会员分析执行器只读指定证据，不持 Git 写权限；凭据按官方授权方案保存在符合资格的分析主机，不默认注入 GitHub-hosted runner。GitHub 采集校验 job 仅 `contents: read`；保存检查点/发布 job 取得必要 `contents: write`，不持会员凭据；PR job 另需 `pull-requests: write`。合并 job 使用 `contents: write` 及所需的 PR/checks/statuses 只读权限。GitHub 权限须按 **job** 隔离，不能靠同一 job 的 step 降级，参见[官方权限说明](https://docs.github.com/en/actions/tutorials/authenticate-with-github_token#modifying-the-permissions-for-the-github_token)。写入路径再由程序白名单限制。
@@ -204,7 +206,7 @@ git status --short
 git ls-files '.github/workflows/*'
 ```
 
-最后一项本轮预期无输出；未跟踪文件同时通过 `git status --short` 核对。提交后执行：
+最后一项应列出离线检查及研究周期 workflow；定时配置是否会派发研究还须核对 `config/automation.yaml`，未跟踪文件同时通过 `git status --short` 核对。提交后执行：
 
 ```sh
 git show --stat --oneline HEAD

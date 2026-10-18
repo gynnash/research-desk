@@ -3,13 +3,17 @@
 ## 总体架构与定时研究设计
 
 - [Research、Insight、Writing 三 Agent 总体架构](three-agent-architecture.md)：定义自动研究、综合洞察、公众号选题，以及人工确认选题后才启动写作的完整流程；独立模型审阅是三者共用能力。
-- [Agent Memory GitHub Actions MVP](agent-memory-github-actions-mvp.md)：拟每周二、周五北京时间 09:00 触发；研究独立审阅与规则校验通过后受限自动入库，再逐步接通 Insight/选题。保留人工笔记保护及失败补跑。
+- [Agent Memory GitHub Actions MVP](agent-memory-github-actions-mvp.md)：每周二、周五北京时间 09:00 的计划入口已准备；按启用配置派发 Research → Insight，独立审阅与规则校验通过后受限正式准入，保留人工笔记保护及失败补跑。
 
-总体流程和正式入库仍按设计分阶段实现。已有真实采集、官方会员本地后端、单篇摘要真实研究审阅及 YAML 驱动的 Research、Insight 测试闭环；当前增加 Writing 的虚构确认及离线模拟写作。真实人工确认入口和会员 Writing 后端留待后续阶段，没有定时任务或公众号发布。
+真实采集、官方会员后端、Research → Insight 与 GitHub 到 Mac 的手动轮次已验收；正式准入已实现并在本地通过 7 份 Markdown、0 新增模型调用的验收。调度代码已准备，最终开关以 [`automation.yaml`](../config/automation.yaml) 为准，远端准入与定时成功需看实际回执。Writing 仅有虚构确认及离线模拟；真实确认入口和会员 Writing 后端仍待实现，不发布公众号。
 
 ## Research → Insight 研究轮次
 
-[轮次入口与 GitHub 验收](research-cycle.md)将按方向发现资料、查重、Research 独立审阅和 Insight 选题串联，结果只写测试目录；真实执行及恢复结果以轮次回执为准。GitHub 的 `ResearchDesk checks` 只执行离线检查；[手动执行器](self-hosted-worker.md)使用当前 Mac 或用户配置的远程主机运行真实研究，并将测试检查点保存回仓库。每周二、周五 09:00 的定时与正式自动入库尚未启用。
+[轮次入口与 GitHub 验收](research-cycle.md)按方向串联发现、查重、Research 独立审阅和 Insight 选题，先保存测试检查点，再按规则正式准入。GitHub 的 `ResearchDesk checks` 只执行离线检查；[自托管执行器](self-hosted-worker.md)使用当前 Mac 或用户配置的远程主机研究；Ubuntu 计划步骤处理固定时间槽，独立发布步骤只接纳允许的新文件。
+
+## 正式准入
+
+[准入规则与操作](formal-admission.md)说明 [`admission.yaml`](../config/admission.yaml)、准入计划、有效 `accepted` 清单、测试 UUID 到正式 UUID 的映射及人工笔记保护。准入不再调用模型，不修改旧测试回执；`admit` 只处理已有已审阅轮次，选题仍为待人工确认。定时开关与准入配置分开，正常研究入库不增加人工审批门槛。
 
 ## Writing 离线闭环
 
@@ -25,7 +29,7 @@
 
 正常两次会员请求，最多四次，包含一次修订与复审；与单篇分析、Research 批次共享月度请求预算，当前上限为 100，未知调用不自动重发。报告、洞察和选题分别只写各目录的 `test/<topic>/`，既有资料不可覆盖。选题由程序固定为 `proposed`、`approval_required: true`、`writing_started: false`，本轮不提供确认或 Writing 入口；真实通过状态以回执为准。
 
-2026-10-19 [真实验收](../reports/test/agent-memory/insight-runs/insight-agent-memory-20261019/acceptance.md)已通过：综合报告、2 条洞察和 2 张待确认选题卡，生成 `gpt-6-luna`，独立审阅 `gpt-6.1-sol`。共 4 次请求、43,163 tokens，含失败响应、一次模型修订、一次严格语法规范化及额外独立格式确认；恢复和缓存补跑均没有追加推理。回执中的月度 `10/10` 为当时快照；按用户后续授权，上限现为 100，该阶段历史累计预留为 10，后续轮次继续累计。会员剩余额度保留未知。正式入库、确认入口、Writing 和调度仍未启用。
+2026-10-19 [真实验收](../reports/test/agent-memory/insight-runs/insight-agent-memory-20261019/acceptance.md)已通过：综合报告、2 条洞察和 2 张待确认选题卡，生成 `gpt-6-luna`，独立审阅 `gpt-6.1-sol`。共 4 次请求、43,163 tokens，含失败响应、一次模型修订、一次严格语法规范化及额外独立格式确认；恢复和缓存补跑均没有追加推理。回执中的月度 `10/10` 为当时快照；按用户后续授权，上限现为 100，该阶段历史累计预留为 10，后续轮次继续累计。会员剩余额度保留未知。此处为该阶段的历史记录；当前准入与调度实现见上文，真实确认入口及会员 Writing 仍待交付。
 
 ## 配置驱动的 Research 批次
 
@@ -57,4 +61,4 @@
 4. 阅读原文并维护状态和笔记；需要时手动整理到 `reports/`、`insights/` 或 `articles/`。
 5. 执行 `python3 workflows/validate.py`（在仓库根目录，需 PyYAML），检查差异，再提交并同步。
 
-这里包含设计、约定、模板、只读校验工具及测试样例；`scripts/` 包含受限真实采集器、模拟骨架、本地官方会员后端及配置驱动的 Research、Insight 测试批次和 Writing 离线演练，产物只写测试目录。没有已启用的调度器、正式自动入库或公众号发布能力。
+这里包含设计、约定、模板、只读校验工具及测试样例；`scripts/` 包含受限真实采集器、模拟骨架、本地官方会员后端及配置驱动的 Research、Insight 测试批次和 Writing 离线演练，产物只写测试目录。正式准入与时间槽调度已有实现，启用状态及远端成功以配置和实际回执为准；没有公众号发布能力。
