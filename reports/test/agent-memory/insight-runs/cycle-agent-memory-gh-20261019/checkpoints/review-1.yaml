@@ -1,0 +1,29 @@
+binding: e2db994f3a17f45edc0b3bd56db76d58a1d642a4a26271bf511dd4fdeeecda25
+result:
+  text: "{\n  \"decision\": \"pass\",\n  \"coverage_acknowledged\": true,\n  \"topic_gate_confirmed\"\
+    : true,\n  \"issues\": [\n    {\n      \"severity\": \"info\",\n      \"location\"\
+    : \"insights.0\",\n      \"reason\": \"分阶段检查与 H3、H4 的历史研究假设有延续关系。候选仍将其明确标为待验证假设，没有将历史建议或验证计划升级为已证实的方法效果。\"\
+    ,\n      \"suggestion\": \"后续整理可补充 H3、H4 作为历史思路出处，区分既有假设与本批 R1、R2 提供的新线索；继续保留未执行验证的说明。\"\
+    \n    },\n    {\n      \"severity\": \"info\",\n      \"location\": \"topics.0\"\
+    ,\n      \"reason\": \"选题范围限于机制比较和评估问题，未据少量材料宣称行业趋势、通用效果或跨系统优劣；当前审阅通过不等于用户批准选题。\"\
+    ,\n      \"suggestion\": \"将该选题提交用户确认；确认前不得启动 Writing 或发布。\"\n    }\n  ],\n  \"\
+    checks\": [\n    {\n      \"target\": \"report\",\n      \"verdict\": \"supported\"\
+    ,\n      \"evidence_ids\": [\"R1\", \"R2\", \"H1\", \"H2\"]\n    },\n    {\n \
+    \     \"target\": \"report.comparisons.0\",\n      \"verdict\": \"supported\"\
+    ,\n      \"evidence_ids\": [\"R1\"]\n    },\n    {\n      \"target\": \"report.comparisons.1\"\
+    ,\n      \"verdict\": \"supported\",\n      \"evidence_ids\": [\"R2\"]\n    },\n\
+    \    {\n      \"target\": \"report.comparisons.2\",\n      \"verdict\": \"supported\"\
+    ,\n      \"evidence_ids\": [\"H1\"]\n    },\n    {\n      \"target\": \"report.comparisons.3\"\
+    ,\n      \"verdict\": \"supported\",\n      \"evidence_ids\": [\"R1\", \"R2\"\
+    ]\n    },\n    {\n      \"target\": \"report.comparisons.4\",\n      \"verdict\"\
+    : \"supported\",\n      \"evidence_ids\": [\"H2\", \"R1\"]\n    },\n    {\n  \
+    \    \"target\": \"insights.0\",\n      \"verdict\": \"supported\",\n      \"\
+    evidence_ids\": [\"R1\", \"R2\", \"H1\", \"H3\", \"H4\"]\n    },\n    {\n    \
+    \  \"target\": \"topics.0\",\n      \"verdict\": \"supported\",\n      \"evidence_ids\"\
+    : [\"R1\", \"R2\", \"H1\"]\n    }\n  ]\n}"
+  model: gpt-6.1-sol
+  response_id: resp_0021a5c85c83e7d4016ad508e16de487d0aba2b5aea25b0313
+  usage:
+    input_tokens: 11005
+    output_tokens: 672
+    total_tokens: 11677

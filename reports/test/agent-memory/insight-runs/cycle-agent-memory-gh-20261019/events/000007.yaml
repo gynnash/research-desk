@@ -1,0 +1,12 @@
+type: call_completed
+reservation_id: review-1
+role: review
+revision: 1
+model_id: gpt-6.1-sol
+response_path: reports/test/agent-memory/insight-runs/cycle-agent-memory-gh-20261019/checkpoints/review-1.yaml
+response_sha256: e5fc65c7fb6f9b30ba63f171f8620685279bbc53e076f24c512ad58f5b57ea1f
+usage:
+  input_tokens: 11005
+  output_tokens: 672
+  total_tokens: 11677
+at: '2026-10-18T17:59:12.770970+00:00'

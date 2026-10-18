@@ -1,0 +1,12 @@
+binding: 795bb9eb7e4e00fd211d241fc7f323be3d34c7bf00fe7cd2ffa757168d3d98d8
+result:
+  text: '{"summary":"基于所提供的 LangChain 博客节选，概述其对智能体上下文管理及 Deep Agents 中相关机制的介绍；不代表对系统效果或实现的独立核验。","claims":[{"kind":"author_claim","text":"节选将上下文管理分为减少无关信息进入上下文，以及管理和筛选已在上下文中的信息两类。","evidence_ids":["A7"]},{"kind":"author_claim","text":"节选称
+    Deep Agents 可通过文件卸载、摘要、按需加载技能、子代理和跨对话文件记忆等方式，将部分信息移出主智能体的活动上下文。","evidence_ids":["A9","A10","A11","A12","A13","A14"]},{"kind":"author_claim","text":"节选描述的工具结果卸载流程会在结果超过约
+    20,000 个 token 时将其写入文件，并向模型提供简短预览和文件路径；较大的用户消息采用更高阈值处理。","evidence_ids":["A25","A26","A28"]},{"kind":"author_claim","text":"节选称摘要中间件默认在上下文使用量达到模型窗口的
+    85% 后压缩较早消息，同时保留最近消息原文。","evidence_ids":["A31","A32"]}],"limitations":["本次只读博客节选，没有核验全文、实验或实现。","节选中的阈值与机制描述属于作者陈述，未独立验证其当前适用性、实际运行表现或记忆准确性。"]}'
+  model: gpt-6-luna
+  response_id: resp_0821f0dc8800c100016ad5089942d087d0a5593d5c3366090d
+  usage:
+    input_tokens: 1756
+    output_tokens: 432
+    total_tokens: 2188

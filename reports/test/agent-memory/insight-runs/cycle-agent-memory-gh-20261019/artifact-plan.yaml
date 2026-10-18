@@ -1,0 +1,4 @@
+files:
+  reports/test/agent-memory/insight-runs/cycle-agent-memory-gh-20261019/report.md: 47eda356203ad49145ca105fbc500ac34c3dd4eee6e5f65ed0bc35b0d00a3b2c
+  insights/test/agent-memory/cycle-agent-memory-gh-20261019/insight-1.md: 66440eb5f248de4788b07ab973eee41de93f85a204f25e2b4d3ec5eedc557f1c
+  articles/test/agent-memory/cycle-agent-memory-gh-20261019/topic-1.md: 783433cfb6cff91bf6c644063aa7d33743dbced526131c698372e13c4e5c72e9

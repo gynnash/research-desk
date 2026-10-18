@@ -1,0 +1,75 @@
+schema_version: 1
+mode: research_cycle_test
+backend: chatgpt_plan
+topic: agent-memory
+cycle_id: cycle-agent-memory-gh-20261019
+status: partial
+window_start: '2026-10-11T17:57:06.092161+00:00'
+window_end: '2026-10-18T17:57:06.092161+00:00'
+discovery_complete: false
+source_status:
+- id: arxiv
+  adapter: arxiv
+  entry_url: https://export.arxiv.org/api/query
+  status: truncated
+  discovered: 2442
+  inspected: 8
+  eligible: 7
+  selected: 1
+  complete_window: false
+  error_types: []
+  requested_url: https://export.arxiv.org/api/query?search_query=all%3A%22agent+memory%22+OR+all%3A%22long-term+memory%22+OR+all%3A%22episodic+memory%22+OR+all%3A%22memory+retrieval%22+OR+all%3A%22memory+consolidation%22&sortBy=lastUpdatedDate&sortOrder=descending&start=0&max_results=8
+- id: letta
+  adapter: letta
+  entry_url: https://www.letta.com/blog/
+  status: truncated
+  discovered: 28
+  inspected: 8
+  eligible: 0
+  selected: 0
+  complete_window: false
+  error_types: []
+  coverage: bounded_listing_only_no_archive_cursor
+- id: langchain
+  adapter: langchain
+  entry_url: https://www.langchain.com/blog
+  status: truncated
+  discovered: 19
+  inspected: 8
+  eligible: 2
+  selected: 1
+  complete_window: false
+  error_types: []
+  coverage: bounded_listing_only_no_archive_cursor
+stages:
+  research:
+    status: test_accepted
+    reserved_calls: 4
+  insight:
+    status: test_accepted
+    reserved_calls: 3
+reserved_calls: 7
+pending_count: 29
+input_hashes:
+  reports/test/agent-memory/cycles/cycle-agent-memory-gh-20261019/manifest.yaml: 3ea98842392464ea7ef338a2836b0fb5c96aafe80d8e9c4ac0c9009daf9e9d2a
+  reports/test/agent-memory/cycles/cycle-agent-memory-gh-20261019/discovery.yaml: 1619f64c8f0d82789703fb6ee68c6990bac0e15f775d25c1ca79576b23f91dcc
+  reports/test/agent-memory/cycles/cycle-agent-memory-gh-20261019/selection.yaml: c8116649666d4f371cdd65ecb652e181daf26bb9994dfe8b63127e97755e3f17
+  sources/blogs/blog-fec9a2e1-6812-425a-83cd-e6a2464a1110.md: 1c05f28a21a3cef08ff0fc966970a4eed70e2510d0d17468437fb4ff0fa7e99f
+  sources/papers/paper-4eb3be4b-7189-49aa-bafd-f88f77a972f4.md: 2fca02def277430ea06e35c370b56b895c82d01b14099c3cea4cb55a1e410274
+  reports/2026-10-18-agent-memory-memgpt-memory-blocks.md: 02b197e040a40022a004e692395b0f5e6ce3b1e3611ea9b374f440bb7ba23e96
+  insights/2026-10-18-agent-memory-usable-memory.md: 6bdbac554506f14147aebdcbbb35a8ea62e4800f9f2a804f1d84ecc414b54212
+  insights/2026-10-18-agent-memory-traceable-updates.md: 5996061dc64dea1ff86ac9275b40ac20b813f95c95fa370fcfc3ba453d5929a2
+  reports/test/agent-memory/cycles/cycle-agent-memory-gh-20261019/history.yaml: 65fc594e909f78ac84bd1d2ca6dd4d34571ec08501a9030dce5df964760a188b
+  reports/test/agent-memory/cycles/cycle-agent-memory-gh-20261019/research-result.yaml: 038e4ba4ed795ef791cf8c05f0d86fea26eca6071bc1f96ebe9992fa0e5e91b7
+  reports/test/agent-memory/cycles/cycle-agent-memory-gh-20261019/configs/research.yaml: 48ab05bd46dd20ba95f51081e65fabf1be2308240e4020af93ae505a86fe7e28
+  reports/test/agent-memory/research-batches/cycle-agent-memory-gh-20261019/receipt-attempt-1.yaml: 038e4ba4ed795ef791cf8c05f0d86fea26eca6071bc1f96ebe9992fa0e5e91b7
+  reports/test/agent-memory/cycles/cycle-agent-memory-gh-20261019/configs/insight.yaml: b35ba68bf4c831cec34e3a3f2db2241f39d33b5399043ea1a00d3b1ee742f987
+  reports/test/agent-memory/cycles/cycle-agent-memory-gh-20261019/insight-result.yaml: 2b116d3b3e3bd6494e99049fd3e1f727c195ee8930c3ae0b1848c3f84a382683
+  reports/test/agent-memory/insight-runs/cycle-agent-memory-gh-20261019/receipt.yaml: 2b116d3b3e3bd6494e99049fd3e1f727c195ee8930c3ae0b1848c3f84a382683
+output_hashes:
+  reports/test/agent-memory/insight-runs/cycle-agent-memory-gh-20261019/report.md: 47eda356203ad49145ca105fbc500ac34c3dd4eee6e5f65ed0bc35b0d00a3b2c
+  insights/test/agent-memory/cycle-agent-memory-gh-20261019/insight-1.md: 66440eb5f248de4788b07ab973eee41de93f85a204f25e2b4d3ec5eedc557f1c
+  articles/test/agent-memory/cycle-agent-memory-gh-20261019/topic-1.md: 783433cfb6cff91bf6c644063aa7d33743dbced526131c698372e13c4e5c72e9
+production_accepted: false
+writing_started: false
+publish_authorized: false

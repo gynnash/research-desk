@@ -1,0 +1,8 @@
+type: item_finished
+key: langchain-9098f9f1ed8c
+status: test_accepted
+result_path: reports/test/agent-memory/research-batches/cycle-agent-memory-gh-20261019/items/langchain-9098f9f1ed8c/result.yaml
+result_sha256: 2bcbc9e06d33e28d86840e055b893684a31b8d2005e5e63ddb37bfa60204071e
+at: '2026-10-18T17:57:59.016752+00:00'
+output: reports/test/agent-memory/research-batches/cycle-agent-memory-gh-20261019/items/langchain-9098f9f1ed8c/report.md
+output_sha256: 925a3d9a97f52fbaed43fd0e05e12bea1abbddc202ac37b598a2a98bbc4680e0

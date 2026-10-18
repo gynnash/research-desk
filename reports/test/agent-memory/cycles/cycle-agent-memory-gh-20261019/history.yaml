@@ -1,0 +1,16 @@
+items:
+- path: sources/blogs/blog-fec9a2e1-6812-425a-83cd-e6a2464a1110.md
+  sha256: 1c05f28a21a3cef08ff0fc966970a4eed70e2510d0d17468437fb4ff0fa7e99f
+  origin: human_baseline
+- path: sources/papers/paper-4eb3be4b-7189-49aa-bafd-f88f77a972f4.md
+  sha256: 2fca02def277430ea06e35c370b56b895c82d01b14099c3cea4cb55a1e410274
+  origin: human_baseline
+- path: reports/2026-10-18-agent-memory-memgpt-memory-blocks.md
+  sha256: 02b197e040a40022a004e692395b0f5e6ce3b1e3611ea9b374f440bb7ba23e96
+  origin: human_baseline
+- path: insights/2026-10-18-agent-memory-usable-memory.md
+  sha256: 6bdbac554506f14147aebdcbbb35a8ea62e4800f9f2a804f1d84ecc414b54212
+  origin: human_baseline
+- path: insights/2026-10-18-agent-memory-traceable-updates.md
+  sha256: 5996061dc64dea1ff86ac9275b40ac20b813f95c95fa370fcfc3ba453d5929a2
+  origin: human_baseline

@@ -1,0 +1,16 @@
+binding: 584159a1b08cf9b0a4006543c877365b1fd669692091932c6d1fecf309d875e8
+result:
+  text: "{\n  \"decision\": \"pass\",\n  \"coverage_acknowledged\": true,\n  \"issues\"\
+    : [],\n  \"checks\": [\n    {\n      \"claim_index\": 0,\n      \"verdict\": \"\
+    supported\",\n      \"evidence_ids\": [\"A1\", \"A2\", \"A3\"]\n    },\n    {\n\
+    \      \"claim_index\": 1,\n      \"verdict\": \"supported\",\n      \"evidence_ids\"\
+    : [\"A4\"]\n    },\n    {\n      \"claim_index\": 2,\n      \"verdict\": \"supported\"\
+    ,\n      \"evidence_ids\": [\"A5\", \"A6\"]\n    },\n    {\n      \"claim_index\"\
+    : 3,\n      \"verdict\": \"supported\",\n      \"evidence_ids\": [\"A7\"]\n  \
+    \  }\n  ]\n}"
+  model: gpt-6.1-sol
+  response_id: resp_03e4021d9069a8b8016ad50889f61487d08c120be6d8198f39
+  usage:
+    input_tokens: 1222
+    output_tokens: 207
+    total_tokens: 1429

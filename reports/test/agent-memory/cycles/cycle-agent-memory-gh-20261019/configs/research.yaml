@@ -1,0 +1,30 @@
+schema_version: 1
+mode: research_batch_test
+backend: chatgpt_plan
+topic: agent-memory
+topics_file: config/research_topics.yaml
+models:
+  research: gpt-6-luna
+  review: gpt-6.1-sol
+budget:
+  max_documents: 2
+  max_calls_per_item: 4
+  max_calls_per_batch: 6
+  month_max_calls: 100
+  max_input_chars: 30000
+  max_output_chars: 8000
+  timeout_seconds: 120
+  max_revisions: 1
+prompts:
+  version: research-batch-v1
+sources:
+- id: arxiv-e11f080635a9
+  adapter: arxiv
+  kind: paper
+  url: https://arxiv.org/abs/2610.22196v1
+  evidence_max_chars: 6000
+- id: langchain-9098f9f1ed8c
+  adapter: langchain
+  kind: blog
+  url: https://www.langchain.com/blog/context-engineering-deep-agents-remember
+  evidence_max_chars: 6000

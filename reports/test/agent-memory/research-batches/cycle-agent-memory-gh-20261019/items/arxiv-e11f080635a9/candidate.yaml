@@ -1,0 +1,68 @@
+candidate:
+  key: arxiv-e11f080635a9
+  kind: paper
+  topic: agent-memory
+  metadata:
+    title: 'Hy-Memory-30B-A3B: Attributed Reinforcement Learning for Long-Term Memory
+      Writing'
+    source: arXiv
+    source_url: https://arxiv.org/abs/2610.22196
+    authors:
+    - Fei, Tianxiang
+    - Kang, Jiazheng
+    - Zheng, Mao
+    - He, Xingyan
+    - Yu, Xiang
+    published_at: '2026-10-15'
+    arxiv_id: '2610.22196'
+    source_version: v1
+  evidence:
+    coverage: abstract_only
+    extraction_coverage: abstract_only
+    source_url: https://arxiv.org/abs/2610.22196
+    source_version: v1
+    content_hash: 2878cf23121daa9fe7a98e314f7fb3f3c89029805c142fde178f851fdaa3decc
+    evidence_sha256: 17d0900a9bd84378be9c9168e2e18533ed32eaea44c4e211b4ae42a99268bb47
+    locators:
+    - id: A1
+      location: abstract_only sentence 1
+      text_sha256: 600caef08823485209be7a94615d2546d276bc881d7d92acddef4e060064b9c0
+      quote: 'External-memory systems extend language-model applications beyond a
+        context window, but their quality depends critically on the model executing
+        the write path: deciding what to retain,'
+    - id: A2
+      location: abstract_only sentence 2
+      text_sha256: 625267d4264ae3fe99612b75629c25aed9652e573437b86d2d8d0dcae0f6eae6
+      quote: ''
+    - id: A3
+      location: abstract_only sentence 3
+      text_sha256: 6eb342697d7f264bb4ddc8f429ee931ebc481b68b8ad995c18e97726b203cb6e
+      quote: ''
+    - id: A4
+      location: abstract_only sentence 4
+      text_sha256: 4224a1ac0fdbf9098fd508bea90f712e5cfb70e75aa6260eb6512d3ac2989072
+      quote: ''
+    - id: A5
+      location: abstract_only sentence 5
+      text_sha256: 49cd74c40711177070377a6fafc78729c17038ca0e223429ad1152dc0992e99f
+      quote: ''
+    - id: A6
+      location: abstract_only sentence 6
+      text_sha256: fcc3abbd4d2382ee8c0a5f83b6ad323cdf8e480297b9c612317c46e7d6f1241f
+      quote: ''
+    - id: A7
+      location: abstract_only sentence 7
+      text_sha256: fb351188078cc12a57bfa3fca325525052a02721bd2d8c505b07f88127691eb6
+      quote: ''
+  identity_keys:
+  - arxiv:2610.22196
+  - url:https://arxiv.org/abs/2610.22196
+  source_id: paper-2d89084b-a1b1-4a27-b298-a660ef434e61
+  existing_source_path: null
+  existing_source_metadata: null
+  content_hash: 2878cf23121daa9fe7a98e314f7fb3f3c89029805c142fde178f851fdaa3decc
+  metadata_hash: e3a7cecda4eeb7d1c3bfa944ee1171ed1d13f30911a8c634cb0b619f97c8863b
+  upstream_updated_at: '2026-10-15'
+material_sha256: 17d0900a9bd84378be9c9168e2e18533ed32eaea44c4e211b4ae42a99268bb47
+action: research
+reason: no_completed_real_research

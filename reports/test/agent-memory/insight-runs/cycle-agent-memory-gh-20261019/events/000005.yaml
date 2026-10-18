@@ -1,0 +1,12 @@
+type: call_completed
+reservation_id: generation-1
+role: generation
+revision: 1
+model_id: gpt-6-luna
+response_path: reports/test/agent-memory/insight-runs/cycle-agent-memory-gh-20261019/checkpoints/generation-1.yaml
+response_sha256: 126ec21554e767fd2d071a45a09afcb5844ef1e8c58f567efe307a94eb45bf23
+usage:
+  input_tokens: 11145
+  output_tokens: 1458
+  total_tokens: 12603
+at: '2026-10-18T17:58:56.112830+00:00'

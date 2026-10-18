@@ -1,0 +1,29 @@
+# Context Engineering: How Deep Agents Remember：研究批次测试
+
+> TEST：官方 ChatGPT 会员真实研究与独立审阅；仅博客节选，未核验完整原文或实现；未正式入库。
+
+- 来源：[Context Engineering: How Deep Agents Remember](https://www.langchain.com/blog/context-engineering-deep-agents-remember)。
+- 资料标识：`blog-be47c817-56d3-4fa5-bb9a-bd19be5c68df`；已有资料：`sources/blogs/test/agent-memory/blog-be47c817-56d3-4fa5-bb9a-bd19be5c68df.md`。
+- 覆盖范围：仅博客节选，未核验完整原文或实现。
+- 研究模型：`gpt-6-luna`；独立审阅：`gpt-6.1-sol`。
+- 审阅：`pass`；修订次数：0；原始材料仅在内存中提供给模型。
+
+## 研究概述
+
+基于所提供的 LangChain 博客节选，概述其对智能体上下文管理及 Deep Agents 中相关机制的介绍；不代表对系统效果或实现的独立核验。
+
+## 主张与证据
+
+- **作者声称（未独立核验）**：节选将上下文管理分为减少无关信息进入上下文，以及管理和筛选已在上下文中的信息两类。（[A7](https://www.langchain.com/blog/context-engineering-deep-agents-remember)）
+- **作者声称（未独立核验）**：节选称 Deep Agents 可通过文件卸载、摘要、按需加载技能、子代理和跨对话文件记忆等方式，将部分信息移出主智能体的活动上下文。（[A9、A10、A11、A12、A13、A14](https://www.langchain.com/blog/context-engineering-deep-agents-remember)）
+- **作者声称（未独立核验）**：节选描述的工具结果卸载流程会在结果超过约 20,000 个 token 时将其写入文件，并向模型提供简短预览和文件路径；较大的用户消息采用更高阈值处理。（[A25、A26、A28](https://www.langchain.com/blog/context-engineering-deep-agents-remember)）
+- **作者声称（未独立核验）**：节选称摘要中间件默认在上下文使用量达到模型窗口的 85% 后压缩较早消息，同时保留最近消息原文。（[A31、A32](https://www.langchain.com/blog/context-engineering-deep-agents-remember)）
+
+## 局限
+
+- 本次只读博客节选，没有核验全文、实验或实现。
+- 节选中的阈值与机制描述属于作者陈述，未独立验证其当前适用性、实际运行表现或记忆准确性。
+
+## 独立审阅
+
+逐项核查、证据摘要与实际用量见同目录检查点及单项回执。

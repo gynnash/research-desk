@@ -1,0 +1,17 @@
+key: arxiv-e11f080635a9
+status: test_accepted
+source_id: paper-2d89084b-a1b1-4a27-b298-a660ef434e61
+coverage: abstract_only
+revision_count: 0
+models:
+  research: gpt-6-luna
+  review: gpt-6.1-sol
+actual_models:
+- gpt-6-luna
+- gpt-6.1-sol
+reserved_calls: 2
+completed_calls: 2
+report_path: reports/test/agent-memory/research-batches/cycle-agent-memory-gh-20261019/items/arxiv-e11f080635a9/report.md
+report_sha256: d1075deea8d8f1631cef86cad93c7aeeea222e33ef525b1f6539e5d1a57d9cdd
+finished_at: '2026-10-18T17:57:43.814026+00:00'
+production_accepted: false

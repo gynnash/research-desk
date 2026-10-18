@@ -1,0 +1,14 @@
+type: call_completed
+key: langchain-9098f9f1ed8c
+reservation_id: langchain-9098f9f1ed8c:review:0
+role: review
+revision: 0
+model_id: gpt-6.1-sol
+at: '2026-10-18T17:57:59.003447+00:00'
+response_path: reports/test/agent-memory/research-batches/cycle-agent-memory-gh-20261019/items/langchain-9098f9f1ed8c/checkpoints/review-0.yaml
+response_sha256: ed38a89d59d70bf5738a72d1235b718756057a286fc85b224d3dd85b3887f2ff
+usage:
+  input_tokens: 2133
+  output_tokens: 119
+  total_tokens: 2252
+usage_status: reported

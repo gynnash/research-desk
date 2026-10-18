@@ -1,0 +1,9 @@
+binding: 4a44140dd48c0e7b57bf1cb4f360da1dbcc522830c389f07980770af08bd5014
+result:
+  text: '{"decision":"pass","coverage_acknowledged":true,"issues":[],"checks":[{"claim_index":0,"verdict":"supported","evidence_ids":["A7"]},{"claim_index":1,"verdict":"supported","evidence_ids":["A9","A10","A11","A12","A13","A14"]},{"claim_index":2,"verdict":"supported","evidence_ids":["A25","A26","A28"]},{"claim_index":3,"verdict":"supported","evidence_ids":["A31","A32"]}]}'
+  model: gpt-6.1-sol
+  response_id: resp_01a1825d54d664b1016ad508a32e2887d0a58a84bbce4a3665
+  usage:
+    input_tokens: 2133
+    output_tokens: 119
+    total_tokens: 2252
