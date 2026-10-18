@@ -69,8 +69,11 @@ def verify_notes(root, baseline):
             raise store.OfflineError('已有笔记变化，保留人工内容并停止: ' + path)
 
 
-def all_runs(root):
-    for pattern in ('*/membership/*/manifest.yaml', '*/research-batches/*/manifest.yaml'):
+def all_runs(root, include_insight=False):
+    patterns = ['*/membership/*/manifest.yaml', '*/research-batches/*/manifest.yaml']
+    if include_insight:
+        patterns.append('*/insight-runs/*/manifest.yaml')
+    for pattern in patterns:
         for path in sorted((root / 'reports/test').glob(pattern)):
             manifest = store.checked_yaml(root, path.relative_to(root))
             base = path.parent.relative_to(root).as_posix()
@@ -83,7 +86,7 @@ def monthly_budget(root, config):
     if config['backend'] == 'mock':
         return 0, configured
     month, total, cap = now()[:7], 0, configured
-    for _, manifest, events in all_runs(root):
+    for _, manifest, events in all_runs(root, include_insight=True):
         if manifest.get('backend') != 'chatgpt_plan':
             continue
         relevant = [e for e in events if e.get('type') == 'call_reserved' and e.get('month') == month]

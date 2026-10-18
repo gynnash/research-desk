@@ -4,7 +4,7 @@ ResearchDesk 是一个以 Markdown、YAML、GitHub 和 Obsidian 为基础的 AI 
 
 当前已完成知识库基础设施、离线骨架、arXiv/Letta/LangChain 真实采集与本地官方 ChatGPT 会员接入。2026-10-19 已通过 YAML 配置驱动的一篇论文摘要与一篇博客节选研究，两项独立审阅通过，4 次请求，中断补跑未重复调用，详见[批次真实验收](reports/test/agent-memory/research-batches/configured-research-20261019/acceptance.md)。[上一阶段单篇测试](reports/test/agent-memory/membership/member-arxiv-20261019/acceptance.md)和模拟结果继续保留，所有新研究结果只写各方向的隔离测试目录。正式资料保持原样；没有定时任务、自动 PR 入库或公众号发布，不使用数据库和复杂 Agent 框架；已有 Vault 备份设置保持原样。
 
-目标流程由三个业务 Agent 完成：每周二、周五北京时间 09:00 自动 **Research 采集、研究与归纳 → Insight 综合历史、提炼洞察和公众号候选选题 → 用户确认选题、角度与受众 → Writing 生成大纲、初稿及候选稿**。各阶段共用独立模型审阅和确定性校验，日常研究、洞察和选题无需人工逐篇审批；写作必须绑定用户明确确认的选题版本，发布由用户另行决定。总体边界见[三 Agent 架构](workflows/three-agent-architecture.md)与[定时研究 MVP](workflows/agent-memory-github-actions-mvp.md)。Insight、选题确认和 Writing 自动执行仍待实现，定时仅保留设计。
+目标流程由三个业务 Agent 完成：每周二、周五北京时间 09:00 自动 **Research 采集、研究与归纳 → Insight 综合历史、提炼洞察和公众号候选选题 → 用户确认选题、角度与受众 → Writing 生成大纲、初稿及候选稿**。各阶段共用独立模型审阅和确定性校验，日常研究、洞察和选题无需人工逐篇审批；写作必须绑定用户明确确认的选题版本，发布由用户另行决定。总体边界见[三 Agent 架构](workflows/three-agent-architecture.md)与[定时研究 MVP](workflows/agent-memory-github-actions-mvp.md)。当前增加 [Insight 测试闭环](workflows/insight-agent-test.md)，选题只保存为待确认；人工确认入口和 Writing 自动执行仍待实现，定时仅保留设计。
 
 可以结合 Codex 维护仓库、配置和校验，使用 ChatGPT Work 辅助论文阅读、研究讨论与文章草稿。两者共用 Markdown/YAML 约定；直接访问本地仓库的能力取决于使用环境和授权。研究成果需明确保存到本仓库并审阅提交，设备间同步沿用下述 Git 流程。[Codex 官方说明](https://developers.openai.com/codex/cli/)与 [ChatGPT Work 官方说明](https://learn.chatgpt.com/docs/get-started-with-work)可供参考。
 
@@ -15,8 +15,9 @@ research-desk/
 ├── config/
 │   ├── research_topics.yaml    # 研究方向及启用状态
 │   ├── legacy_sources.yaml     # 初始化前旧资料的明确兼容清单
-│   ├── examples/research_batch.yaml # 开源用户的通用批次配置示例
-│   └── test/agent-memory/research_batch.yaml # 两份资料的受限测试配置
+│   ├── examples/research_batch.yaml # 开源用户的通用 Research 配置示例
+│   ├── examples/insight.yaml   # 通用 Insight 与历史输入配置示例
+│   └── test/agent-memory/      # 受限 Research 与 Insight 测试配置
 ├── sources/
 │   ├── papers/                # 论文，一篇论文一个 Markdown 文件
 │   └── blogs/                 # 技术博客，一篇原文一个 Markdown 文件
@@ -37,7 +38,9 @@ research-desk/
 │   ├── researchdesk_membership.py # 本应用官方 OAuth 与会员推理
 │   ├── researchdesk_analyze.py # 单篇摘要研究与独立审阅，只写 test
 │   ├── researchdesk_batch_inputs.py # YAML 配置及批次采集输入
-│   └── researchdesk_batch.py   # 配置驱动研究批次与补跑，只写 test
+│   ├── researchdesk_batch.py   # 配置驱动研究批次与补跑，只写 test
+│   ├── researchdesk_insight_inputs.py # 已审阅输入与历史基线核实
+│   └── researchdesk_insight.py # 综合报告、洞察与待确认选题，只写 test
 └── tests/                     # 临时仓库中的自动验收
 ```
 
@@ -46,6 +49,8 @@ research-desk/
 [真实采集说明](workflows/real-source-collection.md)包含入口、查重与更新识别、短证据和测试回执。[会员分析设计](workflows/chatgpt-analysis-handoff.md)说明官方授权与资料交接边界；[本地会员分析说明](workflows/local-membership-analysis.md)提供登录、账户模型核实、单篇摘要测试、有限修订及补跑流程。单篇入口默认最多 4 次请求、月度最多预留 10 次；研究与审阅必须使用账户可用目录中的两个不同实际模型。完整摘要仅作内存输入，研究报告与脱敏回执另存于 `reports/test/agent-memory/membership/<batch-id>/`，不覆盖已有测试来源。
 
 [配置驱动 Research 批次](workflows/configurable-research-batch.md)说明当前的一篇论文加一篇博客测试、通用 YAML 示例及失败补跑。批次读取主题、来源、模型和预算配置，最多 6 次会员请求、单项最多 4 次、至多一次修订；月度 10 次上限与此前单篇会员测试共享，不因换批次重置。新结果只写 `reports/test/<topic>/research-batches/<batch-id>/`，不覆盖既有来源。配置和源码改动可提交，个人授权 profile 必须位于仓库与 Vault 外。
+
+[Insight 测试闭环](workflows/insight-agent-test.md)读取散列与真实独立审阅绑定均有效的 Research 结果，以及 YAML 显式登记的 `human_baseline` 历史资料。生成综合报告、1–2 条跨来源洞察和待人工确认的选题卡，分别创建到 `reports/test/<topic>/insight-runs/<batch-id>/`、`insights/test/<topic>/<batch-id>/` 和 `articles/test/<topic>/<batch-id>/`。正常两次请求，允许一次修订与复审，最多四次；与其他会员入口共用月度预算。历史笔记不会被当作本轮重新核实的原文，模型不能批准自己的选题；本阶段不启动写作。
 
 各用户须自行通过官方会员授权并核实账户可用模型；当前用户本地验证不代表其他账户或 GitHub 临时 runner 已有资格。GitHub 定时与任务记录、符合资格的本地或自托管会员分析执行器及 Git 发布步骤在架构上分开，长期主机及自动入库仍待验收。[OpenAI 官方适用范围](https://developers.openai.com/siwc/token-sharing-open-source)、[自托管指南](https://developers.openai.com/siwc/token-sharing-open-source/self-hosted-vms)
 
