@@ -1,0 +1,70 @@
+binding:
+  evidence_sha256: 61ed245f4fe639ecbace7128f4cf4b7c0303e55d012542c63e19a84f873b56a6
+  baseline_sha256: 959024a827354c2a431f1bc28cc4d4334d65aa3eb90eb8856e7512b348292651
+  revision: 0
+  candidate_sha256: 4dd2745bcc4ae45256cbc0b1260d070c375b9950418e0b59ed740bd8fc0a4bd7
+response:
+  model_id: mock-review-v1
+  request_id: mock-collection-review-1
+  decision: pass
+  checks:
+  - claim_index: 0
+    evidence_ids:
+    - E1
+    verdict: supported
+  issues: []
+  usage:
+    cost_units: 2
+    input_tokens: 150
+    output_tokens: 40
+input:
+  role: review
+  original_evidence:
+    coverage: excerpt
+    text: 'Ever since we''ve been working on MemGPT (now @Letta_AI ), a common question
+      @charlespacker and I have gotten is: “How can I plug your memory'
+    content_hash: 08d58a39ed157d3098f44eb6a54c6e58a50cb7c048271872fce7c082280b9987
+    upstream_updated_at: null
+    locators:
+    - id: E1
+      location: 官方原文提取的开头节选；全文散列另存
+      quote: 'Ever since we''ve been working on MemGPT (now @Letta_AI ), a common
+        question @charlespacker and I have gotten is: “How can I plug your memory'
+  candidate_sha256: 4dd2745bcc4ae45256cbc0b1260d070c375b9950418e0b59ed740bd8fc0a4bd7
+  independent_context: true
+  candidate:
+    metadata:
+      title: Why Memory Isn't a Plugin
+      source: Letta
+      source_url: https://www.letta.com/blog/why-memory-isnt-a-plugin/
+      authors:
+      - SARAH WOODERS
+      published_at: '2026-04-03'
+    research:
+      model_id: mock-research-v1
+      request_id: mock-collection-research-1
+      summary: 模拟记录：仅保存已采集的原始元数据与短节选，尚未进行真实模型分析。
+      claims:
+      - text: 原文节选已提取，具体研究结论等待 ChatGPT 分析。
+        kind: author_claim
+        evidence_ids:
+        - E1
+      limitations:
+      - 分析与审阅均为模拟；不能据此判断方法有效性。
+      - 阅读范围为有限节选或摘要，不声称全文研究。
+      usage:
+        cost_units: 2
+        input_tokens: 100
+        output_tokens: 50
+    markdown: "---\nschema_version: 1\nid: blog-56521361-c491-428a-b75e-3c92c603161e\n\
+      kind: blog\ntitle: Why Memory Isn't a Plugin\nsource: Letta\nsource_url: https://www.letta.com/blog/why-memory-isnt-a-plugin/\n\
+      authors:\n- SARAH WOODERS\npublished_at: '2026-04-03'\ncollected_at: '2026-10-18'\n\
+      updated_at: '2026-10-18'\ntopics:\n- agent-memory\nstatus: inbox\nrelated_sources:\
+      \ []\nrelated_notes: []\n---\n\n> TEST：真实来源采集，分析与审阅均为模拟，不可作为正式研究结论。\n\n# Why\
+      \ Memory Isn't a Plugin\n\n## 摘要\n\n模拟记录：仅保存已采集的原始元数据与短节选，尚未进行真实模型分析。\n\n##\
+      \ 关键结论与证据\n\n阅读范围：`excerpt`；证据散列：`61ed245f4fe639ecbace7128f4cf4b7c0303e55d012542c63e19a84f873b56a6`。\n\
+      \n- [author_claim] 原文节选已提取，具体研究结论等待 ChatGPT 分析。\n  - E1，官方原文提取的开头节选；全文散列另存；[原始来源](https://www.letta.com/blog/why-memory-isnt-a-plugin/)：Ever\
+      \ since we've been working on MemGPT (now @Letta_AI ), a common question @charlespacker\
+      \ and I have gotten is: “How can I plug your memory\n\n## 局限与待验证问题\n\n- 分析与审阅均为模拟；不能据此判断方法有效性。\n\
+      - 阅读范围为有限节选或摘要，不声称全文研究。\n\n## 审阅记录\n\n仅通过不同模拟模型的离线审阅，不是真实模型判断或正式入库。\n批次：`collect-real-sources-20261018-a1`；研究：`mock-research-v1`；审阅：`mock-review-v1`。\n\
+      \n## 人工笔记\n\n## 更新记录\n\n离线验收创建；不修改任何正式资料。\n"

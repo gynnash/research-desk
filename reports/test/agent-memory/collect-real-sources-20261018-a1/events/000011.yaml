@@ -1,0 +1,8 @@
+type: call_reserved
+reservation_id: 8ddcfc6a-0e6d-4601-915b-e1c425a9f290
+item_key: langchain-2
+role: research
+revision: 0
+model_id: mock-research-v1
+month: 2026-10
+cost_units: 10

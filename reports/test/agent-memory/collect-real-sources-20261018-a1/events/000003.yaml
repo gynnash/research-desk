@@ -1,0 +1,8 @@
+type: call_reserved
+reservation_id: 02027a2c-6a68-4145-9c69-2f3a1e7ad108
+item_key: arxiv-0
+role: review
+revision: 0
+model_id: mock-review-v1
+month: 2026-10
+cost_units: 10

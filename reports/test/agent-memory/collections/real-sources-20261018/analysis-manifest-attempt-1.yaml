@@ -1,0 +1,21 @@
+schema_version: 1
+topic: agent-memory
+collection_batch: real-sources-20261018
+bundle_sha256: b80f2ca5a5e7c3f13dbe11bd9e3d0ceeb926be59cdaa25f0a56e346fef7cab78
+analysis_backend: mock
+future_backend: chatgpt_membership
+sent_to_chatgpt: false
+records:
+- identity_keys:
+  - arxiv:2610.22209
+  - url:https://arxiv.org/abs/2610.22209
+  metadata_hash: f0aa1262adee57cb0e6504ef1d0c21af28a320300c1f42b0d6cef7c7d25c8eff
+  content_hash: a11351e13b004fe042d543110fe7cd46a3f66d476f5f6643f65b5166e36a7441
+- identity_keys:
+  - url:https://www.letta.com/blog/why-memory-isnt-a-plugin/
+  metadata_hash: e87bfe50ef28d269e8502be50474b82e6efb46302518a1fe5465ba0f9213d8ec
+  content_hash: 08d58a39ed157d3098f44eb6a54c6e58a50cb7c048271872fce7c082280b9987
+- identity_keys:
+  - url:https://www.langchain.com/blog/context-engineering-deep-agents-remember
+  metadata_hash: fdbe9f86f01065219de46db184e45e693e912aee131965b2e3d50f7201986fd8
+  content_hash: 87028f98102403d97acf9b08c15672775800b7036277489f71835a9b6cb7bf81

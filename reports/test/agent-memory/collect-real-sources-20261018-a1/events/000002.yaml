@@ -1,0 +1,9 @@
+type: call_completed
+reservation_id: f8fc2a1f-8685-43b2-9a8c-fe4be37e8ed7
+item_key: arxiv-0
+role: research
+revision: 0
+month: 2026-10
+cost_units: 2
+response_path: reports/test/agent-memory/collect-real-sources-20261018-a1/checkpoints/arxiv-0/research-0.yaml
+response_sha256: 44fe1aeea13883a2f957634b072bec77b2f0ac2966e18133052dd3ab7a22fe58

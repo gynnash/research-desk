@@ -1,0 +1,9 @@
+type: call_completed
+reservation_id: 0fd5ca47-ec41-41a7-ac2a-15dffc773df3
+item_key: langchain-2
+role: review
+revision: 0
+month: 2026-10
+cost_units: 2
+response_path: reports/test/agent-memory/collect-real-sources-20261018-a1/checkpoints/langchain-2/review-0.yaml
+response_sha256: ac6bcf47d2b4c3b62aaaddea82ec9047adef049f1ce82b624629920013ea4dc2

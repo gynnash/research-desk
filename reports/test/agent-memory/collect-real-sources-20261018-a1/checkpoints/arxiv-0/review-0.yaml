@@ -1,0 +1,80 @@
+binding:
+  evidence_sha256: f20b0f49ffac640497d674efd50c75ff3f7f7b667dfa4b4028116bb23866c8f9
+  baseline_sha256: 959024a827354c2a431f1bc28cc4d4334d65aa3eb90eb8856e7512b348292651
+  revision: 0
+  candidate_sha256: 357373843b03679cf7a0241fac42bada0cfeeb447c430e2edabb344c29a96126
+response:
+  model_id: mock-review-v1
+  request_id: mock-collection-review-0
+  decision: pass
+  checks:
+  - claim_index: 0
+    evidence_ids:
+    - E1
+    verdict: supported
+  issues: []
+  usage:
+    cost_units: 2
+    input_tokens: 150
+    output_tokens: 40
+input:
+  role: review
+  original_evidence:
+    coverage: abstract_only
+    text: Agent memory benchmarks evaluate whether an agent's responses reflect correct
+      knowledge, measuring downstream question-answering accuracy as a proxy for memory
+      quality. We show this evaluation
+    content_hash: a11351e13b004fe042d543110fe7cd46a3f66d476f5f6643f65b5166e36a7441
+    upstream_updated_at: '2026-10-15T16:58:12Z'
+    locators:
+    - id: E1
+      location: 官方原文提取的开头节选；全文散列另存
+      quote: Agent memory benchmarks evaluate whether an agent's responses reflect
+        correct knowledge, measuring downstream question-answering accuracy as a proxy
+        for memory quality. We show this evaluation
+  candidate_sha256: 357373843b03679cf7a0241fac42bada0cfeeb447c430e2edabb344c29a96126
+  independent_context: true
+  candidate:
+    metadata:
+      title: 'Beyond Downstream QA: Rethinking How We Evaluate Agent Memory'
+      source: arXiv
+      source_url: https://arxiv.org/abs/2610.22209
+      authors:
+      - Sebastian-Antonio Toma
+      - Jean de Kernier
+      - Mike Ply
+      - Oliviu Matei
+      published_at: '2026-10-15'
+      arxiv_id: '2610.22209'
+      source_version: v1
+    research:
+      model_id: mock-research-v1
+      request_id: mock-collection-research-0
+      summary: 模拟记录：仅保存已采集的原始元数据与短节选，尚未进行真实模型分析。
+      claims:
+      - text: 原文节选已提取，具体研究结论等待 ChatGPT 分析。
+        kind: author_claim
+        evidence_ids:
+        - E1
+      limitations:
+      - 分析与审阅均为模拟；不能据此判断方法有效性。
+      - 阅读范围为有限节选或摘要，不声称全文研究。
+      usage:
+        cost_units: 2
+        input_tokens: 100
+        output_tokens: 50
+    markdown: "---\nschema_version: 1\nid: paper-a5a3171a-9891-4dea-8bfc-cdf0cf15bce0\n\
+      kind: paper\ntitle: 'Beyond Downstream QA: Rethinking How We Evaluate Agent\
+      \ Memory'\nsource: arXiv\nsource_url: https://arxiv.org/abs/2610.22209\nauthors:\n\
+      - Sebastian-Antonio Toma\n- Jean de Kernier\n- Mike Ply\n- Oliviu Matei\npublished_at:\
+      \ '2026-10-15'\ncollected_at: '2026-10-18'\nupdated_at: '2026-10-18'\ntopics:\n\
+      - agent-memory\nstatus: inbox\nrelated_sources: []\nrelated_notes: []\narxiv_id:\
+      \ '2610.22209'\ndoi: null\nsource_version: v1\n---\n\n> TEST：真实来源采集，分析与审阅均为模拟，不可作为正式研究结论。\n\
+      \n# Beyond Downstream QA: Rethinking How We Evaluate Agent Memory\n\n## 摘要\n\
+      \n模拟记录：仅保存已采集的原始元数据与短节选，尚未进行真实模型分析。\n\n## 关键结论与证据\n\n阅读范围：`abstract_only`；证据散列：`f20b0f49ffac640497d674efd50c75ff3f7f7b667dfa4b4028116bb23866c8f9`。\n\
+      \n- [author_claim] 原文节选已提取，具体研究结论等待 ChatGPT 分析。\n  - E1，官方原文提取的开头节选；全文散列另存；[原始来源](https://arxiv.org/abs/2610.22209)：Agent\
+      \ memory benchmarks evaluate whether an agent's responses reflect correct knowledge,\
+      \ measuring downstream question-answering accuracy as a proxy for memory quality.\
+      \ We show this evaluation\n\n## 局限与待验证问题\n\n- 分析与审阅均为模拟；不能据此判断方法有效性。\n- 阅读范围为有限节选或摘要，不声称全文研究。\n\
+      \n## 审阅记录\n\n仅通过不同模拟模型的离线审阅，不是真实模型判断或正式入库。\n批次：`collect-real-sources-20261018-a1`；研究：`mock-research-v1`；审阅：`mock-review-v1`。\n\
+      \n## 人工笔记\n\n## 更新记录\n\n离线验收创建；不修改任何正式资料。\n"

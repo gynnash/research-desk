@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Entirely hand-written parser fixture; this is not a real paper. -->
+<feed xmlns="http://www.w3.org/2005/Atom" xmlns:arxiv="http://arxiv.org/schemas/atom">
+  <title>Parser test only</title>
+  <entry>
+    <id>https://arxiv.org/abs/2610.01234v2</id>
+    <updated>2026-10-12T15:20:00Z</updated>
+    <published>2026-10-02T12:00:00Z</published>
+    <title>Fixture Agent Memory: A Parser Exercise</title>
+    <summary>This fictional parser exercise describes memory blocks. It reports no measured results.</summary>
+    <author><name>Fixture Author</name></author>
+    <arxiv:doi>10.99999/FIXTURE.Memory</arxiv:doi>
+    <link href="https://arxiv.org/abs/2610.01234v2" rel="alternate" type="text/html"/>
+    <link title="pdf" href="https://arxiv.org/pdf/2610.01234v2" rel="related" type="application/pdf"/>
+  </entry>
+</feed>

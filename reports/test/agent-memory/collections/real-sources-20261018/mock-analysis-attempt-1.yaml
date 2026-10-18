@@ -1,0 +1,172 @@
+schema_version: 1
+data_origin: real_collection
+fixture_notice: 原始元数据与短证据来自真实官方页面，所有分析/审阅响应为程序构造的模拟结果。
+models:
+  research: mock-research-v1
+  review: mock-review-v1
+budget:
+  max_calls: 12
+  max_cost_units: 120
+  month_max_cost_units: 240
+  reservation_cost_units: 10
+candidates:
+- key: arxiv-0
+  topic: agent-memory
+  kind: paper
+  metadata:
+    title: 'Beyond Downstream QA: Rethinking How We Evaluate Agent Memory'
+    source: arXiv
+    source_url: https://arxiv.org/abs/2610.22209
+    authors:
+    - Sebastian-Antonio Toma
+    - Jean de Kernier
+    - Mike Ply
+    - Oliviu Matei
+    published_at: '2026-10-15'
+    arxiv_id: '2610.22209'
+    source_version: v1
+  evidence:
+    coverage: abstract_only
+    text: Agent memory benchmarks evaluate whether an agent's responses reflect correct
+      knowledge, measuring downstream question-answering accuracy as a proxy for memory
+      quality. We show this evaluation
+    content_hash: a11351e13b004fe042d543110fe7cd46a3f66d476f5f6643f65b5166e36a7441
+    upstream_updated_at: '2026-10-15T16:58:12Z'
+    locators:
+    - id: E1
+      location: 官方原文提取的开头节选；全文散列另存
+      quote: Agent memory benchmarks evaluate whether an agent's responses reflect
+        correct knowledge, measuring downstream question-answering accuracy as a proxy
+        for memory quality. We show this evaluation
+  research:
+  - model_id: mock-research-v1
+    request_id: mock-collection-research-0
+    summary: 模拟记录：仅保存已采集的原始元数据与短节选，尚未进行真实模型分析。
+    claims:
+    - text: 原文节选已提取，具体研究结论等待 ChatGPT 分析。
+      kind: author_claim
+      evidence_ids:
+      - E1
+    limitations:
+    - 分析与审阅均为模拟；不能据此判断方法有效性。
+    - 阅读范围为有限节选或摘要，不声称全文研究。
+    usage:
+      cost_units: 2
+      input_tokens: 100
+      output_tokens: 50
+  reviews:
+  - model_id: mock-review-v1
+    request_id: mock-collection-review-0
+    decision: pass
+    checks:
+    - claim_index: 0
+      evidence_ids:
+      - E1
+      verdict: supported
+    issues: []
+    usage:
+      cost_units: 2
+      input_tokens: 150
+      output_tokens: 40
+- key: letta-1
+  topic: agent-memory
+  kind: blog
+  metadata:
+    title: Why Memory Isn't a Plugin
+    source: Letta
+    source_url: https://www.letta.com/blog/why-memory-isnt-a-plugin/
+    authors:
+    - SARAH WOODERS
+    published_at: '2026-04-03'
+  evidence:
+    coverage: excerpt
+    text: 'Ever since we''ve been working on MemGPT (now @Letta_AI ), a common question
+      @charlespacker and I have gotten is: “How can I plug your memory'
+    content_hash: 08d58a39ed157d3098f44eb6a54c6e58a50cb7c048271872fce7c082280b9987
+    upstream_updated_at: null
+    locators:
+    - id: E1
+      location: 官方原文提取的开头节选；全文散列另存
+      quote: 'Ever since we''ve been working on MemGPT (now @Letta_AI ), a common
+        question @charlespacker and I have gotten is: “How can I plug your memory'
+  research:
+  - model_id: mock-research-v1
+    request_id: mock-collection-research-1
+    summary: 模拟记录：仅保存已采集的原始元数据与短节选，尚未进行真实模型分析。
+    claims:
+    - text: 原文节选已提取，具体研究结论等待 ChatGPT 分析。
+      kind: author_claim
+      evidence_ids:
+      - E1
+    limitations:
+    - 分析与审阅均为模拟；不能据此判断方法有效性。
+    - 阅读范围为有限节选或摘要，不声称全文研究。
+    usage:
+      cost_units: 2
+      input_tokens: 100
+      output_tokens: 50
+  reviews:
+  - model_id: mock-review-v1
+    request_id: mock-collection-review-1
+    decision: pass
+    checks:
+    - claim_index: 0
+      evidence_ids:
+      - E1
+      verdict: supported
+    issues: []
+    usage:
+      cost_units: 2
+      input_tokens: 150
+      output_tokens: 40
+- key: langchain-2
+  topic: agent-memory
+  kind: blog
+  metadata:
+    title: 'Context Engineering: How Deep Agents Remember'
+    source: LangChain
+    source_url: https://www.langchain.com/blog/context-engineering-deep-agents-remember
+    authors:
+    - Jess Weng
+    published_at: '2026-10-14'
+  evidence:
+    coverage: excerpt
+    text: 'If you''ve ever crammed for an exam the night before, you know the feeling:
+      the more you study, the more the early chapters start to'
+    content_hash: 87028f98102403d97acf9b08c15672775800b7036277489f71835a9b6cb7bf81
+    upstream_updated_at: '2026-10-14T17:39:32.799Z'
+    locators:
+    - id: E1
+      location: 官方原文提取的开头节选；全文散列另存
+      quote: 'If you''ve ever crammed for an exam the night before, you know the feeling:
+        the more you study, the more the early chapters start to'
+  research:
+  - model_id: mock-research-v1
+    request_id: mock-collection-research-2
+    summary: 模拟记录：仅保存已采集的原始元数据与短节选，尚未进行真实模型分析。
+    claims:
+    - text: 原文节选已提取，具体研究结论等待 ChatGPT 分析。
+      kind: author_claim
+      evidence_ids:
+      - E1
+    limitations:
+    - 分析与审阅均为模拟；不能据此判断方法有效性。
+    - 阅读范围为有限节选或摘要，不声称全文研究。
+    usage:
+      cost_units: 2
+      input_tokens: 100
+      output_tokens: 50
+  reviews:
+  - model_id: mock-review-v1
+    request_id: mock-collection-review-2
+    decision: pass
+    checks:
+    - claim_index: 0
+      evidence_ids:
+      - E1
+      verdict: supported
+    issues: []
+    usage:
+      cost_units: 2
+      input_tokens: 150
+      output_tokens: 40

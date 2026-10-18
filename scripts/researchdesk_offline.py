@@ -30,6 +30,7 @@ class SimulatedInterruption(RuntimeError):
 
 
 NOTICE = '> TEST：离线虚构样例，不可作为正式研究证据。'
+REAL_NOTICE = '> TEST：真实来源采集，分析与审阅均为模拟，不可作为正式研究结论。'
 SAFE_ID = re.compile(r'[a-z0-9][a-z0-9-]{0,100}\Z')
 TERMINAL = {'test_accepted', 'update_proposed', 'rejected', 'blocked', 'duplicate'}
 
@@ -257,7 +258,9 @@ def monthly_limit(root, topic, month, configured):
 
 def validate_fixture(root, fixture):
     if fixture.get('schema_version') != 1 or not fixture.get('fixture_notice'):
-        raise OfflineError('必须使用声明虚构的 Schema 1 离线样例')
+        raise OfflineError('必须使用明确来源性质的 Schema 1 模拟配置')
+    if fixture.get('data_origin', 'fictional_fixture') not in {'fictional_fixture', 'real_collection'}:
+        raise OfflineError('未知资料来源类型')
     models = fixture.get('models', {})
     if set(models) != {'research', 'review'} or any(not isinstance(v, str) or not v.startswith('mock-') for v in models.values()):
         raise OfflineError('只支持 mock-* 模型，无真实模型适配器')
@@ -374,7 +377,14 @@ def plan(root, fixture, fixture_hash, topic, batch_id):
                         existing_sha256=digest((root / existing_path).read_bytes()),
                         existing_version=data.get('source_version'))
             version = candidate['metadata'].get('source_version')
-            item['action'] = 'update' if version and version != data.get('source_version') else 'duplicate'
+            change = candidate.get('upstream_change', {})
+            content_changed = bool(change.get('old_content_hash') and change.get('new_content_hash')
+                                   and change['old_content_hash'] != change['new_content_hash'])
+            metadata_changed = bool(change.get('old_metadata_hash') and change.get('new_metadata_hash')
+                                    and change['old_metadata_hash'] != change['new_metadata_hash'])
+            item['action'] = 'update' if (version and version != data.get('source_version')) or content_changed or metadata_changed else 'duplicate'
+            if change:
+                item['upstream_change'] = change
         if not item['reserved_id'] and item['action'] == 'new':
             item['reserved_id'] = candidate['kind'] + '-' + str(uuid4())
         for key in keys:
@@ -387,6 +397,7 @@ def plan(root, fixture, fixture_hash, topic, batch_id):
                 item.update(action='deferred', reason='research_quota')
         planned.append(item)
     return {'schema_version': 1, 'mode': 'offline', 'production_accepted': False,
+            'data_origin': fixture.get('data_origin', 'fictional_fixture'),
             'batch_id': batch_id, 'topic': topic, 'fixture_sha256': fixture_hash,
             'fixed_date': date.today().isoformat(), 'models': fixture['models'], 'budget': fixture['budget'],
             'protected_files': protected_snapshot(root), 'items': planned}
@@ -434,6 +445,8 @@ def validate_review(candidate, research, response):
 
 def render(candidate, item, research, manifest):
     m = candidate['metadata']
+    real = manifest.get('data_origin') == 'real_collection'
+    notice = REAL_NOTICE if real else NOTICE
     fields = {'schema_version': 1, 'id': item['reserved_id'], 'kind': candidate['kind'],
               'title': m['title'], 'source': m['source'], 'source_url': canonical_url(m['source_url']),
               'authors': m['authors'], 'published_at': m.get('published_at'),
@@ -443,7 +456,7 @@ def render(candidate, item, research, manifest):
         keys = identities(m)
         fields.update(arxiv_id=next((k[6:] for k in keys if k.startswith('arxiv:')), None),
                       doi=next((k[4:] for k in keys if k.startswith('doi:')), None), source_version=m.get('source_version'))
-    lines = ['---', yaml.safe_dump(fields, allow_unicode=True, sort_keys=False).rstrip(), '---', '', NOTICE, '',
+    lines = ['---', yaml.safe_dump(fields, allow_unicode=True, sort_keys=False).rstrip(), '---', '', notice, '',
              '# ' + m['title'], '', '## 摘要', '', research['summary'], '',
              '## 关键结论与证据', '', '阅读范围：`%s`；证据散列：`%s`。' % (candidate['evidence']['coverage'], item['evidence_sha256'])]
     evidence = {x['id']: x for x in candidate['evidence']['locators']}
@@ -451,16 +464,17 @@ def render(candidate, item, research, manifest):
         lines += ['', '- [%s] %s' % (claim['kind'], claim['text'])]
         for key in claim['evidence_ids']:
             loc = evidence[key]
-            lines += ['  - %s，%s；[虚构原文](%s)：%s' % (key, loc['location'], m['source_url'], loc['quote'])]
+            lines += ['  - %s，%s；[%s](%s)：%s' % (key, loc['location'], '原始来源' if real else '虚构原文', m['source_url'], loc['quote'])]
     lines += ['', '## 局限与待验证问题', ''] + ['- ' + str(x) for x in research['limitations']]
     lines += ['', '## 审阅记录', '', '仅通过不同模拟模型的离线审阅，不是真实模型判断或正式入库。',
               '批次：`%s`；研究：`%s`；审阅：`%s`。' % (manifest['batch_id'], manifest['models']['research'], manifest['models']['review']),
               '', '## 人工笔记', '', '## 更新记录', '', '离线验收创建；不修改任何正式资料。', '']
     if item['action'] == 'update':
-        lines = [NOTICE, '', '# 独立更新建议（离线模拟）', '',
+        lines = [notice, '', '# 独立更新建议（模拟分析）', '',
                  '原记录：`%s`；原路径：`%s`。原文件保留。' % (item['reserved_id'], item['existing_path']),
                  '旧版本：`%s`；建议核查版本：`%s`；旧文件散列：`%s`。' % (
-                     item.get('existing_version'), item.get('target_version'), item.get('existing_sha256')), ''] + lines[5:]
+                     item.get('existing_version'), item.get('target_version'), item.get('existing_sha256')),
+                 '原文变化线索：`%s`。变化线索不等于作者确认的修订日期。' % json.dumps(item.get('upstream_change', {}), ensure_ascii=False), ''] + lines[5:]
     return '\n'.join(lines)
 
 
@@ -600,11 +614,13 @@ def run(root, fixture_path, batch_id, fail_after=None):
             items.append(dict(key=item['key'], reserved_id=item['reserved_id'], status=state['status'], output=state.get('output')))
         calls, cost = spend(events)
         summary = {'schema_version': 1, 'mode': 'offline', 'production_accepted': False, 'batch_id': batch_id,
+                   'data_origin': manifest.get('data_origin', 'fictional_fixture'),
                    'status': 'partial' if counts['blocked'] or counts['deferred'] else 'complete',
                    'counts': counts, 'calls': calls, 'cost_units': cost, 'items': items}
         attempt = len(list(safe_path(root, batch_dir).glob('summary-attempt-*.yaml'))) + 1
         save_yaml(root, '%s/summary-attempt-%s.yaml' % (batch_dir, attempt), summary)
-        text = '# 离线验收回执\n\n%s\n\n- 批次：`%s`\n- 状态：`%s`\n- 模拟请求：%s\n- 虚拟费用单位：%s（实际 API 费用为 0）\n\n' % (NOTICE, batch_id, summary['status'], calls, cost)
+        notice = REAL_NOTICE if manifest.get('data_origin') == 'real_collection' else NOTICE
+        text = '# 模拟运行回执\n\n%s\n\n- 批次：`%s`\n- 状态：`%s`\n- 模拟请求：%s\n- 虚拟费用单位：%s（实际 API 费用为 0）\n\n' % (notice, batch_id, summary['status'], calls, cost)
         text += '\n'.join('- %s: %s' % (k, v) for k, v in counts.items()) + '\n'
         create(root, '%s/summary-attempt-%s.md' % (batch_dir, attempt), text)
         return summary

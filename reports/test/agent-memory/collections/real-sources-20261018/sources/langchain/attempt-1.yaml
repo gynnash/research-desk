@@ -1,0 +1,27 @@
+id: langchain
+status: complete
+discovered: 19
+selected: 1
+discovery_mode: seed_and_list
+records:
+- kind: blog
+  metadata:
+    title: 'Context Engineering: How Deep Agents Remember'
+    source: LangChain
+    source_url: https://www.langchain.com/blog/context-engineering-deep-agents-remember
+    authors:
+    - Jess Weng
+    published_at: '2026-10-14'
+  coverage: excerpt
+  upstream_updated_at: '2026-10-14T17:39:32.799Z'
+  content_hash: 87028f98102403d97acf9b08c15672775800b7036277489f71835a9b6cb7bf81
+  source_id: langchain
+  captured_at: '2026-10-18T15:59:07.580283+00:00'
+  requested_entry_url: https://www.langchain.com/blog
+  identity_keys:
+  - url:https://www.langchain.com/blog/context-engineering-deep-agents-remember
+  metadata_hash: fdbe9f86f01065219de46db184e45e693e912aee131965b2e3d50f7201986fd8
+  extraction_coverage: fulltext
+  excerpt: 'If you''ve ever crammed for an exam the night before, you know the feeling:
+    the more you study, the more the early chapters start to'
+warnings: []

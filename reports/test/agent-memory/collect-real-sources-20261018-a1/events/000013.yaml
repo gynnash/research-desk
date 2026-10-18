@@ -1,0 +1,8 @@
+type: call_reserved
+reservation_id: 0fd5ca47-ec41-41a7-ac2a-15dffc773df3
+item_key: langchain-2
+role: review
+revision: 0
+model_id: mock-review-v1
+month: 2026-10
+cost_units: 10

@@ -1,0 +1,15 @@
+schema_version: 1
+mode: collect_test
+batch_id: real-sources-20261018
+topic: agent-memory
+config_sha256: 14e09aef0f9a21c285cca2a6e9ab7f655678b0111d0d86ce89972e6d06ba9ec0
+protected_files:
+  sources/blogs/blog-fec9a2e1-6812-425a-83cd-e6a2464a1110.md: 1c05f28a21a3cef08ff0fc966970a4eed70e2510d0d17468437fb4ff0fa7e99f
+  sources/papers/paper-4eb3be4b-7189-49aa-bafd-f88f77a972f4.md: 2fca02def277430ea06e35c370b56b895c82d01b14099c3cea4cb55a1e410274
+  sources/papers/test.md: 52bf9809aa70dbc3fc8ee55dd96a58a7b85c45717a21e5f7c557a70b4ee07115
+  reports/2026-10-18-agent-memory-memgpt-memory-blocks.md: 02b197e040a40022a004e692395b0f5e6ce3b1e3611ea9b374f440bb7ba23e96
+  insights/2026-10-18-agent-memory-traceable-updates.md: 5996061dc64dea1ff86ac9275b40ac20b813f95c95fa370fcfc3ba453d5929a2
+  insights/2026-10-18-agent-memory-usable-memory.md: 6bdbac554506f14147aebdcbbb35a8ea62e4800f9f2a804f1d84ecc414b54212
+  articles/2026-10-18-agent-memory-saving-vs-remembering-outline.md: 9505994ab7c1a55a71e07f052caa9e9dccb6e7474b607f2ce5e668ca5df27775
+  articles/2026-10-18-agent-memory-saving-vs-remembering-release-candidate.md: f74992ec6c9a408eb74600648939e4baf54c21698f2a30fcb98fc284b21afaac
+  articles/2026-10-18-agent-memory-saving-vs-remembering-draft.md: f73efed024a6dff196588ae90f43fe26b360b60d3f859334455399b2a17a83d3

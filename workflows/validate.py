@@ -247,8 +247,9 @@ def check(root, include_test=False):
                     body_lines = lines[lines.index("---", 1) + 1:]
                 except ValueError:
                     body_lines = []
-                if "> TEST：离线虚构样例，不可作为正式研究证据。" not in body_lines:
-                    fail(path, "测试来源正文必须包含统一 TEST 虚构样例横幅")
+                banners = {"> TEST：离线虚构样例，不可作为正式研究证据。", "> TEST：真实来源采集，分析与审阅均为模拟，不可作为正式研究结论。"}
+                if not banners.intersection(body_lines):
+                    fail(path, "测试来源正文必须声明 TEST 资料性质及模拟分析边界")
             fields(data, COMMON_FIELDS, PAPER_FIELDS if kind == "paper" else set(), path)
             if type(data.get("schema_version")) is not int or data.get("schema_version") != 1:
                 fail(path, "schema_version 必须是整数 1")

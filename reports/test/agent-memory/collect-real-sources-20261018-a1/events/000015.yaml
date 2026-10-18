@@ -1,0 +1,6 @@
+type: item_finished
+item_key: langchain-2
+status: test_accepted
+output: sources/blogs/test/agent-memory/blog-be47c817-56d3-4fa5-bb9a-bd19be5c68df.md
+output_sha256: 622374debc4763b7ba8e6ca8777784a411244361bc692618ce2ec11bd4a0b1db
+revision: 0
