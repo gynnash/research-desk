@@ -1,4 +1,10 @@
-# 人工研究工作流
+# 研究工作流
+
+## 定时研究设计
+
+[Agent Memory GitHub Actions MVP](agent-memory-github-actions-mvp.md) 定义首个定时研究任务的频率、来源、研究执行、去重更新、笔记保护、失败补跑和 PR 审阅流程。目前仅保存设计，尚未实现或启用。
+
+## 人工研究流程
 
 1. 在 `config/research_topics.yaml` 确认主题范围。
 2. 按[维护规范](maintenance.md)全库检索来源，决定新增还是更新。
@@ -6,4 +12,4 @@
 4. 阅读原文并维护状态和笔记；需要时手动整理到 `reports/`、`insights/` 或 `articles/`。
 5. 执行 `python3 workflows/validate.py`（在仓库根目录，需 PyYAML），检查差异，再提交并同步。
 
-这里仅包含约定、模板与只读校验工具。没有研究 Agent、抓取器、调度器或自动研究任务。
+这里仅包含设计、约定、模板与只读校验工具。没有可执行的研究 Agent、抓取器、调度器或自动研究任务。
