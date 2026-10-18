@@ -2,7 +2,7 @@
 
 本轮将官方 ChatGPT 会员授权接到本地 ResearchDesk，先测试一篇已采集论文的摘要研究。运行资格和结果必须由实际授权及回执证明，本文不预设账户等级、可用模型或审阅结论。上一阶段的模拟测试保持原样。
 
-当前真实验收状态：官方登录已发起，等待用户在浏览器完成授权；尚不能声明账户资格、可用模型和真实研究通过。完成后以本轮实际测试回执更新此处。
+当前真实验收状态（2026-10-19 北京时间）：官方 OAuth 身份验签与会员推理权限通过，账户目录实际返回 7 个模型。`gpt-6-luna` 研究、`gpt-6.1-sol` 独立审阅均收到完整推理终态，审阅 `pass`，无修订，共 2 次请求、响应合计报告 2,576 tokens。同批补跑返回 `cached: true`，请求数保持 2。详见[摘要研究报告](../reports/test/agent-memory/membership/member-arxiv-20261019/report.md)、[真实回执](../reports/test/agent-memory/membership/member-arxiv-20261019/receipt.yaml)及[验收说明](../reports/test/agent-memory/membership/member-arxiv-20261019/acceptance.md)。会员等级、剩余额度和金额没有可核实结果，保持未知；没有将这些 tokens 换算成额度百分比或费用。
 
 ## 范围与前提
 
@@ -60,6 +60,8 @@ researchdesk_profile_dir="$HOME/Library/Application Support/ResearchDesk/chatgpt
 ```
 
 `login` 打开系统浏览器并只监听本机回调；用户自行完成官方登录和授权，不向终端、对话或模型提供密码及验证码。未完成时不能继续推理。状态输出中的身份和权限标志仍需结合实际模型目录及推理终态判断，不能当作余额或会员等级证明。
+
+若系统浏览器无法展示授权页，使用 `--manual-browser login` 保持回调监听，由本地应用读取提示的私有 `authorization.json` 并打开其中的官方授权链接。该临时文件权限为 `0600`，只含授权 URL 和有效期，不含 PKCE verifier 或令牌，结束后自动清理；不要复制进仓库。第三方单点登录（例如 Google）由用户自行完成，后端只接收 OpenAI 的最终回调。
 
 确认授权文件位于仓库外，并从该账户目录选择两个不同的实际模型后执行：
 

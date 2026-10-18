@@ -2,7 +2,7 @@
 
 ResearchDesk 是一个长期积累的 AI 技术研究知识库：保存论文与技术博客的来源、阅读笔记和研究结论，发现技术趋势，并为微信公众号文章提供可追溯的素材。
 
-当前已完成知识库基础设施、离线运行骨架，以及 arXiv、Letta、LangChain 的真实资料采集测试。本轮增加本地官方 ChatGPT 会员授权后端，支持单篇 arXiv 摘要研究与独立模型审阅；账户资格、可用模型及真实试跑是否成功，以实际授权和测试回执为准。模拟分析继续保留，所有新研究结果只写各方向的隔离测试目录。正式资料保持原样；没有定时任务、自动 PR 入库或公众号发布，不使用数据库和复杂 Agent 框架；已有 Vault 备份设置保持原样。
+当前已完成知识库基础设施、离线运行骨架，以及 arXiv、Letta、LangChain 的真实资料采集测试。2026-10-19 已通过本地官方 ChatGPT 会员授权、账户模型目录核实，以及单篇 arXiv 摘要研究与独立模型审阅，详见[真实验收](reports/test/agent-memory/membership/member-arxiv-20261019/acceptance.md)。模拟分析继续保留，所有新研究结果只写各方向的隔离测试目录。正式资料保持原样；没有定时任务、自动 PR 入库或公众号发布，不使用数据库和复杂 Agent 框架；已有 Vault 备份设置保持原样。
 
 可以结合 Codex 维护仓库、配置和校验，使用 ChatGPT Work 辅助论文阅读、研究讨论与文章草稿。两者共用 Markdown/YAML 约定；直接访问本地仓库的能力取决于使用环境和授权。研究成果需明确保存到本仓库并审阅提交，设备间同步沿用下述 Git 流程。[Codex 官方说明](https://developers.openai.com/codex/cli/)与 [ChatGPT Work 官方说明](https://learn.chatgpt.com/docs/get-started-with-work)可供参考。
 

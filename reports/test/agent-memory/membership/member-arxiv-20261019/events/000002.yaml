@@ -1,0 +1,13 @@
+type: call_completed
+reservation_id: research-0
+role: research
+revision: 0
+model_id: gpt-6-luna
+at: '2026-10-18T16:22:45.584671+00:00'
+response_path: reports/test/agent-memory/membership/member-arxiv-20261019/checkpoints/research-0.yaml
+response_sha256: 3493420ee727da0b9f38940f840b8de5e676882588282e004dab8c6b594bc2a4
+usage:
+  input_tokens: 613
+  output_tokens: 388
+  total_tokens: 1001
+usage_status: reported

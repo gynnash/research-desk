@@ -1,0 +1,36 @@
+schema_version: 1
+mode: membership_test
+backend: chatgpt_plan
+batch_id: member-arxiv-20261019
+status: test_accepted
+production_accepted: false
+coverage: abstract_only
+models:
+  research: gpt-6-luna
+  review: gpt-6.1-sol
+authorization:
+  authenticated: true
+  plan_permission: true
+  authorization: official_chatgpt_oauth
+  account_fingerprint: 658c777b3a755463
+actual_models:
+- gpt-6-luna
+- gpt-6.1-sol
+revision_count: 0
+reserved_calls: 2
+completed_calls: 2
+usage:
+- input_tokens: 613
+  output_tokens: 388
+  total_tokens: 1001
+- input_tokens: 1033
+  output_tokens: 542
+  total_tokens: 1575
+membership_remaining_quota: null
+api_billed_cost: null
+cost_note: 会员共享额度；不提供可核实余额/金额时保留未知，不按模拟单位或 API 价格换算。
+report_path: reports/test/agent-memory/membership/member-arxiv-20261019/report.md
+report_sha256: c38e9209e92d97731385777bba9663ebd606ce2f1085e16167e295506815c003
+formal_notes_unchanged: true
+all_existing_notes_unchanged: true
+finished_at: '2026-10-18T16:23:02.135714+00:00'

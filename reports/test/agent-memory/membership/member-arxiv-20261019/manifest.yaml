@@ -1,0 +1,127 @@
+schema_version: 1
+mode: membership_test
+production_accepted: false
+topic: agent-memory
+batch_id: member-arxiv-20261019
+created_at: '2026-10-18T16:22:36.537576+00:00'
+backend: chatgpt_plan
+fingerprint: d1779a46ad5a9e1def1e01e534de7bab18ff440e53e5dd4152d3a9342b1f2a3f
+prompt_version: membership-abstract-v1
+topics_sha256: 651cea40a6dbfa2568b324491a102b785230a3c63a7ce03f03252ff3b0cdf18d
+source_receipt: reports/test/agent-memory/collections/real-sources-20261018/receipt-attempt-1.yaml
+source_receipt_sha256: 857ccdd24672c57933b3bcbceb270235747b1910dffd97cff81864f6de5bcb53
+source_id: paper-a5a3171a-9891-4dea-8bfc-cdf0cf15bce0
+source_path: sources/papers/test/agent-memory/paper-a5a3171a-9891-4dea-8bfc-cdf0cf15bce0.md
+candidate:
+  kind: paper
+  metadata:
+    title: 'Beyond Downstream QA: Rethinking How We Evaluate Agent Memory'
+    source: arXiv
+    source_url: https://arxiv.org/abs/2610.22209
+    authors:
+    - Sebastian-Antonio Toma
+    - Jean de Kernier
+    - Mike Ply
+    - Oliviu Matei
+    published_at: '2026-10-15'
+    arxiv_id: '2610.22209'
+    source_version: v1
+  evidence:
+    coverage: abstract_only
+    source_url: https://arxiv.org/abs/2610.22209
+    source_version: v1
+    content_hash: a11351e13b004fe042d543110fe7cd46a3f66d476f5f6643f65b5166e36a7441
+    locators:
+    - id: A1
+      location: abstract sentence 1
+      text_sha256: 6ddd12d7d41ef7b3c5d47170c36766a8c0ea5545e06a750b5b1cd75c953beaba
+      quote: Agent memory benchmarks evaluate whether an agent's responses reflect
+        correct knowledge, measuring downstream question-answering accuracy as a proxy
+        for memory quality.
+    - id: A2
+      location: abstract sentence 2
+      text_sha256: 2eb99de716d0872bf84172026608f609e1bb9e3ec6af8e797da5b7e48982fdd4
+      quote: We show this evaluation
+    - id: A3
+      location: abstract sentence 3
+      text_sha256: 93a4b263ae14c7ed50d5f9382db6ed84f69ff0afa610cece83649966560e9221
+      quote: ''
+    - id: A4
+      location: abstract sentence 4
+      text_sha256: a920c00eb9f4e073eb1a3b438535bc71f032cd17cdf17621100f855244e6f521
+      quote: ''
+    - id: A5
+      location: abstract sentence 5
+      text_sha256: 6d9b1b680bd9c52003a3ba89fe5b22f5cea00c3a42b7919aa3c61f0ab54f2d47
+      quote: ''
+    - id: A6
+      location: abstract sentence 6
+      text_sha256: 0504976af9a8a84e73967ea95789dc04ddcb5d230a5fe3209d7de5abb8ecb3ed
+      quote: ''
+    - id: A7
+      location: abstract sentence 7
+      text_sha256: be1478a1385272e96a4937631b40cc9c209ee98a667e0ae24a6cbf9861c2b621
+      quote: ''
+models:
+  research: gpt-6-luna
+  review: gpt-6.1-sol
+catalog:
+- slug: gpt-6.1-sol
+  display_name: GPT-6.1-Sol
+- slug: gpt-6-astra
+  display_name: GPT-6-Astra
+- slug: gpt-6-sol
+  display_name: GPT-6-Sol
+- slug: gpt-6-luna
+  display_name: GPT-6-Luna
+- slug: gpt-5.6-sol
+  display_name: GPT-5.6-Sol
+- slug: gpt-5.6-terra
+  display_name: GPT-5.6-Terra
+- slug: gpt-5.6-luna
+  display_name: GPT-5.6-Luna
+authorization:
+  authenticated: true
+  plan_permission: true
+  authorization: official_chatgpt_oauth
+  account_fingerprint: 658c777b3a755463
+limits:
+  max_calls: 4
+  month_max_calls: 10
+  max_input_chars: 16000
+  max_output_chars: 12000
+  timeout_seconds: 120
+  max_revisions: 1
+protected_notes:
+  sources/README.md: ea97baad3b8b4e68c5c0dfa81611a92d257bcf2023f3810b039624f3ff1cd517
+  sources/blogs/blog-fec9a2e1-6812-425a-83cd-e6a2464a1110.md: 1c05f28a21a3cef08ff0fc966970a4eed70e2510d0d17468437fb4ff0fa7e99f
+  sources/blogs/test/agent-memory/blog-2ba2d1cb-b637-4842-afd7-efab7210fd2f.md: bf6cf9fa1c1b4879316cf23c419ebcc9f2f34d9a9e41d5d12f98cc2b0158609f
+  sources/blogs/test/agent-memory/blog-56521361-c491-428a-b75e-3c92c603161e.md: 4dd2745bcc4ae45256cbc0b1260d070c375b9950418e0b59ed740bd8fc0a4bd7
+  sources/blogs/test/agent-memory/blog-be47c817-56d3-4fa5-bb9a-bd19be5c68df.md: 622374debc4763b7ba8e6ca8777784a411244361bc692618ce2ec11bd4a0b1db
+  sources/test/README.md: 32b0263d9fd210ccd50354362b98e86102e842d1e8abb600a013bd76ec61655d
+  sources/papers/paper-4eb3be4b-7189-49aa-bafd-f88f77a972f4.md: 2fca02def277430ea06e35c370b56b895c82d01b14099c3cea4cb55a1e410274
+  sources/papers/test.md: 52bf9809aa70dbc3fc8ee55dd96a58a7b85c45717a21e5f7c557a70b4ee07115
+  sources/papers/test/agent-memory/paper-b45f152e-83b7-43ca-9ff5-0e2e7c66e5f9.md: d96bae1c966846f600d98b0d2285dc58ec7078bf83626a45c9b10e5fddc94663
+  sources/papers/test/agent-memory/paper-a5a3171a-9891-4dea-8bfc-cdf0cf15bce0.md: 357373843b03679cf7a0241fac42bada0cfeeb447c430e2edabb344c29a96126
+  reports/2026-10-18-agent-memory-memgpt-memory-blocks.md: 02b197e040a40022a004e692395b0f5e6ce3b1e3611ea9b374f440bb7ba23e96
+  reports/README.md: 901c94e139c67ba26c99451c2f0b6f7fcb0280a70e4a82f2f1416b6c1f02b77b
+  reports/test/README.md: 6ef91886517177cf196851c9cbfcab564f209143e618a42af6678d1e6b7bf15f
+  reports/test/agent-memory/collect-real-sources-20261019-check-a1/summary-attempt-1.md: 4f02a33bcbb3be3240a0681e7ca3f7e494c1821ccf5233bdcca595ad5631efd6
+  reports/test/agent-memory/offline-acceptance-20261018/summary-attempt-1.md: 920a438b21b036923bb8fc6b291af824d4d2c5441bbe16d55f2b8cefc82f0191
+  reports/test/agent-memory/offline-acceptance-20261018/summary-attempt-2.md: 920a438b21b036923bb8fc6b291af824d4d2c5441bbe16d55f2b8cefc82f0191
+  reports/test/agent-memory/offline-acceptance-20261018/acceptance.md: bbcc12d9ca0a95ecd68a55fef5554f0f8486aef25b9a625e9574fe3b4e597db6
+  reports/test/agent-memory/collect-real-sources-20261018-a1/summary-attempt-1.md: 62a11b23f22bae24616d3486dc7eff9b69762d4e623e2f4b841eba6d7e84ff05
+  reports/test/agent-memory/collections/real-sources-20261019-check/summary-attempt-1.md: 6f208dc265b50fc30d7d07e2d4293253159a9bf1922669f0135551f6a6959cd3
+  reports/test/agent-memory/collections/real-sources-20261019-check/analysis-bundle-attempt-1.md: bb258a774fff44130085adef9e25f35badd1e235401c2ee3dcd153fdf6d381eb
+  reports/test/agent-memory/collections/real-sources-20261018/summary-attempt-1.md: ca2ac6c74d10ab3e7be4db1e7fa4b4f23023219dfa85261a5de1846983dcb3a1
+  reports/test/agent-memory/collections/real-sources-20261018/analysis-bundle-attempt-1.md: b80f2ca5a5e7c3f13dbe11bd9e3d0ceeb926be59cdaa25f0a56e346fef7cab78
+  reports/test/agent-memory/collections/real-sources-20261018/acceptance.md: e42877b6de62360ee9af6c762899b0cc172597570fb1b413656656185d8d9764
+  insights/2026-10-18-agent-memory-traceable-updates.md: 5996061dc64dea1ff86ac9275b40ac20b813f95c95fa370fcfc3ba453d5929a2
+  insights/2026-10-18-agent-memory-usable-memory.md: 6bdbac554506f14147aebdcbbb35a8ea62e4800f9f2a804f1d84ecc414b54212
+  insights/README.md: 2a639098b6adaa6cc549d1831065c544afaf03293495a68776e68452f1fabd95
+  insights/test/README.md: 00d6f9133d46c5c4641f1e6ef24a0e358cebbc6c86336fe849052f3385e4e2c7
+  articles/2026-10-18-agent-memory-saving-vs-remembering-outline.md: 9505994ab7c1a55a71e07f052caa9e9dccb6e7474b607f2ce5e668ca5df27775
+  articles/README.md: 1a221c8239e8b298a621752e0e440f0acf701ae0fba012462fe501dd629ee571
+  articles/2026-10-18-agent-memory-saving-vs-remembering-release-candidate.md: f74992ec6c9a408eb74600648939e4baf54c21698f2a30fcb98fc284b21afaac
+  articles/2026-10-18-agent-memory-saving-vs-remembering-draft.md: f73efed024a6dff196588ae90f43fe26b360b60d3f859334455399b2a17a83d3
+  articles/test/README.md: f18fb8cb94b0181266c3d3c52c21de0b6fdce2b58f08fe98be4616169fbedd45
