@@ -65,7 +65,8 @@ def canonical_url(value):
     return urlunsplit((parts.scheme.lower(), host, parts.path or "/", urlencode(query), ""))
 
 
-def check(root):
+def check(root, include_test=False):
+    root = Path(root).resolve()
     errors, warnings = [], []
 
     def fail(path, message):
@@ -192,6 +193,9 @@ def check(root):
         if not local_note(path, {"sources"}) or not path.startswith(("sources/papers/", "sources/blogs/")):
             fail(legacy_path, f"旧资料路径无效或文件不存在：{path!r}")
             continue
+        if len(Path(path).parts) > 3 and Path(path).parts[2] == "test":
+            fail(legacy_path, "测试目录不得加入旧资料豁免清单")
+            continue
         if not isinstance(reason, str) or not reason.strip():
             fail(legacy_path, "旧资料必须说明豁免原因")
         if path in legacy:
@@ -205,19 +209,46 @@ def check(root):
         if type(data.get("schema_version")) is not int or data.get("schema_version") != 1 or data.get("kind") != kind:
             fail(path, "模板 schema_version 或 kind 无效")
 
+    # Tests have their own identity index, but never become a Schema exemption.
+    # Only this exact directory convention marks a source as a test record;
+    # names such as test.md or nested topic/test/ do not opt out of validation.
     records, ids, identities = [], {}, {}
+    test_count = 0
     for folder, kind in (("papers", "paper"), ("blogs", "blog")):
         for file in sorted((root / "sources" / folder).rglob("*.md")):
             path = file.relative_to(root).as_posix()
+            parts = Path(path).parts
+            is_test = len(parts) > 3 and parts[2] == "test"
+            zone = "test" if is_test else "formal"
+            if is_test:
+                if len(parts) != 5 or parts[3] not in topics:
+                    fail(path, "测试来源路径必须为 sources/<papers|blogs>/test/<已配置主题>/<id>.md")
+                    continue
+                if not re.fullmatch(rf"{kind}-[0-9a-f]{{8}}(?:-[0-9a-f]{{4}}){{3}}-[0-9a-f]{{12}}\.md", parts[4]):
+                    fail(path, "测试来源文件名必须为 <kind>-<小写标准 UUID v4>.md")
+                if not include_test:
+                    continue
             text = read(path)
             if path in legacy:
+                if is_test:
+                    fail(path, "测试资料不得通过 legacy_sources.yaml 豁免")
+                    continue
                 if text.splitlines()[:1] == ["---"]:
                     fail(path, "已有 Frontmatter，请移除旧资料豁免后完整校验")
                 else:
                     warnings.append(f"{path}: 按 legacy_sources.yaml 跳过旧资料 Schema 检查")
                 continue
             data = frontmatter(text, path)
-            records.append((path, data))
+            records.append((path, data, zone))
+            test_count += int(is_test)
+            if is_test:
+                lines = text.splitlines()
+                try:
+                    body_lines = lines[lines.index("---", 1) + 1:]
+                except ValueError:
+                    body_lines = []
+                if "> TEST：离线虚构样例，不可作为正式研究证据。" not in body_lines:
+                    fail(path, "测试来源正文必须包含统一 TEST 虚构样例横幅")
             fields(data, COMMON_FIELDS, PAPER_FIELDS if kind == "paper" else set(), path)
             if type(data.get("schema_version")) is not int or data.get("schema_version") != 1:
                 fail(path, "schema_version 必须是整数 1")
@@ -237,8 +268,13 @@ def check(root):
                 fail(path, f"id 必须为 {kind}-<小写标准 UUID v4>")
             if isinstance(record_id, str) and record_id:
                 if record_id in ids:
-                    fail(path, f"重复 ID，已存在于 {ids[record_id]}")
-                ids[record_id] = path
+                    fail(path, f"重复 ID，已存在于 {ids[record_id][0]}")
+                ids[record_id] = (path, zone)
+            if is_test:
+                if file.stem != record_id:
+                    fail(path, "测试来源文件名必须与 Frontmatter id 一致")
+                if not isinstance(data.get("topics"), list) or parts[3] not in data["topics"]:
+                    fail(path, "测试来源 topics 必须包含所在目录的主题 ID")
             for key in ("authors", "topics", "related_sources", "related_notes"):
                 values = string_list(data.get(key), f"{path}.{key}", nonempty=(key == "topics"))
                 if key == "topics":
@@ -277,12 +313,13 @@ def check(root):
             if data.get("source_version") is not None and (not isinstance(data["source_version"], str) or not data["source_version"].strip()):
                 fail(path, "source_version 必须为非空字符串或 null")
             for key in keys:
-                if key in identities:
-                    fail(path, f"重复来源 {key[0]}，已存在于 {identities[key]}")
-                identities[key] = path
+                scoped_key = (zone, key)
+                if scoped_key in identities:
+                    fail(path, f"重复来源 {key[0]}，已存在于 {identities[scoped_key]}")
+                identities[scoped_key] = path
 
     # Resolve after collecting all IDs, so references do not depend on file order.
-    for path, data in records:
+    for path, data, zone in records:
         related = data.get("related_sources")
         for target in related if isinstance(related, list) else []:
             if not isinstance(target, str):
@@ -291,10 +328,19 @@ def check(root):
                 fail(path, "related_sources 不得自关联")
             elif target not in ids:
                 fail(path, f"关联资料 ID 不存在：{target}")
+            elif ids[target][1] != zone:
+                fail(path, "正式与测试资料不得通过 related_sources 互相引用")
         notes = data.get("related_notes")
         for note in notes if isinstance(notes, list) else []:
             if not local_note(note, {"reports", "insights", "articles"}):
                 fail(path, f"关联研究文件无效或不存在：{note!r}")
+                continue
+            note_parts = Path(note).parts
+            note_is_test = len(note_parts) > 2 and note_parts[1] == "test"
+            if note_is_test != (zone == "test"):
+                fail(path, "正式与测试资料不得通过 related_notes 互相引用")
+            elif note_is_test and (len(note_parts) < 4 or note_parts[2] != Path(path).parts[3]):
+                fail(path, "测试 related_notes 必须保存在同一主题的 <reports|insights|articles>/test/<topic>/ 下")
 
     for warning in warnings:
         print(f"WARN {warning}")
@@ -303,15 +349,17 @@ def check(root):
     if errors:
         print(f"检查失败：{len(errors)} 个问题。", file=sys.stderr)
         return 1
-    print(f"检查通过：{len(topics)} 个主题，{len(records)} 条正式资料，{len(warnings)} 条旧资料豁免。")
+    test_label = f"{test_count} 条测试资料" if include_test else "测试资料未检查（使用 --include-test 纳入）"
+    print(f"检查通过：{len(topics)} 个主题，{len(records) - test_count} 条正式资料，{test_label}，{len(warnings)} 条旧资料豁免。")
     return 0
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--root", type=Path, default=Path(__file__).resolve().parents[1], help="仓库根目录（默认由脚本位置确定）")
+    parser.add_argument("--include-test", action="store_true", help="同时校验隔离测试资料；独立查重并禁止与正式资料互链")
     args = parser.parse_args()
-    return check(args.root.resolve())
+    return check(args.root.resolve(), include_test=args.include_test)
 
 
 if __name__ == "__main__":

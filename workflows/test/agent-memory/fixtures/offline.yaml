@@ -1,0 +1,165 @@
+# 全部资料、作者、证据和模型响应均为虚构；仅供离线验收。
+# example.invalid 不可作为真实来源；本样例不会访问网络或模型服务。
+schema_version: 1
+fixture_notice: "全部虚构，仅用于 ResearchDesk 离线验收，不是研究资料或真实模型审阅。"
+models:
+  research: mock-research-v1
+  review: mock-review-v1
+budget:
+  max_calls: 12
+  max_cost_units: 120
+  month_max_cost_units: 240
+  reservation_cost_units: 10
+candidates:
+  - key: new-paper
+    topic: agent-memory
+    kind: paper
+    metadata:
+      title: "[虚构] 分层记忆检索样例"
+      source: "虚构论文样例"
+      source_url: https://example.invalid/papers/layered-memory
+      authors: ["虚构作者甲"]
+      published_at: "2026-10-01"
+      arxiv_id: null
+      doi: 10.99999/offline-memory-example
+      source_version: v1
+    evidence:
+      coverage: excerpt
+      text: "本虚构样例将记忆分为近期缓冲区与长期档案。每次请求只检索两个档案片段。样例未进行准确率或成本实验。"
+      locators:
+        - id: E1
+          location: "虚构正文第 1 段"
+          quote: "本虚构样例将记忆分为近期缓冲区与长期档案。"
+        - id: E2
+          location: "虚构正文第 1 段"
+          quote: "样例未进行准确率或成本实验。"
+    research:
+      - model_id: mock-research-v1
+        request_id: mock-research-paper-r1
+        summary: "虚构样例提出近期缓冲与长期档案两层记忆，没有效果实验。"
+        claims:
+          - text: "样例将记忆分为近期缓冲区与长期档案。"
+            kind: fact
+            evidence_ids: [E1]
+        limitations: ["只有虚构节选，没有准确率或成本实验。"]
+        usage: {cost_units: 2, input_tokens: 120, output_tokens: 50}
+    reviews:
+      - model_id: mock-review-v1
+        request_id: mock-review-paper-r1
+        decision: pass
+        checks:
+          - claim_index: 0
+            evidence_ids: [E1]
+            verdict: supported
+        issues: []
+        usage: {cost_units: 2, input_tokens: 150, output_tokens: 40}
+  - key: revised-blog
+    topic: agent-memory
+    kind: blog
+    metadata:
+      title: "[虚构] 显式记忆块工程笔记"
+      source: "虚构工程博客"
+      source_url: https://example.invalid/blog/memory-blocks
+      authors: []
+      published_at: null
+    evidence:
+      coverage: excerpt
+      text: "本虚构工程笔记使用显式字段保存用户偏好。作者没有报告延迟或准确率数据。"
+      locators:
+        - id: E1
+          location: "虚构小节：字段设计"
+          quote: "本虚构工程笔记使用显式字段保存用户偏好。"
+        - id: E2
+          location: "虚构小节：限制"
+          quote: "作者没有报告延迟或准确率数据。"
+    research:
+      - model_id: mock-research-v1
+        request_id: mock-research-blog-r1
+        summary: "虚构工程笔记介绍显式偏好字段，并推测这可能降低延迟。"
+        claims:
+          - text: "工程笔记使用显式字段保存用户偏好。"
+            kind: fact
+            evidence_ids: [E1]
+          - text: "显式字段可能降低延迟，仍待验证。"
+            kind: inference
+            evidence_ids: [E1]
+        limitations: ["节选没有实验。"]
+        usage: {cost_units: 2, input_tokens: 110, output_tokens: 65}
+      - model_id: mock-research-v1
+        request_id: mock-research-blog-r2
+        summary: "虚构工程笔记介绍显式偏好字段，没有报告效果数据。"
+        claims:
+          - text: "工程笔记使用显式字段保存用户偏好。"
+            kind: fact
+            evidence_ids: [E1]
+        limitations: ["没有延迟或准确率数据，不能推出效果提升。"]
+        usage: {cost_units: 2, input_tokens: 130, output_tokens: 55}
+    reviews:
+      - model_id: mock-review-v1
+        request_id: mock-review-blog-r1
+        decision: revise
+        checks:
+          - claim_index: 0
+            evidence_ids: [E1]
+            verdict: supported
+          - claim_index: 1
+            evidence_ids: [E2]
+            verdict: uncertain
+        issues:
+          - location: "claims[1]"
+            severity: blocking
+            reason: "节选缺少延迟数据，推断对本记录没有必要。"
+            suggestion: "删除延迟推断并明确没有效果数据。"
+        usage: {cost_units: 2, input_tokens: 160, output_tokens: 60}
+      - model_id: mock-review-v1
+        request_id: mock-review-blog-r2
+        decision: pass
+        checks:
+          - claim_index: 0
+            evidence_ids: [E1]
+            verdict: supported
+        issues: []
+        usage: {cost_units: 2, input_tokens: 150, output_tokens: 40}
+  - key: rejected-paper
+    topic: agent-memory
+    kind: paper
+    metadata:
+      title: "[虚构] 不足以支持结论的记忆摘要"
+      source: "虚构论文样例"
+      source_url: https://example.invalid/papers/unsupported-memory
+      authors: []
+      published_at: null
+      arxiv_id: null
+      doi: null
+      source_version: null
+    evidence:
+      coverage: abstract_only
+      text: "本虚构摘要仅提出一种记忆组织设想，没有给出实验。"
+      locators:
+        - id: E1
+          location: "虚构摘要"
+          quote: "本虚构摘要仅提出一种记忆组织设想，没有给出实验。"
+    research:
+      - model_id: mock-research-v1
+        request_id: mock-research-rejected-r1
+        summary: "虚构摘要提出记忆组织设想，但尚不构成可验证的研究结论。"
+        claims:
+          - text: "摘要提出一种记忆组织设想。"
+            kind: fact
+            evidence_ids: [E1]
+        limitations: ["只有摘要；未见方法细节或实验。"]
+        usage: {cost_units: 2, input_tokens: 70, output_tokens: 35}
+    reviews:
+      - model_id: mock-review-v1
+        request_id: mock-review-rejected-r1
+        decision: reject
+        checks:
+          - claim_index: 0
+            evidence_ids: [E1]
+            verdict: supported
+        issues:
+          - location: summary
+            severity: blocking
+            reason: "虚构验收场景：该摘要无法提供本轮需要的机制与证据。"
+            suggestion: "不入库，等待新的原文证据。"
+        usage: {cost_units: 2, input_tokens: 100, output_tokens: 40}
