@@ -33,5 +33,7 @@ jobs:
         run: python workflows/validate.py --include-test
       - name: Check research cycle with fixed inputs
         run: python -m unittest discover -s tests -p 'test_cycle.py' -v
+      - name: Check URL history deduplication without model calls
+        run: python -m unittest discover -s tests -p 'test_url_history_dedup.py' -v
       - name: Check create-only admission without model calls
         run: python -m unittest discover -s tests -p 'test_admission.py' -v

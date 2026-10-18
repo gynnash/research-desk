@@ -1,4 +1,4 @@
-"""Resolve only explicit, accepted test-to-formal source identity mappings."""
+"""Read-only source identities and accepted test-to-formal mappings."""
 
 from pathlib import Path
 import re
@@ -7,6 +7,32 @@ import researchdesk_offline as store
 
 
 SOURCE_ID = re.compile(r'(?:paper|blog)-[0-9a-f-]{36}\Z')
+
+
+def comparison_metadata(metadata):
+    """Normalize URL spelling only for comparisons, never persisted evidence.
+
+    The shared URL policy removes known tracking parameters and fragments but
+    preserves meaningful query values/order, paths and trailing slashes. An
+    official arXiv URL may use abs/pdf/html for the same versioned paper; its
+    explicit source_version remains a separate part of the metadata comparison.
+    Historical candidates and their original metadata hashes stay immutable.
+    """
+    normalized = dict(metadata)
+    url = store.canonical_url(metadata['source_url'])
+    match = re.fullmatch(
+        r'https?://(?:www\.|export\.)?arxiv\.org/(?:abs|pdf|html)/'
+        r'((?:\d{4}\.\d{4,5}|[a-z][a-z0-9.-]*/\d{7}))(v[1-9]\d*)?(?:\.pdf)?',
+        url, re.I)
+    version = metadata.get('source_version')
+    if (match and isinstance(version, str) and re.fullmatch(r'v[1-9]\d*', version)
+            and (not match.group(2) or match.group(2).lower() == version)):
+        # identities() validates any explicit ID against the URL before this
+        # comparison is used. Do not infer an unknown version from a URL.
+        store.identities(metadata)
+        url = 'https://arxiv.org/abs/' + match.group(1).lower()
+    normalized['source_url'] = url
+    return normalized
 
 
 def accepted_records(root):

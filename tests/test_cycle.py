@@ -1,13 +1,15 @@
-"""Five offline orchestration checks; Research and Insight are stubbed locally."""
+"""Offline cycles; capacity coverage also uses real stages with fake models."""
 
 import copy
 import importlib
+import json
 from pathlib import Path
 import socket
 import sys
 import tempfile
 import unittest
 from unittest import mock
+from urllib.parse import parse_qs, urlsplit
 
 import yaml
 
@@ -16,6 +18,42 @@ REPOSITORY = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPOSITORY / 'scripts'))
 import researchdesk_offline as store
 from test_research_batch import FakeMemberClient, FixtureFetcher
+from test_insight import FakeInsightClient
+
+
+class FiveSourceFetcher(FixtureFetcher):
+    """Distinct, near-limit handwritten sources; no network requests."""
+
+    def fetch(self, url):
+        response = super().fetch(url)
+        parts = urlsplit(url)
+        text = response['text']
+        material = ('This fictional parser fixture describes memory blocks without measured results. ' * 74).strip()
+        if 'arxiv.org' in parts.hostname:
+            identifier = parse_qs(parts.query).get('id_list', [parts.path.rsplit('/', 1)[-1]])[0]
+            text = text.replace('2610.01234v2', identifier).replace('FIXTURE.Memory', identifier)
+            text = text.replace('This fictional parser exercise describes memory blocks. It reports no measured results.', material)
+        else:
+            text = text.replace('https://www.letta.com/blog/fixture-memory', url)
+            text = text.replace('This fictional parser fixture describes persistent memory blocks.', material)
+        response.update(text=text, sha256=store.digest(text.encode()))
+        return response
+
+
+class FiveSourceClient(FakeInsightClient):
+    @staticmethod
+    def synthesis():
+        result = FakeInsightClient.synthesis()
+        result['report']['comparisons'].extend(
+            {'kind': 'author_claim', 'text': '额外资料仅提供有限机制描述，不能证明性能。',
+             'evidence_ids': ['R%s' % number]}
+            for number in range(3, 6))
+        return result
+
+    def infer(self, model, instructions, input_text, **limits):
+        if 'evidence' not in json.loads(input_text):
+            return FakeMemberClient.infer(self, model, instructions, input_text, **limits)
+        return super().infer(model, instructions, input_text, **limits)
 
 
 class ResearchInsightCycle(unittest.TestCase):
@@ -83,6 +121,8 @@ class ResearchInsightCycle(unittest.TestCase):
         mock.patch.object(socket.socket, 'connect',
                           side_effect=AssertionError('Network prohibited')).start()
         self.cycle = importlib.import_module('researchdesk_cycle')
+        self.real_research_run = self.cycle.research.run
+        self.real_insight_run = self.cycle.insight.run
         self.discovery = mock.patch.object(self.cycle.discovery, 'discover',
                                            side_effect=lambda *a, **k: copy.deepcopy(self.snapshot)).start()
         self.history_selection = mock.patch.object(self.cycle.discovery, 'select_history',
@@ -163,6 +203,53 @@ class ResearchInsightCycle(unittest.TestCase):
         self.assertEqual(result['status'], 'partial')
         self.assertIn('failed', str(result))
         self.client.infer.assert_not_called()
+
+    def test_five_sources_receive_independent_review_and_fit_actual_insight_payload(self):
+        self.config['discovery'].update(max_documents=5, max_per_source=2)
+        self.config['discovery']['sources'].append(
+            {'id': 'langchain', 'adapter': 'langchain', 'entry_url': 'https://www.langchain.com/blog'})
+        self.config['budget'].update(max_calls_per_cycle=16, research_max_calls=12, max_input_chars=60000)
+        self.config_path.write_text(yaml.safe_dump(self.config, allow_unicode=True, sort_keys=False))
+        sources = []
+        for adapter in ('arxiv', 'letta', 'langchain'):
+            for number in (1, 2):
+                identifier = '%s-%s' % (adapter, number)
+                url = ('https://export.arxiv.org/api/query?id_list=2610.01%03dv2' % number if adapter == 'arxiv'
+                       else 'https://www.%s.com/blog/fixture-memory-%s' % (adapter, number))
+                sources.append({'source': {'id': identifier, 'adapter': adapter,
+                    'kind': 'paper' if adapter == 'arxiv' else 'blog',
+                    'url': url, 'evidence_max_chars': 6000}})
+        self.snapshot['candidates'] = sources
+        # Six real Markdown history inputs exercise JSON serialization overhead.
+        original = (self.root / self.history[0]['path']).read_text()
+        original_id = yaml.safe_load(original.split('---', 2)[1])['id']
+        for number in range(1, 6):
+            identifier = 'paper-00000000-0000-4000-8000-%012d' % number
+            path = self.root / 'sources/papers' / (identifier + '.md')
+            path.write_text(original.replace(original_id, identifier))
+            self.history.append({'path': path.relative_to(self.root).as_posix(),
+                'sha256': store.digest(path.read_bytes()), 'origin': 'human_baseline'})
+        self.research_run.side_effect = self.real_research_run
+        self.insight_run.side_effect = self.real_insight_run
+        client = FiveSourceClient()
+        result = self.cycle.run(self.root, self.config_path, 'first',
+                                client=client, fetcher=FiveSourceFetcher())
+        self.assertEqual(result['status'], 'completed')
+        self.assertEqual(result['reserved_calls'], 12)
+        self.assertEqual([call['model'] for call in client.calls],
+                         ['fixture-research', 'fixture-review'] * 6)
+        self.assertEqual(result['pending_count'], 1)
+        insight_calls = [call for call in client.calls if 'evidence' in call['payload']]
+        self.assertEqual(len(insight_calls), 2)
+        for call in insight_calls:
+            self.assertEqual(sum(item['origin'] == 'reviewed_research'
+                                 for item in call['payload']['evidence']), 5)
+            self.assertEqual(sum(item['origin'] == 'human_baseline'
+                                 for item in call['payload']['evidence']), 6)
+            actual_chars = len(call['instructions']) + len(call['input_text'])
+            self.assertGreater(actual_chars, 30000)
+            self.assertLessEqual(actual_chars, 60000)
+        self.assertEqual(len(list((self.root / 'reports/test/custom-topic/research-batches/first/items').glob('*/report.md'))), 5)
 
 
 if __name__ == '__main__':

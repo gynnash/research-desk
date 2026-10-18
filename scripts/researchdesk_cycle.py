@@ -41,8 +41,8 @@ def load_config(root, path):
     common.fields(config['window'], {'initial_days', 'overlap_hours'}, '扫描时间窗')
     common.positive(config['window']['initial_days'], 1, 365, 'initial_days')
     common.positive(config['window']['overlap_hours'], 0, 168, 'overlap_hours')
-    ranges = {'max_calls_per_cycle': (4, 20), 'research_max_calls': (2, 8), 'insight_max_calls': (2, 4),
-              'max_input_chars': (1000, 30000), 'max_output_chars': (1000, 12000),
+    ranges = {'max_calls_per_cycle': (4, 20), 'research_max_calls': (2, 16), 'insight_max_calls': (2, 4),
+              'max_input_chars': (1000, 60000), 'max_output_chars': (1000, 12000),
               'timeout_seconds': (1, 120), 'max_revisions': (0, 1)}
     common.fields(config['budget'], ranges, '轮次预算')
     for key, (low, high) in ranges.items():
@@ -52,7 +52,7 @@ def load_config(root, path):
     common.fields(config['history'], {'max_documents'}, '历史选择')
     common.positive(config['history']['max_documents'], 1, 10, 'max_documents')
     common.fields(config['discovery'], {'max_candidates', 'max_documents', 'max_per_source', 'evidence_max_chars', 'sources'}, '资料发现')
-    for key, bounds in {'max_candidates': (1,20), 'max_documents': (1,2), 'max_per_source': (1,1), 'evidence_max_chars': (200,10000)}.items():
+    for key, bounds in {'max_candidates': (1,20), 'max_documents': (1,5), 'max_per_source': (1,2), 'evidence_max_chars': (200,10000)}.items():
         common.positive(config['discovery'][key], *bounds, key)
     config.update(_config_path=path.relative_to(root).as_posix(), _config_sha256=store.digest(path.read_bytes()),
                   _topics_sha256=store.digest(topic_path.read_bytes()))
@@ -154,7 +154,7 @@ def plan_candidates(root, config, cycle_id, snapshot, fetcher):
     latest = {}
     for item in pool:
         latest[item['source']['id']] = item
-    selected, skipped, pending, per_source = [], [], [], {}
+    selected, skipped, pending, per_source, seen = [], [], [], {}, set()
     child_config = {'topic':config['topic']}
     for item in list(latest.values())[:1000]:
         source = item['source']
@@ -163,7 +163,7 @@ def plan_candidates(root, config, cycle_id, snapshot, fetcher):
             continue
         try:
             candidate, _ = common.fetch_candidate(root,child_config,source,fetcher)
-            action = research.classify(root,'reports/test/%s/research-batches/%s'%(config['topic'],cycle_id),candidate,'chatgpt_plan',set())
+            action = research.classify(root,'reports/test/%s/research-batches/%s'%(config['topic'],cycle_id),candidate,'chatgpt_plan',seen)
         except Exception as exc:
             pending.append(dict(item,reason='preflight_source_failed',error_type=type(exc).__name__))
             continue

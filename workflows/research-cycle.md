@@ -10,6 +10,10 @@
 
 轮次配置为 [`config/cycles/agent-memory.yaml`](../config/cycles/agent-memory.yaml)。每个方向使用自己的配置及 `test/<topic>/` 输出；模型从该用户当前账户目录选择，生成和独立审阅使用不同的实际模型。授权 profile 保存在仓库及 Obsidian Vault 之外，沿用[本地会员说明](local-membership-analysis.md)的官方登录方式；不复制到 GitHub Secrets 或资料目录。
 
+当前新轮次最多研究 5 份，每个来源最多 2 份、最多检查 20 个候选；重复或被阻止的资料不占研究名额，不为凑满数量重复付费。Research 上限为 12 次（5 份正常研究及审阅共 10 次，另有 2 次修订余量），Insight 上限 4 次，总上限 16 次；不保证每份都能修订，失败或未知请求也占预算。共享月度上限仍为 100 次，不因轮次容量提高而清零。输入字符上限为 60,000，来源证据仍最多 6,000 字符、历史最多 6 份；超限停止并记录原因，不静默删减审阅依据。最大输出与等待时间保持原配置。
+
+查重读取全库来源与真实研究历史，不只比较当前轮次的配置 ID。URL 去掉 fragment 和明确的跟踪参数，保留内容查询参数；arXiv 的 abs/pdf 与版本 URL 归同一论文身份。同身份、同版本且内容未变时跳过；仅 URL 表达变化不算更新，版本或正文确实变化时另存更新研究，不覆盖原来源及人工笔记。已有绑定轮次继续保留原配置快照，不能将新配置套到旧轮次 ID；本次容量调整用于之后的新轮次。
+
 在仓库根目录使用已安装会员依赖的环境运行：
 
 ```sh
@@ -48,8 +52,12 @@
 ```sh
 .venv-membership/bin/python workflows/validate.py --include-test
 .venv-membership/bin/python -m unittest discover -s tests -p 'test_cycle.py' -v
+.venv-membership/bin/python -m unittest discover -s tests -p 'test_url_history_dedup.py' -v
+.venv-membership/bin/python -m unittest discover -s tests -p 'test_admission.py' -v
 git diff --check
 ```
+
+2026-10-19 容量与查重调整的离线验收：6 项轮次、7 项 URL 历史及 4 项正式准入检查全部通过。新增容量用例使用解析器、真实阶段代码及模拟模型完成 5 份资料的独立审阅与 Insight，实际 Insight 生成/审阅输入为 51,346/52,276 字符，均在 60,000 上限内；不把模拟结果视为新的真实会员研究。正式资料、历史检查点、人工笔记和 Obsidian 配置均未修改，新增真实模型调用为 0。
 
 workflow 提交并推送到默认分支后，可从 GitHub Actions 页面选择 **ResearchDesk checks → Run workflow**，或使用已登录的 GitHub CLI：
 

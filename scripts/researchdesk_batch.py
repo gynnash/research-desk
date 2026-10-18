@@ -273,7 +273,8 @@ def call(root, base, events, client, manifest, config, candidate, material, role
 
 
 def same_evidence(left, right, legacy=False):
-    same = (left['metadata'] == right['metadata']
+    from researchdesk_identity import comparison_metadata
+    same = (comparison_metadata(left['metadata']) == comparison_metadata(right['metadata'])
             and left['evidence']['coverage'] == right['evidence']['coverage']
             and left['evidence']['content_hash'] == right['evidence']['content_hash'])
     if not same:
@@ -282,7 +283,11 @@ def same_evidence(left, right, legacy=False):
         # The original one-paper runner supplied the complete abstract but had no
         # material/metadata hash fields. Never extend this exception to blog excerpts.
         return left['evidence']['coverage'] == 'abstract_only'
-    return (left.get('metadata_hash') == right.get('metadata_hash')
+    # metadata_hash binds each original candidate, including the URL as it was
+    # collected. Compare its underlying fields so a tracking/fragment or arXiv
+    # abs/pdf spelling change cannot cause another model study. Do not rewrite
+    # old candidates, hashes, checkpoints or request fingerprints.
+    return (left.get('upstream_updated_at') == right.get('upstream_updated_at')
             and bool(left['evidence'].get('evidence_sha256'))
             and left['evidence']['evidence_sha256'] == right['evidence'].get('evidence_sha256'))
 
@@ -312,13 +317,15 @@ def previous_candidates(root, base, backend):
 
 
 def classify(root, base, candidate, backend, seen):
-    keys = set(candidate.get('identity_keys', store.identities(candidate['metadata'])))
+    # Recompute read-only matching keys from metadata. Old persisted keys remain
+    # part of their original proof, while current URL policy applies to history.
+    keys = set(store.identities(candidate['metadata']))
     if keys & seen:
         return {'action': 'blocked', 'reason': 'same_batch_identity_conflict'}
     seen.update(keys)
     matched = []
     for prior_base, prior, result, events in previous_candidates(root, base, backend):
-        if keys & set(prior.get('identity_keys', store.identities(prior['metadata']))):
+        if keys & set(store.identities(prior['metadata'])):
             matched.append((prior_base, prior, result, events))
     from researchdesk_identity import aliases, resolve
     mapping = aliases(root)

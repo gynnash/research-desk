@@ -104,7 +104,7 @@ def load_config(root, path):
         raise store.OfflineError('模型必须是明确的目录 slug')
     if config['models']['generation'] == config['models']['review']:
         raise store.OfflineError('Insight 生成与独立审阅须为不同的实际模型')
-    ranges = {'max_calls': (2, 4), 'month_max_calls': (2, 1000), 'max_input_chars': (1000, 30000),
+    ranges = {'max_calls': (2, 4), 'month_max_calls': (2, 1000), 'max_input_chars': (1000, 60000),
               'max_output_chars': (1000, 12000), 'timeout_seconds': (1, 120), 'max_revisions': (0, 1)}
     research_inputs.fields(config['budget'], ranges, 'Insight 预算')
     for name, (low, high) in ranges.items():

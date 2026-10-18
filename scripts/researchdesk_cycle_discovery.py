@@ -116,8 +116,8 @@ def discover(root, config, cycle_id, fetcher=None):
     start, end = _instant(config['window_start']), _instant(config['window_end'])
     if start >= end:
         raise store.OfflineError('Cycle 时间窗必须递增')
-    bounds = {'max_candidates': (1, 20), 'max_documents': (1, 2),
-              'max_per_source': (1, 1), 'evidence_max_chars': (200, 10000)}
+    bounds = {'max_candidates': (1, 20), 'max_documents': (1, 5),
+              'max_per_source': (1, 2), 'evidence_max_chars': (200, 10000)}
     values = {}
     for key, (low, high) in bounds.items():
         value = limits.get(key, 6000 if key == 'evidence_max_chars' else None)

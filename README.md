@@ -12,6 +12,8 @@ ResearchDesk 是一个以 Markdown、YAML、GitHub 和 Obsidian 为基础的 AI 
 
 [正式入库与启用验收](workflows/formal-admission-acceptance-2026-10-19.md)已完成：GitHub 自动创建 7 份正式 Markdown 并同步回现有 Obsidian 库，包含两条来源、两份单来源研究、一份综合报告、一条洞察和一张待确认选题，新增模型调用为 0。定时开关已启用，每周二、周五北京时间 09:00；首次计划为 2026-10-20 09:00，实际首个定时执行尚未发生。`reports/<topic>/admissions/<cycle-id>/` 保存计划、身份映射及输入输出散列，原有笔记保持不变；Writing 仍需人工确认后另行接入。
 
+当前新研究轮次最多处理 **5 份资料**，每个来源最多 2 份；每个来源最多检查 20 条候选，实际研究数量取决于新资料、来源可用性和剩余预算。正式资料、测试历史及同轮候选按规范 URL、arXiv 基础编号和 DOI 查重；跟踪参数或页内锚点变化不触发重新研究，真实版本或正文变化才生成独立更新材料。Research 最多 12 次请求，Insight 最多 4 次，共享每轮 16 次及月度 100 次上限。历史已绑定配置与回执不改。[真实选题确认入口设计](workflows/topic-confirmation-mvp.md)采用本地确认页面，供用户核对选题、角度、受众和证据版本；本轮仅完成设计，未实现页面或启动真实 Writing。
+
 [首个自动发现轮次](reports/test/agent-memory/cycles/cycle-agent-memory-20261019/acceptance-local.yaml)已完成本地真实验收：两份研究、综合报告、两条洞察及两张待确认选题，8 次会员请求；Research 后中断恢复及完整缓存重放没有重复调用。来源仅扫描有限列表，整体回执保留 `partial`，不声称全量覆盖。
 
 [GitHub → Mac → Obsidian 验收](reports/test/agent-memory/cycles/cycle-agent-memory-gh-20261019/acceptance.md)也已通过：手动派发真实研究，7 次会员请求产出两份研究、综合报告、1 条洞察和1张待确认选题，工作流自动提交测试结果并同步回现有 Vault；跨工作副本缓存重放新增调用为 0。配置支持用户在自己的本地或远程主机部署，当前实际验证的是这台 Mac。
