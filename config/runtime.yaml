@@ -1,0 +1,14 @@
+# Installed on the current Mac; all personal files stay outside Git and Obsidian.
+# setup installs a user LaunchAgent; run as your normal user, without sudo.
+schema_version: 1
+environment: local
+runner:
+  directory: '~/Library/Application Support/ResearchDesk/actions-runner'
+  labels:
+    - researchdesk
+  name: researchdesk-local
+membership:
+  # null reuses ResearchDesk's default profile on this machine, without copying it.
+  profile: null
+python:
+  venv: '~/Library/Application Support/ResearchDesk/runtime-venv'

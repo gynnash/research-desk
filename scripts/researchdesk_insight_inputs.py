@@ -118,7 +118,11 @@ def load_config(root, path):
         raise store.OfflineError('须明确登记 1–4 个通过审阅的 Research 批次')
     receipts = set()
     for entry in config['research_inputs']:
-        research_inputs.fields(entry, {'receipt', 'config'}, 'Research 输入')
+        research_inputs.fields(entry, {'receipt', 'config', 'item_keys'} if 'item_keys' in entry else {'receipt', 'config'}, 'Research 输入')
+        if 'item_keys' in entry and (not isinstance(entry['item_keys'], list) or not entry['item_keys']
+                or any(not isinstance(key, str) or not store.SAFE_ID.fullmatch(key) for key in entry['item_keys'])
+                or len(set(entry['item_keys'])) != len(entry['item_keys'])):
+            raise store.OfflineError('Research 选定单项必须是非空、唯一的稳定ID列表')
         _receipt_path(root, entry['receipt'], topic)
         if (not isinstance(entry['config'], str) or Path(entry['config']).is_absolute()
                 or Path(entry['config']).as_posix() != entry['config']):
@@ -178,7 +182,7 @@ def _checked_research(root, config, entry):
     if (type(manifest.get('schema_version')) is not int or manifest.get('schema_version') != 1
             or type(receipt.get('schema_version')) is not int or receipt.get('schema_version') != 1
             or manifest.get('production_accepted') is not False or receipt.get('production_accepted') is not False
-            or receipt.get('status') != 'test_accepted' or receipt.get('receipt_path') != entry['receipt']
+            or receipt.get('status') not in ({'test_accepted', 'partial'} if 'item_keys' in entry else {'test_accepted'}) or receipt.get('receipt_path') != entry['receipt']
             or receipt.get('batch_id') != Path(base).name or manifest.get('batch_id') != Path(base).name
             or manifest.get('config_sha256') != original_config['_config_sha256']
             or manifest.get('topics_sha256') != original_config['_topics_sha256']
@@ -198,17 +202,24 @@ def _checked_research(root, config, entry):
     completed = [event for event in events if event['type'] == 'call_completed']
     finished = [event for event in events if event['type'] == 'item_finished']
     expected_keys = [source['id'] for source in original_config['sources']]
+    selected_keys = set(entry.get('item_keys', expected_keys))
+    if not selected_keys.issubset(expected_keys):
+        raise store.OfflineError('选定 Research 单项不属于该批次')
     actual_models = sorted({event['model_id'] for event in completed})
-    if (not reserved or len(reserved) != len(completed)
+    if (not reserved or ('item_keys' not in entry and len(reserved) != len(completed))
             or receipt.get('reserved_calls') != len(reserved) or receipt.get('completed_calls') != len(completed)
             or receipt.get('actual_models') != actual_models or actual_models != sorted(set(manifest['models'].values()))
             or receipt.get('usage') != [event.get('usage') for event in completed]
             or not isinstance(receipt.get('items'), list) or any(not isinstance(item, dict) for item in receipt['items'])
             or [item.get('key') for item in receipt['items']] != expected_keys
-            or len(finished) != len(expected_keys) or {event['key'] for event in finished} != set(expected_keys)):
+            or (('item_keys' not in entry and len(finished) != len(expected_keys))
+                or not selected_keys.issubset({event['key'] for event in finished})
+                or not {event['key'] for event in finished}.issubset(expected_keys))):
         raise store.OfflineError('Research 汇总与真实请求及逐项终态不一致')
     for item in receipt['items']:
         key = item['key']
+        if key not in selected_keys:
+            continue
         result_path = '%s/items/%s/result.yaml' % (base, key)
         result = store.checked_yaml(root, result_path)
         event = next(event for event in finished if event['key'] == key)
@@ -223,6 +234,8 @@ def _checked_research(root, config, entry):
         'events': [{'path': '%s/events/%06d.yaml' % (base, i + 1),
                     'sha256': store.digest(store.safe_path(root, '%s/events/%06d.yaml' % (base, i + 1)).read_bytes())}
                    for i in range(len(events))]}
+    if 'item_keys' in entry:
+        proof['item_keys'] = entry['item_keys']
     return base, manifest, original_config, receipt, proof
 
 
@@ -261,6 +274,8 @@ def _research_evidence(root, config, fetcher):
     for entry in config['research_inputs']:
         base, manifest, original_config, receipt, proof = _checked_research(root, config, entry)
         for source, item in zip(original_config['sources'], receipt['items']):
+            if 'item_keys' in entry and item['key'] not in entry['item_keys']:
+                continue
             path = '%s/items/%s/candidate.yaml' % (base, item['key'])
             plan = store.checked_yaml(root, path)
             candidate = plan.get('candidate', {})

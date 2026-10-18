@@ -1,0 +1,19 @@
+# Copy into config/runtime.yaml ON THE REMOTE MACHINE after connecting using
+# your own SSH configuration. ResearchDesk never opens SSH or transfers tokens.
+# Clone your own repository there, install Python 3.9+/gh/curl, authorize gh,
+# then run the official ResearchDesk membership login on that host.
+# Linux setup uses sudo -n only for svc.sh install/start; arrange service rights
+# yourself. On a remote Mac use the local Mac path pattern and no sudo.
+schema_version: 1
+environment: remote
+runner:
+  directory: '~/.local/share/ResearchDesk/actions-runner'
+  labels:
+    - researchdesk
+  name: researchdesk-remote
+membership:
+  # Configure an independently authorized, owner-only profile on this host.
+  # Do not copy another user's OAuth credentials or a local Codex session.
+  profile: '~/.local/share/ResearchDesk/chatgpt'
+python:
+  venv: '~/.local/share/ResearchDesk/runtime-venv'

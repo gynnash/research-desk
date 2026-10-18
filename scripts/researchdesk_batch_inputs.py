@@ -23,9 +23,10 @@ def config_path(root, relative):
             path = path.relative_to(root)
         except ValueError as exc:
             raise store.OfflineError('配置必须位于选定工作台的 config 目录') from exc
-    if (not path.parts or path.parts[0] != 'config' or '..' in path.parts
+    runtime = bool(re.fullmatch(r'reports/test/[a-z0-9-]+/cycles/[a-z0-9-]+/configs/(?:research|insight)\.yaml', path.as_posix()))
+    if (not path.parts or (path.parts[0] != 'config' and not runtime) or '..' in path.parts
             or '\\' in str(path) or path.suffix not in {'.yaml', '.yml'}):
-        raise store.OfflineError('配置必须是 config 下的 YAML，禁止越界路径')
+        raise store.OfflineError('配置须位于 config 或受限轮次配置快照，禁止越界路径')
     current = root
     for part in path.parts:
         current = current / part

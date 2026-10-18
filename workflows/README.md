@@ -7,6 +7,10 @@
 
 总体流程和正式入库仍按设计分阶段实现。已有真实采集、官方会员本地后端、单篇摘要真实研究审阅及 YAML 驱动的 Research、Insight 测试闭环；当前增加 Writing 的虚构确认及离线模拟写作。真实人工确认入口和会员 Writing 后端留待后续阶段，没有定时任务或公众号发布。
 
+## Research → Insight 研究轮次
+
+[轮次入口与 GitHub 验收](research-cycle.md)将按方向发现资料、查重、Research 独立审阅和 Insight 选题串联，结果只写测试目录；真实执行及恢复结果以轮次回执为准。GitHub 的 `ResearchDesk checks` 只执行离线规范与关键轮次检查，不使用会员凭据、调用研究模型或写入仓库；真实研究由本地或后续验收的执行主机完成。每周二、周五 09:00 的定时与正式自动入库尚未启用。
+
 ## Writing 离线闭环
 
 [Writing 虚构确认、三阶段审阅与验收](writing-agent-offline.md)使用固定虚构选题与证据，确认记录明确为 `origin: offline_fixture`。大纲、初稿和候选稿各自先通过确定性校验和独立模拟审阅，再进入下一阶段；模型不能自行批准确认。文章只写 `articles/test/<topic>/<batch-id>/`，账本只写 `reports/test/<topic>/writing-runs/<batch-id>/`，不覆盖旧稿。

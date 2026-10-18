@@ -1,0 +1,37 @@
+schema_version: 1
+mode: research_cycle_test
+backend: chatgpt_plan
+topic: agent-memory
+topics_file: config/research_topics.yaml
+window:
+  initial_days: 7
+  overlap_hours: 48
+discovery:
+  max_candidates: 8
+  max_documents: 2
+  max_per_source: 1
+  evidence_max_chars: 6000
+  sources:
+    - id: arxiv
+      adapter: arxiv
+      entry_url: https://export.arxiv.org/api/query
+    - id: letta
+      adapter: letta
+      entry_url: https://www.letta.com/blog/
+    - id: langchain
+      adapter: langchain
+      entry_url: https://www.langchain.com/blog
+models:
+  research: gpt-6-luna
+  insight: gpt-6-luna
+  review: gpt-6.1-sol
+budget:
+  max_calls_per_cycle: 10
+  research_max_calls: 6
+  insight_max_calls: 4
+  max_input_chars: 30000
+  max_output_chars: 8000
+  timeout_seconds: 120
+  max_revisions: 1
+history:
+  max_documents: 6
