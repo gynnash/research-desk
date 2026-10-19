@@ -17,3 +17,5 @@
 确定性复核通过：原确认、正式证据、输入提示绑定、响应模型身份、独立逐段审阅、三稿确切渲染字节与输出散列一致，所有本地引用文件存在，原笔记散列全部未变。R1 仍只有论文摘要、R2 仍只有博客节选、H1 仍是未经本次独立核验的历史人工笔记。稿件保留这些范围，不声称复现实验或证明行业趋势。
 
 调用、实际 usage、阶段与输出散列见 [receipt.yaml](receipt.yaml)；原响应与审阅保留在 `checkpoints/`、`stages/`，停止快照在 `partial/`。配置、正式选题、研究资料与人工笔记均未改写。可复现入口及零推理离线验收命令见[真实 Writing 说明](../../../../../workflows/writing-agent-member.md)。
+
+Vault 外独立工作目录已用生产 `researchdesk_writing_job.py execute --max-new-calls 0` 再次执行成功，随后 `export` 与 `apply` 均通过：导出 0 个新文件、保存 0 个新文件，仍为原来的 6 次完成请求，没有重复消费或改写三稿。GitHub 同一确认的[零调用复核作业](https://github.com/gynnash/research-desk/actions/runs/39285266719)已派发；记录本次本地复核时远端仍在排队，不能视为远端成功回执。
