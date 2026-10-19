@@ -1,7 +1,7 @@
 # ResearchDesk 三 Agent 总体架构
 
 - 版本：1.0；修订日期：2026-10-20。
-- 状态：**Research / Insight、GitHub 到 Mac、正式入库与 Obsidian 同步均已验收；每周二/周五北京时间09:00已启用，首次定时结果尚待发生。真实页面确认与会员 Writing 已接通，写作仅输出 test，不发布公众号**。
+- 状态：**Research / Insight、GitHub 到 Mac、正式入库与 Obsidian 同步均已验收；每周二/周五北京时间03:00已配置启用，实际定时结果以运行回执为准。真实页面确认与会员 Writing 已接通，写作仅输出 test，不发布公众号**。
 - 实施进度：已有[离线骨架](offline-research.md)、[真实资料采集测试](real-source-collection.md)和[本地会员真实研究与独立审阅](local-membership-analysis.md)。[配置驱动的 Research 批次闭环](configurable-research-batch.md)已通过一篇论文摘要与一篇博客节选的真实验收，共 4 次请求，独立审阅均通过，计划中断后补跑与完整缓存补跑均未重复调用；[验收记录](../reports/test/agent-memory/research-batches/configured-research-20261019/acceptance.md)只在测试区。[Insight 测试闭环](insight-agent-test.md)也已通过[真实验收](../reports/test/agent-memory/insight-runs/insight-agent-memory-20261019/acceptance.md)：两份已审阅 Research 与五份显式历史基线生成综合报告、2 条洞察和 2 张待确认选题卡，独立模型审阅通过；4 次请求含一次修订、语法规范化及独立格式确认，补跑未增加调用。[Writing 离线闭环](writing-agent-offline.md)已通过[虚构样例验收](../reports/test/agent-memory/writing-runs/writing-offline-20261019/acceptance.md)：三阶段独立模拟审阅通过，初稿修订一次，共 8 次模拟调用，三个断点恢复及缓存补跑未追加调用，会员调用为 0。[正式准入及定时启用](formal-admission-acceptance-2026-10-19.md)已完成：GitHub 新增 7 份正式 Markdown 并同步 Obsidian，0 新增模型调用；固定时间槽调度读取 `automation.yaml`，已在正式验收后开启。真实人工确认及 Git 保存已实现；[会员 Writing](writing-agent-member.md)读取用户确认，依次生成并独立审阅大纲、初稿和候选稿，仍只写 test。
 - 目标：构建长期运行的 AI 技术研究与内容创作系统，持续收集一手资料、积累研究证据、发现技术变化，并为微信公众号提供可追溯的选题与文章。
 - 基础：沿用 Markdown、YAML、GitHub 与 Obsidian；不引入数据库或复杂 Agent 框架。
@@ -14,7 +14,7 @@ Research、Insight、Writing 是三个业务角色；它们可以由受控脚本
 
 ```mermaid
 flowchart TD
-    T[每周二、周五北京时间 09:00] --> R[Research：采集、查重、研究与归纳]
+    T[每周二、周五北京时间 03:00] --> R[Research：采集、查重、研究与归纳]
     S[一手论文与技术博客] --> R
     K[(GitHub 共享知识库与历史证据)] --> R
     R --> QR[独立模型审阅 + 确定性校验]
@@ -102,7 +102,9 @@ GitHub 是共享资料与版本记录的主线，`main` 表示已正式入库的
 
 ## 6. 触发、运行与失败恢复
 
-Research 已启用**每周二、周五北京时间 09:00**的 GitHub Actions 调度；UTC cron 为 `0 1 * * 2,5`，计划时间不保证准点，首个自然定时结果仍待发生。当前自动轮次先完成 Research，再以通过的输入运行 Insight，经整体准入后保存正式研究、洞察和候选选题；同批内容不变不重复分析。手动入口用于验收和同槽恢复。新轮次最多研究 5 份，每来源最多 2 份，Research 12 次、Insight 4 次；URL 历史及同轮查重、独立更新与人工笔记保护继续生效。Writing 不随定时研究启动。
+Research 已启用**每周二、周五北京时间 03:00**的 GitHub Actions 调度；UTC cron 为 `0 19 * * 1,4`，对应前一天周一、周四 UTC 19:00，计划时间不保证准点，实际自然定时结果以运行回执为准。当前自动轮次先完成 Research，再以通过的输入运行 Insight，经整体准入后保存正式研究、洞察和候选选题；同批内容不变不重复分析。手动入口用于验收和同槽恢复。新轮次最多研究 5 份，每来源最多 2 份，Research 12 次、Insight 4 次；URL 历史及同轮查重、独立更新与人工笔记保护继续生效。Writing 不随定时研究启动。
+
+个人 Codex 聊天另在每周二、周五北京时间 09:00 只读检查当天研究状态和已有正式结果，汇报发现、洞察及候选选题；未完成或失败时说明状态，不启动第二轮研究。该任务独立保存在 Codex 应用中，不由 GitHub 自动创建。当前 Mac 凌晨研究时需保持开机、联网及 runner 会话可用，上午汇报需 Codex 应用可运行。
 
 每批使用持久化 YAML 清单和 Git 分支记录固定时间窗、身份键、预留 ID、输入/证据散列、阶段、调用预留、费用、输出和处理决定。不以临时 runner、缓存或 artifact 作为唯一状态，不引入数据库。
 
@@ -131,7 +133,7 @@ Writing 离线骨架固定大纲、初稿、候选稿三个阶段：前置阶段
 
 ## 8. 分阶段实施与验收
 
-当前新增阶段为[正式准入](formal-admission.md)：`admission.yaml` 控制白名单与保护，`reports/<topic>/admissions/<cycle-id>/` 保存计划、有效 ID 映射和最终散列。旧测试回执不修改；新正式文件创建完成且远端确认后才作为共享正式资料。`automation.yaml` 控制启用时间、每周二/五 09:00 固定槽与 14 天内每次一个槽的补跑。调度代码存在不等于已经启用或完成首轮定时研究。
+当前新增阶段为[正式准入](formal-admission.md)：`admission.yaml` 控制白名单与保护，`reports/<topic>/admissions/<cycle-id>/` 保存计划、有效 ID 映射和最终散列。旧测试回执不修改；新正式文件创建完成且远端确认后才作为共享正式资料。`automation.yaml` 控制启用时间、每周二/五 03:00 固定槽与 14 天内每次一个槽的补跑。调度代码存在不等于已经启用或完成首轮定时研究。
 
 1. **配置驱动的 Research 测试批次**：已验收 YAML 主题、来源、模型和预算下的一篇论文摘要与一篇博客节选，接通真实会员研究、独立审阅、失败补跑与测试回执，既有资料保持不变。
 2. **综合研究、Insight 与选题测试**：已用两份已审阅 Research 与五份显式历史基线，完成跨来源综合报告、2 条洞察和 2 张待确认选题卡的真实独立审阅，并验证中断恢复与缓存补跑不追加请求。证据不足、无选题、拒绝、预算及门禁失败另由离线测试覆盖；全部结果只写测试目录，不将模拟场景冒称真实模型验收。

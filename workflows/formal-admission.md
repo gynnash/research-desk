@@ -43,4 +43,4 @@ gh workflow run researchdesk-manual.yml --ref main \
 
 ## 实际部署
 
-2026-10-19 已完成[GitHub 正式回存与 Obsidian 同步验收](formal-admission-acceptance-2026-10-19.md)，随后启用每周二、周五北京时间 09:00 的研究；实际首个定时结果须以运行回执为准。
+2026-10-19 已完成[GitHub 正式回存与 Obsidian 同步验收](formal-admission-acceptance-2026-10-19.md)，随后启用当时每周二、周五北京时间 09:00 的研究；当前计划已调整为 03:00，实际定时结果须以运行回执为准。

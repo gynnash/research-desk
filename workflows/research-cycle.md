@@ -4,7 +4,7 @@
 
 2026-10-19 已通过[本地断点与缓存验收](../reports/test/agent-memory/cycles/cycle-agent-memory-20261019/acceptance-local.yaml)，并完成[GitHub → 当前 Mac → 测试结果回存 → Obsidian 的真实验收](../reports/test/agent-memory/cycles/cycle-agent-memory-gh-20261019/acceptance.md)。来源扫描是有边界的候选列表；阶段通过不表示全量检索完成。本轮增加受限正式准入与定时入口，实际验收及启用状态以远端配置和回执为准。
 
-本地分析使用用户自己的官方 ChatGPT 会员授权。GitHub 的 `ResearchDesk checks` 只做离线校验；[自托管执行器](self-hosted-worker.md)在当前 Mac 上使用仓库外配置执行健康检查或有限研究轮次，并通过独立发布 job 保存检查点。Research 与 Insight 先写测试区，准入规则通过后仅创建允许的正式新文件。每周二、周五北京时间 09:00 的 cron 由 `automation.yaml` 启用开关控制，正式准入验收后才开启，不启动 Writing 或发布公众号。
+本地分析使用用户自己的官方 ChatGPT 会员授权。GitHub 的 `ResearchDesk checks` 只做离线校验；[自托管执行器](self-hosted-worker.md)在当前 Mac 上使用仓库外配置执行健康检查或有限研究轮次，并通过独立发布 job 保存检查点。Research 与 Insight 先写测试区，准入规则通过后仅创建允许的正式新文件。每周二、周五北京时间 03:00 的 cron 由 `automation.yaml` 启用开关控制，正式准入验收后才开启，不启动 Writing 或发布公众号。
 
 ## 配置与运行
 
@@ -73,4 +73,4 @@ gh run view <run-id> --log-failed
 
 当前选择用户自己的 Mac，按[自托管部署说明](self-hosted-worker.md)配置 runner、仓库外 venv 与会员 profile；远程长期主机另有配置示例。会员凭据、自动刷新、工作目录、故障恢复和 Git 发布权限分别验收；GitHub 临时 runner 的离线检查通过不证明它已有会员推理资格。
 
-已完成[受限正式入库、Obsidian 同步和定时启用验收](formal-admission-acceptance-2026-10-19.md)；首次定时计划为 2026-10-20 北京时间09:00，实际执行结果尚待发生。开源用户沿用同一代码，自行配置主题、来源、模型、预算、授权和部署环境；个人授权、账户信息及私有笔记不得随示例分发。
+已完成[受限正式入库、Obsidian 同步和定时启用验收](formal-admission-acceptance-2026-10-19.md)；验收当时启用每周二、周五北京时间09:00，现调整为03:00；实际执行结果以运行回执为准。开源用户沿用同一代码，自行配置主题、来源、模型、预算、授权和部署环境；个人授权、账户信息及私有笔记不得随示例分发。

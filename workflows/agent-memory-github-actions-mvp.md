@@ -1,7 +1,7 @@
 # Agent Memory 定时研究任务 MVP 设计
 
 - 版本：1.0；修订日期：2026-10-20。
-- 状态：**Research / Insight、GitHub 正式入库与 Obsidian 同步已验收；周二/周五北京时间09:00已启用**。[远端准入回执](formal-admission-acceptance-2026-10-19.md)已保存；首个定时成功仍须等待实际执行，启用值读取 `config/automation.yaml`。
+- 状态：**Research / Insight、GitHub 正式入库与 Obsidian 同步已验收；周二/周五北京时间03:00已启用**。[远端准入回执](formal-admission-acceptance-2026-10-19.md)已保存；实际定时成功仍须核对运行回执，启用值读取 `config/automation.yaml`。
 - 实施进度：已有[离线骨架](offline-research.md)、[真实来源采集](real-source-collection.md)、[配置驱动 Research](configurable-research-batch.md)与[真实 Insight 闭环](insight-agent-test.md)。[GitHub → 当前 Mac → Research / Insight → 测试结果回存 → Obsidian](../reports/test/agent-memory/cycles/cycle-agent-memory-gh-20261019/acceptance.md)已通过手动真实验收，按方向发现资料、读取历史、生成与独立审阅，并校验保存测试检查点。本地/远程主机通过 YAML 配置；本次实际验证当前 Mac。[正式准入](formal-admission.md)已完成远端 7 份 Markdown、0 新增模型调用验收并同步回 Obsidian；启用配置随后设为 true。真实人工确认页面及 Git 保存已实现；[会员 Writing](writing-agent-member.md)已实现真实确认后的三阶段独立审阅，只输出 test。
 - 目标：GitHub Actions 定时发现 Agent Memory 资料，生成带证据的研究记录，经独立审阅模型与规则校验通过后自动入库。
 - 总体架构见[三 Agent 总体架构](three-agent-architecture.md)。沿用[主题配置](../config/research_topics.yaml)、[Schema v1](source-schema.md)、[维护规范](maintenance.md)和现有模板，保持 Markdown + YAML。
@@ -14,7 +14,7 @@
 
 本版已实施 Research / Insight 的配置驱动测试批次与 GitHub 手动派发：处理 YAML 启用的方向，首个方向为 `agent-memory`，`agent-rl` 继续停用。当前先创建隔离测试研究、综合报告、洞察、待确认选题及回执，再经独立审阅绑定与准入规则创建新的正式资料。真实 Writing 通过独立手动派发作业执行，仍只输出 test；定时是否开启以自动化配置为准，不连接公众号发布接口。
 
-最终业务链路为：**周二/周五 09:00 自动 Research → 独立审阅后受限入库 → 自动综合与 Insight → 独立审阅后保存洞察和公众号候选选题 → 用户明确确认选题、角度、受众及输入版本 → Writing 生成并审阅大纲、初稿、候选稿 → 用户决定是否发布**。独立审阅是三个 Agent 共用的能力。正常研究、洞察和选题无需人工逐篇审阅；模型通过不能替用户确认选题。确认需绑定选题与证据散列，内容变化后重获确认，模型无权创建自己的批准记录。
+最终业务链路为：**周二/周五 03:00 自动 Research → 独立审阅后受限入库 → 自动综合与 Insight → 独立审阅后保存洞察和公众号候选选题 → 用户明确确认选题、角度、受众及输入版本 → Writing 生成并审阅大纲、初稿、候选稿 → 用户决定是否发布**。独立审阅是三个 Agent 共用的能力。正常研究、洞察和选题无需人工逐篇审阅；模型通过不能替用户确认选题。确认需绑定选题与证据散列，内容变化后重获确认，模型无权创建自己的批准记录。
 
 **正常入库流程不要求人工审阅或人工点击合并。** 内容须有可核实的原始来源、稳定身份、明确阅读范围、可定位的证据，并同时通过独立模型审阅和确定性检查。运行成功、模型通过、准入验证与远端保存分别记录；只有通过的最终产物及准入清单进入 `main`，才算共享正式入库。研究消费者仅读取这些产物，不把检查点草稿或失败记录当成研究结论。
 
@@ -26,7 +26,7 @@
 
 | 项目 | MVP 决策 |
 | --- | --- |
-| 主入口 | **每周二、周五北京时间 09:00**，每周两次。UTC cron 为 `0 1 * * 2,5`，对应 `Asia/Shanghai`；workflow 已包含该事件，`automation.yaml` 的 `enabled` 控制是否派发真实研究。 |
+| 主入口 | **每周二、周五北京时间 03:00**，每周两次。UTC cron 为 `0 19 * * 1,4`（周一、周四 UTC 19:00），对应 `Asia/Shanghai`；workflow 已包含该事件，`automation.yaml` 的 `enabled` 控制是否派发真实研究。 |
 | 执行环境 | GitHub Actions 手动派发、任务记录及受限测试结果回存已验证；会员分析使用当前 Mac 自托管执行器，授权与依赖保存在仓库外。提供远程主机配置，用户在所选主机自行部署授权。定时已配置启用，首轮实际定时、长期在线可用性与其他主机资格仍待验收，不假设 GitHub 临时 runner 可直接使用会员。 |
 | 辅助入口 | 已提供 `workflow_dispatch` 的 health/discover/run/admit/catchup；补跑保留固定槽 ID、历史预留和已保存阶段，未知请求不自动重发。 |
 | 扫描时间窗 | 首次最近 7 天；随后从各来源最后已合并的完整扫描游标向前重叠 48 小时，扫描到本批固定截止时间。周二覆盖上次周五以来，周五覆盖上次周二以来，不能只查运行当天。 |
@@ -45,7 +45,9 @@ URL 查重使用全库正式及测试来源和真实研究历史，也覆盖同�
 
 研究、修订、审阅、复审和失败重试都计入调用及用量预算。请求前持久化调用预留，关闭隐式重试；结果未知不能返还预留。会员真实额度不可观测时标记未知，不将模拟单位换算成真实费用；具体用量门禁按会员后端验收。若以后另行采用付费 API，需另外预留最大费用。额度不足时留下待办，不能新建批次绕过限制或自动切换付费后端。
 
-GitHub 的定时任务可能延迟或丢失，09:00 是计划时间；本设计保留用户指定的整点，不另行调整时间。恢复完整性依靠游标和清单。参见 [GitHub schedule 文档](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#schedule)。
+GitHub 的定时任务可能延迟或丢失，03:00 是计划时间；本设计保留用户指定的整点，不另行调整时间。恢复完整性依靠游标和清单。参见 [GitHub schedule 文档](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#schedule)。
+
+当前 Mac 在凌晨研究时需保持开机、联网且 runner 用户会话可用；上午 Codex 汇报另需应用可运行。研究未完成或失败时，简报应说明实际状态，不冒充已生成总结。
 
 ## 3. 资料来源与筛选
 
@@ -127,7 +129,7 @@ arXiv 的 `published` 是首次版本日期，`updated` 是当前版本更新时
 
 自动化无权改模板、Schema、主题配置、已有笔记、既有研究报告、洞察、文章及 `.obsidian/`。检查点和 PR 分支发现人工编辑、同名路径或非本任务提交时，保留内容并阻止自动覆盖。按预期远端 head 推送，不强推、不自动解决笔记冲突；分支被占用时换新命名的发布分支需记录关联，并重新审阅合并候选，不能删除原分支来恢复。
 
-`batch-id` 使用固定逻辑时间槽，如 `agent-memory-20261020T010000Z`（周二北京时间 09:00），`attempt` 递增并关联 GitHub run ID。补跑沿用批次时间窗、来源身份和预留 UUID；不得重新生成 ID 或重置额度。
+`batch-id` 使用固定逻辑时间槽，如 `agent-memory-20261019T190000Z`（周一 UTC 19:00，即周二北京时间 03:00；示例格式，实际 `cycle_id` 以程序生成值为准），`attempt` 递增并关联 GitHub run ID。补跑沿用批次时间窗、来源身份和预留 UUID；不得重新生成 ID 或重置额度。
 
 ## 7. 后续 PR 方案：状态、游标与失败补跑
 
@@ -154,7 +156,7 @@ arXiv 的 `published` 是首次版本日期，`updated` 是当前版本更新时
 
 无新资料且扫描完整时，通过规则校验的扫描回执可单独 PR 自动合并；它不包含研究结论，不需要调用模型“批准零结果”。只有审阅拒绝项的批次也可合并经过校验的处理决定/用量回执，不能混入未通过正文。全来源抓取失败则运行失败并保留检查点，不推进扫描游标。
 
-定时、补跑、检查点写入和发布采用同一 concurrency 组，`cancel-in-progress: false`；待运行队列不承担持久补跑职责，参见 [GitHub concurrency 文档](https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/control-workflow-concurrency)。Summary 显示来源覆盖、各决策数量、用量、待办、合并状态和最近完整扫描。首版只使用 GitHub 运行状态/PR，不增加外部消息渠道。
+定时、补跑、检查点写入和发布采用同一 concurrency 组，`cancel-in-progress: false`；待运行队列不承担持久补跑职责，参见 [GitHub concurrency 文档](https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/control-workflow-concurrency)。Summary 显示来源覆盖、各决策数量、用量、待办、合并状态和最近完整扫描。研究工作流保留 GitHub 运行状态；个人 Codex 聊天另于每周二、周五北京时间 09:00 只读汇总运行状态和已有正式结果，不重复研究。Codex 任务独立配置在应用中，不能由研究成功推定已经完成汇报。
 
 ## 8. 后续 PR 方案：权限与审计
 
@@ -178,11 +180,11 @@ arXiv 的 `published` 是首次版本日期，`updated` 是当前版本更新时
 
 后续再实现固定窗口和游标、无人值守主机、受限 GitHub PR 自动合并及 Insight/选题链路，验证仓库规则兼容性。Writing 需要独立的人工确认入口及版本绑定验收，不能由模型审阅自动放行。
 
-验收通过且另获启用授权后，才添加周二/周五 09:00 的 schedule。基础设施首次验收与启用可由项目所有者决定，日常研究入库不设置人工内容审阅门槛。
+验收通过且另获启用授权后，才添加周二/周五 03:00 的 schedule。基础设施首次验收与启用可由项目所有者决定，日常研究入库不设置人工内容审阅门槛。
 
 | 验收场景 | 必须观察到的结果 |
 | --- | --- |
-| 周二/周五运行，或中间漏跑 | 对应北京时间 09:00，固定窗口覆盖上个有效游标以来的资料，重叠去重，不只查当天。 |
+| 周二/周五运行，或中间漏跑 | 对应北京时间 03:00，固定窗口覆盖上个有效游标以来的资料，重叠去重，不只查当天。 |
 | 新论文/博客通过 | 两个不同模型独立生成/审阅，证据可定位，规则通过后 PR 自动合并；新来源 `status: inbox`，accepted 可追溯。 |
 | 同模型冒充审阅、模型未配置、审阅超时 | 不自审、不默认通过；无未经审阅的研究正文进入 main。 |
 | revise、reject、格式错误或假 pass | 修订最多一次且重审；阻塞问题不能放行，合格项仍可独立入库。 |

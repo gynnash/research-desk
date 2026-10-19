@@ -5,6 +5,7 @@ import argparse
 from datetime import datetime, timedelta, timezone
 import json
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 import researchdesk_offline as store
 import researchdesk_batch_inputs as common
@@ -25,8 +26,8 @@ def load_config(root):
                           'cycle_config', 'admission_config', 'catchup'}, '调度配置')
     if (type(config['schema_version']) is not int or config['schema_version'] != 1
             or type(config['enabled']) is not bool or config['timezone'] != 'Asia/Shanghai'
-            or config['schedule_utc'] != '0 1 * * 2,5'):
-        raise store.OfflineError('当前调度仅支持周二/周五北京时间09:00')
+            or config['schedule_utc'] != '0 19 * * 1,4'):
+        raise store.OfflineError('当前调度仅支持周二/周五北京时间03:00')
     common.fields(config['catchup'], {'lookback_days', 'max_slots_per_run'}, '补跑配置')
     common.positive(config['catchup']['lookback_days'], 1, 30, 'lookback_days')
     if type(config['catchup']['max_slots_per_run']) is not int or config['catchup']['max_slots_per_run'] != 1:
@@ -57,12 +58,15 @@ def due_slot(root, config, now=None):
     now = now.astimezone(timezone.utc)
     topic = cycle.load_config(root, config['cycle_config'])['topic']
     start = max(instant(config['activated_at']), now - timedelta(days=config['catchup']['lookback_days']))
-    cursor = start.replace(hour=1, minute=0, second=0, microsecond=0)
-    if cursor < start:
+    local_zone = ZoneInfo(config['timezone'])
+    local_start = start.astimezone(local_zone)
+    local_now = now.astimezone(local_zone)
+    cursor = local_start.replace(hour=3, minute=0, second=0, microsecond=0)
+    if cursor < local_start:
         cursor += timedelta(days=1)
-    while cursor <= now:
+    while cursor <= local_now:
         if cursor.weekday() in (1, 4):
-            cycle_id = '%s-%s-0900' % (topic, cursor.strftime('%Y%m%d'))
+            cycle_id = '%s-%s-0300' % (topic, cursor.strftime('%Y%m%d'))
             accepted = 'reports/%s/admissions/%s/accepted.yaml' % (topic, cycle_id)
             if (root / accepted).exists():
                 marker = accepted_marker(root, accepted)
@@ -79,7 +83,7 @@ def due_slot(root, config, now=None):
                     for stage in ('research', 'insight'))
                 if not terminal:
                     return {'cycle_id': cycle_id, 'cycle_config': config['cycle_config'],
-                            'operation': 'run', 'slot_utc': cursor.isoformat()}
+                            'operation': 'run', 'slot_utc': cursor.astimezone(timezone.utc).isoformat()}
         cursor += timedelta(days=1)
     return {'cycle_id': '', 'cycle_config': config['cycle_config'], 'operation': 'run', 'slot_utc': ''}
 

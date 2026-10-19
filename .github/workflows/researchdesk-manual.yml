@@ -2,7 +2,8 @@ name: ResearchDesk research cycle
 
 on:
   schedule:
-    - cron: '0 1 * * 2,5'
+    # Tuesday and Friday 03:00 Asia/Shanghai = Monday and Thursday 19:00 UTC.
+    - cron: '0 19 * * 1,4'
   workflow_dispatch:
     inputs:
       operation:

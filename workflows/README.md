@@ -3,9 +3,11 @@
 ## 总体架构与定时研究设计
 
 - [Research、Insight、Writing 三 Agent 总体架构](three-agent-architecture.md)：定义自动研究、综合洞察、公众号选题，以及人工确认选题后才启动写作的完整流程；独立模型审阅是三者共用能力。
-- [Agent Memory GitHub Actions MVP](agent-memory-github-actions-mvp.md)：每周二、周五北京时间 09:00 的计划入口已准备；按启用配置派发 Research → Insight，独立审阅与规则校验通过后受限正式准入，保留人工笔记保护及失败补跑。
+- [Agent Memory GitHub Actions MVP](agent-memory-github-actions-mvp.md)：每周二、周五北京时间 03:00 的计划入口已准备；按启用配置派发 Research → Insight，独立审阅与规则校验通过后受限正式准入，保留人工笔记保护及失败补跑。
 
 真实采集、官方会员后端、Research → Insight 与 GitHub 到 Mac 的手动轮次已验收；正式准入已实现并通过 7 份 Markdown、0 新增模型调用的远端验收。每周两次调度已启用，最终开关以 [`automation.yaml`](../config/automation.yaml) 为准，定时成功需看实际回执。真实本地确认页现已实现；[会员 Writing](writing-agent-member.md)已接通真实页面确认、三阶段独立审阅及受限测试回存，不发布公众号。
+
+个人 Codex 聊天中的“ResearchDesk 每周研究简报”独立在每周二、周五北京时间 09:00 只读汇总 GitHub 状态和已有正式研究，提供洞察、选题及报告链接；未完成或失败时如实说明，不重复派发研究。该任务保存在 Codex 应用中，开源用户需自行配置。当前 Mac 凌晨研究时需保持开机、联网及 runner 会话可用，上午汇报需 Codex 应用可运行。
 
 ## Research → Insight 研究轮次
 
@@ -71,4 +73,4 @@
 
 ## 正式入库与定时启用验收
 
-[2026-10-19 实际回执](formal-admission-acceptance-2026-10-19.md)：GitHub 创建首批 7 份正式资料并同步 Obsidian，0 次新增模型调用；每周二、周五北京时间 09:00 的开关随后启用，首个计划为 2026-10-20。选题仍待人工确认，Writing 和公众号发布未启动。
+[2026-10-19 实际回执](formal-admission-acceptance-2026-10-19.md)：GitHub 创建首批 7 份正式资料并同步 Obsidian，0 次新增模型调用；验收当时启用每周二、周五北京时间 09:00，当前研究计划已调整为 03:00。该历史验收没有启动 Writing 或公众号发布；实际定时执行结果以运行回执为准。

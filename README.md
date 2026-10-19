@@ -6,11 +6,13 @@ ResearchDesk 是一个以 Markdown、YAML、GitHub 和 Obsidian 为基础的 AI 
 
 同日已完成 [Insight 真实测试](reports/test/agent-memory/insight-runs/insight-agent-memory-20261019/acceptance.md)：基于上述两份 Research 结果和五份历史基线，生成 1 份综合报告、2 条洞察和 2 张待确认选题卡，实际生成与审阅模型不同。共 4 次会员请求、43,163 tokens，包含格式失败响应、一次模型修订及额外独立格式确认；禁用推理的中断恢复与完整缓存补跑均未增加调用。新产物仍只在 `test`，未启动 Writing。验收时的 `10/10` 保留为历史快照；按用户后续授权，当前本仓库月度请求预算已调为 100，累计值随后续研究增加，以账本复核为准；会员剩余额度未知。
 
-目标流程由三个业务 Agent 完成：每周二、周五北京时间 09:00 自动 **Research 采集、研究与归纳 → Insight 综合历史、提炼洞察和公众号候选选题 → 用户确认选题、角度与受众 → Writing 生成大纲、初稿及候选稿**。各阶段共用独立模型审阅和确定性校验，日常研究、洞察和选题无需人工逐篇审批；写作必须绑定用户明确确认的选题版本，发布由用户另行决定。总体边界见[三 Agent 架构](workflows/three-agent-architecture.md)与[定时研究 MVP](workflows/agent-memory-github-actions-mvp.md)。[Insight 测试闭环](workflows/insight-agent-test.md)已生成待确认选题；[Writing 离线闭环](workflows/writing-agent-offline.md)只演练虚构选题的确认及模拟写作。真实本地选题确认页与[会员 Writing 后端](workflows/writing-agent-member.md)已接通：用户确认并同步后，单独派发三阶段测试写作。
+目标流程由三个业务 Agent 完成：每周二、周五北京时间 03:00 自动 **Research 采集、研究与归纳 → Insight 综合历史、提炼洞察和公众号候选选题 → 用户确认选题、角度与受众 → Writing 生成大纲、初稿及候选稿**。各阶段共用独立模型审阅和确定性校验，日常研究、洞察和选题无需人工逐篇审批；写作必须绑定用户明确确认的选题版本，发布由用户另行决定。总体边界见[三 Agent 架构](workflows/three-agent-architecture.md)与[定时研究 MVP](workflows/agent-memory-github-actions-mvp.md)。[Insight 测试闭环](workflows/insight-agent-test.md)已生成待确认选题；[Writing 离线闭环](workflows/writing-agent-offline.md)只演练虚构选题的确认及模拟写作。真实本地选题确认页与[会员 Writing 后端](workflows/writing-agent-member.md)已接通：用户确认并同步后，单独派发三阶段测试写作。
 
 [Research → Insight 研究轮次](workflows/research-cycle.md)按方向发现资料并串联两个阶段。[自托管执行器](workflows/self-hosted-worker.md)支持当前 Mac 及用户配置的远程主机：主机使用自己的会员授权分析，独立作业校验并保存检查点，再按 [admission.yaml](config/admission.yaml) 准入新正式资料；授权与运行环境留在仓库外。`ResearchDesk checks` 单独执行离线检查。调度器支持固定时间槽、14 天范围内每次一个槽的补跑及同槽恢复；`enabled: false` 时不会自动派研究，正式验收后再改为 `true`。
 
-[正式入库与启用验收](workflows/formal-admission-acceptance-2026-10-19.md)已完成：GitHub 自动创建 7 份正式 Markdown 并同步回现有 Obsidian 库，包含两条来源、两份单来源研究、一份综合报告、一条洞察和一张待确认选题，新增模型调用为 0。定时开关已启用，每周二、周五北京时间 09:00；首次计划为 2026-10-20 09:00，实际首个定时执行尚未发生。`reports/<topic>/admissions/<cycle-id>/` 保存计划、身份映射及输入输出散列，原有笔记保持不变；Writing 读取真实页面确认，首次输出继续限定在 test。
+[正式入库与启用验收](workflows/formal-admission-acceptance-2026-10-19.md)已完成：GitHub 自动创建 7 份正式 Markdown 并同步回现有 Obsidian 库，包含两条来源、两份单来源研究、一份综合报告、一条洞察和一张待确认选题，新增模型调用为 0。验收当时启用的是每周二、周五北京时间 09:00；现调整为 03:00，UTC cron 为 `0 19 * * 1,4`（周一、周四 UTC 19:00），实际定时执行结果以运行回执为准。`reports/<topic>/admissions/<cycle-id>/` 保存计划、身份映射及输入输出散列，原有笔记保持不变；Writing 读取真实页面确认，首次输出继续限定在 test。
+
+个人 Codex 聊天中的“ResearchDesk 每周研究简报”在每周二、周五北京时间 09:00 读取 GitHub 运行状态与已有正式结果，汇报发现、洞察、待确认选题及链接；未完成或失败时如实说明，不重复启动研究。该任务独立配置在 Codex 应用中，不随仓库自动部署。当前 Mac 在凌晨研究时须保持开机、联网且 runner 用户会话可用；上午汇报另需 Codex 应用可运行。
 
 当前新研究轮次最多处理 **5 份资料**，每个来源最多 2 份；每个来源最多检查 20 条候选，实际研究数量取决于新资料、来源可用性和剩余预算。正式资料、测试历史及同轮候选按规范 URL、arXiv 基础编号和 DOI 查重；跟踪参数或页内锚点变化不触发重新研究，真实版本或正文变化才生成独立更新材料。Research 最多 12 次请求，Insight 最多 4 次，共享每轮 16 次及月度 100 次上限。历史已绑定配置与回执不改。[真实选题确认入口](workflows/topic-confirmation-mvp.md)已实现本地浏览器页面，供用户核对选题、角度、受众和证据版本，保存真实确认、撤回及同步重试；真实 Writing 只处理用户已在页面确认并同步的选题，先写 test，再通过[Writing 正式准入](workflows/writing-formal-admission.md)新增正式三稿。
 
