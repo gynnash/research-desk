@@ -9,7 +9,7 @@
 3. 刷新记录查看阶段、调用次数和三份测试稿。大纲通过审阅后才生成初稿，初稿通过后才生成候选稿，每阶段使用另一个实际模型独立审阅。
 4. 如需停止后续写作，在页面撤回确认。已保存内容与调用预留保留，撤回不删除稿件，也不能取消已经发送给服务端的请求。
 
-首次小额验证和页面按钮每次最多新增 6 次请求。GitHub 手动入口可选择 6 次或 0 次（仅复核与复用缓存），不能突破原确认的总额、每阶段额度及共享月度额度。默认总额最多 12 次、每阶段最多 4 次、每阶段最多修订一次；三个阶段无修订时共 6 次请求。独立审阅不通过时保留结果，不将失败稿作为通过稿。
+首次小额验证和页面按钮每次最多新增 6 次请求。GitHub 手动入口可选择 6 次或 0 次，不能突破原确认的总额、每阶段额度及共享月度额度。0 次模式只核验已完整通过审阅的结果，不实例化会员客户端、不查询账户或模型目录、不发送推理；未完成批次不能借此模式继续生成。默认总额最多 12 次、每阶段最多 4 次、每阶段最多修订一次；三个阶段无修订时共 6 次请求。独立审阅不通过时保留结果，不将失败稿作为通过稿。
 
 确认本身只保存授权，开始写作是单独操作；本工作流只有 `workflow_dispatch`，没有新增定时或确认记录 push 自动触发。
 
@@ -21,6 +21,8 @@
 - 主机部署沿用[自托管执行器](self-hosted-worker.md)。GitHub 临时主机只校验和保存测试文件；会员凭据保留在选定的分析主机外部运行目录。会员资格、可用模型及官方限流由实际账户决定。[官方错误与恢复说明](https://developers.openai.com/siwc/token-sharing-open-source/errors-and-recovery)
 
 执行前核对真实页面确认、原预览、正式 Research / Insight 的准入证明、完整证据散列及 `main` / 索引 / `origin/main` 的文件字节。每个关键边界只 fetch 最新远端，不自动合并人工文件；撤回、输入变化或未同步立即停止。页面服务与 Vault 使用不同工作目录，通过普通 Git 同步。
+
+自托管 Writing 步骤显式传入该作业已有的 `contents: read` token，Git fetch 只在子进程中使用临时 credential helper，不保存到 Git 配置、不依赖交互式 Keychain。令牌不进入参数、模型输入、检查点或日志。同步失败按固定的认证、网络或超时错误码停止，不能把缺少回执误报为排队或成功。
 
 ## 引用与审阅
 
@@ -41,6 +43,7 @@ reports/test/<topic>/writing-runs/writing-<approval-id>/
   partial/               # 中断快照，不改写旧回执
   artifact-plan.yaml     # 三份稿件的确切输出散列
   receipt.yaml           # 最终状态、用量与输出散列
+  verifications/         # GitHub 0 调用复核凭据及配对 SHA-256
 articles/test/<topic>/writing-<approval-id>/
   outline.md
   draft.md
@@ -52,6 +55,8 @@ articles/test/<topic>/writing-<approval-id>/
 Research、Insight、Writing 的 GitHub 作业共用 `researchdesk-membership-worker` 串行并发组；工作副本还有本地预算锁。其他主机应使用同一派发通道，不同时从多个独立副本直接调用，不能将仓库锁理解为账户级分布式额度锁。
 
 自托管作业无仓库写 token，失败时也导出检查点；独立保存作业检查白名单、散列、原始输入及三阶段审阅，只追加 `test` 文件并普通提交推送。同步失败保留 worker 与 14 天 artifact，不强推、不清理未知请求。
+
+GitHub 0 次模式追加 `verifications/gha-<run-id>-<attempt>.yaml`，绑定源码提交、原确认、原回执、三稿散列及零新增调用。保存作业重验这些字段后才提交；已有大纲、初稿、候选稿和原模型账本保持原字节。这样可验证真实的“执行 → artifact → 回存 → Obsidian 拉取”链路，无需再次请求会员。
 
 ## 可复现检查
 

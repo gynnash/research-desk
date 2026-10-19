@@ -399,6 +399,88 @@ class RealMemberWriting(unittest.TestCase):
         self.assertEqual(replay['commit'], saved['commit'])
         self.assertEqual(len(self.client.calls), 6)
 
+    def complete_synced_batch(self):
+        record = self.confirm()
+        result = self.run_writing(record)
+        self.git('add', '.')
+        self.git('commit', '-m', 'Save isolated reviewed Writing checkpoints')
+        self.git('push', 'origin', 'main')
+        return record, result
+
+    def test_zero_call_job_verifies_locally_without_any_membership_contact(self):
+        job = importlib.import_module('researchdesk_writing_job')
+        record, result = self.complete_synced_batch()
+        before = self.hashes()
+        host = self.root.parent / 'external-runtime'
+        (host / 'bin').mkdir(parents=True)
+        (host / 'bin/python').touch()
+        state = self.root.parent / 'zero-local-state'
+        prohibited = AssertionError('Zero-call verification must not contact membership')
+        with mock.patch.dict('os.environ', {'GITHUB_ACTIONS': 'false'}), \
+                mock.patch.object(job.runtime, 'load_config', return_value={
+                    '_venv': host, '_profile': self.root.parent / 'unused-profile'}), \
+                mock.patch.object(job.member, 'run', side_effect=prohibited), \
+                mock.patch.object(shared, 'authorization', side_effect=prohibited), \
+                mock.patch.object(membership.MembershipClient, '__init__', side_effect=prohibited), \
+                mock.patch.object(membership.MembershipClient, 'status', side_effect=prohibited), \
+                mock.patch.object(membership.MembershipClient, 'models', side_effect=prohibited):
+            self.assertEqual(job.execute(self.root, state, record['id'], max_new_calls=0), 0)
+        self.assertEqual(self.hashes(), before)
+        self.assertEqual(len(self.client.calls), result['completed_calls'])
+
+    def test_zero_call_actions_receipt_is_exported_verified_and_saved_create_only(self):
+        job = importlib.import_module('researchdesk_writing_job')
+        record, result = self.complete_synced_batch()
+        before = self.hashes()
+        host = self.root.parent / 'external-runtime'
+        (host / 'bin').mkdir(parents=True)
+        (host / 'bin/python').touch()
+        state, artifact = self.root.parent / 'zero-actions-state', self.root.parent / 'zero-actions-artifact'
+        env = {'GITHUB_ACTIONS': 'true', 'GITHUB_REF': 'refs/heads/main',
+               'GITHUB_EVENT_NAME': 'workflow_dispatch', 'GITHUB_RUN_ID': '1234567', 'GITHUB_RUN_ATTEMPT': '2',
+               'GH_TOKEN': 'isolated-placeholder-for-local-bare-origin-no-network'}
+        prohibited = AssertionError('Zero-call verification must not contact membership')
+        with mock.patch.dict('os.environ', env), \
+                mock.patch.object(job.runtime, 'load_config', return_value={
+                    '_venv': host, '_profile': self.root.parent / 'unused-profile'}), \
+                mock.patch.object(job.member, 'run', side_effect=prohibited), \
+                mock.patch.object(shared, 'authorization', side_effect=prohibited), \
+                mock.patch.object(membership.MembershipClient, '__init__', side_effect=prohibited), \
+                mock.patch.object(membership.MembershipClient, 'status', side_effect=prohibited), \
+                mock.patch.object(membership.MembershipClient, 'models', side_effect=prohibited):
+            self.assertEqual(job.execute(self.root, state, record['id'], max_new_calls=0), 0)
+        relative = 'reports/test/%s/writing-runs/writing-%s/verifications/gha-1234567-2.yaml' % (TOPIC, record['id'])
+        proof = store.checked_yaml(self.root, relative)
+        self.assertEqual(proof['output_hashes'], result['output_hashes'])
+        self.assertEqual(proof['completed_calls'], 6)
+        self.assertEqual(proof['new_model_calls'], 0)
+        self.assertTrue(proof['no_membership_contacts'])
+        self.assertEqual(proof['effective_month_max_calls'], 100)
+        for path, sha in before.items():
+            self.assertEqual(store.digest((self.root / path).read_bytes()), sha, path)
+        exported = job.export(self.root, state, artifact)
+        self.assertEqual(set(exported['files']), {relative, relative + '.sha256'})
+        publisher = self.root.parent / 'zero-actions-publisher'
+        subprocess.run(['git', 'clone', '--quiet', str(self.origin), str(publisher)],
+                       check=True, capture_output=True)
+        saved = job.apply(publisher, artifact)
+        self.assertEqual(saved['status'], 'test_accepted')
+        self.assertEqual(saved['saved_files'], 2)
+        self.assertEqual(store.checked_yaml(publisher, relative), proof)
+        self.assertEqual(job.apply(publisher, artifact)['saved_files'], 0)
+        # A matching checksum cannot turn a false contact/call claim into proof.
+        tampered = dict(proof, new_model_calls=1)
+        payload = yaml.safe_dump(tampered, allow_unicode=True, sort_keys=False).encode()
+        (artifact / 'payload' / relative).write_bytes(payload)
+        marker = (store.digest(payload) + '\n').encode()
+        (artifact / 'payload' / (relative + '.sha256')).write_bytes(marker)
+        exported['files'].update({relative: store.digest(payload), relative + '.sha256': store.digest(marker)})
+        (artifact / 'manifest.json').write_text(json.dumps(exported), encoding='utf-8')
+        with self.assertRaises(job.JobError):
+            job.apply(publisher, artifact)
+        self.assertEqual(store.checked_yaml(publisher, relative), proof)
+        self.assertEqual(len(self.client.calls), 6)
+
 
 if __name__ == '__main__':
     unittest.main()

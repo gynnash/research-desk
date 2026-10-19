@@ -22,6 +22,7 @@ JobError = transfer.JobError
 git, safe, tracked = transfer.git, transfer.safe, transfer.tracked
 CONTEXT_FIELDS = {'schema_version', 'mode', 'topic', 'approval_id', 'batch_id',
                   'base_commit', 'baseline_blobs', 'input_fingerprint', 'config_path'}
+VERIFICATION = re.compile(r'verifications/gha-([1-9][0-9]{0,19})-([1-9][0-9]{0,5})\.yaml\Z')
 
 
 def context(root, bundle):
@@ -77,7 +78,8 @@ def allowed(relative, value):
     return bool(leaf in {'manifest.yaml', 'receipt.yaml', 'artifact-plan.yaml'}
         or re.fullmatch(r'checkpoints/(?:outline|draft|candidate)-(?:writing|review)-[01]\.yaml', leaf)
         or re.fullmatch(r'stages/(?:outline|draft|candidate)\.yaml', leaf)
-        or re.fullmatch(r'(?:events|partial)/[0-9]{6}\.yaml', leaf))
+        or re.fullmatch(r'(?:events|partial)/[0-9]{6}\.yaml', leaf)
+        or VERIFICATION.fullmatch(leaf))
 
 
 def _untracked(root):
@@ -141,6 +143,26 @@ def execute(root, state, approval_id, config_path='config/confirmation.yaml', ma
     if not python.is_file():
         raise JobError('writing_configured_external_python_missing')
     transfer.json_write(state / 'context.json', value)
+    if max_new_calls == 0:
+        # Recheck completed results without constructing a membership client,
+        # refreshing its OAuth token, or contacting its model/status endpoints.
+        try:
+            result = _verify(root, value)
+            if result['status'] != 'test_accepted':
+                raise JobError('writing_zero_call_verification_requires_complete_accepted_batch')
+            if os.environ.get('GITHUB_ACTIONS') == 'true':
+                run_id, attempt = os.environ.get('GITHUB_RUN_ID', ''), os.environ.get('GITHUB_RUN_ATTEMPT', '')
+                leaf = 'verifications/gha-%s-%s.yaml' % (run_id, attempt)
+                if not VERIFICATION.fullmatch(leaf):
+                    raise JobError('writing_github_verification_identity_invalid')
+                base = 'reports/test/%s/writing-runs/%s/' % (value['topic'], value['batch_id'])
+                store.save_yaml(root, base + leaf, _verification(root, value, result, run_id, attempt))
+        finally:
+            check_baseline(root, value)
+        print(json.dumps(dict(result, approval_id=approval_id, batch_id=value['batch_id'],
+            exit_code=0, new_model_calls=0, no_membership_contacts=True,
+            output_mode='test_only', publish_authorized=False)))
+        return 0
     command = [str(python), str(root / 'scripts/researchdesk_writing_member.py'), '--root', str(root),
                '--config', config_path, '--approval-id', approval_id,
                '--max-new-calls', str(max_new_calls), '--profile', str(host['_profile'])]
@@ -313,6 +335,38 @@ def verify_result(root, bundle):
     return _verify(Path(root).resolve(), context(Path(root).resolve(), bundle))
 
 
+def _verification(root, value, result, run_id, attempt):
+    """Bind one zero-contact Actions check to the original verified results."""
+    if result.get('status') != 'test_accepted' or result.get('unknown_requests') is not False:
+        raise JobError('writing_verification_requires_complete_independent_reviews')
+    base = 'reports/test/%s/writing-runs/%s' % (value['topic'], value['batch_id'])
+    receipt_path = base + '/receipt.yaml'
+    receipt = store.checked_yaml(root, receipt_path)
+    monthly, ceiling = shared.monthly_budget(root, {'backend': 'chatgpt_plan',
+        'budget': {'month_max_calls': shared.membership_monthly_limit(root)}})
+    return {'schema_version': 1, 'mode': 'writing_zero_call_verification',
+        'topic': value['topic'], 'approval_id': value['approval_id'], 'batch_id': value['batch_id'],
+        'source_commit': value['base_commit'], 'input_fingerprint': value['input_fingerprint'],
+        'github_run_id': run_id, 'github_run_attempt': attempt,
+        'original_receipt_path': receipt_path,
+        'original_receipt_sha256': store.digest(safe(root, receipt_path).read_bytes()),
+        'output_hashes': receipt['output_hashes'], 'reserved_calls': receipt['reserved_calls'],
+        'completed_calls': result['completed_calls'], 'monthly_reserved_calls': monthly,
+        'effective_month_max_calls': ceiling, 'new_model_calls': 0, 'no_membership_contacts': True,
+        'status': 'test_accepted', 'output_mode': 'test_only',
+        'production_accepted': False, 'publish_authorized': False}
+
+
+def _verify_verifications(root, value, result):
+    base = 'reports/test/%s/writing-runs/%s/' % (value['topic'], value['batch_id'])
+    for relative in value['files']:
+        if not relative.startswith(base) or not relative.endswith('.yaml'):
+            continue
+        match = VERIFICATION.fullmatch(relative[len(base):])
+        if match and store.checked_yaml(root, relative) != _verification(root, value, result, *match.groups()):
+            raise JobError('writing_zero_call_verification_does_not_match_verified_results')
+
+
 def apply(root, artifact):
     root, artifact = Path(root).resolve(), Path(artifact)
     value = _context(json.loads((artifact / 'manifest.json').read_text()), artifact=True)
@@ -347,6 +401,7 @@ def apply(root, artifact):
             handle.flush()
             os.fsync(handle.fileno())
     result = _verify(root, value)
+    _verify_verifications(root, value, result)
     validate = subprocess.run([sys.executable, str(root / 'workflows/validate.py'), '--include-test'],
                               cwd=root, capture_output=True, check=False)
     if validate.returncode:
@@ -391,7 +446,10 @@ def main():
             apply(args.root, args.artifact)
         return 0
     except Exception as exc:
-        print(json.dumps({'error': str(exc) if isinstance(exc, JobError) else 'writing_job_stopped_preserve_checkpoint'}))
+        error = exc.code if isinstance(exc, member.WritingRefreshError) else (
+            str(exc) if isinstance(exc, JobError) else 'writing_job_stopped_preserve_checkpoint')
+        print(json.dumps({'error': error,
+                          'error_type': type(exc).__name__}))
         return 1
 
 

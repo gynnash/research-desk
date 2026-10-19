@@ -8,6 +8,7 @@ approves topics, imports credentials, writes formal notes, or publishes articles
 
 import argparse
 import json
+import os
 from pathlib import Path
 import re
 import subprocess
@@ -150,15 +151,42 @@ def _active(root, bundle, refresh):
     inputs.verify_active(root, bundle)
 
 
+class WritingRefreshError(store.OfflineError):
+    def __init__(self, code):
+        self.code = code
+        super().__init__(code)
+
+
 def refresh_origin(root):
     """Observe remote revocations without merging or changing local notes."""
+    command = ['git', '-C', str(root)]
+    environment = dict(os.environ, GIT_TERMINAL_PROMPT='0')
+    if environment.get('GITHUB_ACTIONS') == 'true':
+        if not environment.get('GH_TOKEN'):
+            raise WritingRefreshError('writing_remote_read_token_missing')
+        # checkout deliberately does not persist its token. Use the job's
+        # read-only token only in this process, without Keychain interaction,
+        # token-bearing URLs or credential changes in the repository.
+        command += ['-c', 'credential.helper=', '-c', 'credential.helper=!gh auth git-credential']
+    command += ['fetch', '--quiet', 'origin', 'main']
     try:
-        completed = subprocess.run(['git', '-C', str(root), 'fetch', '--quiet', 'origin', 'main'],
+        completed = subprocess.run(command, env=environment,
             stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, timeout=45, check=False)
-    except (OSError, subprocess.TimeoutExpired) as exc:
-        raise store.OfflineError('无法刷新远端确认，保留检查点并停止 Writing') from exc
+    except subprocess.TimeoutExpired as exc:
+        raise WritingRefreshError('writing_remote_refresh_timeout') from exc
+    except OSError as exc:
+        raise WritingRefreshError('writing_remote_git_unavailable') from exc
     if completed.returncode:
-        raise store.OfflineError('远端确认刷新失败，保留检查点并停止 Writing')
+        error = completed.stderr.decode('utf-8', errors='replace').lower()
+        if any(term in error for term in ('authentication', 'could not read username',
+                                         'could not read password', 'terminal prompts disabled')):
+            code = 'writing_remote_auth_failed'
+        elif any(term in error for term in ('resolve host', 'failed to connect', 'connection',
+                                           'ssl', 'tls', 'proxy', 'timed out')):
+            code = 'writing_remote_network_failed'
+        else:
+            code = 'writing_remote_refresh_failed'
+        raise WritingRefreshError(code)
     return True
 
 

@@ -41,3 +41,5 @@ jobs:
         run: python -m unittest discover -s tests -p 'test_confirmation.py' -v
       - name: Check confirmed Writing with fake transport and no member usage
         run: python -m unittest discover -s tests -p 'test_writing_member.py' -v
+      - name: Check process-scoped Git refresh without network or credentials
+        run: python -m unittest discover -s tests -p 'test_writing_refresh.py' -v

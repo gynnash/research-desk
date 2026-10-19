@@ -50,6 +50,7 @@ jobs:
         env:
           APPROVAL_ID: ${{ inputs.approval_id }}
           MAX_NEW_CALLS: ${{ inputs.max_new_calls }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           "$RUNNER_TEMP/researchdesk-writing-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT/bin/python" scripts/researchdesk_writing_job.py execute \
             --state "$RUNNER_TEMP/researchdesk-writing-state-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT" \
