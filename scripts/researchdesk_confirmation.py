@@ -420,6 +420,8 @@ class ConfirmationStore:
             writing_inputs.prepare_bundle(self.root, approval_id=confirmation_id,
                                           config_path=self.config['_config_path'])
             progress = current['writing']
+            if progress.get('formal', {}).get('status') != 'not_admitted':
+                raise ConfirmationError('writing_already_admitted', '此批次已有正式准入记录，保留已有稿件，不能新增写作请求。')
             if progress['status'] in {'test_accepted', 'rejected', 'blocked', 'revision_required',
                                       'unknown_request', 'integrity_blocked'}:
                 raise ConfirmationError('writing_stopped', '此批次已完成或需要检查执行记录，不能新增写作请求。')
@@ -443,7 +445,9 @@ class ConfirmationStore:
 
     def document(self, relative):
         for record in self.list_confirmations():
-            for item in record.get('writing', {}).get('documents', []):
+            writing = record.get('writing', {})
+            allowed_documents = writing.get('documents', []) + writing.get('formal', {}).get('documents', [])
+            for item in allowed_documents:
                 if item['path'] == relative:
                     payload = admission._location(self.root, relative).read_bytes()
                     if store.digest(payload) != item['sha256']:

@@ -368,6 +368,9 @@
     if (record.synced === false && !['revoked', 'invalidated', 'revocation_pending_sync'].includes(record.status)) return names.pending_sync;
     if (['confirmed_waiting_writer', 'confirmed'].includes(record.status)) {
       const progress = record.writing || {};
+      const formal = progress.formal || {};
+      if (formal.status === 'accepted') return '三稿已正式入库 · 未发布';
+      if (formal.status === 'integrity_changed') return '正式稿完整性待核对 · 文件已保留';
       const states = {queued: '已派发 · 等待执行', dispatch_unknown: '派发状态待核对',
         in_progress: '测试写作进行中', paused: '测试写作已暂停', test_accepted: '三稿已通过审阅 · TEST',
         rejected: '独立审阅未通过', blocked: '证据不足 · 已停止', revision_required: '修订仍未通过',
@@ -412,17 +415,36 @@
       if (list(progress.documents).length) {
         const documents = element('div', 'record-buttons');
         for (const item of progress.documents) {
-          const button = element('button', 'secondary compact', text(item.label, '查看稿件'));
+          const names = {outline: '大纲', draft: '初稿', candidate: '候选稿'};
+          const button = element('button', 'secondary compact', `TEST · ${names[item.stage] || text(item.label, '查看稿件')}`);
           button.type = 'button';
           button.addEventListener('click', () => openDocument(item.path));
           documents.append(button);
         }
-        card.append(documents, element('p', 'small', '只读展示已校验稿件。全部保存在 test，尚未正式入库或发布。'));
+        card.append(element('h3', 'small-heading', '原始测试稿 · 保留'), documents,
+          element('p', 'small', '只读展示原始 test 结果；正式准入会另存新文件，公众号未发布。'));
+      }
+      const formal = progress.formal || {};
+      if (formal.status === 'accepted') {
+        const documents = element('div', 'record-buttons');
+        for (const item of list(formal.documents)) {
+          const names = {outline: '正式大纲', draft: '正式初稿', candidate: '正式候选稿'};
+          const button = element('button', 'secondary compact', names[item.stage] || text(item.label, '正式稿件'));
+          button.type = 'button';
+          button.addEventListener('click', () => openDocument(item.path));
+          documents.append(button);
+        }
+        card.append(element('h3', 'small-heading', '正式稿件 · 已入库，未发布'), documents,
+          element('p', 'small', '只读展示经过准入校验的三稿，保存于 articles 的研究方向目录。原测试结果和人工笔记保留。'));
+      } else if (formal.status === 'integrity_changed') {
+        card.append(element('p', 'notice warm', text(formal.reason,
+          '正式稿或准入记录已变化，可能包含人工编辑。文件已保留，暂停展示，不能将当前改稿视为原审阅版本。')));
       }
       const canRevoke = ['confirmed_waiting_writer', 'confirmed', 'sync_pending', 'pending_sync'].includes(record.status);
       const canSync = ['pending_sync', 'revocation_pending_sync', 'sync_pending'].includes(record.status) || record.synced === false;
       const canWrite = state.session && state.session.writing_available && record.synced &&
-        ['confirmed_waiting_writer', 'confirmed'].includes(record.status) && ['not_started', 'paused'].includes(progress.status);
+        ['confirmed_waiting_writer', 'confirmed'].includes(record.status) && ['not_started', 'paused'].includes(progress.status) &&
+        formal.status === 'not_admitted';
       if (canRevoke || canSync || canWrite) {
         const footer = element('div', 'card-footer');
         const buttons = element('div', 'record-buttons');
@@ -444,7 +466,10 @@
           button.addEventListener('click', () => openRevoke(record));
           buttons.append(button);
         }
-        footer.append(element('span', 'small', canSync ? '本机记录已保留；同步完成前不会交给写作' : '每次派发最多新增 6 次会员请求；已完成结果会复用'), buttons);
+        const footerNote = canSync ? '本机记录已保留；同步完成前不会交给写作' :
+          formal.status === 'accepted' ? '正式稿已入库；撤回确认不会删除历史稿件' :
+          '每次派发最多新增 6 次会员请求；已完成结果会复用';
+        footer.append(element('span', 'small', footerNote), buttons);
         card.append(footer);
       }
       container.append(card);

@@ -12,13 +12,15 @@ ResearchDesk 是一个以 Markdown、YAML、GitHub 和 Obsidian 为基础的 AI 
 
 [正式入库与启用验收](workflows/formal-admission-acceptance-2026-10-19.md)已完成：GitHub 自动创建 7 份正式 Markdown 并同步回现有 Obsidian 库，包含两条来源、两份单来源研究、一份综合报告、一条洞察和一张待确认选题，新增模型调用为 0。定时开关已启用，每周二、周五北京时间 09:00；首次计划为 2026-10-20 09:00，实际首个定时执行尚未发生。`reports/<topic>/admissions/<cycle-id>/` 保存计划、身份映射及输入输出散列，原有笔记保持不变；Writing 读取真实页面确认，首次输出继续限定在 test。
 
-当前新研究轮次最多处理 **5 份资料**，每个来源最多 2 份；每个来源最多检查 20 条候选，实际研究数量取决于新资料、来源可用性和剩余预算。正式资料、测试历史及同轮候选按规范 URL、arXiv 基础编号和 DOI 查重；跟踪参数或页内锚点变化不触发重新研究，真实版本或正文变化才生成独立更新材料。Research 最多 12 次请求，Insight 最多 4 次，共享每轮 16 次及月度 100 次上限。历史已绑定配置与回执不改。[真实选题确认入口](workflows/topic-confirmation-mvp.md)已实现本地浏览器页面，供用户核对选题、角度、受众和证据版本，保存真实确认、撤回及同步重试；真实 Writing 只处理用户已在页面确认并同步的选题，输出仍只在 test。
+当前新研究轮次最多处理 **5 份资料**，每个来源最多 2 份；每个来源最多检查 20 条候选，实际研究数量取决于新资料、来源可用性和剩余预算。正式资料、测试历史及同轮候选按规范 URL、arXiv 基础编号和 DOI 查重；跟踪参数或页内锚点变化不触发重新研究，真实版本或正文变化才生成独立更新材料。Research 最多 12 次请求，Insight 最多 4 次，共享每轮 16 次及月度 100 次上限。历史已绑定配置与回执不改。[真实选题确认入口](workflows/topic-confirmation-mvp.md)已实现本地浏览器页面，供用户核对选题、角度、受众和证据版本，保存真实确认、撤回及同步重试；真实 Writing 只处理用户已在页面确认并同步的选题，先写 test，再通过[Writing 正式准入](workflows/writing-formal-admission.md)新增正式三稿。
 
 ## 在浏览器确认选题
 
 本地页面运行后，打开 [选题工作台](http://127.0.0.1:8765)，按“查看选题与证据 → 调整写作要求 → 查看最终预览”操作。页面保留论文摘要、博客节选与人工历史资料的范围和缺口；修改标题或角度不会把新增判断变成已核实事实。核对后自行勾选范围说明，点击“保存写作确认”。确认记录保存并同步后，可点击 **“开始 / 继续测试写作”**，派发 GitHub Writing 作业。确认本身只保存授权；开始按钮每次最多新增 6 次会员请求，仍受原确认与共享月度预算限制。页面可查看阶段、调用数和大纲、初稿、候选稿；不发布公众号。
 
 在“确认记录”中可以撤回；网络或 Git 同步失败时显示待同步状态，使用“重试同步”继续保存同一条记录，不要重复确认。发生冲突会保留现场并停止，不覆盖人工笔记或强推。页面服务与其独立工作目录位于 Vault 外，Obsidian 通过既有 Git 方式收到记录。预览默认 15 分钟有效，服务重启后需要重新预览。首次准备和启动方法见[使用说明与维护附录](workflows/topic-confirmation-mvp.md#维护附录)。
+
+[正式准入](workflows/writing-formal-admission.md)不调用模型，只把有效页面确认且三阶段独立审阅通过的结果，以新文件保存在 `articles/<topic>/`，并在 `reports/<topic>/writing-admissions/` 固定计划和接受回执。原 test 与人工笔记保持原样，页面分别显示 TEST 和正式稿件；正式入库仍未授权公众号发布。
 
 [首个自动发现轮次](reports/test/agent-memory/cycles/cycle-agent-memory-20261019/acceptance-local.yaml)已完成本地真实验收：两份研究、综合报告、两条洞察及两张待确认选题，8 次会员请求；Research 后中断恢复及完整缓存重放没有重复调用。来源仅扫描有限列表，整体回执保留 `partial`，不声称全量覆盖。
 
@@ -34,6 +36,7 @@ research-desk/
 │   ├── research_topics.yaml    # 研究方向及启用状态
 │   ├── membership_budget.yaml  # 本仓库会员调用的共享月度请求预算
 │   ├── admission.yaml         # 独立审阅后的受限正式准入
+│   ├── writing_admission.yaml # 已确认、已审阅 Writing 三稿的创建式准入
 │   ├── automation.yaml        # 定时开关、固定时间槽与补跑范围
 │   ├── confirmation.yaml      # 本地确认页、字数及冻结写作范围
 │   ├── cycles/                # 按方向配置发现、Research 与 Insight 轮次
@@ -74,7 +77,8 @@ research-desk/
 │   ├── researchdesk_writing.py # 虚构确认与三阶段离线模拟写作
 │   ├── researchdesk_writing_member_inputs.py # 真实页面确认与正式证据门禁
 │   ├── researchdesk_writing_member.py # 真实会员三阶段写作与独立审阅
-│   └── researchdesk_writing_job.py # 外部会员运行环境与受限测试回存
+│   ├── researchdesk_writing_job.py # 外部会员运行环境与受限测试回存
+│   └── researchdesk_writing_admission.py # 三稿正式准入，不调用模型
 └── tests/                     # 临时仓库中的自动验收
 ```
 
@@ -86,7 +90,7 @@ research-desk/
 
 [Insight 测试闭环](workflows/insight-agent-test.md)读取散列与真实独立审阅绑定均有效的 Research 结果，以及 YAML 显式登记的 `human_baseline` 历史资料。生成综合报告、1–2 条跨来源洞察和待人工确认的选题卡，分别创建到 `reports/test/<topic>/insight-runs/<batch-id>/`、`insights/test/<topic>/<batch-id>/` 和 `articles/test/<topic>/<batch-id>/`。正常两次请求，允许一次修订与复审，最多四次；与其他会员入口共用月度预算。历史笔记不会被当作本轮重新核实的原文，模型不能批准自己的选题；本阶段不启动写作。
 
-[Writing 离线闭环](workflows/writing-agent-offline.md)已通过[虚构样例验收](reports/test/agent-memory/writing-runs/writing-offline-20261019/acceptance.md)：`origin: offline_fixture` 确认绑定大纲、初稿和候选稿，`mock-writer` 与 `mock-reviewer` 逐级生成、审阅；初稿修订一次，总计 8 次模拟调用，三个断点恢复与缓存补跑未追加调用。文章只写 `articles/test/<topic>/<batch-id>/`，账本只写 `reports/test/<topic>/writing-runs/<batch-id>/`。配置仍限制每批最多 12 次、每阶段最多 4 次及一次修订；不联网、不消费会员预算，也未批准或改写当前两张真实选题卡。真实本地确认入口与[会员 Writing](workflows/writing-agent-member.md)已实现，保留上述离线演练历史；正式文章准入仍后置。
+[Writing 离线闭环](workflows/writing-agent-offline.md)已通过[虚构样例验收](reports/test/agent-memory/writing-runs/writing-offline-20261019/acceptance.md)：`origin: offline_fixture` 确认绑定大纲、初稿和候选稿，`mock-writer` 与 `mock-reviewer` 逐级生成、审阅；初稿修订一次，总计 8 次模拟调用，三个断点恢复与缓存补跑未追加调用。文章只写 `articles/test/<topic>/<batch-id>/`，账本只写 `reports/test/<topic>/writing-runs/<batch-id>/`。配置仍限制每批最多 12 次、每阶段最多 4 次及一次修订；不联网、不消费会员预算，也未批准或改写当前两张真实选题卡。真实本地确认入口与[会员 Writing](workflows/writing-agent-member.md)已实现，保留上述离线演练历史；[正式文章准入](workflows/writing-formal-admission.md)只接收真实确认与真实独立审阅结果。
 
 此前的“每月 10 次”是本项目为小额度验收设置的本地请求限制，写在早期入口及测试 YAML 中，并非来自 ChatGPT 官方会员额度。现在由 `config/membership_budget.yaml` 的 `month_max_calls: 100` 集中管理，同一工作台的真实单篇、Research、Insight 和 Writing 请求共用累计账本；修改上限不清零历史消费，失败或未知请求仍占预留。已绑定的测试配置与旧回执保持原样，旧 `10/10` 只表示验收当时的策略。批次、单项和修订次数限制继续有效；会员官方限流及授权状态仍以实际服务为准。
 

@@ -115,5 +115,5 @@ def inspect(root, topic, approval_id, confirmation_path):
     """Expose immutable TEST and formal history without granting execution."""
     result = _inspect_test(root, topic, approval_id, confirmation_path)
     import researchdesk_writing_admission as formal
-    result['formal'] = formal.inspect(root, approval_id)
+    result['formal'] = formal.inspect(root, topic, approval_id)
     return result

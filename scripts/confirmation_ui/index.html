@@ -22,7 +22,7 @@
         <div class="sidebar-foot"><strong>决定写什么，由你确认</strong>研究资料保持原样。<br>确认后也不会发布公众号。</div>
       </aside>
       <main id="main" class="main">
-        <p class="service-note"><span class="status-dot" aria-hidden="true"></span>确认同步后，可单独开始测试写作；大纲、初稿与候选稿逐阶段独立审阅，不会发布公众号。</p>
+        <p class="service-note"><span class="status-dot" aria-hidden="true"></span>确认后单独开始测试写作，三稿逐阶段独立审阅；正式准入另存新文件，在这里只读查看。公众号未发布。</p>
         <div id="global-error" class="notice error" role="alert" hidden><p id="global-error-text"></p><button class="text-button" data-action="reload">重新加载</button></div>
         <div id="loading" class="loading" role="status">正在读取工作台…</div>
 
@@ -75,7 +75,7 @@
         </section>
 
         <section data-screen="records" hidden>
-          <div class="page-heading"><div><p class="eyebrow">每一次确认，都可以追溯</p><h1 tabindex="-1">确认记录</h1><p class="lead">查看授权、写作进度和已审阅三稿。仅有效且已同步的确认可以开始测试写作。</p></div><button class="secondary compact" data-action="reload-records">刷新记录</button></div>
+          <div class="page-heading"><div><p class="eyebrow">每一次确认，都可以追溯</p><h1 tabindex="-1">确认记录</h1><p class="lead">查看授权、原始测试稿和已正式入库的三稿。已入库稿件保留来源引用，未发布公众号。</p></div><button class="secondary compact" data-action="reload-records">刷新记录</button></div>
           <div id="records-message" class="notice success" role="status" hidden></div>
           <div id="record-list" class="record-list"></div>
           <div id="records-empty" class="empty card" hidden><h2>还没有确认记录</h2><p>选择一张选题，核对证据并保存确认后，会显示在这里。</p><button class="primary" data-action="topics">查看待确认选题 →</button></div>
@@ -88,6 +88,6 @@
   <dialog id="revoke-dialog" aria-labelledby="revoke-heading">
     <form id="revoke-form"><h2 id="revoke-heading">撤回这次写作确认</h2><p id="revoke-title" class="lead"></p><p>撤回将保存一条新记录，原确认和研究资料会保留。</p><label for="revoke-reason">撤回原因<textarea id="revoke-reason" maxlength="500" required placeholder="例如：想调整文章角度"></textarea></label><p id="revoke-error" class="inline-error" role="alert" hidden></p><div class="dialog-actions"><button class="secondary" type="button" data-action="cancel-revoke">保留确认</button><button id="revoke-button" class="danger" type="submit">确认撤回</button></div></form>
   </dialog>
-  <dialog id="document-dialog" class="document-dialog" aria-labelledby="document-heading"><div class="document-heading"><div><h2 id="document-heading">资料与稿件 · 只读</h2><p class="small">这里展示已校验的研究资料或 TEST 稿件；保留来源范围，未授权发布。</p></div><button class="secondary compact" type="button" data-action="close-document">关闭</button></div><p id="document-path" class="source-path"></p><p id="document-error" class="inline-error" role="alert" hidden></p><pre id="document-content" class="document-content"></pre></dialog>
+  <dialog id="document-dialog" class="document-dialog" aria-labelledby="document-heading"><div class="document-heading"><div><h2 id="document-heading">资料与稿件 · 只读</h2><p class="small">展示已校验的研究资料、原始 TEST 稿或正式稿；保留来源范围，公众号未发布。人工编辑后需重新核对完整性。</p></div><button class="secondary compact" type="button" data-action="close-document">关闭</button></div><p id="document-path" class="source-path"></p><p id="document-error" class="inline-error" role="alert" hidden></p><pre id="document-content" class="document-content"></pre></dialog>
 </body>
 </html>

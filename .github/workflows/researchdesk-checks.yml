@@ -43,3 +43,5 @@ jobs:
         run: python -m unittest discover -s tests -p 'test_writing_member.py' -v
       - name: Check process-scoped Git refresh without network or credentials
         run: python -m unittest discover -s tests -p 'test_writing_refresh.py' -v
+      - name: Check create-only Writing admission and formal document display
+        run: python -m unittest discover -s tests -p 'test_writing_admission.py' -v

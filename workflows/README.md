@@ -19,6 +19,8 @@
 
 [真实选题确认入口](topic-confirmation-mvp.md)已实现本地浏览器页面：查看正式选题及证据、调整标题/角度/受众/字数、核对固定预览后，由用户勾选并点击“保存写作确认”。页面也提供只读证据笔记、确认记录、撤回和待同步记录的重试。保存确认后可单独点击“开始 / 继续测试写作”，通过 GitHub 派发到用户配置的会员主机；确认本身不自动调用模型。状态及测试稿在“确认记录”中查看。
 
+[Writing 正式准入](writing-formal-admission.md)把已确认且三阶段独立审阅通过的真实结果，新增到 `articles/<topic>/`；保留原 test、来源引用与人工笔记，固定计划和接受回执，不调用会员。页面分别展示 TEST 与已正式入库的三稿，正式入库仍不代表公众号发布。
+
 确认服务使用 Vault 外的独立工作目录，只追加确认与撤回记录并普通提交推送。网络失败显示 `pending_sync` 或 `revocation_pending_sync`，保留本机记录；冲突时停止，既有资料不覆盖。短时预览仅保存在进程内存，服务重启后需要重新预览。用户日常在浏览器操作，准备与启动命令见[维护附录](topic-confirmation-mvp.md#维护附录)。
 
 [Writing 虚构确认、三阶段审阅与验收](writing-agent-offline.md)使用固定虚构选题与证据，确认记录明确为 `origin: offline_fixture`。大纲、初稿和候选稿各自先通过确定性校验和独立模拟审阅，再进入下一阶段；模型不能自行批准确认。文章只写 `articles/test/<topic>/<batch-id>/`，账本只写 `reports/test/<topic>/writing-runs/<batch-id>/`，不覆盖旧稿。
