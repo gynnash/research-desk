@@ -39,7 +39,7 @@ def _frozen(root, approval_id, confirmation_path, manifest):
             'insights': payload['insights'], 'gaps': payload['evidence_gaps']}
 
 
-def inspect(root, topic, approval_id, confirmation_path):
+def _inspect_test(root, topic, approval_id, confirmation_path):
     root = Path(root).resolve()
     batch_id = writing.stable_batch_id(approval_id)
     base = 'reports/test/%s/writing-runs/%s' % (topic, batch_id)
@@ -109,3 +109,11 @@ def inspect(root, topic, approval_id, confirmation_path):
     except (store.OfflineError, OSError, ValueError, KeyError, TypeError, RuntimeError):
         result.update(status='integrity_blocked', reason='写作记录或稿件校验未通过，已保留文件，暂停派发与展示。')
         return result
+
+
+def inspect(root, topic, approval_id, confirmation_path):
+    """Expose immutable TEST and formal history without granting execution."""
+    result = _inspect_test(root, topic, approval_id, confirmation_path)
+    import researchdesk_writing_admission as formal
+    result['formal'] = formal.inspect(root, approval_id)
+    return result
