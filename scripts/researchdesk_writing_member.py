@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """Confirmed-topic, membership-backed Writing; immutable checkpoints, TEST only.
 
 The confirmation page is the only producer of authorization. This worker never
@@ -9,6 +10,7 @@ import argparse
 import json
 from pathlib import Path
 import re
+import subprocess
 import sys
 
 import yaml
@@ -146,6 +148,18 @@ def _active(root, bundle, refresh):
     if refresh is not None and refresh() is False:
         raise store.OfflineError('远端确认同步未完成，停止 Writing')
     inputs.verify_active(root, bundle)
+
+
+def refresh_origin(root):
+    """Observe remote revocations without merging or changing local notes."""
+    try:
+        completed = subprocess.run(['git', '-C', str(root), 'fetch', '--quiet', 'origin', 'main'],
+            stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, timeout=45, check=False)
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        raise store.OfflineError('无法刷新远端确认，保留检查点并停止 Writing') from exc
+    if completed.returncode:
+        raise store.OfflineError('远端确认刷新失败，保留检查点并停止 Writing')
+    return True
 
 
 def _room(root, config, events, stage, count, invocation_start, max_new_calls):
@@ -299,10 +313,12 @@ def render(stage, candidate, bundle, batch_id):
         'input_fingerprint': bundle['input_fingerprint'], 'models': bundle['models'],
         'production_accepted': False, 'writing_started': True, 'publish_authorized': False}
     choices = _confirmation(bundle)
+    evidence = {item['id']: item for item in bundle['evidence']}
+    related = '、'.join('[%s](%s)' % (key, posixpath.relpath(item['path'], directory)) for key, item in evidence.items())
     lines = ['---', yaml.safe_dump(metadata, allow_unicode=True, sort_keys=False).rstrip(), '---', '', NOTICE, '',
         '# ' + candidate['title'], '', '- 已确认角度：' + choices['angle'], '- 已确认受众：' + choices['audience'],
-        '- 目标字数：' + str(choices['target_words']), '', candidate['summary'], '']
-    evidence = {item['id']: item for item in bundle['evidence']}
+        '- 目标字数：' + str(choices['target_words']), '', '## 导读', '', candidate['summary'], '',
+        '相关资料（具体支持关系以正文逐段核查为准）：' + related, '']
     labels = {'fact': '原文直接确认的事实', 'author_claim': '原作者声称，未经我们独立复现实验',
               'inference': '我们的推断', 'analogy': '解释性类比，非原文事实'}
     for section in candidate['sections']:
@@ -335,6 +351,13 @@ def run(root, approval_id, config_path='config/confirmation.yaml', client=None, 
     root = Path(root).resolve()
     if fail_after not in {None, 'after_outline', 'after_review', 'after_first_output'} or type(max_new_calls) is not int or not 0 <= max_new_calls <= 12:
         raise store.OfflineError('无效 Writing 断点或本轮小额调用上限')
+    from researchdesk_membership import MembershipClient
+    if client is None:
+        client = MembershipClient(root=root)
+    # Dependency-injected fake clients permit offline tests. Production clients
+    # always refresh unless the operator supplies an equally strict callback.
+    if refresh is None and isinstance(client, MembershipClient):
+        refresh = lambda: refresh_origin(root)
     if refresh is not None and refresh() is False:
         raise store.OfflineError('远端同步未完成，不能读取授权')
     bundle = inputs.prepare_bundle(root, approval_id=approval_id, config_path=config_path)
@@ -342,9 +365,6 @@ def run(root, approval_id, config_path='config/confirmation.yaml', client=None, 
     config = {'backend': 'chatgpt_plan', 'topic': bundle['topic'], 'models': bundle['models'],
               'budget': dict(bundle['budget'], month_max_calls=bundle['month_max_calls'])}
     base = 'reports/test/%s/writing-runs/%s' % (bundle['topic'], batch_id)
-    if client is None:
-        from researchdesk_membership import MembershipClient
-        client = MembershipClient(root=root)
     authorization, _ = shared.authorization(client, 'chatgpt_plan', {'research': config['models']['writing'], 'review': config['models']['review']})
     with shared.global_budget_lock(root), store.topic_lock(root, bundle['topic']):
         _active(root, bundle, refresh)

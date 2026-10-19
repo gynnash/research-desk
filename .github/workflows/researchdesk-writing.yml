@@ -1,0 +1,95 @@
+name: ResearchDesk confirmed Writing
+run-name: Writing · ${{ inputs.approval_id }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      approval_id:
+        description: Existing synchronized human confirmation ID from the local page
+        required: true
+        type: string
+      max_new_calls:
+        description: 6 for a bounded attempt, 0 to verify and reuse completed checkpoints
+        type: choice
+        default: '6'
+        options: ['0', '6']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: researchdesk-membership-worker
+  cancel-in-progress: false
+
+jobs:
+  write:
+    if: github.ref == 'refs/heads/main'
+    runs-on: [self-hosted, researchdesk]
+    timeout-minutes: 25
+    defaults:
+      run:
+        shell: 'bash --noprofile --norc -eo pipefail "{0}"'
+    outputs:
+      artifact_id: ${{ steps.artifact.outputs.artifact-id }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: main
+          fetch-depth: 0
+          path: researchdesk-worker
+          clean: false
+          persist-credentials: false
+      - name: Prepare bootstrap dependencies
+        working-directory: researchdesk-worker
+        run: |
+          python3 -m venv "$RUNNER_TEMP/researchdesk-writing-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+          "$RUNNER_TEMP/researchdesk-writing-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT/bin/python" -m pip install -r workflows/requirements.txt
+      - name: Execute only a page-confirmed test Writing batch
+        id: writing
+        working-directory: researchdesk-worker
+        env:
+          APPROVAL_ID: ${{ inputs.approval_id }}
+          MAX_NEW_CALLS: ${{ inputs.max_new_calls }}
+        run: |
+          "$RUNNER_TEMP/researchdesk-writing-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT/bin/python" scripts/researchdesk_writing_job.py execute \
+            --state "$RUNNER_TEMP/researchdesk-writing-state-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT" \
+            --approval-id "$APPROVAL_ID" --max-new-calls "$MAX_NEW_CALLS"
+      - name: Export completed or interrupted checkpoints
+        id: export
+        if: always() && steps.writing.outcome != 'skipped'
+        working-directory: researchdesk-worker
+        run: |
+          "$RUNNER_TEMP/researchdesk-writing-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT/bin/python" scripts/researchdesk_writing_job.py export \
+            --state "$RUNNER_TEMP/researchdesk-writing-state-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT" \
+            --destination "$RUNNER_TEMP/researchdesk-writing-export-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+      - uses: actions/upload-artifact@v7
+        id: artifact
+        if: always() && steps.export.outcome == 'success'
+        with:
+          name: researchdesk-writing-checkpoints
+          path: ${{ runner.temp }}/researchdesk-writing-export-${{ github.run_id }}-${{ github.run_attempt }}/
+          if-no-files-found: error
+          retention-days: 14
+
+  save:
+    needs: write
+    if: always() && github.ref == 'refs/heads/main' && needs.write.outputs.artifact_id != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r workflows/requirements-membership.txt
+      - uses: actions/download-artifact@v8
+        with:
+          name: researchdesk-writing-checkpoints
+          path: ${{ runner.temp }}/researchdesk-writing-checkpoints
+      - name: Recheck authorization and save only new test outputs
+        run: python scripts/researchdesk_writing_job.py apply --artifact "$RUNNER_TEMP/researchdesk-writing-checkpoints"

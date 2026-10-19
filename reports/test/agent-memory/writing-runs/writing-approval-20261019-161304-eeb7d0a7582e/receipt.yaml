@@ -1,0 +1,62 @@
+schema_version: 1
+mode: writing_member_test
+backend: chatgpt_plan
+topic: agent-memory
+batch_id: writing-approval-20261019-161304-eeb7d0a7582e
+approval_id: approval-20261019-161304-eeb7d0a7582e
+status: test_accepted
+confirmation_path: reports/agent-memory/writing-approvals/approval-20261019-161304-eeb7d0a7582e/confirmed.yaml
+confirmation_origin: local_confirmation_page
+models:
+  writing: gpt-6-luna
+  review: gpt-6.1-sol
+actual_models:
+- gpt-6-luna
+- gpt-6.1-sol
+stages:
+  outline:
+    status: test_accepted
+    revision_count: 0
+    checkpoint: reports/test/agent-memory/writing-runs/writing-approval-20261019-161304-eeb7d0a7582e/stages/outline.yaml
+  draft:
+    status: test_accepted
+    revision_count: 0
+    checkpoint: reports/test/agent-memory/writing-runs/writing-approval-20261019-161304-eeb7d0a7582e/stages/draft.yaml
+  candidate:
+    status: test_accepted
+    revision_count: 0
+    checkpoint: reports/test/agent-memory/writing-runs/writing-approval-20261019-161304-eeb7d0a7582e/stages/candidate.yaml
+reserved_calls: 6
+completed_calls: 6
+usage:
+- input_tokens: 8386
+  output_tokens: 1727
+  total_tokens: 10113
+- input_tokens: 10080
+  output_tokens: 903
+  total_tokens: 10983
+- input_tokens: 10157
+  output_tokens: 2009
+  total_tokens: 12166
+- input_tokens: 12148
+  output_tokens: 774
+  total_tokens: 12922
+- input_tokens: 12226
+  output_tokens: 2019
+  total_tokens: 14245
+- input_tokens: 14209
+  output_tokens: 777
+  total_tokens: 14986
+output_hashes:
+  articles/test/agent-memory/writing-approval-20261019-161304-eeb7d0a7582e/outline.md: 51df9e48da561b763153eb5c15318bbc88aca048cd90ca854018019062d0d065
+  articles/test/agent-memory/writing-approval-20261019-161304-eeb7d0a7582e/draft.md: e7c81bddcf7c029f7f9692a741d6e888b716372cb440424d6e4fd25b7c5e3bf7
+  articles/test/agent-memory/writing-approval-20261019-161304-eeb7d0a7582e/candidate.md: 7545c1a858b75a6508f9d3a1deed79373eaa5a3b73f9b986cf4920c11b68e4f0
+all_existing_notes_unchanged: true
+real_topic_approved: true
+production_accepted: false
+writing_started: true
+publish_authorized: false
+membership_remaining_quota: null
+api_billed_cost: null
+monthly_reserved_calls: 31
+effective_month_max_calls: 100

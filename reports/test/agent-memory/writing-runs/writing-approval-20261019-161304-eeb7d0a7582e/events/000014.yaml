@@ -1,0 +1,13 @@
+type: call_completed
+reservation_id: candidate-review-0
+stage: candidate
+role: review
+revision: 0
+model_id: gpt-6.1-sol
+response_path: reports/test/agent-memory/writing-runs/writing-approval-20261019-161304-eeb7d0a7582e/checkpoints/candidate-review-0.yaml
+response_sha256: 7bbc29ca5a8fea8169031fcdfa8f67ae71e9324f38e08882475bddf251602c09
+usage:
+  input_tokens: 14209
+  output_tokens: 777
+  total_tokens: 14986
+at: '2026-10-19T16:22:56.052502+00:00'

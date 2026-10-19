@@ -1,0 +1,13 @@
+type: call_completed
+reservation_id: draft-review-0
+stage: draft
+role: review
+revision: 0
+model_id: gpt-6.1-sol
+response_path: reports/test/agent-memory/writing-runs/writing-approval-20261019-161304-eeb7d0a7582e/checkpoints/draft-review-0.yaml
+response_sha256: 69881d5520af9a52cf9adcf0133c7297173dc9d599a3e4a4944e40c237b8d218
+usage:
+  input_tokens: 12148
+  output_tokens: 774
+  total_tokens: 12922
+at: '2026-10-19T16:21:44.172811+00:00'

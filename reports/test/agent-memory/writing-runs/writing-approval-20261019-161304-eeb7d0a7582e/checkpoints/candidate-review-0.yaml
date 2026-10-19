@@ -1,0 +1,38 @@
+binding: 2b35c5bd22269f7791234d0d2340414e73ef79d27a2a33bb26b26830405c2c6d
+result:
+  text: "{\n  \"decision\": \"pass\",\n  \"coverage_acknowledged\": true,\n  \"issues\"\
+    : [\n    {\n      \"severity\": \"info\",\n      \"location\": \"第1节第2段\",\n \
+    \     \"reason\": \"“评测 harness”对部分产品与工程读者可能不够直观；该段结果及其摘要覆盖范围、作者报告属性和推广限制均与 R1\
+    \ 一致。\",\n      \"suggestion\": \"可将“评测 harness”改为“评测框架（harness）”，降低阅读门槛，不改变结果或扩大其适用范围。\"\
+    \n    }\n  ],\n  \"checks\": [\n    {\n      \"section_index\": 0,\n      \"paragraph_index\"\
+    : 0,\n      \"verdict\": \"supported\",\n      \"evidence_ids\": [\"R1\", \"R2\"\
+    , \"H1\"]\n    },\n    {\n      \"section_index\": 1,\n      \"paragraph_index\"\
+    : 0,\n      \"verdict\": \"supported\",\n      \"evidence_ids\": [\"R1\"]\n  \
+    \  },\n    {\n      \"section_index\": 1,\n      \"paragraph_index\": 1,\n   \
+    \   \"verdict\": \"supported\",\n      \"evidence_ids\": [\"R1\"]\n    },\n  \
+    \  {\n      \"section_index\": 1,\n      \"paragraph_index\": 2,\n      \"verdict\"\
+    : \"supported\",\n      \"evidence_ids\": [\"R1\"]\n    },\n    {\n      \"section_index\"\
+    : 2,\n      \"paragraph_index\": 0,\n      \"verdict\": \"supported\",\n     \
+    \ \"evidence_ids\": [\"R2\"]\n    },\n    {\n      \"section_index\": 2,\n   \
+    \   \"paragraph_index\": 1,\n      \"verdict\": \"supported\",\n      \"evidence_ids\"\
+    : [\"R2\"]\n    },\n    {\n      \"section_index\": 2,\n      \"paragraph_index\"\
+    : 2,\n      \"verdict\": \"supported\",\n      \"evidence_ids\": [\"R2\", \"H1\"\
+    ]\n    },\n    {\n      \"section_index\": 3,\n      \"paragraph_index\": 0,\n\
+    \      \"verdict\": \"supported\",\n      \"evidence_ids\": [\"R1\", \"R2\", \"\
+    H1\"]\n    },\n    {\n      \"section_index\": 3,\n      \"paragraph_index\":\
+    \ 1,\n      \"verdict\": \"supported\",\n      \"evidence_ids\": [\"H1\"]\n  \
+    \  },\n    {\n      \"section_index\": 4,\n      \"paragraph_index\": 0,\n   \
+    \   \"verdict\": \"supported\",\n      \"evidence_ids\": [\"R1\", \"R2\", \"H1\"\
+    ]\n    },\n    {\n      \"section_index\": 4,\n      \"paragraph_index\": 1,\n\
+    \      \"verdict\": \"supported\",\n      \"evidence_ids\": [\"R1\", \"R2\", \"\
+    H1\"]\n    },\n    {\n      \"section_index\": 4,\n      \"paragraph_index\":\
+    \ 2,\n      \"verdict\": \"supported\",\n      \"evidence_ids\": [\"R1\", \"R2\"\
+    , \"H1\"]\n    },\n    {\n      \"section_index\": 5,\n      \"paragraph_index\"\
+    : 0,\n      \"verdict\": \"supported\",\n      \"evidence_ids\": [\"R1\", \"R2\"\
+    , \"H1\"]\n    }\n  ]\n}"
+  model: gpt-6.1-sol
+  response_id: resp_03a374038c47282c016ad643ceec6487d084bbf6bb8af49749
+  usage:
+    input_tokens: 14209
+    output_tokens: 777
+    total_tokens: 14986

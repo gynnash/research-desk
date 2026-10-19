@@ -1,0 +1,8 @@
+type: call_reserved
+reservation_id: draft-review-0
+stage: draft
+role: review
+revision: 0
+model_id: gpt-6.1-sol
+month: 2026-10
+at: '2026-10-19T16:21:25.516577+00:00'

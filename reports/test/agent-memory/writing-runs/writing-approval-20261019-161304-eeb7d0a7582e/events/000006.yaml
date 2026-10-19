@@ -1,0 +1,8 @@
+type: call_reserved
+reservation_id: draft-writing-0
+stage: draft
+role: writing
+revision: 0
+model_id: gpt-6-luna
+month: 2026-10
+at: '2026-10-19T16:18:20.650972+00:00'

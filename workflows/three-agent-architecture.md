@@ -1,8 +1,8 @@
 # ResearchDesk 三 Agent 总体架构
 
-- 版本：0.9；修订日期：2026-10-19。
-- 状态：**Research / Insight、GitHub 到 Mac、正式入库与 Obsidian 同步均已验收；每周二/周五北京时间09:00已启用，首次定时结果尚待发生。Writing 仍为离线模拟，未确认真实选题或发布公众号**。
-- 实施进度：已有[离线骨架](offline-research.md)、[真实资料采集测试](real-source-collection.md)和[本地会员真实研究与独立审阅](local-membership-analysis.md)。[配置驱动的 Research 批次闭环](configurable-research-batch.md)已通过一篇论文摘要与一篇博客节选的真实验收，共 4 次请求，独立审阅均通过，计划中断后补跑与完整缓存补跑均未重复调用；[验收记录](../reports/test/agent-memory/research-batches/configured-research-20261019/acceptance.md)只在测试区。[Insight 测试闭环](insight-agent-test.md)也已通过[真实验收](../reports/test/agent-memory/insight-runs/insight-agent-memory-20261019/acceptance.md)：两份已审阅 Research 与五份显式历史基线生成综合报告、2 条洞察和 2 张待确认选题卡，独立模型审阅通过；4 次请求含一次修订、语法规范化及独立格式确认，补跑未增加调用。[Writing 离线闭环](writing-agent-offline.md)已通过[虚构样例验收](../reports/test/agent-memory/writing-runs/writing-offline-20261019/acceptance.md)：三阶段独立模拟审阅通过，初稿修订一次，共 8 次模拟调用，三个断点恢复及缓存补跑未追加调用，会员调用为 0。[正式准入及定时启用](formal-admission-acceptance-2026-10-19.md)已完成：GitHub 新增 7 份正式 Markdown 并同步 Obsidian，0 新增模型调用；固定时间槽调度读取 `automation.yaml`，已在正式验收后开启。真实人工确认页面及 Git 保存已实现；会员 Writing 后端仍待接通。
+- 版本：1.0；修订日期：2026-10-20。
+- 状态：**Research / Insight、GitHub 到 Mac、正式入库与 Obsidian 同步均已验收；每周二/周五北京时间09:00已启用，首次定时结果尚待发生。真实页面确认与会员 Writing 已接通，写作仅输出 test，不发布公众号**。
+- 实施进度：已有[离线骨架](offline-research.md)、[真实资料采集测试](real-source-collection.md)和[本地会员真实研究与独立审阅](local-membership-analysis.md)。[配置驱动的 Research 批次闭环](configurable-research-batch.md)已通过一篇论文摘要与一篇博客节选的真实验收，共 4 次请求，独立审阅均通过，计划中断后补跑与完整缓存补跑均未重复调用；[验收记录](../reports/test/agent-memory/research-batches/configured-research-20261019/acceptance.md)只在测试区。[Insight 测试闭环](insight-agent-test.md)也已通过[真实验收](../reports/test/agent-memory/insight-runs/insight-agent-memory-20261019/acceptance.md)：两份已审阅 Research 与五份显式历史基线生成综合报告、2 条洞察和 2 张待确认选题卡，独立模型审阅通过；4 次请求含一次修订、语法规范化及独立格式确认，补跑未增加调用。[Writing 离线闭环](writing-agent-offline.md)已通过[虚构样例验收](../reports/test/agent-memory/writing-runs/writing-offline-20261019/acceptance.md)：三阶段独立模拟审阅通过，初稿修订一次，共 8 次模拟调用，三个断点恢复及缓存补跑未追加调用，会员调用为 0。[正式准入及定时启用](formal-admission-acceptance-2026-10-19.md)已完成：GitHub 新增 7 份正式 Markdown 并同步 Obsidian，0 新增模型调用；固定时间槽调度读取 `automation.yaml`，已在正式验收后开启。真实人工确认及 Git 保存已实现；[会员 Writing](writing-agent-member.md)读取用户确认，依次生成并独立审阅大纲、初稿和候选稿，仍只写 test。
 - 目标：构建长期运行的 AI 技术研究与内容创作系统，持续收集一手资料、积累研究证据、发现技术变化，并为微信公众号提供可追溯的选题与文章。
 - 基础：沿用 Markdown、YAML、GitHub 与 Obsidian；不引入数据库或复杂 Agent 框架。
 
@@ -28,7 +28,7 @@ flowchart TD
     K <-->|现有 Git 同步| O[Obsidian 阅读、批注与选题确认]
 ```
 
-目前已手动验证“来源 → 报告 → 洞察 → 文章”链路，实现来源采集、本应用官方会员授权、YAML 驱动的 Research 与 Insight 测试闭环。当前 [Writing 离线演练](writing-agent-offline.md)使用虚构选题及 `origin: offline_fixture` 确认，验证大纲、初稿和候选稿逐级独立模拟审阅及恢复。它不确认现有真实选题、不联网、不请求会员，也不改变正式资料。正式准入与 Actions 时间槽调度已实现；本地准入结果不等于远端已经保存或调度已启用。可信人工确认入口及会员 Writing 属于后续阶段，会员凭据仅存于仓库与 Obsidian Vault 之外。
+目前已手动验证“来源 → 报告 → 洞察 → 文章”链路，实现来源采集、本应用官方会员授权、YAML 驱动的 Research 与 Insight 测试闭环。当前 [Writing 离线演练](writing-agent-offline.md)使用虚构选题及 `origin: offline_fixture` 确认，验证大纲、初稿和候选稿逐级独立模拟审阅及恢复。它不确认现有真实选题、不联网、不请求会员，也不改变正式资料。正式准入与 Actions 时间槽调度已实现；本地准入结果不等于远端已经保存或调度已启用。可信人工确认入口与[会员 Writing](writing-agent-member.md)已接通，确认本身只保存授权，单独按钮派发 GitHub Writing 作业；会员凭据仅存于仓库与 Obsidian Vault 之外。
 
 ## 2. 三个业务角色
 
@@ -119,7 +119,7 @@ Research 已启用**每周二、周五北京时间 09:00**的 GitHub Actions 调
 
 选题卡必须给出稳定 ID、版本或内容散列、核心观点、写作角度、目标读者、主要依据、证据缺口和推荐范围。用户可在后续明确的确认入口接受或调整这些内容；仅编辑笔记、阅读选题、模型返回 `pass` 或没有回复均不是确认。
 
-Insight 将选题状态固定为 `proposed`、`approval_required: true`、`writing_started: false`，模型不能将候选标记为已确认。[真实选题确认页](topic-confirmation-mvp.md)已接通正式选题、完整证明校验、冻结预览、用户确认与撤回，记录在独立工作目录创建并普通提交推送；本轮未代用户确认任何真实选题。既有离线 Writing 继续只读虚构 `offline_fixture` 确认；真实会员 Writing 尚未接通，用户确认后当前状态为等待接入。
+Insight 将选题状态固定为 `proposed`、`approval_required: true`、`writing_started: false`，模型不能将候选标记为已确认。[真实选题确认页](topic-confirmation-mvp.md)已接通正式选题、完整证明校验、冻结预览、用户确认与撤回，记录在独立工作目录创建并普通提交推送；本轮未代用户确认任何真实选题。既有离线 Writing 继续只读虚构 `offline_fixture` 确认；真实会员 Writing 只读取已同步的页面确认，单独派发后逐阶段生成及独立审阅，输出仍只写 test；不能把模拟确认升级成真实授权。
 
 [真实选题确认入口](topic-confirmation-mvp.md)采用轻量 localhost 页面：用户查看证据范围、调整角度和受众、直接点击确认；受信任本机入口绑定选题、证据及配置版本，追加确认与撤回记录。Codex / ChatGPT Work 协助预览和打开页面，模型审阅不能代替点击。页面与 Git 保存已实现，真实写作执行及一次执行占用仍为下一阶段。
 

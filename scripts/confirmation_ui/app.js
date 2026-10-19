@@ -218,7 +218,7 @@
   }
   function configureSession(session) {
     const words = session && session.config && session.config.words;
-    if (!session.csrf_token || session.writing_available !== false || !words ||
+    if (!session.csrf_token || typeof session.writing_available !== 'boolean' || !words ||
         !Number.isInteger(words.min) || !Number.isInteger(words.max) || !Number.isInteger(words.default) ||
         words.min < 1 || words.max < words.min || words.default < words.min || words.default > words.max) {
       throw new Error('本地工作台配置未就绪，暂时无法保存确认。请检查页面服务配置后刷新。');
@@ -347,7 +347,7 @@
       $('#acknowledged').checked = false;
       renderTopics();
       renderRecords();
-      message('#records-message', record.synced === false ? '确认已保存在本机，但同步尚未完成。不会启动写作；请保留记录并检查同步状态。' : '已保存写作确认，等待接通 Writing。当前未启动写作，也未发布公众号。');
+      message('#records-message', record.synced === false ? '确认已保存在本机，但同步尚未完成。不会启动写作；请保留记录并检查同步状态。' : '已保存写作确认。点击“开始测试写作”后才会派发大纲、初稿和候选稿任务；不会发布公众号。');
       showScreen('records');
       announce('已保存写作确认，尚未开始写作。');
     } catch (error) {
@@ -364,8 +364,16 @@
     }
   }
   function recordStatus(record) {
-    const names = {confirmed_waiting_writer: '已确认 · 等待接通 Writing', confirmed: '已确认 · 等待接通 Writing', revoked: '已撤回', invalidated: '已失效', sync_pending: '已保存 · 等待同步', pending_sync: '确认已保存 · 等待同步', revocation_pending_sync: '撤回已保存 · 等待同步'};
+    const names = {confirmed_waiting_writer: '已确认 · 等待开始写作', confirmed: '已确认 · 等待开始写作', revoked: '已撤回', invalidated: '已失效', sync_pending: '已保存 · 等待同步', pending_sync: '确认已保存 · 等待同步', revocation_pending_sync: '撤回已保存 · 等待同步'};
     if (record.synced === false && !['revoked', 'invalidated', 'revocation_pending_sync'].includes(record.status)) return names.pending_sync;
+    if (['confirmed_waiting_writer', 'confirmed'].includes(record.status)) {
+      const progress = record.writing || {};
+      const states = {queued: '已派发 · 等待执行', dispatch_unknown: '派发状态待核对',
+        in_progress: '测试写作进行中', paused: '测试写作已暂停', test_accepted: '三稿已通过审阅 · TEST',
+        rejected: '独立审阅未通过', blocked: '证据不足 · 已停止', revision_required: '修订仍未通过',
+        unknown_request: '请求结果未知 · 已停止', integrity_blocked: '记录待核对 · 已停止'};
+      if (states[progress.status]) return states[progress.status];
+    }
     return names[record.status] || '状态待核对';
   }
   function renderRecords() {
@@ -386,17 +394,44 @@
       const choices = record.choices || record;
       if (choices.angle) card.append(element('p', 'topic-description', choices.angle));
       const details = element('div', 'record-details');
+      const progress = record.writing || {};
       details.append(element('span', '', `确认时间：${displayDate(record.created_at)}`),
-        element('span', '', record.writing_started ? '写作状态请核对执行记录' : 'Writing：未开始'),
+        element('span', '', `Writing：${Number.isInteger(progress.completed_calls) ? progress.completed_calls : 0} 次已完成 / ${Number.isInteger(progress.reserved_calls) ? progress.reserved_calls : 0} 次已预留`),
         element('span', '', '公众号：未授权发布'));
       if (choices.target_words) details.append(element('span', '', `目标篇幅：约 ${Number(choices.target_words).toLocaleString('zh-CN')} 字`));
       card.append(details, element('p', 'record-id', `确认 ID：${text(record.id)}`));
       if (record.reason) card.append(element('p', 'notice warm', record.reason));
+      if (progress.reason) card.append(element('p', 'notice warm', progress.reason));
+      if (record.writing_started) {
+        const stages = element('div', 'phases');
+        for (const [key, label] of [['outline', '大纲'], ['draft', '初稿'], ['candidate', '候选稿']]) {
+          stages.append(element('span', '', `${label}${progress.stages && progress.stages[key] ? ' ✓ 已审阅' : ' · 待完成'}`));
+        }
+        card.append(stages);
+      }
+      if (list(progress.documents).length) {
+        const documents = element('div', 'record-buttons');
+        for (const item of progress.documents) {
+          const button = element('button', 'secondary compact', text(item.label, '查看稿件'));
+          button.type = 'button';
+          button.addEventListener('click', () => openDocument(item.path));
+          documents.append(button);
+        }
+        card.append(documents, element('p', 'small', '只读展示已校验稿件。全部保存在 test，尚未正式入库或发布。'));
+      }
       const canRevoke = ['confirmed_waiting_writer', 'confirmed', 'sync_pending', 'pending_sync'].includes(record.status);
       const canSync = ['pending_sync', 'revocation_pending_sync', 'sync_pending'].includes(record.status) || record.synced === false;
-      if (canRevoke || canSync) {
+      const canWrite = state.session && state.session.writing_available && record.synced &&
+        ['confirmed_waiting_writer', 'confirmed'].includes(record.status) && ['not_started', 'paused'].includes(progress.status);
+      if (canRevoke || canSync || canWrite) {
         const footer = element('div', 'card-footer');
         const buttons = element('div', 'record-buttons');
+        if (canWrite) {
+          const start = element('button', 'primary', record.writing_started ? '继续测试写作' : '开始测试写作');
+          start.type = 'button';
+          start.addEventListener('click', () => startWriting(record, start));
+          buttons.append(start);
+        }
         if (canSync) {
           const sync = element('button', 'primary', '重试同步');
           sync.type = 'button';
@@ -409,11 +444,28 @@
           button.addEventListener('click', () => openRevoke(record));
           buttons.append(button);
         }
-        footer.append(element('span', 'small', canSync ? '本机记录已保留；同步完成前不会交给写作' : '已保存的研究和原选题保持不变'), buttons);
+        footer.append(element('span', 'small', canSync ? '本机记录已保留；同步完成前不会交给写作' : '每次派发最多新增 6 次会员请求；已完成结果会复用'), buttons);
         card.append(footer);
       }
       container.append(card);
     }
+  }
+  async function startWriting(record, button) {
+    if (state.busy) return;
+    state.busy = true;
+    button.disabled = true;
+    button.textContent = '正在派发…';
+    showGlobalError('');
+    try {
+      const result = await api('/api/writing', {confirmation_id: record.id});
+      if (!result.confirmation || result.confirmation.id !== record.id) throw new Error('未收到完整派发结果，请刷新记录或查看 GitHub 运行记录。');
+      state.confirmations = state.confirmations.map(item => item.id === record.id ? result.confirmation : item);
+      renderRecords();
+      message('#records-message', '已派发测试写作。执行器将再次核对确认与证据，逐阶段生成并独立审阅；完成后刷新记录查看三稿。不会发布公众号。');
+      announce('测试写作已派发。');
+    } catch (error) {
+      showGlobalError(`${error.message} 请先刷新核对，不要连续重复派发。`);
+    } finally { state.busy = false; button.disabled = false; }
   }
   async function retrySync(record, button) {
     if (state.busy) return;
@@ -427,7 +479,7 @@
       const updated = result.confirmation;
       state.confirmations = state.confirmations.map(item => item.id === updated.id ? updated : item);
       renderRecords();
-      message('#records-message', updated.synced ? '记录已同步。Writing 尚未接通，不会启动写作。' : '记录仍待同步，现场已保留。请检查网络或仓库冲突后再重试，不要重复确认。');
+      message('#records-message', updated.synced ? '记录已同步。有效确认可以单独开始测试写作；同步本身不会启动模型。' : '记录仍待同步，现场已保留。请检查网络或仓库冲突后再重试，不要重复确认。');
       announce(updated.synced ? '记录已同步。' : '记录仍待同步。');
     } catch (error) { showGlobalError(error.message); }
     finally { state.busy = false; button.disabled = false; button.textContent = '重试同步'; }

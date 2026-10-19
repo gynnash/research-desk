@@ -1,8 +1,8 @@
 # Agent Memory 定时研究任务 MVP 设计
 
-- 版本：0.9；修订日期：2026-10-19。
+- 版本：1.0；修订日期：2026-10-20。
 - 状态：**Research / Insight、GitHub 正式入库与 Obsidian 同步已验收；周二/周五北京时间09:00已启用**。[远端准入回执](formal-admission-acceptance-2026-10-19.md)已保存；首个定时成功仍须等待实际执行，启用值读取 `config/automation.yaml`。
-- 实施进度：已有[离线骨架](offline-research.md)、[真实来源采集](real-source-collection.md)、[配置驱动 Research](configurable-research-batch.md)与[真实 Insight 闭环](insight-agent-test.md)。[GitHub → 当前 Mac → Research / Insight → 测试结果回存 → Obsidian](../reports/test/agent-memory/cycles/cycle-agent-memory-gh-20261019/acceptance.md)已通过手动真实验收，按方向发现资料、读取历史、生成与独立审阅，并校验保存测试检查点。本地/远程主机通过 YAML 配置；本次实际验证当前 Mac。[正式准入](formal-admission.md)已完成远端 7 份 Markdown、0 新增模型调用验收并同步回 Obsidian；启用配置随后设为 true。真实人工确认页面及 Git 保存已实现；Writing 执行仍仅为离线样例，会员 Writing 后端待接通。
+- 实施进度：已有[离线骨架](offline-research.md)、[真实来源采集](real-source-collection.md)、[配置驱动 Research](configurable-research-batch.md)与[真实 Insight 闭环](insight-agent-test.md)。[GitHub → 当前 Mac → Research / Insight → 测试结果回存 → Obsidian](../reports/test/agent-memory/cycles/cycle-agent-memory-gh-20261019/acceptance.md)已通过手动真实验收，按方向发现资料、读取历史、生成与独立审阅，并校验保存测试检查点。本地/远程主机通过 YAML 配置；本次实际验证当前 Mac。[正式准入](formal-admission.md)已完成远端 7 份 Markdown、0 新增模型调用验收并同步回 Obsidian；启用配置随后设为 true。真实人工确认页面及 Git 保存已实现；[会员 Writing](writing-agent-member.md)已实现真实确认后的三阶段独立审阅，只输出 test。
 - 目标：GitHub Actions 定时发现 Agent Memory 资料，生成带证据的研究记录，经独立审阅模型与规则校验通过后自动入库。
 - 总体架构见[三 Agent 总体架构](three-agent-architecture.md)。沿用[主题配置](../config/research_topics.yaml)、[Schema v1](source-schema.md)、[维护规范](maintenance.md)和现有模板，保持 Markdown + YAML。
 
@@ -12,7 +12,7 @@
 
 闭环为：**定时触发 → 发现与查重 → 固定原文证据 → 研究模型生成 → 独立模型审阅 → 规则校验 → 受限正式准入与保存 → Obsidian 拉取**。
 
-本版已实施 Research / Insight 的配置驱动测试批次与 GitHub 手动派发：处理 YAML 启用的方向，首个方向为 `agent-memory`，`agent-rl` 继续停用。当前先创建隔离测试研究、综合报告、洞察、待确认选题及回执，再经独立审阅绑定与准入规则创建新的正式资料。真实 Writing 仍待实现，定时是否开启以自动化配置为准，不连接公众号发布接口。
+本版已实施 Research / Insight 的配置驱动测试批次与 GitHub 手动派发：处理 YAML 启用的方向，首个方向为 `agent-memory`，`agent-rl` 继续停用。当前先创建隔离测试研究、综合报告、洞察、待确认选题及回执，再经独立审阅绑定与准入规则创建新的正式资料。真实 Writing 通过独立手动派发作业执行，仍只输出 test；定时是否开启以自动化配置为准，不连接公众号发布接口。
 
 最终业务链路为：**周二/周五 09:00 自动 Research → 独立审阅后受限入库 → 自动综合与 Insight → 独立审阅后保存洞察和公众号候选选题 → 用户明确确认选题、角度、受众及输入版本 → Writing 生成并审阅大纲、初稿、候选稿 → 用户决定是否发布**。独立审阅是三个 Agent 共用的能力。正常研究、洞察和选题无需人工逐篇审阅；模型通过不能替用户确认选题。确认需绑定选题与证据散列，内容变化后重获确认，模型无权创建自己的批准记录。
 
@@ -41,7 +41,7 @@
 
 早期一篇论文加一篇博客的测试仍保留当时最多 6 次请求及月度 10 次的快照，不修改历史 YAML 或回执。当前新轮次读取 [`config/cycles/agent-memory.yaml`](../config/cycles/agent-memory.yaml) 的 5 份资料、Research 12 次及 Insight 4 次限制；[`config/membership_budget.yaml`](../config/membership_budget.yaml) 的共享月度 100 次不变，历史消费不清零。已绑定轮次不能套用新配置或换 ID 逃避原判断；新上限只适用于后续新轮次。
 
-URL 查重使用全库正式及测试来源和真实研究历史，也覆盖同轮 URL 别名；只在比较时去掉跟踪参数、fragment 和同论文的 arXiv URL 表达差异，不修改既有证据与散列。非跟踪查询参数、版本、原文或节选变化仍可形成独立更新，详见[维护规范](maintenance.md)。[真实选题确认页](topic-confirmation-mvp.md)已实现本地预览、明确确认、撤回与 Git 保存；当前确认后等待接入真实 Writing，不自动调用模型或发布公众号。
+URL 查重使用全库正式及测试来源和真实研究历史，也覆盖同轮 URL 别名；只在比较时去掉跟踪参数、fragment 和同论文的 arXiv URL 表达差异，不修改既有证据与散列。非跟踪查询参数、版本、原文或节选变化仍可形成独立更新，详见[维护规范](maintenance.md)。[真实选题确认页](topic-confirmation-mvp.md)已实现本地预览、明确确认、撤回与 Git 保存；确认保存后可单独派发真实 Writing；没有新增 Writing 定时任务或自动发布公众号。
 
 研究、修订、审阅、复审和失败重试都计入调用及用量预算。请求前持久化调用预留，关闭隐式重试；结果未知不能返还预留。会员真实额度不可观测时标记未知，不将模拟单位换算成真实费用；具体用量门禁按会员后端验收。若以后另行采用付费 API，需另外预留最大费用。额度不足时留下待办，不能新建批次绕过限制或自动切换付费后端。
 

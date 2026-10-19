@@ -1,0 +1,13 @@
+type: call_completed
+reservation_id: outline-writing-0
+stage: outline
+role: writing
+revision: 0
+model_id: gpt-6-luna
+response_path: reports/test/agent-memory/writing-runs/writing-approval-20261019-161304-eeb7d0a7582e/checkpoints/outline-writing-0.yaml
+response_sha256: 88cc78dbbb6d35f0be5a19c5aebb5e6524d5f116ad75be5de387749670e5a565
+usage:
+  input_tokens: 8386
+  output_tokens: 1727
+  total_tokens: 10113
+at: '2026-10-19T16:17:49.024991+00:00'

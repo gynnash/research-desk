@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Loopback topic confirmation, immutable events and bounded Git synchronization.
 
-No model client, Writing runner or publishing interface is exposed here.
+The page may dispatch a confirmed TEST Writing job; model execution stays on
+the trusted worker. No membership credential or publishing interface is exposed.
 Run setup once, then serve from a separate checkout outside the Obsidian vault.
 """
 
@@ -193,6 +194,7 @@ class ConfirmationStore:
         self.clock = clock or time.time
         self.lock = threading.RLock()
         self.previews, self.published = {}, {}
+        self.writing_dispatches = {}
 
     def _refresh(self):
         if hasattr(self.publisher, 'refresh') and not self.publisher.refresh():
@@ -331,10 +333,16 @@ class ConfirmationStore:
             self.published.get(p) == store.digest((self.root / p).read_bytes()) for p in files)
         if not synced and status != 'invalidated':
             status = 'revocation_pending_sync' if revoked else 'pending_sync'
+        import researchdesk_writing_status as writing_status
+        writing = writing_status.inspect(self.root, topic, record['id'], base + '/confirmed.yaml')
+        dispatch = self.writing_dispatches.get(record['id'])
+        if dispatch and self.clock() - dispatch['timestamp'] < 90 and writing['status'] == 'not_started':
+            writing = dict(writing, status=dispatch['status'], dispatched_at=dispatch['at'])
         return {'id': record['id'], 'topic': topic, 'topic_id': record['topic_id'], 'title': record['title'],
                 'created_at': record['created_at'], 'status': status, 'synced': synced, 'reason': reason,
                 'choices': preview['payload']['choices'],
-                'writing_started': False, 'publish_authorized': False, 'record_path': base + '/confirmed.yaml'}
+                'writing_started': writing['started'], 'writing': writing,
+                'publish_authorized': False, 'record_path': base + '/confirmed.yaml'}
 
     def list_confirmations(self):
         with self.lock:
@@ -400,7 +408,47 @@ class ConfirmationStore:
                 self._publish(files, 'Save ResearchDesk human confirmation records', confirmation_id)
             return self._status(topic, base)
 
+    def start_writing(self, confirmation_id):
+        """Dispatch only; the worker rechecks confirmation before every request."""
+        with self.lock:
+            self._refresh()
+            topic, base = self._locate(confirmation_id)
+            current = self._status(topic, base)
+            if not current['synced'] or current['status'] != 'confirmed_waiting_writer':
+                raise ConfirmationError('writing_confirmation_inactive', '请先同步有效确认；已撤回或失效的确认不能启动写作。')
+            import researchdesk_writing_member_inputs as writing_inputs
+            writing_inputs.prepare_bundle(self.root, approval_id=confirmation_id,
+                                          config_path=self.config['_config_path'])
+            progress = current['writing']
+            if progress['status'] in {'test_accepted', 'rejected', 'blocked', 'revision_required',
+                                      'unknown_request', 'integrity_blocked'}:
+                raise ConfirmationError('writing_stopped', '此批次已完成或需要检查执行记录，不能新增写作请求。')
+            now = self.clock()
+            previous = self.writing_dispatches.get(confirmation_id)
+            if previous and now - previous['timestamp'] < 90:
+                return self._status(topic, base)
+            # Mark before dispatch: a timeout can mean GitHub accepted the job.
+            self.writing_dispatches[confirmation_id] = {'timestamp': now, 'status': 'dispatch_unknown',
+                'at': datetime.fromtimestamp(now, timezone.utc).isoformat()}
+            try:
+                response = subprocess.run(['gh', 'workflow', 'run', 'researchdesk-writing.yml', '--ref', 'main',
+                    '-f', 'approval_id=' + confirmation_id, '-f', 'max_new_calls=6'], cwd=self.root,
+                    stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=45, check=False)
+            except (OSError, subprocess.TimeoutExpired) as exc:
+                raise ConfirmationError('writing_dispatch_unknown', '派发结果尚不明确，请先刷新记录或查看 GitHub 运行记录；同一确认会复用已有检查点。', 503) from exc
+            if response.returncode:
+                raise ConfirmationError('writing_dispatch_failed', '写作任务未能派发，请检查本机 GitHub CLI 授权及 Writing 工作流后重试。', 503)
+            self.writing_dispatches[confirmation_id]['status'] = 'queued'
+            return self._status(topic, base)
+
     def document(self, relative):
+        for record in self.list_confirmations():
+            for item in record.get('writing', {}).get('documents', []):
+                if item['path'] == relative:
+                    payload = admission._location(self.root, relative).read_bytes()
+                    if store.digest(payload) != item['sha256']:
+                        raise ConfirmationError('writing_document_changed', '稿件已变化，保留文件并停止展示。')
+                    return {'path': relative, 'text': payload.decode('utf-8')}
         allowed = set()
         for card in inputs.list_topics(self.root, self.config):
             preview = inputs.prepare_preview(self.root, self.config, card['id'])
@@ -461,7 +509,7 @@ def create_server(root, config, host='127.0.0.1', port=0, publisher=None):
                 path = parts.path
                 if not mutation:
                     if path == '/api/session':
-                        return self._json({'csrf_token': self.server.csrf_token, 'writing_available': False,
+                        return self._json({'csrf_token': self.server.csrf_token, 'writing_available': True,
                             'config': {'words': config['writing']['words'], 'writing': config['writing'],
                                        'preview_ttl_seconds': config['preview_ttl_seconds']}})
                     if path == '/api/topics':
@@ -496,6 +544,9 @@ def create_server(root, config, host='127.0.0.1', port=0, publisher=None):
                 if path == '/api/sync':
                     common.fields(payload, {'confirmation_id'}, '同步请求')
                     return self._json({'confirmation': manager.retry_sync(payload['confirmation_id'])})
+                if path == '/api/writing':
+                    common.fields(payload, {'confirmation_id'}, 'Writing 派发请求')
+                    return self._json({'confirmation': manager.start_writing(payload['confirmation_id'])})
                 raise ConfirmationError('not_found', '未找到操作。', 404)
             except ConfirmationError as exc:
                 self._json({'error': {'code': exc.code, 'message': exc.message}}, exc.status)
@@ -587,7 +638,7 @@ def main():
             raise store.OfflineError('服务端口必须在 1024–65535')
         server = create_server(target, target_config, port=port)
         print('ResearchDesk 选题确认：http://127.0.0.1:%s' % server.server_port, flush=True)
-        print('页面已接通真实资料与确认记录；Writing 尚未接通，不会调用会员模型。', flush=True)
+        print('页面已接通真实资料、确认记录及 TEST Writing 派发；模型由独立执行器运行，不会发布公众号。', flush=True)
         if args.open_browser:
             webbrowser.open('http://127.0.0.1:%s' % server.server_port)
         try:

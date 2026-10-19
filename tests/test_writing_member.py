@@ -10,6 +10,7 @@ These checks never confirm a topic in the user's vault or access the network.
 import importlib
 import json
 from pathlib import Path
+import re
 import shutil
 import socket
 import subprocess
@@ -111,6 +112,11 @@ class RealMemberWriting(unittest.TestCase):
         self.root.mkdir()
         shutil.copytree(REPOSITORY / 'config', self.root / 'config')
         paths = set(self.plan['input_hashes']) | set(self.plan['protected_notes']) | set(self.plan['output_hashes'])
+        paths |= {'README.md', '.gitignore', 'sources/README.md', 'reports/README.md',
+                  'insights/README.md', 'articles/README.md', 'workflows/README.md',
+                  'workflows/source-schema.md', 'workflows/maintenance.md',
+                  'workflows/requirements.txt', 'workflows/validate.py',
+                  'workflows/templates/paper.md', 'workflows/templates/blog.md'}
         paths |= {p.relative_to(REPOSITORY).as_posix()
                   for p in (REPOSITORY / ADMISSION).iterdir() if p.is_file()}
         for relative in list(paths):
@@ -249,6 +255,7 @@ class RealMemberWriting(unittest.TestCase):
                           for role in ('writing', 'review')])
         for call in self.client.calls:
             self.assertEqual(call['model'], self.config['writing']['models'][call['role']])
+        self.assertEqual(len(set(result['actual_models'])), 2)
         self.assertEqual(len(result['output_hashes']), 3)
         self.assertFalse(result['publish_authorized'])
         for relative, expected in result['output_hashes'].items():
@@ -256,6 +263,9 @@ class RealMemberWriting(unittest.TestCase):
             self.assertEqual(store.digest(path.read_bytes()), expected)
             self.assertIn('> TEST', path.read_text(encoding='utf-8'))
             self.assertIn('https://', path.read_text(encoding='utf-8'))
+            for target in re.findall(r'\]\(([^)]+)\)', path.read_text(encoding='utf-8')):
+                if '://' not in target:
+                    self.assertTrue((path.parent / target.split('#', 1)[0]).resolve().is_file(), target)
         after = self.hashes()
         replay = self.run_writing(record)
         self.assertTrue(replay['cached'])
@@ -331,6 +341,63 @@ class RealMemberWriting(unittest.TestCase):
         self.assertEqual(target.read_bytes(), changed)
         self.assertEqual(len(self.client.calls), 6)
         self.assert_original_unchanged()
+
+    def test_job_transfer_rejects_changed_inputs_and_conflicts_then_saves_test_only(self):
+        job = importlib.import_module('researchdesk_writing_job')
+        record = self.confirm()
+        bundle = self.inputs.prepare_bundle(self.root, record['id'])
+        state, artifact = self.root.parent / 'state', self.root.parent / 'artifact'
+        job.transfer.json_write(state / 'context.json', job.context(self.root, bundle))
+        result = self.run_writing(record)
+        exported = job.export(self.root, state, artifact)
+        self.assertTrue(exported['files'])
+        self.assertTrue(all('test' in Path(relative).parts for relative in exported['files']))
+        self.assertTrue(set(result['output_hashes']).issubset(exported['files']))
+
+        def clone(name):
+            target = self.root.parent / name
+            subprocess.run(['git', 'clone', '--quiet', str(self.origin), str(target)],
+                           check=True, capture_output=True)
+            return target
+
+        conflicted = clone('conflicted-publisher')
+        config_path = conflicted / 'config/research_topics.yaml'
+        original_config = config_path.read_bytes()
+        changed = original_config + b'\n# Isolated human configuration change\n'
+        config_path.write_bytes(changed)
+        with self.assertRaises(job.JobError):
+            job.apply(conflicted, artifact)
+        self.assertEqual(config_path.read_bytes(), changed)
+        self.assertTrue(all(not (conflicted / relative).exists() for relative in result['output_hashes']))
+        config_path.write_bytes(original_config)
+        manual = conflicted / next(iter(result['output_hashes']))
+        manual.parent.mkdir(parents=True, exist_ok=True)
+        content = '# 人工测试写作笔记：自动回存不可覆盖。\n'.encode('utf-8')
+        manual.write_bytes(content)
+        with self.assertRaises(job.JobError):
+            job.apply(conflicted, artifact)
+        self.assertEqual(manual.read_bytes(), content)
+
+        publisher = clone('clean-publisher')
+        original_notes = {relative: (publisher / relative).read_bytes()
+                          for relative in self.original if Path(relative).suffix == '.md'}
+        saved = job.apply(publisher, artifact)
+        self.assertEqual(saved['status'], 'test_accepted')
+        self.assertEqual(saved['completed_calls'], 6)
+        self.assertGreater(saved['saved_files'], 3)
+        self.assertFalse(saved['production_accepted'])
+        self.assertEqual(len(self.client.calls), 6)
+        for relative, content in original_notes.items():
+            self.assertEqual((publisher / relative).read_bytes(), content, relative)
+        changes = subprocess.run(
+            ['git', '-C', str(publisher), 'diff-tree', '--no-commit-id', '--name-only', '-r', 'HEAD'],
+            check=True, capture_output=True, text=True).stdout.splitlines()
+        self.assertTrue(changes)
+        self.assertTrue(all('test' in Path(relative).parts for relative in changes))
+        replay = job.apply(publisher, artifact)
+        self.assertEqual(replay['saved_files'], 0)
+        self.assertEqual(replay['commit'], saved['commit'])
+        self.assertEqual(len(self.client.calls), 6)
 
 
 if __name__ == '__main__':
