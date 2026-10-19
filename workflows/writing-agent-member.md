@@ -66,8 +66,8 @@ git diff --check
 
 ```sh
 python3 scripts/researchdesk_writing_job.py execute \
-  --state /tmp/researchdesk-writing-state \
+  --state "$HOME/.local/state/ResearchDesk/writing-attempt-001" \
   --approval-id '<页面保存的真实确认 ID>' --max-new-calls 6
 ```
 
-不要在多个副本并发运行真实入口。已通过的完整批次再次运行只复核及复用，不新增模型请求。首次真实结果与实际调用数量见该批次的 `receipt.yaml` 及测试验收记录。
+每次执行使用新的仓库外 state 目录；同一确认 ID 继续复用仓库内的原批次检查点。不要在多个副本并发运行真实入口。已通过的完整批次再次运行只复核及复用，不新增模型请求。首次真实结果与实际调用数量见该批次的 `receipt.yaml` 及测试验收记录。
