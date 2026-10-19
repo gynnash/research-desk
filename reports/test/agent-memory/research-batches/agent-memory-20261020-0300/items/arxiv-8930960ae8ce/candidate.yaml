@@ -1,0 +1,69 @@
+candidate:
+  key: arxiv-8930960ae8ce
+  kind: paper
+  topic: agent-memory
+  metadata:
+    title: 'MemSyco-Bench: Benchmarking Sycophancy in Agent Memory'
+    source: arXiv
+    source_url: https://arxiv.org/abs/2607.01071
+    authors:
+    - Xiang, Zhishang
+    - Chen, Zerui
+    - Tang, Yunbo
+    - Wei, Zhimin
+    - Ning, Ruqin
+    - Lin, Yujie
+    - Zhang, Qinggang
+    - Su, Jinsong
+    published_at: '2026-07-01'
+    arxiv_id: '2607.01071'
+    source_version: v3
+  evidence:
+    coverage: abstract_only
+    extraction_coverage: abstract_only
+    source_url: https://arxiv.org/abs/2607.01071
+    source_version: v3
+    content_hash: 67ba274f5d7b2c80a001673e8db300a2cdf4891ba50182b21173cbb064e3da33
+    evidence_sha256: 62fc37b491d210d6f66175e5d83d772334935b468977f2c5992d284ae7c47472
+    locators:
+    - id: A1
+      location: abstract_only sentence 1
+      text_sha256: 65c9a39e7bba2e65979942baa1bbac4d86aaa69567160a310caac315ca919170
+      quote: Memory has emerged as a cornerstone of modern LLM-based agents, supporting
+        their evolution from single-turn assistants to long-term collaborators.
+    - id: A2
+      location: abstract_only sentence 2
+      text_sha256: 973be91519af9e371c994e372a766f1990755b2c4515bb0024a9c3e84eff8446
+      quote: 'However, memory is not always beneficial:'
+    - id: A3
+      location: abstract_only sentence 3
+      text_sha256: 093bbf3533c32b9db5833b5af461720007f368d759e5cd1366bdf8a2ef3ace70
+      quote: ''
+    - id: A4
+      location: abstract_only sentence 4
+      text_sha256: a78a1a3c001eeb9f797bf157853ef5118ec810fd189f7edc66df789ef2a04407
+      quote: ''
+    - id: A5
+      location: abstract_only sentence 5
+      text_sha256: d27c0f7d04351c51962edbe8f8cfbe0959d8a59266d3f2545ac0e3f99626c452
+      quote: ''
+    - id: A6
+      location: abstract_only sentence 6
+      text_sha256: f9ba47e8a8e0bb7e102ca36a654734fc7ab9d685265efb7e224b1b58f01284d0
+      quote: ''
+    - id: A7
+      location: abstract_only sentence 7
+      text_sha256: 69f6b925528b792213a32f08b35d49913936d51704f6e0b298d281b4cd588ccb
+      quote: ''
+  identity_keys:
+  - arxiv:2607.01071
+  - url:https://arxiv.org/abs/2607.01071
+  source_id: paper-f5ce4a88-8dda-4ad0-b219-a0abb5a40c21
+  existing_source_path: null
+  existing_source_metadata: null
+  content_hash: 67ba274f5d7b2c80a001673e8db300a2cdf4891ba50182b21173cbb064e3da33
+  metadata_hash: b1cfc84fac48178e9f8766e943180516a53509b8fd5588ec5574cf5400011979
+  upstream_updated_at: '2026-10-15'
+material_sha256: 62fc37b491d210d6f66175e5d83d772334935b468977f2c5992d284ae7c47472
+action: research
+reason: no_completed_real_research

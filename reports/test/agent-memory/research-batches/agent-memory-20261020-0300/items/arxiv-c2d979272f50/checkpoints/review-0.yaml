@@ -1,0 +1,23 @@
+binding: 8c8a1ef8376d0bf56c25562fb785e3289e95c005fff192f122f00751c12c2979
+result:
+  text: "{\n  \"decision\": \"revise\",\n  \"coverage_acknowledged\": true,\n  \"\
+    issues\": [\n    {\n      \"severity\": \"error\",\n      \"location\": \"candidate.claims[3].text\"\
+    ,\n      \"reason\": \"A11 中的 exemplar-free 不等于“无样本”。后者容易被理解为零样本学习或不使用训练样本，而 A7\
+    \ 明确描述从新数据学习。原文支持的是不依赖样本范例的增量学习设置，而不是零样本设置。\",\n      \"suggestion\": \"将“无样本\
+    \ Class-IL 与 Task-IL 设置”改为“exemplar-free（不保留历史样本范例）的 Class-IL 与 Task-IL 设置”，并继续保留“作者报告”的归属限定。\"\
+    \n    },\n    {\n      \"severity\": \"warning\",\n      \"location\": \"candidate.claims[2].text\"\
+    ,\n      \"reason\": \"候选将 A8 的 consolidation 译为“整合”，而 A9 的 integration 也表述为“整合”，弱化了摘要明确区分的知识巩固与知识集成两个阶段。流程的其余内容有原文支持。\"\
+    ,\n      \"suggestion\": \"将“随后通过整合过程提取模式”改为“随后通过知识巩固过程识别已学习参数中的潜在模式”，并将最后一步保留为“集成进长期记忆”。\"\
+    \n    }\n  ],\n  \"checks\": [\n    {\n      \"claim_index\": 0,\n      \"verdict\"\
+    : \"supported\",\n      \"evidence_ids\": [\"A1\", \"A2\"]\n    },\n    {\n  \
+    \    \"claim_index\": 1,\n      \"verdict\": \"supported\",\n      \"evidence_ids\"\
+    : [\"A4\", \"A5\"]\n    },\n    {\n      \"claim_index\": 2,\n      \"verdict\"\
+    : \"supported\",\n      \"evidence_ids\": [\"A7\", \"A8\", \"A9\"]\n    },\n \
+    \   {\n      \"claim_index\": 3,\n      \"verdict\": \"unsupported\",\n      \"\
+    evidence_ids\": [\"A11\", \"A12\"]\n    }\n  ]\n}"
+  model: gpt-6.1-sol
+  response_id: resp_045ea63cdcd60b0e016ad69cfb3c9c87d0a33968ce1f4778b0
+  usage:
+    input_tokens: 1205
+    output_tokens: 558
+    total_tokens: 1763

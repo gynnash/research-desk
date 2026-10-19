@@ -1,0 +1,73 @@
+schema_version: 1
+mode: research_cycle_test
+backend: chatgpt_plan
+topic: agent-memory
+cycle_id: agent-memory-20261020-0300
+status: insight_blocked
+window_start: '2026-10-12T22:42:02.981223+00:00'
+window_end: '2026-10-19T22:42:02.981223+00:00'
+discovery_complete: false
+source_status:
+- id: arxiv
+  adapter: arxiv
+  entry_url: https://export.arxiv.org/api/query
+  status: truncated
+  discovered: 2451
+  inspected: 20
+  eligible: 15
+  selected: 2
+  complete_window: false
+  error_types: []
+  requested_url: https://export.arxiv.org/api/query?search_query=all%3A%22agent+memory%22+OR+all%3A%22long-term+memory%22+OR+all%3A%22episodic+memory%22+OR+all%3A%22memory+retrieval%22+OR+all%3A%22memory+consolidation%22&sortBy=lastUpdatedDate&sortOrder=descending&start=0&max_results=20
+- id: letta
+  adapter: letta
+  entry_url: https://www.letta.com/blog/
+  status: truncated
+  discovered: 28
+  inspected: 20
+  eligible: 0
+  selected: 0
+  complete_window: false
+  error_types: []
+  coverage: bounded_listing_only_no_archive_cursor
+- id: langchain
+  adapter: langchain
+  entry_url: https://www.langchain.com/blog
+  status: truncated
+  discovered: 19
+  inspected: 19
+  eligible: 2
+  selected: 2
+  complete_window: false
+  error_types: []
+  coverage: bounded_listing_only_no_archive_cursor
+stages:
+  research:
+    status: test_accepted
+    reserved_calls: 6
+  insight:
+    status: revise
+    reserved_calls: 3
+reserved_calls: 9
+pending_count: 68
+input_hashes:
+  reports/test/agent-memory/cycles/agent-memory-20261020-0300/manifest.yaml: 863a26396cae175dfbfd3614dec29a134c003a10b4849c0f8105a98e37c43553
+  reports/test/agent-memory/cycles/agent-memory-20261020-0300/discovery.yaml: a576a412e84d6518ece911968d16890d02c411ec55af65a7e42dbba0c18b5228
+  reports/test/agent-memory/cycles/agent-memory-20261020-0300/selection.yaml: df7d4c7c01c1bce34e7245550a443c94957f007d203e481ee1bf96ecea9d6e2b
+  sources/blogs/agent-memory/blog-05c33166-b18e-425e-91e0-36ddd26f21aa.md: e41eecff5dec1f01b27eae70df70bbc71de57107c8d8e3f51c786022334f642e
+  sources/blogs/blog-fec9a2e1-6812-425a-83cd-e6a2464a1110.md: 1c05f28a21a3cef08ff0fc966970a4eed70e2510d0d17468437fb4ff0fa7e99f
+  sources/papers/agent-memory/paper-2d89084b-a1b1-4a27-b298-a660ef434e61.md: 20ca381ff3e8d96d9e711c763fd3c7ad2eae3dd6f2f381f0edbe573311ec1378
+  sources/papers/paper-4eb3be4b-7189-49aa-bafd-f88f77a972f4.md: 2fca02def277430ea06e35c370b56b895c82d01b14099c3cea4cb55a1e410274
+  reports/agent-memory/cycle-agent-memory-gh-20261019-synthesis.md: 445d181c3a8eb2f11204e64279f56a79acc57ec6a127f27e073a34d264e8829d
+  reports/agent-memory/cycle-agent-memory-gh-20261019-research-paper-2d89084b-a1b1-4a27-b298-a660ef434e61.md: dc9bbeb260b478b94ebe7919a7e6c4ab10238ba49fdb14a987b803035af3e5d2
+  reports/test/agent-memory/cycles/agent-memory-20261020-0300/history.yaml: 3b26254b6a7e93cb2fc17c6ba1fc467d9c37e234d417cde87e79563f261b381d
+  reports/test/agent-memory/cycles/agent-memory-20261020-0300/research-result.yaml: 5ae786bef3f7270583c49fa9caa46349e4f06b1e8b31424c4a1c17518afac7b6
+  reports/test/agent-memory/cycles/agent-memory-20261020-0300/configs/research.yaml: 792a863fc3d1871469f607e5782cb96bf63cc4458da9fdf8efdf0bc5e72364b7
+  reports/test/agent-memory/research-batches/agent-memory-20261020-0300/receipt-attempt-1.yaml: 5ae786bef3f7270583c49fa9caa46349e4f06b1e8b31424c4a1c17518afac7b6
+  reports/test/agent-memory/cycles/agent-memory-20261020-0300/configs/insight.yaml: f04aafaa710ba7c525fe3379b387e71dd31ead3be9f61df270efd33af8184b84
+  reports/test/agent-memory/cycles/agent-memory-20261020-0300/insight-result.yaml: c41bf1d2a32726ae28763151c547a69558bc85be0b59de87e3f99d64b66c03fd
+  reports/test/agent-memory/insight-runs/agent-memory-20261020-0300/receipt.yaml: c41bf1d2a32726ae28763151c547a69558bc85be0b59de87e3f99d64b66c03fd
+output_hashes: {}
+production_accepted: false
+writing_started: false
+publish_authorized: false

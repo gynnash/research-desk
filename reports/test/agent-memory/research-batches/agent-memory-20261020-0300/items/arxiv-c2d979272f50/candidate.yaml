@@ -1,0 +1,89 @@
+candidate:
+  key: arxiv-c2d979272f50
+  kind: paper
+  topic: agent-memory
+  metadata:
+    title: 'Co2In: a Bi-level Memory Incremental Learning Framework with Knowledge
+      Encoding, Consolidation, and Integration'
+    source: arXiv
+    source_url: https://arxiv.org/abs/2610.21804
+    authors:
+    - Sun, Wenju
+    - Li, Qingyong
+    - Li, Boyang
+    - Wang, Wen
+    - Zhang, Siyu
+    - Wei, Yi
+    - Geng, Yangliao
+    published_at: '2026-10-15'
+    arxiv_id: '2610.21804'
+    source_version: v1
+  evidence:
+    coverage: abstract_only
+    extraction_coverage: abstract_only
+    source_url: https://arxiv.org/abs/2610.21804
+    source_version: v1
+    content_hash: 012a6deb45c79b083191bb41156905dd3c03ff94d0c73d59899a8732ffc06161
+    evidence_sha256: 3a95f1a0fbe2d19d3127c51bec1d63379114e227f73a0b04ed9680e7bc6f64e4
+    locators:
+    - id: A1
+      location: abstract_only sentence 1
+      text_sha256: 9042d04c6214e16b87e44d6698ddc0d191a7b7ad803b5285be77406599cfe461
+      quote: Incremental learning (IL) aims to continually acquire new knowledge (plasticity)
+        while retaining previously learned information (stability).
+    - id: A2
+      location: abstract_only sentence 2
+      text_sha256: ca0b20e4804da507a516086e09ccbeb67c5a16b1f79ba4492ec2634fba565db6
+      quote: However, striking a balance between plasticity and stability remains
+    - id: A3
+      location: abstract_only sentence 3
+      text_sha256: ede3a828cf83c665e9f381253dc171e95323aafa0a571594cc103cf6888a3094
+      quote: ''
+    - id: A4
+      location: abstract_only sentence 4
+      text_sha256: bdec857f7edf2edbc280c37ce6c29848ffee528f56255ab40ba25a80a053e7fe
+      quote: ''
+    - id: A5
+      location: abstract_only sentence 5
+      text_sha256: 261662edee44a25e4cc9e21fd968df3567a6cee768ce7baa8d70eb64a6e49541
+      quote: ''
+    - id: A6
+      location: abstract_only sentence 6
+      text_sha256: bc6cc8c9e5371168a9f1b6c3396571f4495cab60b24c03692161c11647a738b2
+      quote: ''
+    - id: A7
+      location: abstract_only sentence 7
+      text_sha256: 198d009213bf43cbe061ba3b054fe8089d0e2aa174bf63ccbf9b4a09f1138658
+      quote: ''
+    - id: A8
+      location: abstract_only sentence 8
+      text_sha256: 5291a9b401df2df989896f57f0bde5e7a57a007c6159165587ef62d44811f1d8
+      quote: ''
+    - id: A9
+      location: abstract_only sentence 9
+      text_sha256: f0ea453c69c3a8629c8ea6971c8c70c5ae26756a01be92e1471278414be2189d
+      quote: ''
+    - id: A10
+      location: abstract_only sentence 10
+      text_sha256: 1c4bfc21c1954c4aee4df99e6bd35033df856af23f75c786f88ae0c09157654c
+      quote: ''
+    - id: A11
+      location: abstract_only sentence 11
+      text_sha256: 312cf6b0cec8584e49b1fad3bd9ccff2958ad478c62bca24ccc0abd5d160bb81
+      quote: ''
+    - id: A12
+      location: abstract_only sentence 12
+      text_sha256: 21787af2c9a7ac524c822d2bab0fec76ac3c86ccee73cd782b98bd81805984c3
+      quote: ''
+  identity_keys:
+  - arxiv:2610.21804
+  - url:https://arxiv.org/abs/2610.21804
+  source_id: paper-0d7a0c77-ff16-47d6-a6ea-91407aa2cc80
+  existing_source_path: null
+  existing_source_metadata: null
+  content_hash: 012a6deb45c79b083191bb41156905dd3c03ff94d0c73d59899a8732ffc06161
+  metadata_hash: ec721fcdaa149cab14dfb4601f6c7527956c713c8a8a385d1d2950e2f3be2c02
+  upstream_updated_at: '2026-10-15'
+material_sha256: 3a95f1a0fbe2d19d3127c51bec1d63379114e227f73a0b04ed9680e7bc6f64e4
+action: research
+reason: no_completed_real_research

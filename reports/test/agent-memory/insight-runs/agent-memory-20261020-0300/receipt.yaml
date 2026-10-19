@@ -1,0 +1,41 @@
+schema_version: 1
+mode: insight_test
+backend: chatgpt_plan
+topic: agent-memory
+batch_id: agent-memory-20261020-0300
+status: revise
+production_accepted: false
+models:
+  generation: gpt-6-luna
+  review: gpt-6.1-sol
+actual_models:
+- gpt-6-luna
+- gpt-6.1-sol
+revision_count: 1
+reserved_calls: 3
+format_normalization_count: 0
+format_confirmation_calls: 0
+completed_calls: 3
+usage:
+- input_tokens: 10494
+  output_tokens: 1959
+  total_tokens: 12453
+- input_tokens: 12462
+  output_tokens: 1932
+  total_tokens: 14394
+- input_tokens: 12222
+  output_tokens: 1227
+  total_tokens: 13449
+outputs:
+  report: null
+  insights: []
+  topics: []
+output_hashes: {}
+approval_required: true
+writing_started: false
+publish_authorized: false
+membership_remaining_quota: null
+api_billed_cost: null
+all_existing_notes_unchanged: true
+monthly_reserved_calls: 40
+effective_month_max_calls: 100

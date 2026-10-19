@@ -1,0 +1,11 @@
+binding: e14f05581e04a105d620e39b773c42cecafae4ace69275c195fd521ac3e55a9d
+result:
+  text: '{"summary":"本材料仅提供 Co2In 论文摘要，介绍一种面向增量学习的双层记忆架构及其作者报告的评测结果；不涵盖更广泛智能体记忆系统的证据。","claims":[{"kind":"fact","text":"摘要将增量学习的核心挑战描述为平衡新知识获取能力与保留既有信息的能力。","evidence_ids":["A1","A2"]},{"kind":"author_claim","text":"作者提出
+    Co2In 双层记忆架构：工作记忆负责适应新知识，长期记忆负责持久保留信息。","evidence_ids":["A4","A5"]},{"kind":"author_claim","text":"摘要描述的流程是：工作记忆从新数据学习并将知识编码到参数中；随后通过整合过程提取模式、形成紧凑表示，并将表示与模式变换为独立网络层，整合进长期记忆。","evidence_ids":["A7","A8","A9"]},{"kind":"author_claim","text":"作者称在
+    CIFAR-10、CIFAR-100 和 Tiny-ImageNet 的无样本 Class-IL 与 Task-IL 设置下评测，并报告 Co2In 达到最先进性能且记忆消耗高效。","evidence_ids":["A11","A12"]}],"limitations":["本次仅依据论文摘要，未核验全文、实验细节、实现或结果；摘要中的性能与效率结论是作者报告，并非独立验证。","摘要主要讨论增量学习框架，未提供对隐私、安全、遗忘控制或通用智能体记忆任务的具体证据。"]}'
+  model: gpt-6-luna
+  response_id: resp_0371266ea9dd9293016ad69cf0e09c87d0a7e9044b593b007b
+  usage:
+    input_tokens: 809
+    output_tokens: 374
+    total_tokens: 1183
