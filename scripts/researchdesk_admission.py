@@ -140,9 +140,10 @@ def _insight_proof(root, config, bundle, cycle_id, bind_requests):
     manifest = store.checked_yaml(root, base + '/manifest.yaml')
     receipt = store.checked_yaml(root, base + '/receipt.yaml')
     _auth(manifest)
+    generation_instructions, review_instructions = insight.instructions_for(config)
     fingerprint = store.digest({'config': config, 'input_fingerprint': bundle['input_fingerprint'],
-        'authorization': manifest['authorization'], 'generation_prompt': insight.GENERATION_INSTRUCTIONS,
-        'review_prompt': insight.REVIEW_INSTRUCTIONS})
+        'authorization': manifest['authorization'], 'generation_prompt': generation_instructions,
+        'review_prompt': review_instructions})
     if (manifest.get('mode') != 'insight_test' or manifest.get('topic') != config['topic']
             or manifest.get('batch_id') != cycle_id or manifest.get('fingerprint') != fingerprint
             or manifest.get('models') != config['models'] or manifest.get('budget') != config['budget']
@@ -165,7 +166,7 @@ def _insight_proof(root, config, bundle, cycle_id, bind_requests):
     final_revision = receipt.get('revision_count')
     if type(final_revision) is not int or final_revision not in (0, 1):
         raise store.OfflineError('Insight 修订次数无效')
-    model_payload = inputs.model_payload(bundle) if bind_requests else None
+    model_payload = inputs.model_payload(bundle, config['prompts']['version']) if bind_requests else None
     previous_candidate = previous_review = None
     for revision in range(final_revision + 1):
         generation = store.checked_yaml(root, '%s/checkpoints/generation-%s.yaml' % (base, revision))
@@ -180,7 +181,7 @@ def _insight_proof(root, config, bundle, cycle_id, bind_requests):
                 if checkpoint.get('binding') != expected:
                     raise store.OfflineError('Insight 检查点未绑定同一份原文和候选')
             return checkpoint['result']['text']
-        raw = read('generation', insight.GENERATION_INSTRUCTIONS, request)
+        raw = read('generation', generation_instructions, request)
         recovery = {}
         try:
             candidate = insight.parse_response(raw, 'generation')
@@ -199,7 +200,7 @@ def _insight_proof(root, config, bundle, cycle_id, bind_requests):
         if not insight.validate_candidate(candidate, bundle):
             raise store.OfflineError('证据不足不能准入')
         review_payload = dict(model_payload, candidate=candidate, **recovery) if bind_requests else None
-        review = insight.parse_response(read('review', insight.REVIEW_INSTRUCTIONS, review_payload), 'review')
+        review = insight.parse_response(read('review', review_instructions, review_payload), 'review')
         decision = insight.validate_review(candidate, review, bundle, format_recovery=bool(recovery),
                                            allow_deferred_normalization=True)
         if recovery and decision == 'pass' and 'format_normalization_acknowledged' not in review:

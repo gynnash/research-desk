@@ -112,7 +112,7 @@ def load_config(root, path):
     if config['budget']['max_calls'] > config['budget']['month_max_calls']:
         raise store.OfflineError('Insight 请求上限不可超过月度上限')
     research_inputs.fields(config['prompts'], {'version'}, 'Insight 提示词')
-    if config['prompts']['version'] != 'insight-v1':
+    if config['prompts']['version'] not in {'insight-v1', 'insight-v2'}:
         raise store.OfflineError('未知 Insight 提示词版本')
     if not isinstance(config['research_inputs'], list) or not 1 <= len(config['research_inputs']) <= 4:
         raise store.OfflineError('须明确登记 1–4 个通过审阅的 Research 批次')
@@ -390,19 +390,112 @@ def _historical_evidence(root, config):
     return evidence, provenance
 
 
-def model_payload(bundle):
+HISTORICAL_REFERENCE = re.compile(r'(?<![A-Za-z0-9_])([RH][1-9][0-9]*)(?![A-Za-z0-9_])')
+
+
+def historical_destinations(text):
+    """Protect link bytes, including nested parentheses and reference links."""
+    spans = []
+    for match in re.finditer(r'^ {0,3}\[[^\]\r\n]+\]:[ \t]*(?:\r?\n[ \t]*)?(<[^>\r\n]*>|[^\s]+)', text, re.MULTILINE):
+        spans.append(match.span(1))
+    for match in re.finditer(r'\b(?:href|src)\s*=\s*("[^"]*"|\'[^\']*\'|[^\s>]+)', text, re.IGNORECASE):
+        spans.append(match.span(1))
+    for match in re.finditer(r'\]\(', text):
+        start, cursor, depth = match.end(), match.end(), 1
+        while cursor < len(text) and depth:
+            if text[cursor] == '\\':
+                cursor += 2
+                continue
+            if text[cursor] == '<':
+                closing = text.find('>', cursor + 1)
+                if closing >= 0:
+                    cursor = closing + 1
+                    continue
+            if text[cursor] == '(':
+                depth += 1
+            elif text[cursor] == ')':
+                depth -= 1
+            cursor += 1
+        if not depth:
+            spans.append((start, cursor - 1))
+    # Bare links need balanced parentheses, but must not absorb adjacent prose
+    # after a Markdown closing delimiter or Chinese sentence punctuation.
+    for match in re.finditer(r'https?://', text):
+        start, cursor, depth = match.start(), match.end(), 0
+        if any(left <= start < right for left, right in spans):
+            continue
+        while cursor < len(text):
+            char = text[cursor]
+            if char.isspace() or char in '<>"\'，。；：！？、':
+                break
+            if char == '(':
+                depth += 1
+            elif char == ')':
+                if not depth:
+                    break
+                depth -= 1
+            cursor += 1
+        spans.append((start, cursor))
+    merged = []
+    for start, end in sorted(spans):
+        if merged and start <= merged[-1][1]:
+            merged[-1] = (merged[-1][0], max(end, merged[-1][1]))
+        else:
+            merged.append((start, end))
+    return merged
+
+
+def scoped_history(record):
+    """Namespace document-local aliases only in the model-facing projection.
+
+    Older syntheses retain their own R/H labels. They must never be interpreted
+    as labels in today's evidence bundle. Keep URLs/link destinations and the
+    original, hash-bound note untouched; retain every other character.
+    """
+    aliases = set()
+    def replace(match):
+        alias = match.group(1)
+        scoped = 'historical-%s-%s' % (record['id'], alias)
+        aliases.add(scoped)
+        return scoped
+    text, parts, cursor = record['text'], [], 0
+    for start, end in historical_destinations(text):
+        parts.extend((HISTORICAL_REFERENCE.sub(replace, text[cursor:start]), text[start:end]))
+        cursor = end
+    parts.append(HISTORICAL_REFERENCE.sub(replace, text[cursor:]))
+    return ''.join(parts), sorted(aliases)
+
+
+def evidence_title(record):
+    if record['origin'] == 'reviewed_research':
+        return record['metadata']['title']
+    heading = re.search(r'^#\s+(.+)$', record['text'], re.MULTILINE)
+    return heading.group(1) if heading else Path(record['path']).stem
+
+
+def model_payload(bundle, prompt_version='insight-v1'):
     """One shared projection for generation, review and input-size preflight.
 
     Evidence text is never truncated. Research reports duplicate the structured
     claims and original material, so their rendered text and integrity proofs
     stay in the full bundle instead of being sent a second time to the model.
     """
+    if prompt_version not in {'insight-v1', 'insight-v2'}:
+        raise store.OfflineError('未知 Insight 提示词版本')
     payload = {'topic': bundle['topic'], 'research_context': bundle['research_context'], 'evidence': []}
+    if prompt_version == 'insight-v2':
+        payload['evidence_index'] = {
+            record['id']: dict(title=evidence_title(record), **{
+                key: record[key] for key in ('origin', 'coverage', 'source_ids', 'source_urls')})
+            for record in bundle['evidence']}
     for record in bundle['evidence']:
         keys = {'id', 'origin', 'path', 'source_ids', 'source_url', 'source_urls', 'coverage', 'historical_status'}
         keys |= ({'metadata', 'research_summary', 'research_claims', 'research_limitations', 'original_material'}
                  if record['origin'] == 'reviewed_research' else {'text'})
-        payload['evidence'].append({key: value for key, value in record.items() if key in keys})
+        projected = {key: value for key, value in record.items() if key in keys}
+        if prompt_version == 'insight-v2' and record['origin'] == 'human_baseline':
+            projected['text'], projected['historical_reference_ids'] = scoped_history(record)
+        payload['evidence'].append(projected)
     return payload
 
 
@@ -418,7 +511,7 @@ def prepare_bundle(root, config, fetcher=None):
         'description': config['topic_description'], 'scope': config['topic_scope'], 'keywords': config['topic_keywords']},
         'evidence': research + historical,
         'provenance': {'research_inputs': research_provenance, 'historical_inputs': historical_provenance}}
-    if len(json.dumps(model_payload(bundle), ensure_ascii=False)) > config['budget']['max_input_chars']:
+    if len(json.dumps(model_payload(bundle, config['prompts']['version']), ensure_ascii=False)) > config['budget']['max_input_chars']:
         raise store.OfflineError('显式登记输入超过字符预算；停止而不截断原文或隐瞒覆盖范围')
     bundle['input_fingerprint'] = store.digest(bundle)
     return bundle

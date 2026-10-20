@@ -626,6 +626,54 @@ class InsightLoop(unittest.TestCase):
         self.assert_blocked()
         self.assertEqual(len(self.client.calls), 1)
 
+    def test_v2_uses_same_scoped_payload_for_generation_review_and_admission(self):
+        self.config['prompts']['version'] = 'insight-v2'
+        self.history_path.write_text(self.history_path.read_text() + '\nR2 旧编号；H1 旧编号。\n')
+        self.config['historical_inputs'][0]['sha256'] = store.digest(self.history_path.read_bytes())
+        original = self.history_path.read_bytes()
+        result = self.run_insight()
+        self.assertEqual(result['status'], 'test_accepted')
+        generation, review = [call['payload'] for call in self.client.calls]
+        self.assertEqual(generation['evidence_index'], review['evidence_index'])
+        self.assertEqual(generation['evidence'], review['evidence'])
+        self.assertIn('historical-H1-R2', generation['evidence'][-1]['text'])
+        insight = importlib.import_module('researchdesk_insight')
+        config = insight.inputs.load_config(self.root, self.config_path)
+        bundle = insight.inputs.prepare_bundle(self.root, config, fetcher=self.fetcher)
+        admission = importlib.import_module('researchdesk_admission')
+        candidate, proof, _, _ = admission._insight_proof(self.root, config, bundle, 'first', True)
+        self.assertEqual(candidate, review['candidate'])
+        self.assertEqual(proof['status'], 'test_accepted')
+        replay = self.run_insight()
+        self.assertTrue(replay['cached'])
+        self.assertEqual(len(self.client.calls), 2)
+        self.assertEqual(self.history_path.read_bytes(), original)
+
+    def test_v2_historical_local_alias_is_not_valid_current_evidence(self):
+        self.config['prompts']['version'] = 'insight-v2'
+        self.client.research_mutator = lambda result: result['report']['comparisons'][0].update(
+            evidence_ids=['historical-H1-R2'])
+        self.assert_blocked()
+        self.assertEqual(len(self.client.calls), 1)
+
+    def test_v2_reviewer_misattribution_block_still_prevents_output(self):
+        self.config['prompts']['version'] = 'insight-v2'
+        self.client.review_decisions = ['revise', 'revise']
+        result = self.run_insight()
+        self.assertEqual(result['status'], 'revise')
+        self.assertFalse(result['production_accepted'])
+        self.assertEqual(len(self.client.calls), 4)
+        self.assertFalse((self.directory() / 'report.md').exists())
+        self.assertEqual(result['outputs'], {'report': None, 'insights': [], 'topics': []})
+
+    def test_v2_cannot_reinterpret_existing_v1_checkpoints_or_reset_budget(self):
+        self.run_insight()
+        original = {p: p.read_bytes() for p in self.directory().rglob('*') if p.is_file()}
+        self.config['prompts']['version'] = 'insight-v2'
+        self.assert_blocked()
+        self.assertEqual(len(self.client.calls), 2)
+        self.assertEqual({p: p.read_bytes() for p in original}, original)
+
     def test_insight_needs_new_research_and_historical_evidence(self):
         self.client.research_mutator = lambda result: result['insights'][0].update(evidence_ids=['R1', 'R2'])
         self.assert_blocked()
