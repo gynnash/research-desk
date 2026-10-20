@@ -17,7 +17,7 @@ jobs:
   offline-checks:
     name: Offline schema and research cycle
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
       - name: Check out repository
         uses: actions/checkout@v7
@@ -35,6 +35,10 @@ jobs:
         run: python -m unittest discover -s tests -p 'test_schedule.py' -v
       - name: Check research cycle with fixed inputs
         run: python -m unittest discover -s tests -p 'test_cycle.py' -v
+      - name: Check Insight citation scopes and independent review without model calls
+        run: python -m unittest discover -s tests -p 'test_insight*.py' -v
+      - name: Check bounded linked recovery and checkpoint transfer without model calls
+        run: python -m unittest discover -s tests -p 'test_recovery*.py' -v
       - name: Check URL history deduplication without model calls
         run: python -m unittest discover -s tests -p 'test_url_history_dedup.py' -v
       - name: Check create-only admission without model calls

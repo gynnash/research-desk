@@ -145,6 +145,14 @@ def inspect_files(root, files, topic, cycle, formal_files=None):
                 raise JobError('checkpoint_digest_invalid')
 
 
+def verify_recovery(root, topic, cycle_id, required=False):
+    """Recheck linked inputs before a recovery can be formally admitted."""
+    manifest = safe(root, 'reports/test/%s/cycles/%s/recovery.yaml' % (topic, cycle_id))
+    if required or manifest.exists():
+        import researchdesk_recovery as recovery
+        recovery.verify_lineage(root, topic, cycle_id)
+
+
 def execute(root, state, config_path, cycle_id, operation, fail_after=None):
     import researchdesk_cycle as cycle
     import researchdesk_runner as runtime
@@ -153,6 +161,17 @@ def execute(root, state, config_path, cycle_id, operation, fail_after=None):
         raise JobError('trusted_main_required')
     config = cycle.load_config(root, config_path)
     cycle.base_path(config, cycle_id)
+    original_cycle_id = cycle_id
+    if operation in {'run', 'recover'}:
+        import researchdesk_recovery as recovery
+        recovery_id = recovery.requested(root, config_path, original_cycle_id)
+        if operation == 'recover' and recovery_id is None:
+            raise JobError('recovery_request_required')
+        if recovery_id is not None:
+            if fail_after not in (None, 'after_review'):
+                raise JobError('recovery_interruption_must_follow_new_review')
+            cycle_id, operation = recovery_id, 'recover'
+            cycle.base_path(config, cycle_id)
     host = runtime.load_config(root)
     python = host['_venv'] / 'bin/python'
     if not python.is_file():
@@ -176,6 +195,11 @@ def execute(root, state, config_path, cycle_id, operation, fail_after=None):
     elif operation == 'admit':
         command = [str(python), str(root/'scripts/researchdesk_job.py'), '--root', str(root),
                    'admit', '--config', config_path, '--cycle-id', cycle_id]
+    elif operation == 'recover':
+        command = [str(python), str(root / 'scripts/researchdesk_recovery.py'), '--root', str(root),
+                   '--config', config_path, '--cycle-id', original_cycle_id, '--profile', str(host['_profile'])]
+        if fail_after:
+            command += ['--fail-after', fail_after]
     else:
         command = [str(python), str(root / 'scripts/researchdesk_cycle.py'), '--root', str(root),
                    operation, '--config', config_path, '--cycle-id', cycle_id, '--profile', str(host['_profile'])]
@@ -183,7 +207,7 @@ def execute(root, state, config_path, cycle_id, operation, fail_after=None):
             command += ['--fail-after', fail_after]
     result = subprocess.run(command, cwd=root, capture_output=True, text=True, check=False)
     admission_status = 'not_requested'
-    if result.returncode == 0 and operation == 'run' and admission_enabled(root, config['topic']):
+    if result.returncode == 0 and operation in {'run', 'recover'} and admission_enabled(root, config['topic']):
         import researchdesk_offline as store
         receipt = store.checked_yaml(root, cycle.base_path(config,cycle_id)+'/receipt.yaml')
         if all(receipt.get('stages',{}).get(stage,{}).get('status')=='test_accepted' for stage in ('research','insight')):
@@ -248,7 +272,7 @@ def apply(root, artifact):
             raise JobError('transfer_identity_invalid')
     if len(manifest['files']) > 1000 or manifest['schema_version'] != 1:
         raise JobError('transfer_manifest_invalid')
-    if manifest['operation'] not in {'discover','run','admit'}:
+    if manifest['operation'] not in {'discover','run','admit','recover'}:
         raise JobError('transfer_operation_invalid')
     current = tracked(root)
     if any(current.get(path) != blob for path, blob in manifest['baseline_blobs'].items()):
@@ -276,9 +300,14 @@ def apply(root, artifact):
         descriptor = os.open(str(path), os.O_CREAT | os.O_EXCL | os.O_WRONLY | os.O_NOFOLLOW, 0o644)
         with os.fdopen(descriptor, 'wb') as handle:
             handle.write(content)
+    # The publisher owns the original Research inputs; a recovery transfer may
+    # reference them but may never replace them. Check those bindings locally,
+    # including failed/interrupted transfers that have no admission plan yet.
+    verify_recovery(root, manifest['topic'], manifest['cycle_id'],
+                    required=manifest['operation'] == 'recover')
     plan, _ = formal_plan(root, manifest['topic'], manifest['cycle_id'])
     production_accepted = False
-    if plan is not None and manifest['operation'] in {'run','admit'}:
+    if plan is not None and manifest['operation'] in {'run','admit','recover'}:
         if not admission_enabled(root, manifest['topic']):
             raise JobError('formal_admission_disabled')
         import researchdesk_admission as admission
@@ -317,6 +346,7 @@ def admit(root, config_path, cycle_id):
     config=cycle.load_config(root,config_path)
     if not admission_enabled(root,config['topic']):
         raise JobError('formal_admission_disabled')
+    verify_recovery(root, config['topic'], cycle_id)
     result=admission.run(root,config['topic'],cycle_id)
     print(json.dumps({'cycle_id':cycle_id,'production_accepted':True,'inference_calls':0}))
     return result
@@ -330,8 +360,8 @@ def main():
     start.add_argument('--state', type=Path, required=True)
     start.add_argument('--config', required=True)
     start.add_argument('--cycle-id', required=True)
-    start.add_argument('--operation', choices=('health', 'discover', 'run', 'admit'), required=True)
-    start.add_argument('--fail-after', choices=('after_research',))
+    start.add_argument('--operation', choices=('health', 'discover', 'run', 'admit', 'recover'), required=True)
+    start.add_argument('--fail-after', choices=('after_research', 'after_review'))
     pack = commands.add_parser('export')
     pack.add_argument('--state', type=Path, required=True)
     pack.add_argument('--destination', type=Path, required=True)

@@ -135,7 +135,7 @@ def _auth(manifest):
         raise store.OfflineError('只有真实官方会员及不同实际模型的独立审阅可准入')
 
 
-def _insight_proof(root, config, bundle, cycle_id, bind_requests):
+def _insight_proof(root, config, bundle, cycle_id, bind_requests, allow_failure=False):
     base = 'reports/test/%s/insight-runs/%s' % (config['topic'], cycle_id)
     manifest = store.checked_yaml(root, base + '/manifest.yaml')
     receipt = store.checked_yaml(root, base + '/receipt.yaml')
@@ -149,7 +149,8 @@ def _insight_proof(root, config, bundle, cycle_id, bind_requests):
             or manifest.get('models') != config['models'] or manifest.get('budget') != config['budget']
             or manifest.get('input_fingerprint') != bundle['input_fingerprint']
             or manifest.get('provenance') != bundle['provenance'] or manifest.get('writing_started') is not False
-            or receipt.get('status') != 'test_accepted' or receipt.get('backend') != 'chatgpt_plan'
+            or receipt.get('status') not in ({'revise', 'reject', 'blocked'} if allow_failure else {'test_accepted'})
+            or receipt.get('backend') != 'chatgpt_plan'
             or receipt.get('topic') != config['topic'] or receipt.get('batch_id') != cycle_id
             or receipt.get('production_accepted') is not False or receipt.get('writing_started') is not False
             or receipt.get('publish_authorized') is not False or receipt.get('approval_required') is not True):
@@ -214,8 +215,11 @@ def _insight_proof(root, config, bundle, cycle_id, bind_requests):
         if revision < final_revision and decision != 'revise':
             raise store.OfflineError('额外修订未得到独立审阅支持')
         previous_candidate, previous_review = candidate, review
-    if previous_review is None or previous_review['decision'] != 'pass':
-        raise store.OfflineError('最后一轮独立审阅未通过')
+    expected_decision = receipt['status'] if allow_failure else 'pass'
+    if previous_review is None or previous_review['decision'] != expected_decision:
+        raise store.OfflineError('最后一轮独立审阅与所需终态不一致')
+    if allow_failure and (receipt.get('output_hashes') or receipt.get('outputs') != {'report': None, 'insights': [], 'topics': []}):
+        raise store.OfflineError('失败 Insight 不得已有接受产物')
     expected_roles = {(e['role'], e['revision']) for e in completed}
     allowed = {('generation', n) for n in range(final_revision + 1)}
     allowed |= {('review', n) for n in range(final_revision + 1)
@@ -514,6 +518,8 @@ def _verify_plan(root, value, topic, cycle_id):
         allowed = {content.encode(), effective[relative].encode()}
         if target.exists() and (not target.is_file() or target.read_bytes() not in allowed):
             raise store.OfflineError('人工内容或同名文件冲突，停止覆盖: ' + relative)
+    import researchdesk_recovery as recovery
+    recovery.verify_if_present(root, topic, cycle_id, bundle=value['verification_bundle'])
     config = inputs.load_config(root, value['insight_config'])
     for entry in config['research_inputs']:
         inputs._checked_research(root, config, entry)
@@ -542,6 +548,8 @@ def _plan(root, topic, cycle_id, fetcher=None):
     config_path = cycle_base + '/configs/insight.yaml'
     config = inputs.load_config(root, config_path)
     bundle = inputs.prepare_bundle(root, config, fetcher=fetcher)
+    import researchdesk_recovery as recovery
+    recovery.verify_if_present(root, topic, cycle_id, bundle=bundle)
     candidate, receipt, manifest, insight_base = _insight_proof(root, config, bundle, cycle_id, True)
     old_paths, old_contents = insight.render_outputs(root, insight_base, config, cycle_id, candidate, bundle)
     if receipt.get('outputs') != old_paths or receipt.get('output_hashes') != {
@@ -572,6 +580,9 @@ def _plan(root, topic, cycle_id, fetcher=None):
                   if path.is_file() and path.suffix in {'.yaml', '.md'}}
     for entry in config['historical_inputs']:
         paths.add(entry['path'])
+    lineage = recovery.verify_if_present(root, topic, cycle_id, bundle=bundle)
+    if lineage:
+        paths |= set(lineage['original_files']) | {lineage['request_path']}
     compact_bundle = {key: bundle[key] for key in ('topic', 'research_context', 'provenance', 'input_fingerprint')}
     compact_bundle['evidence'] = [{key: item for key, item in evidence.items()
         if key not in {'text', 'original_material'}} for evidence in bundle['evidence']]
