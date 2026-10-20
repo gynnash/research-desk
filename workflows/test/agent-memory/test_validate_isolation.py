@@ -73,7 +73,7 @@ class IsolationTests(unittest.TestCase):
 
     def test_filename_test_md_does_not_exempt_a_new_formal_source(self):
         target = self.root / "sources/papers/agent-memory/test.md"
-        target.parent.mkdir(parents=True)
+        target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text("invalid formal source\n", encoding="utf-8")
         self.check(expected=1)
 

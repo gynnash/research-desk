@@ -249,9 +249,18 @@ def run(root, config_path, cycle_id, client=None, fetcher=None, fail_after=None)
                         'topics_file':config['topics_file'],'models':{'generation':config['models']['insight'],'review':config['models']['review']},
                         'budget':{'max_calls':budget['insight_max_calls'],'month_max_calls':monthly_cap,
                                   **{key:budget[key] for key in ('max_input_chars','max_output_chars','timeout_seconds','max_revisions')}},
-                        'prompts':{'version':'insight-v1'},'research_inputs':[{'receipt':original_receipt,'config':research_path,'item_keys':keys}],
+                        'prompts':{'version':'insight-v2'},'research_inputs':[{'receipt':original_receipt,'config':research_path,'item_keys':keys}],
                         'historical_inputs':historical}
                     insight_path = base+'/configs/insight.yaml'
+                    if store.safe_path(root, insight_path).exists():
+                        # An interrupted pre-upgrade cycle owns its frozen v1
+                        # config. Only new children default to v2; save_yaml
+                        # still rejects changes to any other bound input.
+                        previous = store.checked_yaml(root, insight_path)
+                        version = previous.get('prompts', {}).get('version')
+                        if version not in {'insight-v1', 'insight-v2'}:
+                            raise store.OfflineError('已有 Insight 配置的提示词版本无效')
+                        insight_cfg['prompts']['version'] = version
                     store.save_yaml(root, insight_path, insight_cfg)
                     if client is None:
                         from researchdesk_membership import MembershipClient

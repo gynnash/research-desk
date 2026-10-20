@@ -30,6 +30,21 @@ FORMAT_REVIEW_INSTRUCTIONS = '''你是独立的格式恢复核对模型。本请
 仅输出一个合法JSON对象，严格三个字段：{"decision":"pass 或 reject","format_normalization_acknowledged":true,"reason":"具体核对理由"}。未确认时 decision 为 reject 且布尔为 false；不输出围栏、其他字段或附加文字。'''
 
 
+CITATION_SCOPE_INSTRUCTIONS = '''本次引用映射只以顶层 evidence_index 和 evidence[].id 为准，逐项核对标题、source_ids、origin 与 coverage，不可按编号位置猜测来源类型。历史正文中的 historical-H5-R2 等标记只属于该历史文档的旧引用命名空间，不是本次 R2，也不是可输出的 evidence_ids。引用历史内容时使用该文档当前的 H 编号；若要引用另一份来源，必须在本次 evidence_index 中重新核对其身份。历史正文中“本次”“已审阅”等说法描述的是旧轮次，不能覆盖当前 human_baseline 状态。生成和审阅都须检查每个引用是否指向所述来源，不能只检查编号存在。'''
+
+
+def instructions_for(config):
+    version = config['prompts']['version']
+    if version == 'insight-v1':
+        # Frozen compatibility: existing manifests and checkpoints bind these
+        # exact bytes. Never reinterpret a legacy receipt with a new prompt.
+        return GENERATION_INSTRUCTIONS, REVIEW_INSTRUCTIONS
+    if version == 'insight-v2':
+        return (GENERATION_INSTRUCTIONS + '\n' + CITATION_SCOPE_INSTRUCTIONS,
+                REVIEW_INSTRUCTIONS + '\n' + CITATION_SCOPE_INSTRUCTIONS)
+    raise store.OfflineError('未知 Insight 提示词版本')
+
+
 def model_for_role(manifest, role):
     return manifest['models']['review' if role == 'format_review' else role]
 
@@ -432,6 +447,7 @@ def verify_ledger(root, base, events, manifest, bundle):
 def run(root, config_path, batch_id, client, fetcher=None, fail_after=None):
     root = Path(root).resolve()
     config = inputs.load_config(root, config_path)
+    generation_instructions, review_instructions = instructions_for(config)
     if not isinstance(batch_id, str) or not store.SAFE_ID.fullmatch(batch_id) or fail_after not in (None, 'after_review'):
         raise store.OfflineError('无效 Insight 批次或验收断点')
     auth, catalog = shared.authorization(client, 'chatgpt_plan', {'research': config['models']['generation'], 'review': config['models']['review']})
@@ -439,7 +455,7 @@ def run(root, config_path, batch_id, client, fetcher=None, fail_after=None):
         bundle = inputs.prepare_bundle(root, config, fetcher=fetcher)
         base = 'reports/test/%s/insight-runs/%s' % (config['topic'], batch_id)
         fingerprint = store.digest({'config': config, 'input_fingerprint': bundle['input_fingerprint'],
-                                    'authorization': auth, 'generation_prompt': GENERATION_INSTRUCTIONS, 'review_prompt': REVIEW_INSTRUCTIONS})
+                                    'authorization': auth, 'generation_prompt': generation_instructions, 'review_prompt': review_instructions})
         manifest_path = base + '/manifest.yaml'
         if store.safe_path(root, manifest_path).exists():
             manifest = store.checked_yaml(root, manifest_path)
@@ -464,7 +480,7 @@ def run(root, config_path, batch_id, client, fetcher=None, fail_after=None):
             store.save_yaml(root, manifest_path, manifest)
         events = store.read_events(root, base)
         verify_ledger(root, base, events, manifest, bundle)
-        model_bundle = inputs.model_payload(bundle)
+        model_bundle = inputs.model_payload(bundle, config['prompts']['version'])
         candidate, review, revision = None, None, 0
         for revision in range(config['budget']['max_revisions'] + 1):
             if not any(e['type'] == 'call_completed' and e['role'] == 'generation' and e['revision'] == revision for e in events):
@@ -480,7 +496,7 @@ def run(root, config_path, batch_id, client, fetcher=None, fail_after=None):
                 request.update(previous_candidate=candidate, previous_review=review)
             recovery = {}
             try:
-                candidate = call(root, base, events, client, manifest, config, 'generation', revision, GENERATION_INSTRUCTIONS, request)
+                candidate = call(root, base, events, client, manifest, config, 'generation', revision, generation_instructions, request)
                 if not validate_candidate(candidate, bundle):
                     break
             except GenerationFormatError as exc:
@@ -520,7 +536,7 @@ def run(root, config_path, batch_id, client, fetcher=None, fail_after=None):
                         store.append_event(root, base, events, {'type': 'local_validation_failed', 'revision': revision,
                                            'response_sha256': store.digest(raw.encode()), 'at': shared.now()})
                     continue
-            review = call(root, base, events, client, manifest, config, 'review', revision, REVIEW_INSTRUCTIONS,
+            review = call(root, base, events, client, manifest, config, 'review', revision, review_instructions,
                           dict(model_bundle, candidate=candidate, **recovery))
             decision = validate_review(candidate, review, bundle, format_recovery=bool(recovery), allow_deferred_normalization=True)
             if recovery and decision == 'pass' and 'format_normalization_acknowledged' not in review:

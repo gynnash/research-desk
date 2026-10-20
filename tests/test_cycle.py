@@ -165,6 +165,29 @@ class ResearchInsightCycle(unittest.TestCase):
         self.insight_run.assert_called_once()
         self.client.infer.assert_not_called()
         self.assertFalse((self.root / '.github').exists())
+        child = store.checked_yaml(self.root, 'reports/test/custom-topic/cycles/first/configs/insight.yaml')
+        self.assertEqual(child['prompts']['version'], 'insight-v2')
+
+    def test_interrupted_v1_child_config_is_preserved_after_upgrade(self):
+        child_path = 'reports/test/custom-topic/cycles/first/configs/insight.yaml'
+        def old_interruption(*args, **kwargs):
+            # Reproduce bytes saved by the old cycle before its Insight call.
+            path = self.root / child_path
+            config = yaml.safe_load(path.read_text())
+            config['prompts']['version'] = 'insight-v1'
+            path.write_text(yaml.safe_dump(config, allow_unicode=True, sort_keys=False))
+            Path(str(path) + '.sha256').write_text(store.digest(path.read_bytes()) + '\n')
+            raise store.SimulatedInterruption('pre-upgrade Insight interruption')
+        self.insight_run.side_effect = old_interruption
+        with self.assertRaises(store.SimulatedInterruption):
+            self.run_cycle()
+        original = (self.root / child_path).read_bytes()
+        self.insight_run.side_effect = self.fake_insight
+        result = self.run_cycle()
+        self.assertEqual(result['status'], 'completed')
+        self.assertEqual((self.root / child_path).read_bytes(), original)
+        self.research_run.assert_called_once()
+        self.client.infer.assert_not_called()
 
     def test_same_cycle_id_is_cached_without_new_child_or_model_calls(self):
         first = self.run_cycle()
