@@ -1,0 +1,29 @@
+binding: 5dcd779bb614de207142fd368196d9a988e81b1e1bff3eceda584a28d5e48a0c
+result:
+  text: "{\n  \"decision\": \"pass\",\n  \"coverage_acknowledged\": true,\n  \"topic_gate_confirmed\"\
+    : true,\n  \"issues\": [\n    {\n      \"severity\": \"info\",\n      \"location\"\
+    : \"topics\",\n      \"reason\": \"两项选题均限定为研究问题与比较框架，未将提案、作者报告或历史笔记升级为已验证效果。本次通过仅表示综合内容受现有证据支持，不代表用户已确认选题。\"\
+    ,\n      \"suggestion\": \"保留选题待用户确认状态；确认前不得启动 Writing 或发布。\"\n    }\n  ],\n \
+    \ \"checks\": [\n    {\n      \"target\": \"report\",\n      \"verdict\": \"supported\"\
+    ,\n      \"evidence_ids\": [\"R1\", \"R2\", \"H1\", \"H2\"]\n    },\n    {\n \
+    \     \"target\": \"report.comparisons.0\",\n      \"verdict\": \"supported\"\
+    ,\n      \"evidence_ids\": [\"R1\"]\n    },\n    {\n      \"target\": \"report.comparisons.1\"\
+    ,\n      \"verdict\": \"supported\",\n      \"evidence_ids\": [\"R2\"]\n    },\n\
+    \    {\n      \"target\": \"report.comparisons.2\",\n      \"verdict\": \"supported\"\
+    ,\n      \"evidence_ids\": [\"R2\"]\n    },\n    {\n      \"target\": \"report.comparisons.3\"\
+    ,\n      \"verdict\": \"supported\",\n      \"evidence_ids\": [\"R1\", \"H1\"\
+    ]\n    },\n    {\n      \"target\": \"report.comparisons.4\",\n      \"verdict\"\
+    : \"supported\",\n      \"evidence_ids\": [\"R2\", \"H2\"]\n    },\n    {\n  \
+    \    \"target\": \"insights.0\",\n      \"verdict\": \"supported\",\n      \"\
+    evidence_ids\": [\"R1\", \"H1\"]\n    },\n    {\n      \"target\": \"insights.1\"\
+    ,\n      \"verdict\": \"supported\",\n      \"evidence_ids\": [\"R2\", \"H2\"\
+    ]\n    },\n    {\n      \"target\": \"topics.0\",\n      \"verdict\": \"supported\"\
+    ,\n      \"evidence_ids\": [\"R1\", \"H1\"]\n    },\n    {\n      \"target\":\
+    \ \"topics.1\",\n      \"verdict\": \"supported\",\n      \"evidence_ids\": [\"\
+    R2\", \"H2\"]\n    }\n  ]\n}"
+  model: gpt-6.1-sol
+  response_id: resp_0207e4ad6b1f1b7f016ad6c9219a6887d09742e3690250720f
+  usage:
+    input_tokens: 13577
+    output_tokens: 585
+    total_tokens: 14162

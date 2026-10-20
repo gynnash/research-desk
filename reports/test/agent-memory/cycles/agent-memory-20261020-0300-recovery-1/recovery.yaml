@@ -1,0 +1,690 @@
+schema_version: 1
+mode: linked_insight_recovery
+topic: agent-memory
+original_cycle_id: agent-memory-20261020-0300
+recovery_id: agent-memory-20261020-0300-recovery-1
+config_path: config/cycles/agent-memory.yaml
+request_path: config/recoveries/agent-memory-20261020-0300.yaml
+request_sha256: ac29d57da5aab9483f19fbf2499aef0b77b8b6edb4e3c47c5083837e17e90d86
+original_files:
+  reports/test/agent-memory/cycles/agent-memory-20261020-0300/configs/insight.yaml: f04aafaa710ba7c525fe3379b387e71dd31ead3be9f61df270efd33af8184b84
+  reports/test/agent-memory/cycles/agent-memory-20261020-0300/configs/insight.yaml.sha256: 17e5aea8e259ede4038dad98ac04801289adbd6a0e3a74aac8f040426e7aa792
+  reports/test/agent-memory/cycles/agent-memory-20261020-0300/configs/research.yaml: 792a863fc3d1871469f607e5782cb96bf63cc4458da9fdf8efdf0bc5e72364b7
+  reports/test/agent-memory/cycles/agent-memory-20261020-0300/configs/research.yaml.sha256: 6d594d2556ac6c239fcc1c9e4656d4aa245d5226bb1391d2de0b159019b08931
+  reports/test/agent-memory/cycles/agent-memory-20261020-0300/discovery.yaml: a576a412e84d6518ece911968d16890d02c411ec55af65a7e42dbba0c18b5228
+  reports/test/agent-memory/cycles/agent-memory-20261020-0300/discovery.yaml.sha256: b395c5b73e053cea491ed7f5d09237c6289479ed0b841400bb0d7a3548913d9d
+  reports/test/agent-memory/cycles/agent-memory-20261020-0300/history.yaml: 3b26254b6a7e93cb2fc17c6ba1fc467d9c37e234d417cde87e79563f261b381d
+  reports/test/agent-memory/cycles/agent-memory-20261020-0300/history.yaml.sha256: ec2a7ecebe787876d2c109863f330fbe38ef8791a435037bcc219b83817f9ad8
+  reports/test/agent-memory/cycles/agent-memory-20261020-0300/insight-result.yaml: c41bf1d2a32726ae28763151c547a69558bc85be0b59de87e3f99d64b66c03fd
+  reports/test/agent-memory/cycles/agent-memory-20261020-0300/insight-result.yaml.sha256: 2f31a31bd9bf8ccda96d3bc4267585ba745ffbec3158f797d123d3b9effc7dab
+  reports/test/agent-memory/cycles/agent-memory-20261020-0300/manifest.yaml: 863a26396cae175dfbfd3614dec29a134c003a10b4849c0f8105a98e37c43553
+  reports/test/agent-memory/cycles/agent-memory-20261020-0300/manifest.yaml.sha256: 38326a0699543cee876664440e6a7a934b37570b991a11f9e54f88a41d9327c2
+  reports/test/agent-memory/cycles/agent-memory-20261020-0300/pending.yaml: 0724120b56a738292e5e9ffd56f45c8a4a0b003007cf664800c502b08ccee23f
+  reports/test/agent-memory/cycles/agent-memory-20261020-0300/pending.yaml.sha256: 356660fe46db71466f78a9a45cb8a6cae604eab8665d5d1bc32f62290e78c061
+  reports/test/agent-memory/cycles/agent-memory-20261020-0300/receipt.yaml: 85090a88df6125a0b63f44ed10d5e1112521c4714f205c662d0fd2e8281037b2
+  reports/test/agent-memory/cycles/agent-memory-20261020-0300/receipt.yaml.sha256: fd0e3d7356764f6fbe620255580ecc19812f3610fea3354a46865feb67fd402a
+  reports/test/agent-memory/cycles/agent-memory-20261020-0300/research-result.yaml: 5ae786bef3f7270583c49fa9caa46349e4f06b1e8b31424c4a1c17518afac7b6
+  reports/test/agent-memory/cycles/agent-memory-20261020-0300/research-result.yaml.sha256: 7dd1cb85139160bb3d2d2fcf3b0942f62ab00a64ed9c1ebabd461edc70c98510
+  reports/test/agent-memory/cycles/agent-memory-20261020-0300/selection.yaml: df7d4c7c01c1bce34e7245550a443c94957f007d203e481ee1bf96ecea9d6e2b
+  reports/test/agent-memory/cycles/agent-memory-20261020-0300/selection.yaml.sha256: b9c18c8430372b774aadfcdc30d98105902a8afdef941f5095cf48d639a48441
+  reports/test/agent-memory/insight-runs/agent-memory-20261020-0300/checkpoints/generation-0.yaml: 6b22bf95f01882e9bac38964106acdc0496fb117b13c2e84f64905dfadb67191
+  reports/test/agent-memory/insight-runs/agent-memory-20261020-0300/checkpoints/generation-0.yaml.sha256: 7eeb04e36a3ef49c215191f7c2e2e237f34e3343978ca2b4313f71c2db2cf86f
+  reports/test/agent-memory/insight-runs/agent-memory-20261020-0300/checkpoints/generation-1.yaml: 69cdfa9e69b189cd8c05e936fc3c139f78893626714f96d346ab515a6938d7c5
+  reports/test/agent-memory/insight-runs/agent-memory-20261020-0300/checkpoints/generation-1.yaml.sha256: 328e15abfe31af59fa0a552cd1c42adb2b9ad416ddc73f3be9b80acc0d97d89f
+  reports/test/agent-memory/insight-runs/agent-memory-20261020-0300/checkpoints/review-1.yaml: 55546cc0df28c3c52dfa31ca62ad7c36f838caf305bc9f2d1164a3859735205e
+  reports/test/agent-memory/insight-runs/agent-memory-20261020-0300/checkpoints/review-1.yaml.sha256: 52fdc05f281ada1854d43b2b29e6078abd154dc3e629632844db0cae7821aa1b
+  reports/test/agent-memory/insight-runs/agent-memory-20261020-0300/events/000001.yaml: 0b1105c99e1b9f5f34faca4967f029d5281463ba298468f857b55b5d1b6a685b
+  reports/test/agent-memory/insight-runs/agent-memory-20261020-0300/events/000001.yaml.sha256: 0f99dacd661f8daee3fdb8def38eb742027afa89a6367e74522dc3baecae87a2
+  reports/test/agent-memory/insight-runs/agent-memory-20261020-0300/events/000002.yaml: e6448379e9b87d7891339f4e1f1b8c817452bc0b1972263e0d7612bd79f58da3
+  reports/test/agent-memory/insight-runs/agent-memory-20261020-0300/events/000002.yaml.sha256: bf81fe71662a20d2e52288d23fc732acf1798c60ae9fbb6dfa6a9fdd5d3662e4
+  reports/test/agent-memory/insight-runs/agent-memory-20261020-0300/events/000003.yaml: f0c2a03a2d6937ba8b1ad3ec41fa3d436a360f2c4ef4c970da75e1b025d70b0c
+  reports/test/agent-memory/insight-runs/agent-memory-20261020-0300/events/000003.yaml.sha256: e57bf0a5bb729581ebfc5d10d0a0f074ed506ab6848f7d9d41b18b6d0808ed5f
+  reports/test/agent-memory/insight-runs/agent-memory-20261020-0300/events/000004.yaml: e6f446e227a58844ca0fedd91a2cf0e6baa642af68159fb7e5d49cc0081cbc33
+  reports/test/agent-memory/insight-runs/agent-memory-20261020-0300/events/000004.yaml.sha256: a6dda740f973a29fa0e99607154fdaf6d5a6953260eb100b7877ff7fe5644aca
+  reports/test/agent-memory/insight-runs/agent-memory-20261020-0300/events/000005.yaml: 74a7eb3bbee6c0e4b1178e94b1693cc27e3117190037ec64a6cfdbecb230634a
+  reports/test/agent-memory/insight-runs/agent-memory-20261020-0300/events/000005.yaml.sha256: 28bdde1dfb8c30188cea59377df5ba0c3eb03db3767ea73847acf88b05e29ec1
+  reports/test/agent-memory/insight-runs/agent-memory-20261020-0300/events/000006.yaml: 84f702fad823407487b59f4eaad9963b3ab3a96b3d4e217b2c7ba4e9c513b16d
+  reports/test/agent-memory/insight-runs/agent-memory-20261020-0300/events/000006.yaml.sha256: 7a9b936d21577f058668c8b27b8051a90c7c1c47a09ad2c2c94b34105ce45a7d
+  reports/test/agent-memory/insight-runs/agent-memory-20261020-0300/events/000007.yaml: c7c75e7c6514a01d44557c2aab3ef9944985bd40f39da8914ef4fe042e487986
+  reports/test/agent-memory/insight-runs/agent-memory-20261020-0300/events/000007.yaml.sha256: 9b266ba02e12feb75b368b2318311985291dece3c25aec195b12c40c1723f232
+  reports/test/agent-memory/insight-runs/agent-memory-20261020-0300/manifest.yaml: 2932858476f4993ed5679da12f767e8a981b61301ca9275d400007beeb417e59
+  reports/test/agent-memory/insight-runs/agent-memory-20261020-0300/manifest.yaml.sha256: 79098cb9a599ba86268526df7d853491a40b8977dc79843d960a34fd50c73354
+  reports/test/agent-memory/insight-runs/agent-memory-20261020-0300/receipt.yaml: c41bf1d2a32726ae28763151c547a69558bc85be0b59de87e3f99d64b66c03fd
+  reports/test/agent-memory/insight-runs/agent-memory-20261020-0300/receipt.yaml.sha256: 2f31a31bd9bf8ccda96d3bc4267585ba745ffbec3158f797d123d3b9effc7dab
+  reports/test/agent-memory/research-batches/agent-memory-20261020-0300/events/000001.yaml: 6ef1551b958ce1cc24fcd7d3204e7d8a5a48b304cdf679a918cd7b9e1f57105b
+  reports/test/agent-memory/research-batches/agent-memory-20261020-0300/events/000001.yaml.sha256: 8d76fd017f7763e5c9d7073d052c2400e600f8c60e80abcbd4c79470a96f2f7f
+  reports/test/agent-memory/research-batches/agent-memory-20261020-0300/events/000002.yaml: 44a55dd1907163a31a9155f794bdbffc55b134346bbf92e5abcaee022d69f3a3
+  reports/test/agent-memory/research-batches/agent-memory-20261020-0300/events/000002.yaml.sha256: 90c20897c65b31364e09a0d843975595b06a415af0261697e75d05621ddcad8e
+  reports/test/agent-memory/research-batches/agent-memory-20261020-0300/events/000003.yaml: 682595c5b83051faf1c01dd1fed9b0157cdc0bfcc5ff3817e9a388ccb259fffa
+  reports/test/agent-memory/research-batches/agent-memory-20261020-0300/events/000003.yaml.sha256: c5e458882290ac81834b8ce937eb6666aadd31500267229a777c97d541d60e93
+  reports/test/agent-memory/research-batches/agent-memory-20261020-0300/events/000004.yaml: 83fa44ed0a29081bd3d72d3dc75340c2439a635f4190326676b5ae788ee6e9d9
+  reports/test/agent-memory/research-batches/agent-memory-20261020-0300/events/000004.yaml.sha256: f506e3019736335200255c23098b71a76e9a58e0dbba87acbc2e6ec8f860c59a
+  reports/test/agent-memory/research-batches/agent-memory-20261020-0300/events/000005.yaml: 76e8b02218910f6f6d15258dd863c997a10c434f0204a6030b64ad9d1161788d
+  reports/test/agent-memory/research-batches/agent-memory-20261020-0300/events/000005.yaml.sha256: ae079aefc043cfa5e0e7794edf874185ca43c55483ccf7e8bdeee20894b03bd7
+  reports/test/agent-memory/research-batches/agent-memory-20261020-0300/events/000006.yaml: 7cbce39ef86586469835c3903a021ddc2adf5cbb6e11b8fca976c4c69ca1e0e8
+  reports/test/agent-memory/research-batches/agent-memory-20261020-0300/events/000006.yaml.sha256: 56913e49a9c8600c15f5b20ab7d7f9b72cd9a5b46fb784b6dff8531bbe0288ff
+  reports/test/agent-memory/research-batches/agent-memory-20261020-0300/events/000007.yaml: 4e9e480a42ae0cbce9c279fc6ed819773a9d500fdc3db74ab73ae173a9b04efb
+  reports/test/agent-memory/research-batches/agent-memory-20261020-0300/events/000007.yaml.sha256: 5f5761bc649d1b9b5f93d52d6a3b9d1b6a0693a60a3bcf6832912d84e252b0fd
+  reports/test/agent-memory/research-batches/agent-memory-20261020-0300/events/000008.yaml: 30355052acdcd1818a73f7a81dde5a04fa3fbd0a43d18edbdd682cad49e6f378
+  reports/test/agent-memory/research-batches/agent-memory-20261020-0300/events/000008.yaml.sha256: d81c449836cc10ad38c00516dd1d03d114783e490746af2369447eee792bbc59
+  reports/test/agent-memory/research-batches/agent-memory-20261020-0300/events/000009.yaml: 3f8ff79a86911b943d23a7a094ec312cdd8b90a4e7abc6cf8da530bb83d85eef
+  reports/test/agent-memory/research-batches/agent-memory-20261020-0300/events/000009.yaml.sha256: 09789f780273343a330dfc8cfc2aad8c73f517004890a59e227dfd1e5f0b669b
+  reports/test/agent-memory/research-batches/agent-memory-20261020-0300/events/000010.yaml: 299d12dc0f6dd7330da0ba56a7b9fb3aa4500527406e7c2a0a185d902b4c5fff
+  reports/test/agent-memory/research-batches/agent-memory-20261020-0300/events/000010.yaml.sha256: b1b731012b258cb95e54260dccbd37725d26fbc06b35b7c1fb5ad36009903837
+  reports/test/agent-memory/research-batches/agent-memory-20261020-0300/events/000011.yaml: 09da58659164e5707a2275514fee74ae95ffad9f39769705b02aed0cbb611861
+  reports/test/agent-memory/research-batches/agent-memory-20261020-0300/events/000011.yaml.sha256: 9c85877433c655dd49868d21f46424904944f3f629c09bc28bdbd1f96e65d31b
+  reports/test/agent-memory/research-batches/agent-memory-20261020-0300/events/000012.yaml: d9858c2f28422242c4037c1d7fc9a6de0156f457e5ef0343ee1a8f79a3679649
+  reports/test/agent-memory/research-batches/agent-memory-20261020-0300/events/000012.yaml.sha256: af8687f571bb806228d57c3e7073bee3838a9036f93cd3f7c46940503ab13a98
+  reports/test/agent-memory/research-batches/agent-memory-20261020-0300/events/000013.yaml: 059b0973fdbe6c62377bc76d2c4b96196a1711e2d701eadb2d126faa6f1a6068
+  reports/test/agent-memory/research-batches/agent-memory-20261020-0300/events/000013.yaml.sha256: a28356e990728e47cfa10313896c5555436f6490859ef116bf3359387049e5f0
+  reports/test/agent-memory/research-batches/agent-memory-20261020-0300/events/000014.yaml: 529c7711d81f7fc9ecb49315840d02d5c9c9bf6581331ec3938bf1471f437c59
+  reports/test/agent-memory/research-batches/agent-memory-20261020-0300/events/000014.yaml.sha256: b31fd79a3a2ba1f4b3b9838001f713531b44ab7dbcb919d0058e6454abae4bb5
+  reports/test/agent-memory/research-batches/agent-memory-20261020-0300/items/arxiv-8930960ae8ce/candidate.yaml: 836ce234b874240ec6c6e35e01809c6af87de68d5c2a730354e873449e56bb03
+  reports/test/agent-memory/research-batches/agent-memory-20261020-0300/items/arxiv-8930960ae8ce/candidate.yaml.sha256: 29159519635e56f0fc98c1988e00b2ce4e9680c4625e1931bd1f210d854413e4
+  reports/test/agent-memory/research-batches/agent-memory-20261020-0300/items/arxiv-8930960ae8ce/checkpoints/research-0.yaml: cfaed0617e35e87f4d16262a3aff432810845de4df284f1ffe406c9ef41880e7
+  ? reports/test/agent-memory/research-batches/agent-memory-20261020-0300/items/arxiv-8930960ae8ce/checkpoints/research-0.yaml.sha256
+  : a01881b70ffd4f7af35519f24e75f169a44b5a7be03b12c7534cbbda30e794e5
+  reports/test/agent-memory/research-batches/agent-memory-20261020-0300/items/arxiv-8930960ae8ce/checkpoints/review-0.yaml: dde3579387a736b06f71f72e4fe00e83de8b4488abce34f78f9823629ded79fd
+  ? reports/test/agent-memory/research-batches/agent-memory-20261020-0300/items/arxiv-8930960ae8ce/checkpoints/review-0.yaml.sha256
+  : 748ddfbfac4fe04392c03704c0b553550fda995b59b76c74c17e9c8baea945b1
+  reports/test/agent-memory/research-batches/agent-memory-20261020-0300/items/arxiv-8930960ae8ce/report.md: dd89cf4167d1123369ae295951b58311d45203bdf88f1456b048978d43abc0e7
+  reports/test/agent-memory/research-batches/agent-memory-20261020-0300/items/arxiv-8930960ae8ce/result.yaml: 8d57336c70dd97ae8b9d63e62fd81fb39bbaebd6e37b6c1f11900652d6235fb7
+  reports/test/agent-memory/research-batches/agent-memory-20261020-0300/items/arxiv-8930960ae8ce/result.yaml.sha256: fb117efd31ff40649fa6a4b7559bcf831208fc7799a96d14d8f6eef226d3629f
+  reports/test/agent-memory/research-batches/agent-memory-20261020-0300/items/arxiv-c2d979272f50/candidate.yaml: aba0a21237b08d70326c9fd0227ab16c60597b151ea86861a5035e6e14caaffb
+  reports/test/agent-memory/research-batches/agent-memory-20261020-0300/items/arxiv-c2d979272f50/candidate.yaml.sha256: 0d4696cdecca104f67f6e321e2c1e0577a1063ca885d7559a5265db0abd996a2
+  reports/test/agent-memory/research-batches/agent-memory-20261020-0300/items/arxiv-c2d979272f50/checkpoints/research-0.yaml: 8d556d7b63ab759152b903ea9bde25dee03b9487aa32ea7c0569ffe933cdef73
+  ? reports/test/agent-memory/research-batches/agent-memory-20261020-0300/items/arxiv-c2d979272f50/checkpoints/research-0.yaml.sha256
+  : f34b55255f73d90ac2c29d759ecb2a72adf84bcf0508d3f79f3d4aee7cd734e7
+  reports/test/agent-memory/research-batches/agent-memory-20261020-0300/items/arxiv-c2d979272f50/checkpoints/research-1.yaml: 40609223f7374ffedda90643335849aaf443f1fa0a1949996ea82123ad4fc2fa
+  ? reports/test/agent-memory/research-batches/agent-memory-20261020-0300/items/arxiv-c2d979272f50/checkpoints/research-1.yaml.sha256
+  : 0c25e915d7b18a18a5a3e34684a23bab666ee67ec1a7aea1ee3985ed629d123c
+  reports/test/agent-memory/research-batches/agent-memory-20261020-0300/items/arxiv-c2d979272f50/checkpoints/review-0.yaml: d6bfb0b7044d32f10ad794c7aea8da657e3281bd8df03a59c0eba34033e7496a
+  ? reports/test/agent-memory/research-batches/agent-memory-20261020-0300/items/arxiv-c2d979272f50/checkpoints/review-0.yaml.sha256
+  : b3ed48386060da77b149ce6e6470fe18cc1021592821ac5be4c10ee3d080ecfc
+  reports/test/agent-memory/research-batches/agent-memory-20261020-0300/items/arxiv-c2d979272f50/checkpoints/review-1.yaml: c4f8ac8474bd2ca6db72d7210cefd0e22263159dcada5f4e194c9b037e1091a0
+  ? reports/test/agent-memory/research-batches/agent-memory-20261020-0300/items/arxiv-c2d979272f50/checkpoints/review-1.yaml.sha256
+  : 22dad73cf2cb50e1dc497f378297adf04d65bb353d9b2f508e93f006435ddfe6
+  reports/test/agent-memory/research-batches/agent-memory-20261020-0300/items/arxiv-c2d979272f50/report.md: 66f3574de1fab185282d998fe866a8c26983e6636a5ee98d5f7bf739b3587e74
+  reports/test/agent-memory/research-batches/agent-memory-20261020-0300/items/arxiv-c2d979272f50/result.yaml: 5dfb99e6be1c80571ccd7ddb9eafbdd495982a1be43bf85ea13fe471305e6731
+  reports/test/agent-memory/research-batches/agent-memory-20261020-0300/items/arxiv-c2d979272f50/result.yaml.sha256: 534dc107b77766df0863f0d84d7b681329518fea2f4e00090ecc3107e285cf2a
+  reports/test/agent-memory/research-batches/agent-memory-20261020-0300/manifest.yaml: c381ca89addbb632c1d75d8178beeed9ce7bbe7d45039601e5cf7e025ce31be5
+  reports/test/agent-memory/research-batches/agent-memory-20261020-0300/manifest.yaml.sha256: 2e20c2fa028bc4f83b7276d068c202476420e07ef95ad79659b763b239762040
+  reports/test/agent-memory/research-batches/agent-memory-20261020-0300/receipt-attempt-1.yaml: 5ae786bef3f7270583c49fa9caa46349e4f06b1e8b31424c4a1c17518afac7b6
+  reports/test/agent-memory/research-batches/agent-memory-20261020-0300/receipt-attempt-1.yaml.sha256: 7dd1cb85139160bb3d2d2fcf3b0942f62ab00a64ed9c1ebabd461edc70c98510
+  reports/test/agent-memory/research-batches/agent-memory-20261020-0300/source-attempts/arxiv-8930960ae8ce/attempt-1.yaml: 5f9c1b69f65878edb1f65912334828c042cbff13c65e45028531f41c7d46bd7a
+  ? reports/test/agent-memory/research-batches/agent-memory-20261020-0300/source-attempts/arxiv-8930960ae8ce/attempt-1.yaml.sha256
+  : 333f61acb85a10d355005b9c5afd3dfd34cd5e798d5511a9c8890acaf63c41e4
+  reports/test/agent-memory/research-batches/agent-memory-20261020-0300/source-attempts/arxiv-c2d979272f50/attempt-1.yaml: d56bfa53320255ce44ec235b73c0ed9df7dd95aa764e37a93340924b0fdf8e46
+  ? reports/test/agent-memory/research-batches/agent-memory-20261020-0300/source-attempts/arxiv-c2d979272f50/attempt-1.yaml.sha256
+  : d3909eaa2dbca585f6a49f99b71177164eb7d13923c3a50dcb1338a6e75ada74
+original_reserved_calls: 9
+max_calls_per_cycle: 16
+max_new_calls: 4
+month_max_calls: 100
+prompt_version: insight-v2
+original_failure_sha256: c41bf1d2a32726ae28763151c547a69558bc85be0b59de87e3f99d64b66c03fd
+original_candidate_sha256: 69cdfa9e69b189cd8c05e936fc3c139f78893626714f96d346ab515a6938d7c5
+original_reviewer_sha256: 55546cc0df28c3c52dfa31ca62ad7c36f838caf305bc9f2d1164a3859735205e
+verification_bundle:
+  topic: agent-memory
+  research_context:
+    name: Agent Memory
+    description: 研究 AI Agent 如何存储、检索、更新并使用长期经验。
+    scope:
+    - 记忆架构、工作记忆与长期记忆
+    - 记忆写入、检索、压缩、更新与遗忘
+    - 情景记忆、语义记忆与程序性记忆
+    - 记忆评测、可靠性、隐私与安全
+    keywords:
+    - agent memory
+    - long-term memory
+    - episodic memory
+    - memory retrieval
+    - memory consolidation
+  provenance:
+    research_inputs:
+    - id: R1
+      receipt: reports/test/agent-memory/research-batches/agent-memory-20261020-0300/receipt-attempt-1.yaml
+      receipt_sha256: 5ae786bef3f7270583c49fa9caa46349e4f06b1e8b31424c4a1c17518afac7b6
+      manifest: reports/test/agent-memory/research-batches/agent-memory-20261020-0300/manifest.yaml
+      manifest_sha256: c381ca89addbb632c1d75d8178beeed9ce7bbe7d45039601e5cf7e025ce31be5
+      config: reports/test/agent-memory/cycles/agent-memory-20261020-0300/configs/research.yaml
+      config_sha256: 792a863fc3d1871469f607e5782cb96bf63cc4458da9fdf8efdf0bc5e72364b7
+      topics_sha256: 651cea40a6dbfa2568b324491a102b785230a3c63a7ce03f03252ff3b0cdf18d
+      models: &id002
+        research: gpt-6-luna
+        review: gpt-6.1-sol
+      events: &id003
+      - path: reports/test/agent-memory/research-batches/agent-memory-20261020-0300/events/000001.yaml
+        sha256: 6ef1551b958ce1cc24fcd7d3204e7d8a5a48b304cdf679a918cd7b9e1f57105b
+      - path: reports/test/agent-memory/research-batches/agent-memory-20261020-0300/events/000002.yaml
+        sha256: 44a55dd1907163a31a9155f794bdbffc55b134346bbf92e5abcaee022d69f3a3
+      - path: reports/test/agent-memory/research-batches/agent-memory-20261020-0300/events/000003.yaml
+        sha256: 682595c5b83051faf1c01dd1fed9b0157cdc0bfcc5ff3817e9a388ccb259fffa
+      - path: reports/test/agent-memory/research-batches/agent-memory-20261020-0300/events/000004.yaml
+        sha256: 83fa44ed0a29081bd3d72d3dc75340c2439a635f4190326676b5ae788ee6e9d9
+      - path: reports/test/agent-memory/research-batches/agent-memory-20261020-0300/events/000005.yaml
+        sha256: 76e8b02218910f6f6d15258dd863c997a10c434f0204a6030b64ad9d1161788d
+      - path: reports/test/agent-memory/research-batches/agent-memory-20261020-0300/events/000006.yaml
+        sha256: 7cbce39ef86586469835c3903a021ddc2adf5cbb6e11b8fca976c4c69ca1e0e8
+      - path: reports/test/agent-memory/research-batches/agent-memory-20261020-0300/events/000007.yaml
+        sha256: 4e9e480a42ae0cbce9c279fc6ed819773a9d500fdc3db74ab73ae173a9b04efb
+      - path: reports/test/agent-memory/research-batches/agent-memory-20261020-0300/events/000008.yaml
+        sha256: 30355052acdcd1818a73f7a81dde5a04fa3fbd0a43d18edbdd682cad49e6f378
+      - path: reports/test/agent-memory/research-batches/agent-memory-20261020-0300/events/000009.yaml
+        sha256: 3f8ff79a86911b943d23a7a094ec312cdd8b90a4e7abc6cf8da530bb83d85eef
+      - path: reports/test/agent-memory/research-batches/agent-memory-20261020-0300/events/000010.yaml
+        sha256: 299d12dc0f6dd7330da0ba56a7b9fb3aa4500527406e7c2a0a185d902b4c5fff
+      - path: reports/test/agent-memory/research-batches/agent-memory-20261020-0300/events/000011.yaml
+        sha256: 09da58659164e5707a2275514fee74ae95ffad9f39769705b02aed0cbb611861
+      - path: reports/test/agent-memory/research-batches/agent-memory-20261020-0300/events/000012.yaml
+        sha256: d9858c2f28422242c4037c1d7fc9a6de0156f457e5ef0343ee1a8f79a3679649
+      - path: reports/test/agent-memory/research-batches/agent-memory-20261020-0300/events/000013.yaml
+        sha256: 059b0973fdbe6c62377bc76d2c4b96196a1711e2d701eadb2d126faa6f1a6068
+      - path: reports/test/agent-memory/research-batches/agent-memory-20261020-0300/events/000014.yaml
+        sha256: 529c7711d81f7fc9ecb49315840d02d5c9c9bf6581331ec3938bf1471f437c59
+      item_keys: &id004
+      - arxiv-8930960ae8ce
+      - arxiv-c2d979272f50
+      path: reports/test/agent-memory/research-batches/agent-memory-20261020-0300/items/arxiv-8930960ae8ce/report.md
+      sha256: dd89cf4167d1123369ae295951b58311d45203bdf88f1456b048978d43abc0e7
+      source_id: paper-f5ce4a88-8dda-4ad0-b219-a0abb5a40c21
+      source_ids:
+      - paper-f5ce4a88-8dda-4ad0-b219-a0abb5a40c21
+      source_url: https://arxiv.org/abs/2607.01071v3
+      identity_keys: &id001
+      - arxiv:2607.01071
+      - url:https://arxiv.org/abs/2607.01071
+      source_identities:
+      - source_id: paper-f5ce4a88-8dda-4ad0-b219-a0abb5a40c21
+        identity_keys: *id001
+      coverage: abstract_only
+      origin: reviewed_research
+      candidate_path: reports/test/agent-memory/research-batches/agent-memory-20261020-0300/items/arxiv-8930960ae8ce/candidate.yaml
+      candidate_sha256: 836ce234b874240ec6c6e35e01809c6af87de68d5c2a730354e873449e56bb03
+      content_sha256: 67ba274f5d7b2c80a001673e8db300a2cdf4891ba50182b21173cbb064e3da33
+      metadata_sha256: b1cfc84fac48178e9f8766e943180516a53509b8fd5588ec5574cf5400011979
+      evidence_sha256: 62fc37b491d210d6f66175e5d83d772334935b468977f2c5992d284ae7c47472
+      original_material_sha256: 62fc37b491d210d6f66175e5d83d772334935b468977f2c5992d284ae7c47472
+      checkpoints:
+      - role: research
+        revision: 0
+        path: reports/test/agent-memory/research-batches/agent-memory-20261020-0300/items/arxiv-8930960ae8ce/checkpoints/research-0.yaml
+        sha256: cfaed0617e35e87f4d16262a3aff432810845de4df284f1ffe406c9ef41880e7
+      - role: review
+        revision: 0
+        path: reports/test/agent-memory/research-batches/agent-memory-20261020-0300/items/arxiv-8930960ae8ce/checkpoints/review-0.yaml
+        sha256: dde3579387a736b06f71f72e4fe00e83de8b4488abce34f78f9823629ded79fd
+    - id: R2
+      receipt: reports/test/agent-memory/research-batches/agent-memory-20261020-0300/receipt-attempt-1.yaml
+      receipt_sha256: 5ae786bef3f7270583c49fa9caa46349e4f06b1e8b31424c4a1c17518afac7b6
+      manifest: reports/test/agent-memory/research-batches/agent-memory-20261020-0300/manifest.yaml
+      manifest_sha256: c381ca89addbb632c1d75d8178beeed9ce7bbe7d45039601e5cf7e025ce31be5
+      config: reports/test/agent-memory/cycles/agent-memory-20261020-0300/configs/research.yaml
+      config_sha256: 792a863fc3d1871469f607e5782cb96bf63cc4458da9fdf8efdf0bc5e72364b7
+      topics_sha256: 651cea40a6dbfa2568b324491a102b785230a3c63a7ce03f03252ff3b0cdf18d
+      models: *id002
+      events: *id003
+      item_keys: *id004
+      path: reports/test/agent-memory/research-batches/agent-memory-20261020-0300/items/arxiv-c2d979272f50/report.md
+      sha256: 66f3574de1fab185282d998fe866a8c26983e6636a5ee98d5f7bf739b3587e74
+      source_id: paper-0d7a0c77-ff16-47d6-a6ea-91407aa2cc80
+      source_ids:
+      - paper-0d7a0c77-ff16-47d6-a6ea-91407aa2cc80
+      source_url: https://arxiv.org/abs/2610.21804v1
+      identity_keys: &id005
+      - arxiv:2610.21804
+      - url:https://arxiv.org/abs/2610.21804
+      source_identities:
+      - source_id: paper-0d7a0c77-ff16-47d6-a6ea-91407aa2cc80
+        identity_keys: *id005
+      coverage: abstract_only
+      origin: reviewed_research
+      candidate_path: reports/test/agent-memory/research-batches/agent-memory-20261020-0300/items/arxiv-c2d979272f50/candidate.yaml
+      candidate_sha256: aba0a21237b08d70326c9fd0227ab16c60597b151ea86861a5035e6e14caaffb
+      content_sha256: 012a6deb45c79b083191bb41156905dd3c03ff94d0c73d59899a8732ffc06161
+      metadata_sha256: ec721fcdaa149cab14dfb4601f6c7527956c713c8a8a385d1d2950e2f3be2c02
+      evidence_sha256: 3a95f1a0fbe2d19d3127c51bec1d63379114e227f73a0b04ed9680e7bc6f64e4
+      original_material_sha256: 3a95f1a0fbe2d19d3127c51bec1d63379114e227f73a0b04ed9680e7bc6f64e4
+      checkpoints:
+      - role: research
+        revision: 0
+        path: reports/test/agent-memory/research-batches/agent-memory-20261020-0300/items/arxiv-c2d979272f50/checkpoints/research-0.yaml
+        sha256: 8d556d7b63ab759152b903ea9bde25dee03b9487aa32ea7c0569ffe933cdef73
+      - role: review
+        revision: 0
+        path: reports/test/agent-memory/research-batches/agent-memory-20261020-0300/items/arxiv-c2d979272f50/checkpoints/review-0.yaml
+        sha256: d6bfb0b7044d32f10ad794c7aea8da657e3281bd8df03a59c0eba34033e7496a
+      - role: research
+        revision: 1
+        path: reports/test/agent-memory/research-batches/agent-memory-20261020-0300/items/arxiv-c2d979272f50/checkpoints/research-1.yaml
+        sha256: 40609223f7374ffedda90643335849aaf443f1fa0a1949996ea82123ad4fc2fa
+      - role: review
+        revision: 1
+        path: reports/test/agent-memory/research-batches/agent-memory-20261020-0300/items/arxiv-c2d979272f50/checkpoints/review-1.yaml
+        sha256: c4f8ac8474bd2ca6db72d7210cefd0e22263159dcada5f4e194c9b037e1091a0
+    historical_inputs:
+    - id: H1
+      origin: human_baseline
+      path: sources/blogs/agent-memory/blog-05c33166-b18e-425e-91e0-36ddd26f21aa.md
+      sha256: e41eecff5dec1f01b27eae70df70bbc71de57107c8d8e3f51c786022334f642e
+      source_ids: &id006
+      - blog-05c33166-b18e-425e-91e0-36ddd26f21aa
+      source_urls: &id007
+      - https://www.langchain.com/blog/context-engineering-deep-agents-remember
+      source_url: https://www.langchain.com/blog/context-engineering-deep-agents-remember
+      identity_keys: &id008
+      - url:https://www.langchain.com/blog/context-engineering-deep-agents-remember
+      source_identities: &id009
+      - source_id: blog-05c33166-b18e-425e-91e0-36ddd26f21aa
+        identity_keys:
+        - url:https://www.langchain.com/blog/context-engineering-deep-agents-remember
+      coverage: historical_note
+      independently_reviewed: false
+      can_support_original_facts: false
+    - id: H2
+      origin: human_baseline
+      path: sources/blogs/blog-fec9a2e1-6812-425a-83cd-e6a2464a1110.md
+      sha256: 1c05f28a21a3cef08ff0fc966970a4eed70e2510d0d17468437fb4ff0fa7e99f
+      source_ids: &id010
+      - blog-fec9a2e1-6812-425a-83cd-e6a2464a1110
+      source_urls: &id011
+      - https://www.letta.com/blog/memory-blocks/
+      source_url: https://www.letta.com/blog/memory-blocks/
+      identity_keys: &id012
+      - url:https://www.letta.com/blog/memory-blocks/
+      source_identities: &id013
+      - source_id: blog-fec9a2e1-6812-425a-83cd-e6a2464a1110
+        identity_keys:
+        - url:https://www.letta.com/blog/memory-blocks/
+      coverage: historical_note
+      independently_reviewed: false
+      can_support_original_facts: false
+    - id: H3
+      origin: human_baseline
+      path: sources/papers/agent-memory/paper-2d89084b-a1b1-4a27-b298-a660ef434e61.md
+      sha256: 20ca381ff3e8d96d9e711c763fd3c7ad2eae3dd6f2f381f0edbe573311ec1378
+      source_ids: &id014
+      - paper-2d89084b-a1b1-4a27-b298-a660ef434e61
+      source_urls: &id015
+      - https://arxiv.org/abs/2610.22196
+      source_url: https://arxiv.org/abs/2610.22196
+      identity_keys: &id016
+      - arxiv:2610.22196
+      - url:https://arxiv.org/abs/2610.22196
+      source_identities: &id017
+      - source_id: paper-2d89084b-a1b1-4a27-b298-a660ef434e61
+        identity_keys:
+        - arxiv:2610.22196
+        - url:https://arxiv.org/abs/2610.22196
+      coverage: historical_note
+      independently_reviewed: false
+      can_support_original_facts: false
+    - id: H4
+      origin: human_baseline
+      path: sources/papers/paper-4eb3be4b-7189-49aa-bafd-f88f77a972f4.md
+      sha256: 2fca02def277430ea06e35c370b56b895c82d01b14099c3cea4cb55a1e410274
+      source_ids: &id018
+      - paper-4eb3be4b-7189-49aa-bafd-f88f77a972f4
+      source_urls: &id019
+      - https://arxiv.org/abs/2310.08560
+      source_url: https://arxiv.org/abs/2310.08560
+      identity_keys: &id020
+      - arxiv:2310.08560
+      - doi:10.48550/arxiv.2310.08560
+      - url:https://arxiv.org/abs/2310.08560
+      source_identities: &id021
+      - source_id: paper-4eb3be4b-7189-49aa-bafd-f88f77a972f4
+        identity_keys:
+        - arxiv:2310.08560
+        - doi:10.48550/arxiv.2310.08560
+        - url:https://arxiv.org/abs/2310.08560
+      coverage: historical_note
+      independently_reviewed: false
+      can_support_original_facts: false
+    - id: H5
+      origin: human_baseline
+      path: reports/agent-memory/cycle-agent-memory-gh-20261019-synthesis.md
+      sha256: 445d181c3a8eb2f11204e64279f56a79acc57ec6a127f27e073a34d264e8829d
+      source_ids: &id022
+      - blog-05c33166-b18e-425e-91e0-36ddd26f21aa
+      - blog-fec9a2e1-6812-425a-83cd-e6a2464a1110
+      - paper-2d89084b-a1b1-4a27-b298-a660ef434e61
+      - paper-4eb3be4b-7189-49aa-bafd-f88f77a972f4
+      source_urls: &id023
+      - https://arxiv.org/abs/2310.08560
+      - https://arxiv.org/abs/2610.22196
+      - https://www.langchain.com/blog/context-engineering-deep-agents-remember
+      - https://www.letta.com/blog/memory-blocks/
+      source_url: null
+      identity_keys: &id024
+      - arxiv:2310.08560
+      - arxiv:2610.22196
+      - doi:10.48550/arxiv.2310.08560
+      - url:https://arxiv.org/abs/2310.08560
+      - url:https://arxiv.org/abs/2610.22196
+      - url:https://www.langchain.com/blog/context-engineering-deep-agents-remember
+      - url:https://www.letta.com/blog/memory-blocks/
+      source_identities: &id025
+      - source_id: blog-05c33166-b18e-425e-91e0-36ddd26f21aa
+        identity_keys:
+        - url:https://www.langchain.com/blog/context-engineering-deep-agents-remember
+      - source_id: blog-fec9a2e1-6812-425a-83cd-e6a2464a1110
+        identity_keys:
+        - url:https://www.letta.com/blog/memory-blocks/
+      - source_id: paper-2d89084b-a1b1-4a27-b298-a660ef434e61
+        identity_keys:
+        - arxiv:2610.22196
+        - url:https://arxiv.org/abs/2610.22196
+      - source_id: paper-4eb3be4b-7189-49aa-bafd-f88f77a972f4
+        identity_keys:
+        - arxiv:2310.08560
+        - doi:10.48550/arxiv.2310.08560
+        - url:https://arxiv.org/abs/2310.08560
+      coverage: historical_note
+      independently_reviewed: false
+      can_support_original_facts: false
+    - id: H6
+      origin: human_baseline
+      path: reports/agent-memory/cycle-agent-memory-gh-20261019-research-paper-2d89084b-a1b1-4a27-b298-a660ef434e61.md
+      sha256: dc9bbeb260b478b94ebe7919a7e6c4ab10238ba49fdb14a987b803035af3e5d2
+      source_ids: &id026
+      - paper-2d89084b-a1b1-4a27-b298-a660ef434e61
+      source_urls: &id027
+      - https://arxiv.org/abs/2610.22196
+      source_url: https://arxiv.org/abs/2610.22196
+      identity_keys: &id028
+      - arxiv:2610.22196
+      - url:https://arxiv.org/abs/2610.22196
+      source_identities: &id029
+      - source_id: paper-2d89084b-a1b1-4a27-b298-a660ef434e61
+        identity_keys:
+        - arxiv:2610.22196
+        - url:https://arxiv.org/abs/2610.22196
+      coverage: historical_note
+      independently_reviewed: false
+      can_support_original_facts: false
+  input_fingerprint: 6428ba703621ccb0bdbfd0ab7c5dffa95bb991d011cdf0aeb136b5d104fdd0b9
+  evidence:
+  - id: R1
+    origin: reviewed_research
+    path: reports/test/agent-memory/research-batches/agent-memory-20261020-0300/items/arxiv-8930960ae8ce/report.md
+    sha256: dd89cf4167d1123369ae295951b58311d45203bdf88f1456b048978d43abc0e7
+    source_ids:
+    - paper-f5ce4a88-8dda-4ad0-b219-a0abb5a40c21
+    source_id: paper-f5ce4a88-8dda-4ad0-b219-a0abb5a40c21
+    source_url: https://arxiv.org/abs/2607.01071v3
+    source_urls:
+    - https://arxiv.org/abs/2607.01071v3
+    coverage: abstract_only
+    identity_keys: *id001
+    source_identities:
+    - source_id: paper-f5ce4a88-8dda-4ad0-b219-a0abb5a40c21
+      identity_keys: *id001
+    independently_reviewed: true
+    can_support_original_facts: true
+    metadata:
+      title: 'MemSyco-Bench: Benchmarking Sycophancy in Agent Memory'
+      source: arXiv
+      source_url: https://arxiv.org/abs/2607.01071
+      authors:
+      - Xiang, Zhishang
+      - Chen, Zerui
+      - Tang, Yunbo
+      - Wei, Zhimin
+      - Ning, Ruqin
+      - Lin, Yujie
+      - Zhang, Qinggang
+      - Su, Jinsong
+      published_at: '2026-07-01'
+      arxiv_id: '2607.01071'
+      source_version: v3
+    research_summary: 仅依据论文摘要节选，MemSyco-Bench 关注记忆对智能体后续推理与决策的影响，尤其是记忆诱发的迎合问题；不能据此判断基准的完整设计或实测效果。
+    research_claims:
+    - kind: author_claim
+      text: 作者指出，检索到的记忆可能导致智能体过度迎合用户，从而损害事实准确性或客观推理。
+      evidence_ids:
+      - A2
+    - kind: author_claim
+      text: 作者称，现有记忆基准主要评估记忆是否被正确存储、检索或更新，而较少关注记忆如何影响后续推理与决策。
+      evidence_ids:
+      - A3
+    - kind: author_claim
+      text: 作者提出 MemSyco-Bench，用于评估智能体系统中的记忆诱发迎合，并考察何时应让记忆影响决策、以及如何使用有效记忆。
+      evidence_ids:
+      - A4
+      - A5
+    - kind: fact
+      text: 摘要列出五类评测任务：拒绝将记忆当作事实证据、遵守记忆适用范围、处理记忆与客观证据的冲突、跟踪记忆更新，以及使用有效记忆进行个性化。
+      evidence_ids:
+      - A6
+    research_limitations:
+    - 本次仅阅读摘要节选，未核验论文全文、基准数据、实验结果或实现。
+    - 节选未提供各任务的具体定义、评测方法、结果或局限，不能据此判断基准的有效性或实际表现。
+    locators:
+    - id: A1
+      location: abstract_only sentence 1
+      text_sha256: 65c9a39e7bba2e65979942baa1bbac4d86aaa69567160a310caac315ca919170
+      quote: Memory has emerged as a cornerstone of modern LLM-based agents, supporting
+        their evolution from single-turn assistants to long-term collaborators.
+    - id: A2
+      location: abstract_only sentence 2
+      text_sha256: 973be91519af9e371c994e372a766f1990755b2c4515bb0024a9c3e84eff8446
+      quote: 'However, memory is not always beneficial:'
+    - id: A3
+      location: abstract_only sentence 3
+      text_sha256: 093bbf3533c32b9db5833b5af461720007f368d759e5cd1366bdf8a2ef3ace70
+      quote: ''
+    - id: A4
+      location: abstract_only sentence 4
+      text_sha256: a78a1a3c001eeb9f797bf157853ef5118ec810fd189f7edc66df789ef2a04407
+      quote: ''
+    - id: A5
+      location: abstract_only sentence 5
+      text_sha256: d27c0f7d04351c51962edbe8f8cfbe0959d8a59266d3f2545ac0e3f99626c452
+      quote: ''
+    - id: A6
+      location: abstract_only sentence 6
+      text_sha256: f9ba47e8a8e0bb7e102ca36a654734fc7ab9d685265efb7e224b1b58f01284d0
+      quote: ''
+    - id: A7
+      location: abstract_only sentence 7
+      text_sha256: 69f6b925528b792213a32f08b35d49913936d51704f6e0b298d281b4cd588ccb
+      quote: ''
+  - id: R2
+    origin: reviewed_research
+    path: reports/test/agent-memory/research-batches/agent-memory-20261020-0300/items/arxiv-c2d979272f50/report.md
+    sha256: 66f3574de1fab185282d998fe866a8c26983e6636a5ee98d5f7bf739b3587e74
+    source_ids:
+    - paper-0d7a0c77-ff16-47d6-a6ea-91407aa2cc80
+    source_id: paper-0d7a0c77-ff16-47d6-a6ea-91407aa2cc80
+    source_url: https://arxiv.org/abs/2610.21804v1
+    source_urls:
+    - https://arxiv.org/abs/2610.21804v1
+    coverage: abstract_only
+    identity_keys: *id005
+    source_identities:
+    - source_id: paper-0d7a0c77-ff16-47d6-a6ea-91407aa2cc80
+      identity_keys: *id005
+    independently_reviewed: true
+    can_support_original_facts: true
+    metadata:
+      title: 'Co2In: a Bi-level Memory Incremental Learning Framework with Knowledge
+        Encoding, Consolidation, and Integration'
+      source: arXiv
+      source_url: https://arxiv.org/abs/2610.21804
+      authors:
+      - Sun, Wenju
+      - Li, Qingyong
+      - Li, Boyang
+      - Wang, Wen
+      - Zhang, Siyu
+      - Wei, Yi
+      - Geng, Yangliao
+      published_at: '2026-10-15'
+      arxiv_id: '2610.21804'
+      source_version: v1
+    research_summary: 本次仅依据 Co2In 论文摘要，概述其面向增量学习的双层记忆架构、知识处理流程及作者报告的评测结果；这些材料不构成对通用智能体记忆系统的全面评估。
+    research_claims:
+    - kind: fact
+      text: 摘要将增量学习的挑战描述为：获取新知识的能力与保留既有信息的能力需要取得平衡。
+      evidence_ids:
+      - A1
+      - A2
+    - kind: author_claim
+      text: 作者提出 Co2In 双层记忆架构：工作记忆用于适应性地获取知识，长期记忆用于持久保留信息，两者在增量学习过程中协作。
+      evidence_ids:
+      - A4
+      - A5
+      - A6
+    - kind: author_claim
+      text: 摘要描述的流程是：工作记忆从新数据学习并将知识编码到参数中；随后通过知识巩固识别已学习参数中的潜在模式并形成紧凑表示，再将该表示与识别出的模式转换为独立网络层，集成进长期记忆。
+      evidence_ids:
+      - A7
+      - A8
+      - A9
+    - kind: author_claim
+      text: 作者称在 CIFAR-10、CIFAR-100 和 Tiny-ImageNet 的 exemplar-free（不使用样本范例）Class-IL
+        与 Task-IL 设置下评测，并报告 Co2In 达到最先进性能且记忆消耗高效。
+      evidence_ids:
+      - A11
+      - A12
+    research_limitations:
+    - 本次仅依据论文摘要，未核验全文、实验细节、实现或结果；性能与记忆消耗结论是作者报告，并非独立验证。
+    - 摘要未提供足够信息核查比较基线、具体数值或“高效”的衡量方式。
+    - 摘要主要讨论增量学习框架，未提供对隐私、安全、遗忘控制或通用智能体记忆任务的具体证据。
+    locators:
+    - id: A1
+      location: abstract_only sentence 1
+      text_sha256: 9042d04c6214e16b87e44d6698ddc0d191a7b7ad803b5285be77406599cfe461
+      quote: Incremental learning (IL) aims to continually acquire new knowledge (plasticity)
+        while retaining previously learned information (stability).
+    - id: A2
+      location: abstract_only sentence 2
+      text_sha256: ca0b20e4804da507a516086e09ccbeb67c5a16b1f79ba4492ec2634fba565db6
+      quote: However, striking a balance between plasticity and stability remains
+    - id: A3
+      location: abstract_only sentence 3
+      text_sha256: ede3a828cf83c665e9f381253dc171e95323aafa0a571594cc103cf6888a3094
+      quote: ''
+    - id: A4
+      location: abstract_only sentence 4
+      text_sha256: bdec857f7edf2edbc280c37ce6c29848ffee528f56255ab40ba25a80a053e7fe
+      quote: ''
+    - id: A5
+      location: abstract_only sentence 5
+      text_sha256: 261662edee44a25e4cc9e21fd968df3567a6cee768ce7baa8d70eb64a6e49541
+      quote: ''
+    - id: A6
+      location: abstract_only sentence 6
+      text_sha256: bc6cc8c9e5371168a9f1b6c3396571f4495cab60b24c03692161c11647a738b2
+      quote: ''
+    - id: A7
+      location: abstract_only sentence 7
+      text_sha256: 198d009213bf43cbe061ba3b054fe8089d0e2aa174bf63ccbf9b4a09f1138658
+      quote: ''
+    - id: A8
+      location: abstract_only sentence 8
+      text_sha256: 5291a9b401df2df989896f57f0bde5e7a57a007c6159165587ef62d44811f1d8
+      quote: ''
+    - id: A9
+      location: abstract_only sentence 9
+      text_sha256: f0ea453c69c3a8629c8ea6971c8c70c5ae26756a01be92e1471278414be2189d
+      quote: ''
+    - id: A10
+      location: abstract_only sentence 10
+      text_sha256: 1c4bfc21c1954c4aee4df99e6bd35033df856af23f75c786f88ae0c09157654c
+      quote: ''
+    - id: A11
+      location: abstract_only sentence 11
+      text_sha256: 312cf6b0cec8584e49b1fad3bd9ccff2958ad478c62bca24ccc0abd5d160bb81
+      quote: ''
+    - id: A12
+      location: abstract_only sentence 12
+      text_sha256: 21787af2c9a7ac524c822d2bab0fec76ac3c86ccee73cd782b98bd81805984c3
+      quote: ''
+  - id: H1
+    origin: human_baseline
+    path: sources/blogs/agent-memory/blog-05c33166-b18e-425e-91e0-36ddd26f21aa.md
+    sha256: e41eecff5dec1f01b27eae70df70bbc71de57107c8d8e3f51c786022334f642e
+    source_ids: *id006
+    source_urls: *id007
+    source_url: https://www.langchain.com/blog/context-engineering-deep-agents-remember
+    identity_keys: *id008
+    source_identities: *id009
+    coverage: historical_note
+    independently_reviewed: false
+    can_support_original_facts: false
+    historical_status: 历史人工基线，含 AI 辅助内容；未经本次独立原文审阅。推断与旧主张均不可升格为新核验事实。
+  - id: H2
+    origin: human_baseline
+    path: sources/blogs/blog-fec9a2e1-6812-425a-83cd-e6a2464a1110.md
+    sha256: 1c05f28a21a3cef08ff0fc966970a4eed70e2510d0d17468437fb4ff0fa7e99f
+    source_ids: *id010
+    source_urls: *id011
+    source_url: https://www.letta.com/blog/memory-blocks/
+    identity_keys: *id012
+    source_identities: *id013
+    coverage: historical_note
+    independently_reviewed: false
+    can_support_original_facts: false
+    historical_status: 历史人工基线，含 AI 辅助内容；未经本次独立原文审阅。推断与旧主张均不可升格为新核验事实。
+  - id: H3
+    origin: human_baseline
+    path: sources/papers/agent-memory/paper-2d89084b-a1b1-4a27-b298-a660ef434e61.md
+    sha256: 20ca381ff3e8d96d9e711c763fd3c7ad2eae3dd6f2f381f0edbe573311ec1378
+    source_ids: *id014
+    source_urls: *id015
+    source_url: https://arxiv.org/abs/2610.22196
+    identity_keys: *id016
+    source_identities: *id017
+    coverage: historical_note
+    independently_reviewed: false
+    can_support_original_facts: false
+    historical_status: 历史人工基线，含 AI 辅助内容；未经本次独立原文审阅。推断与旧主张均不可升格为新核验事实。
+  - id: H4
+    origin: human_baseline
+    path: sources/papers/paper-4eb3be4b-7189-49aa-bafd-f88f77a972f4.md
+    sha256: 2fca02def277430ea06e35c370b56b895c82d01b14099c3cea4cb55a1e410274
+    source_ids: *id018
+    source_urls: *id019
+    source_url: https://arxiv.org/abs/2310.08560
+    identity_keys: *id020
+    source_identities: *id021
+    coverage: historical_note
+    independently_reviewed: false
+    can_support_original_facts: false
+    historical_status: 历史人工基线，含 AI 辅助内容；未经本次独立原文审阅。推断与旧主张均不可升格为新核验事实。
+  - id: H5
+    origin: human_baseline
+    path: reports/agent-memory/cycle-agent-memory-gh-20261019-synthesis.md
+    sha256: 445d181c3a8eb2f11204e64279f56a79acc57ec6a127f27e073a34d264e8829d
+    source_ids: *id022
+    source_urls: *id023
+    source_url: null
+    identity_keys: *id024
+    source_identities: *id025
+    coverage: historical_note
+    independently_reviewed: false
+    can_support_original_facts: false
+    historical_status: 历史人工基线，含 AI 辅助内容；未经本次独立原文审阅。推断与旧主张均不可升格为新核验事实。
+  - id: H6
+    origin: human_baseline
+    path: reports/agent-memory/cycle-agent-memory-gh-20261019-research-paper-2d89084b-a1b1-4a27-b298-a660ef434e61.md
+    sha256: dc9bbeb260b478b94ebe7919a7e6c4ab10238ba49fdb14a987b803035af3e5d2
+    source_ids: *id026
+    source_urls: *id027
+    source_url: https://arxiv.org/abs/2610.22196
+    identity_keys: *id028
+    source_identities: *id029
+    coverage: historical_note
+    independently_reviewed: false
+    can_support_original_facts: false
+    historical_status: 历史人工基线，含 AI 辅助内容；未经本次独立原文审阅。推断与旧主张均不可升格为新核验事实。
+authorization:
+  authenticated: true
+  plan_permission: true
+  authorization: official_chatgpt_oauth
+  account_fingerprint: 658c777b3a755463
+writing_started: false
+publish_authorized: false

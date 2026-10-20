@@ -1,0 +1,46 @@
+---
+schema_version: 1
+id: research-agent-memory-20261020-0300-recovery-1-paper-0d7a0c77-ff16-47d6-a6ea-91407aa2cc80
+kind: research_report
+title: 'Co2In: a Bi-level Memory Incremental Learning Framework with Knowledge Encoding,
+  Consolidation, and Integration'
+topic: agent-memory
+topics:
+- agent-memory
+status: accepted
+source_id: paper-0d7a0c77-ff16-47d6-a6ea-91407aa2cc80
+coverage: abstract_only
+---
+
+# Co2In: a Bi-level Memory Incremental Learning Framework with Knowledge Encoding, Consolidation, and Integration
+
+> AI 自动研究记录，已通过独立模型审阅；阅读范围及证据限制见正文，未复现实验。
+
+- 来源：[Co2In: a Bi-level Memory Incremental Learning Framework with Knowledge Encoding, Consolidation, and Integration](https://arxiv.org/abs/2610.21804v1)。
+- 覆盖范围：仅论文摘要，未核验全文或实验数据。
+- 研究模型：`gpt-6-luna`；独立审阅：`gpt-6.1-sol`。
+- 审阅：`pass`；修订次数：1；原始材料仅在内存中提供给模型。
+
+## 研究概述
+
+本次仅依据 Co2In 论文摘要，概述其面向增量学习的双层记忆架构、知识处理流程及作者报告的评测结果；这些材料不构成对通用智能体记忆系统的全面评估。
+
+## 主张与证据
+
+- **原文事实**：摘要将增量学习的挑战描述为：获取新知识的能力与保留既有信息的能力需要取得平衡。（[A1、A2](https://arxiv.org/abs/2610.21804v1)）
+- **作者声称（未独立核验）**：作者提出 Co2In 双层记忆架构：工作记忆用于适应性地获取知识，长期记忆用于持久保留信息，两者在增量学习过程中协作。（[A4、A5、A6](https://arxiv.org/abs/2610.21804v1)）
+- **作者声称（未独立核验）**：摘要描述的流程是：工作记忆从新数据学习并将知识编码到参数中；随后通过知识巩固识别已学习参数中的潜在模式并形成紧凑表示，再将该表示与识别出的模式转换为独立网络层，集成进长期记忆。（[A7、A8、A9](https://arxiv.org/abs/2610.21804v1)）
+- **作者声称（未独立核验）**：作者称在 CIFAR-10、CIFAR-100 和 Tiny-ImageNet 的 exemplar-free（不使用样本范例）Class-IL 与 Task-IL 设置下评测，并报告 Co2In 达到最先进性能且记忆消耗高效。（[A11、A12](https://arxiv.org/abs/2610.21804v1)）
+
+## 局限
+
+- 本次仅依据论文摘要，未核验全文、实验细节、实现或结果；性能与记忆消耗结论是作者报告，并非独立验证。
+- 摘要未提供足够信息核查比较基线、具体数值或“高效”的衡量方式。
+- 摘要主要讨论增量学习框架，未提供对隐私、安全、遗忘控制或通用智能体记忆任务的具体证据。
+
+## 独立审阅
+
+
+正式来源：[paper-0d7a0c77-ff16-47d6-a6ea-91407aa2cc80](../../sources/papers/agent-memory/paper-0d7a0c77-ff16-47d6-a6ea-91407aa2cc80.md)。
+
+准入记录：[输入、审阅与输出散列](admissions/agent-memory-20261020-0300-recovery-1/accepted.yaml)。
