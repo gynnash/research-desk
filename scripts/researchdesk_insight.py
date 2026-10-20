@@ -317,6 +317,8 @@ def render_outputs(root, base, config, batch_id, candidate, bundle):
 
 
 def call(root, base, events, client, manifest, config, role, revision, instructions, request):
+    if manifest.get('recovery') and role not in {'generation', 'review'}:
+        raise store.OfflineError('关联恢复仅允许生成与独立审阅，不追加格式请求')
     serialized = json.dumps(request, ensure_ascii=False)
     binding = store.digest({'fingerprint': manifest['fingerprint'], 'role': role, 'revision': revision,
                             'instructions': instructions, 'input': serialized})
@@ -335,7 +337,7 @@ def call(root, base, events, client, manifest, config, role, revision, instructi
         raise store.OfflineError('存在结果未知的真实请求，不自动重发')
     if len(instructions) + len(serialized) > config['budget']['max_input_chars']:
         raise store.OfflineError('Insight 输入超过字符上限')
-    room(root, config, events, 1)
+    room(root, config, events, 1, manifest.get('recovery'))
     reservation = '%s-%s' % (role, revision)
     store.append_event(root, base, events, {'type': 'call_reserved', 'reservation_id': reservation, 'role': role,
                        'revision': revision, 'model_id': model_for_role(manifest, role), 'month': shared.now()[:7], 'at': shared.now()})
@@ -358,7 +360,10 @@ def call(root, base, events, client, manifest, config, role, revision, instructi
     return parse_response(result['text'], role)
 
 
-def room(root, config, events, count):
+def room(root, config, events, count, recovery=None):
+    if recovery is not None:
+        import researchdesk_recovery as linked_recovery
+        linked_recovery.check_room(root, config, events, count, recovery)
     monthly, cap = shared.monthly_budget(root, config)
     if sum(e['type'] == 'call_reserved' for e in events) + count > config['budget']['max_calls'] or monthly + count > cap:
         raise store.OfflineError('Insight 批次或共享月度请求预算不足')
@@ -454,6 +459,9 @@ def run(root, config_path, batch_id, client, fetcher=None, fail_after=None):
     with shared.global_budget_lock(root), store.topic_lock(root, config['topic']):
         bundle = inputs.prepare_bundle(root, config, fetcher=fetcher)
         base = 'reports/test/%s/insight-runs/%s' % (config['topic'], batch_id)
+        import researchdesk_recovery as linked_recovery
+        lineage = linked_recovery.verify_if_present(root, config['topic'], batch_id, bundle=bundle, config=config, auth=auth)
+        recovery_binding = linked_recovery.binding(root, config['topic'], batch_id) if lineage else None
         fingerprint = store.digest({'config': config, 'input_fingerprint': bundle['input_fingerprint'],
                                     'authorization': auth, 'generation_prompt': generation_instructions, 'review_prompt': review_instructions})
         manifest_path = base + '/manifest.yaml'
@@ -464,19 +472,25 @@ def run(root, config_path, batch_id, client, fetcher=None, fail_after=None):
                      'input_fingerprint': bundle['input_fingerprint'], 'provenance': bundle['provenance'],
                      'models': config['models'], 'budget': config['budget'], 'authorization': auth,
                      'writing_started': False}
-            if any(manifest.get(key) != value for key, value in bound.items()):
+            if recovery_binding is not None:
+                bound['recovery'] = recovery_binding
+            if manifest.get('recovery') != recovery_binding or any(manifest.get(key) != value for key, value in bound.items()):
                 raise store.OfflineError('批次绑定的输入、配置、模型或账户改变，不能重置预算')
             shared.verify_notes(root, manifest['protected_notes'])
         else:
             for path in sorted((root / 'reports/test').glob('*/insight-runs/*/manifest.yaml')):
                 prior = store.checked_yaml(root, path.relative_to(root))
                 if prior['input_fingerprint'] == bundle['input_fingerprint']:
+                    if lineage and path.parent.name == lineage['original_cycle_id'] and path.parent.parent.parent.name == config['topic']:
+                        continue
                     raise store.OfflineError('同一输入已存在 Insight 批次，请复用或补跑: ' + path.parent.relative_to(root).as_posix())
             manifest = {'schema_version': 1, 'mode': 'insight_test', 'backend': 'chatgpt_plan', 'topic': config['topic'],
                         'batch_id': batch_id, 'created_at': shared.now(), 'fingerprint': fingerprint,
                         'input_fingerprint': bundle['input_fingerprint'], 'provenance': bundle['provenance'],
                         'models': config['models'], 'budget': config['budget'], 'authorization': auth, 'catalog': catalog,
                         'protected_notes': shared.notes_snapshot(root), 'writing_started': False}
+            if recovery_binding is not None:
+                manifest['recovery'] = recovery_binding
             store.save_yaml(root, manifest_path, manifest)
         events = store.read_events(root, base)
         verify_ledger(root, base, events, manifest, bundle)
@@ -485,7 +499,7 @@ def run(root, config_path, batch_id, client, fetcher=None, fail_after=None):
         for revision in range(config['budget']['max_revisions'] + 1):
             if not any(e['type'] == 'call_completed' and e['role'] == 'generation' and e['revision'] == revision for e in events):
                 try:
-                    room(root, config, events, 2)
+                    room(root, config, events, 2, recovery_binding)
                 except store.OfflineError:
                     if review is None:
                         raise

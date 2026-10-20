@@ -51,7 +51,7 @@ new calls, so they cannot be appended under the old Insight allowance. The
 overall cycle limit is 16; an additional pair would bring cumulative use to
 11. The shared monthly limit must also be checked when execution is authorized.
 
-An explicit recovery implementation would need to:
+The linked recovery implementation follows these requirements:
 
 1. Preserve the original 102 saved files, including the rejection, byte for byte.
 2. Create an append-only recovery attempt with lineage to the original cycle,
@@ -62,14 +62,14 @@ An explicit recovery implementation would need to:
    old reservations in monthly and cumulative cycle accounting. A two-call
    allowance permits one corrective generation/review pair with no revision;
    a four-call allowance permits one independently reviewed revision if needed.
-5. Extend admission and job export/apply to validate the new paths and lineage;
-   the current admission format assumes the original cycle paths.
+5. Extend admission and job export/apply to validate the new paths and lineage.
 6. Require a fresh independent pass before creating accepted test outputs.
    Writing and publication remain separate user gates.
 
-This recovery mechanism is not implemented here. Do not delete receipts,
-increase old budgets, alter hashes, bypass duplicate-input checks, or rerun
-discovery as a substitute for explicitly recovering this slot.
+See [linked Insight recovery](linked-insight-recovery.md) for the explicit,
+single-attempt recovery path. The citation fix by itself does not authorize or
+schedule recovery. Do not delete receipts, increase old budgets, alter hashes,
+bypass duplicate-input checks, or rerun discovery to replace the failed slot.
 
 ## Offline verification
 
@@ -87,5 +87,5 @@ reordered history, preserved raw inputs/link destinations, identical generation
 and review maps, v2 admission proof verification, v1 replay compatibility,
 interrupted pre-upgrade child configuration preservation, and reviewer rejection
 preventing outputs. Tests use fake providers or cached proofs; no live model
-run is required. A live repaired synthesis remains unverified until separately
-authorized.
+run is required. A live repaired synthesis is verified only by its fresh
+independent review and formal admission receipt.
