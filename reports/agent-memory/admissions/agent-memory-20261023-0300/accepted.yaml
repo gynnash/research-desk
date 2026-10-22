@@ -1,0 +1,83 @@
+schema_version: 1
+mode: formal_admission
+topic: agent-memory
+cycle_id: agent-memory-20261023-0300
+status: accepted
+production_accepted: true
+source_id_map:
+  paper-ef2bb506-9872-4221-8434-03dc4c74646a: paper-ef2bb506-9872-4221-8434-03dc4c74646a
+  paper-2fa6f60d-0b98-43ab-b4bb-c2a94bd803dd: paper-2fa6f60d-0b98-43ab-b4bb-c2a94bd803dd
+plan_path: reports/agent-memory/admissions/agent-memory-20261023-0300/plan.yaml
+plan_sha256: bf8158d9f8422e1cf63c9b1475cf2d68b4a45829067363f526a251e328e1105f
+input_hashes:
+  articles/test/agent-memory/agent-memory-20261023-0300/topic-1.md: b78483d05fd2117044b4dde2c7bc28b70886e0ebd6d506bb2cc6ce05306c2808
+  articles/test/agent-memory/agent-memory-20261023-0300/topic-2.md: 0d4dc29a6b97d8f4797c2d0a9b2adcd540760e99269e4ac1463e5fe8667a1acb
+  insights/test/agent-memory/agent-memory-20261023-0300/insight-1.md: 39e5ff1450bb6b2d8943b5f3e618f1efa0dc81198e2e89ddc9134983f006c6bd
+  insights/test/agent-memory/agent-memory-20261023-0300/insight-2.md: ab8519c560fce099862bc5fbf5e0d9796648cc0a0e8ad261b1ab2694ff9cff2e
+  reports/agent-memory/cycle-agent-memory-gh-20261019-research-paper-2d89084b-a1b1-4a27-b298-a660ef434e61.md: dc9bbeb260b478b94ebe7919a7e6c4ab10238ba49fdb14a987b803035af3e5d2
+  reports/agent-memory/cycle-agent-memory-gh-20261019-synthesis.md: 445d181c3a8eb2f11204e64279f56a79acc57ec6a127f27e073a34d264e8829d
+  reports/test/agent-memory/cycles/agent-memory-20261023-0300/configs/insight.yaml: e7d599b6cb1e12ba1dddefe92f0fb3526889dded37eae2506e13f4a3a54bc33f
+  reports/test/agent-memory/cycles/agent-memory-20261023-0300/configs/research.yaml: d42d47aee86865449d35a52d58525b973d9ee0c8e7be8796896e7e83bfac9d2a
+  reports/test/agent-memory/cycles/agent-memory-20261023-0300/discovery.yaml: a87478aa1cb4c349c9a335cc457eabb3df52cee5afebdada1fa612e1544cda36
+  reports/test/agent-memory/cycles/agent-memory-20261023-0300/history.yaml: 3b26254b6a7e93cb2fc17c6ba1fc467d9c37e234d417cde87e79563f261b381d
+  reports/test/agent-memory/cycles/agent-memory-20261023-0300/insight-result.yaml: 63e9b358c64e562e2e03c5ede2e07daa27fce3d905b0a4c4726d26b2bd1dc393
+  reports/test/agent-memory/cycles/agent-memory-20261023-0300/manifest.yaml: cbd7b419fb10e9655508d490d814cabe35b277463fa24cb27e3ef05d0d35e0fd
+  reports/test/agent-memory/cycles/agent-memory-20261023-0300/pending.yaml: 8a90e5c30b0094ac6a673a3d7f0420f5ded1a0e231769af06dc9fd319b6c2b65
+  reports/test/agent-memory/cycles/agent-memory-20261023-0300/receipt.yaml: e35fb8f62ad96242d1f451774952557921588c47f5011cb32793db0fbbf14414
+  reports/test/agent-memory/cycles/agent-memory-20261023-0300/research-result.yaml: 4b585e2800df5249b7edb1b540eadf077b465844a0798d4fbf7e4ad2462b651b
+  reports/test/agent-memory/cycles/agent-memory-20261023-0300/selection.yaml: 3e8910c9c3b51f5202576720d732770d8c9672c92cb8636eea09afdae553e20c
+  reports/test/agent-memory/insight-runs/agent-memory-20261023-0300/artifact-plan.yaml: b2a4e73f2d589d999015d71ee2d62768daa91502fccf2a59cfe99c5a15c93fdc
+  reports/test/agent-memory/insight-runs/agent-memory-20261023-0300/checkpoints/generation-0.yaml: 038a343a240d89fef68a77760fc0dd0498319d8b23e3a7f1b0a503af5862f619
+  reports/test/agent-memory/insight-runs/agent-memory-20261023-0300/checkpoints/generation-1.yaml: e8f26671b3d6e6369cbd794897dc779f06d9cd2a7909b10e9dd2de7501988586
+  reports/test/agent-memory/insight-runs/agent-memory-20261023-0300/checkpoints/review-1.yaml: 0cbddd50ff90580057e51ccd9a2cff35e59b971da8b0de5db0646be470939e33
+  reports/test/agent-memory/insight-runs/agent-memory-20261023-0300/events/000001.yaml: aa36f26cd762efc1891f5f32998f0dc99e03f2fe8f1435915e8fd5223aecd029
+  reports/test/agent-memory/insight-runs/agent-memory-20261023-0300/events/000002.yaml: f2980d7d9eda82e096a8c70dc49182f5c58804af8a325d26dca83b426464b600
+  reports/test/agent-memory/insight-runs/agent-memory-20261023-0300/events/000003.yaml: 54f4186ee3bb7422f7b434d84fa12db577d4dd1add9a22ddcb569f84d26cbd94
+  reports/test/agent-memory/insight-runs/agent-memory-20261023-0300/events/000004.yaml: 8db76b1f4467dbc9a0442bc1ecd4f30458aae665f78e57e87190f180cfdc1083
+  reports/test/agent-memory/insight-runs/agent-memory-20261023-0300/events/000005.yaml: 39d453cb2ca48bd0f0dc2e65344d842d8348a4d07dfba237c8229b55c5215e99
+  reports/test/agent-memory/insight-runs/agent-memory-20261023-0300/events/000006.yaml: 973e283ca8e268ea343043d05274a9d3e509cc77bf1bd81dab4b9e663c89602f
+  reports/test/agent-memory/insight-runs/agent-memory-20261023-0300/events/000007.yaml: 06a6b2bd3c31990ac8ae36089a1f120e0a13b16649393f31ea4e6461e371ac0f
+  reports/test/agent-memory/insight-runs/agent-memory-20261023-0300/manifest.yaml: fe1a09397b6b88bc3e4d79f80e988f9d6549388b70f9e15d4bcc4a7db3e3ba4e
+  reports/test/agent-memory/insight-runs/agent-memory-20261023-0300/receipt.yaml: 63e9b358c64e562e2e03c5ede2e07daa27fce3d905b0a4c4726d26b2bd1dc393
+  reports/test/agent-memory/insight-runs/agent-memory-20261023-0300/report.md: a30117dd5b40e695f0aa37decdb1d2b4b0fb82114875339f038ebcb31c966686
+  reports/test/agent-memory/research-batches/agent-memory-20261023-0300/events/000001.yaml: c2555ccb7e9b23e059ea9d0ccfffc78d5a9f6230af00d81d6cf0fc7d3eab46d8
+  reports/test/agent-memory/research-batches/agent-memory-20261023-0300/events/000002.yaml: d1067efa074171f92691bfc95e6e9334933c0b52d311da6e43f1c595effbf52e
+  reports/test/agent-memory/research-batches/agent-memory-20261023-0300/events/000003.yaml: ec3c37c8c3967773d126445bcc96e891b2b6096dd978b56854912bab655aa3c7
+  reports/test/agent-memory/research-batches/agent-memory-20261023-0300/events/000004.yaml: 41007b18ea13ed83eeab9cb7c51722ec75019c4b3e3ae48941b59b512bc084b3
+  reports/test/agent-memory/research-batches/agent-memory-20261023-0300/events/000005.yaml: 1132dec45f3a353ba2e62c00489231205dcd293155c2ff55d8772c0644302d2e
+  reports/test/agent-memory/research-batches/agent-memory-20261023-0300/events/000006.yaml: 60de0b356aa8fb70d09f40431474d249df2a8666a007de09ad1ea7590c0fe2da
+  reports/test/agent-memory/research-batches/agent-memory-20261023-0300/events/000007.yaml: dd0f930f3c6c88a16c23d89f094fda437f69f81b097d41cb23b4c352003d8813
+  reports/test/agent-memory/research-batches/agent-memory-20261023-0300/events/000008.yaml: 697cb0475eb9ac4fc46e2369e7c59f03781948c59b89a61488dac5fa76b8d3c0
+  reports/test/agent-memory/research-batches/agent-memory-20261023-0300/events/000009.yaml: f9755ba41af5ab736b049376aa63320a9ff80bb5e65aa24d5006a0a17be97568
+  reports/test/agent-memory/research-batches/agent-memory-20261023-0300/events/000010.yaml: d73f4592cbdc7e9116e9f0c6c55fcfe9696694eee169825c1bf18cfdf6a91041
+  reports/test/agent-memory/research-batches/agent-memory-20261023-0300/items/arxiv-d9523f400d3a/candidate.yaml: b592cb1ad1613000b84dc73275d6a992af0120d529cc25969074c35b33890511
+  reports/test/agent-memory/research-batches/agent-memory-20261023-0300/items/arxiv-d9523f400d3a/checkpoints/research-0.yaml: a39a89887cb8e171c0064c844fd7db7b723e19e7c9419c5e6c3d5a281215f440
+  reports/test/agent-memory/research-batches/agent-memory-20261023-0300/items/arxiv-d9523f400d3a/checkpoints/review-0.yaml: 1f69a2e2556586b6c6653daa8767309e64feae8ddb3a42e891f8bea9239ef21d
+  reports/test/agent-memory/research-batches/agent-memory-20261023-0300/items/arxiv-d9523f400d3a/report.md: 7f58d262d6d6b6f14b7f6374debe0cb99265083dd00e8915b11b52396a6d71cf
+  reports/test/agent-memory/research-batches/agent-memory-20261023-0300/items/arxiv-d9523f400d3a/result.yaml: 0320f3746868cafc774e330a38d6700f88e7382c5c991ced0adcb7a67ffc70bf
+  reports/test/agent-memory/research-batches/agent-memory-20261023-0300/items/arxiv-e05d9eb84420/candidate.yaml: 35e903465e932b867a6a28a7e213943211af75d39e401590f1ef17cd2095bbf0
+  reports/test/agent-memory/research-batches/agent-memory-20261023-0300/items/arxiv-e05d9eb84420/checkpoints/research-0.yaml: ea62f56935a0c4c96afb4ad856c3193be36a3c022e652170ff24d0f2f0882ed1
+  reports/test/agent-memory/research-batches/agent-memory-20261023-0300/items/arxiv-e05d9eb84420/checkpoints/review-0.yaml: 2c2b696125481b9c625e6f38a9cd25f897fd109b87a3db3ab2bfa307ee4a0564
+  reports/test/agent-memory/research-batches/agent-memory-20261023-0300/items/arxiv-e05d9eb84420/report.md: 02f784c6d50e22efaee33f20ddeb46d2518a69b2453bd954ea1a1f7eb7b31219
+  reports/test/agent-memory/research-batches/agent-memory-20261023-0300/items/arxiv-e05d9eb84420/result.yaml: 92e93b901077b60f6e5a6ac3f148b5f53696be350a36443a7c1ad23a86bd70d9
+  reports/test/agent-memory/research-batches/agent-memory-20261023-0300/manifest.yaml: 153c80968f0d1e2f3c852cd897b97e443dd0843f1fbbb0a554849201e645b62f
+  reports/test/agent-memory/research-batches/agent-memory-20261023-0300/receipt-attempt-1.yaml: 4b585e2800df5249b7edb1b540eadf077b465844a0798d4fbf7e4ad2462b651b
+  reports/test/agent-memory/research-batches/agent-memory-20261023-0300/source-attempts/arxiv-d9523f400d3a/attempt-1.yaml: 52ae1a4bd3689b303600fe708f44e6cf9119ef71b09cf91263c33b33e6968f0b
+  reports/test/agent-memory/research-batches/agent-memory-20261023-0300/source-attempts/arxiv-e05d9eb84420/attempt-1.yaml: 7a3357e1bdab9c3abf4b5c3277be4684c7fe86b9889de3e46c69f9dfc92d4daf
+  sources/blogs/agent-memory/blog-05c33166-b18e-425e-91e0-36ddd26f21aa.md: e41eecff5dec1f01b27eae70df70bbc71de57107c8d8e3f51c786022334f642e
+  sources/blogs/blog-fec9a2e1-6812-425a-83cd-e6a2464a1110.md: 1c05f28a21a3cef08ff0fc966970a4eed70e2510d0d17468437fb4ff0fa7e99f
+  sources/papers/agent-memory/paper-2d89084b-a1b1-4a27-b298-a660ef434e61.md: 20ca381ff3e8d96d9e711c763fd3c7ad2eae3dd6f2f381f0edbe573311ec1378
+  sources/papers/paper-4eb3be4b-7189-49aa-bafd-f88f77a972f4.md: 2fca02def277430ea06e35c370b56b895c82d01b14099c3cea4cb55a1e410274
+output_hashes:
+  reports/agent-memory/agent-memory-20261023-0300-synthesis.md: 4255efd76f3150d4ec0eac62fc7412c729a30c7eb292d4f137c244310c4ebf08
+  insights/agent-memory/agent-memory-20261023-0300-insight-1.md: d4f72d12bd7c8dbe1a759d634ba7d93f54b8c66f483a25ba911a2c47e2a57c18
+  insights/agent-memory/agent-memory-20261023-0300-insight-2.md: 816a009a9c2ab23343476c38fba3fed7dc057090c9a47ccf81415fc5b0ee5b1f
+  articles/agent-memory/agent-memory-20261023-0300-topic-1.md: cd16fd83dae20dad7b29fb9050753491ae1415a80d8fef11af8a273aa84ae77a
+  articles/agent-memory/agent-memory-20261023-0300-topic-2.md: 5c301f42f7c85a0e7e2e0976f6f9326fc972ca3ccabe7e8ef40959f3b6621158
+  reports/agent-memory/agent-memory-20261023-0300-research-paper-ef2bb506-9872-4221-8434-03dc4c74646a.md: c29cc56cb8f4e88e3182e6dc9953b7bcc5dad65d831298eadf9db63430442629
+  sources/papers/agent-memory/paper-ef2bb506-9872-4221-8434-03dc4c74646a.md: 16db82204f1b32954aca09a5539c7e6982e1c67765164febeadbafff4923a34f
+  reports/agent-memory/agent-memory-20261023-0300-research-paper-2fa6f60d-0b98-43ab-b4bb-c2a94bd803dd.md: 3924a6a394547717c5c850e25bd4f448a6c10fb5f9a7ec8ffb9a246a2c2e371e
+  sources/papers/agent-memory/paper-2fa6f60d-0b98-43ab-b4bb-c2a94bd803dd.md: 231312c94bc6021a60ddf1c880f258a159c642fd9edbbe92655a34b895f7632d
+writing_started: false
+publish_authorized: false
+new_model_calls: 0

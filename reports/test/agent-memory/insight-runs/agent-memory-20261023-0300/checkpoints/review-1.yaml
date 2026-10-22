@@ -1,0 +1,29 @@
+binding: f260d5e9e47e2034eac0cd7d2c1066c169d94a5a015523c087ace6c771fc190a
+result:
+  text: "{\n  \"decision\": \"pass\",\n  \"coverage_acknowledged\": true,\n  \"topic_gate_confirmed\"\
+    : true,\n  \"issues\": [\n    {\n      \"severity\": \"info\",\n      \"location\"\
+    : \"topics\",\n      \"reason\": \"两个选题均为待用户确认的研究讨论方向，不构成写作或发布授权。第二个选题的跨领域迁移已被明确限定为待验证问题，未将视频编辑结果冒充智能体记忆效果。\"\
+    ,\n      \"suggestion\": \"保留现有证据边界与待验证措辞；提交用户确认选题后再决定后续流程，不启动 Writing 或发布。\"\n\
+    \    }\n  ],\n  \"checks\": [\n    {\n      \"target\": \"report\",\n      \"\
+    verdict\": \"supported\",\n      \"evidence_ids\": [\"R1\", \"R2\", \"H1\", \"\
+    H2\"]\n    },\n    {\n      \"target\": \"report.comparisons.0\",\n      \"verdict\"\
+    : \"supported\",\n      \"evidence_ids\": [\"R1\"]\n    },\n    {\n      \"target\"\
+    : \"report.comparisons.1\",\n      \"verdict\": \"supported\",\n      \"evidence_ids\"\
+    : [\"R2\"]\n    },\n    {\n      \"target\": \"report.comparisons.2\",\n     \
+    \ \"verdict\": \"supported\",\n      \"evidence_ids\": [\"H1\"]\n    },\n    {\n\
+    \      \"target\": \"report.comparisons.3\",\n      \"verdict\": \"supported\"\
+    ,\n      \"evidence_ids\": [\"R2\", \"H2\"]\n    },\n    {\n      \"target\":\
+    \ \"report.comparisons.4\",\n      \"verdict\": \"supported\",\n      \"evidence_ids\"\
+    : [\"R1\", \"R2\"]\n    },\n    {\n      \"target\": \"insights.0\",\n      \"\
+    verdict\": \"supported\",\n      \"evidence_ids\": [\"R2\", \"H1\"]\n    },\n\
+    \    {\n      \"target\": \"insights.1\",\n      \"verdict\": \"supported\",\n\
+    \      \"evidence_ids\": [\"R1\", \"H2\"]\n    },\n    {\n      \"target\": \"\
+    topics.0\",\n      \"verdict\": \"supported\",\n      \"evidence_ids\": [\"R2\"\
+    , \"H1\"]\n    },\n    {\n      \"target\": \"topics.1\",\n      \"verdict\":\
+    \ \"supported\",\n      \"evidence_ids\": [\"R1\", \"H2\"]\n    }\n  ]\n}"
+  model: gpt-6.1-sol
+  response_id: resp_02bd534113fd227c016ada8831663c87d0ab6a4d8a6bc3d135
+  usage:
+    input_tokens: 13685
+    output_tokens: 589
+    total_tokens: 14274

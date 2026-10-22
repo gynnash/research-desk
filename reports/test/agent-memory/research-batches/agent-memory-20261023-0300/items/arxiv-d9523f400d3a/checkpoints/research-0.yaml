@@ -1,0 +1,9 @@
+binding: 6a884363bc199126c09293974a175799f1ac716eb2d2c011ec388ccbab43ad76
+result:
+  text: '{"summary":"仅依据论文摘要，概述 Edit-Your-Interest 在视频编辑中使用有界特征记忆与相似性检索传播的设计；材料涉及记忆缓存、检索和更新，但不直接研究通用智能体记忆。","claims":[{"kind":"fact","text":"摘要称，时空特征记忆库（SFM）在固定内存预算下缓存前序帧的空间注意力特征。","evidence_ids":["A5"]},{"kind":"author_claim","text":"作者称，SFM维护代表性候选池，以减少对完整序列进行时空建模的计算开销。","evidence_ids":["A6"]},{"kind":"fact","text":"摘要称，特征最相似传播（FMP）依据相似度检索相关缓存令牌，并将其传播至当前帧；SFM更新算法则依据特征多样性维护记忆的代表性和非冗余性。","evidence_ids":["A7","A9"]},{"kind":"author_claim","text":"作者称，SFM与FMP的设计改善了时间一致性并减少模糊和马赛克状伪影；摘要还称实验中该方法在效率和视觉保真度方面优于当时的先进方法。","evidence_ids":["A8","A12"]}],"limitations":["本次仅覆盖论文摘要，未核验全文、实验细节、实现或结果。","材料讨论的是视频编辑方法中的特征缓存与检索，不能据此推断其适用于通用智能体的工作记忆或长期记忆。","摘要未提供可用于独立评估记忆更新策略、内存预算大小或比较实验的具体细节。"]}'
+  model: gpt-6-luna
+  response_id: resp_08679e4626393643016ada87a5910087d09ad77205b67b4f08
+  usage:
+    input_tokens: 897
+    output_tokens: 455
+    total_tokens: 1352

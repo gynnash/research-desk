@@ -1,0 +1,1421 @@
+schema_version: 1
+mode: formal_admission_plan
+topic: agent-memory
+cycle_id: agent-memory-20261023-0300
+source_id_map:
+  paper-ef2bb506-9872-4221-8434-03dc4c74646a: paper-ef2bb506-9872-4221-8434-03dc4c74646a
+  paper-2fa6f60d-0b98-43ab-b4bb-c2a94bd803dd: paper-2fa6f60d-0b98-43ab-b4bb-c2a94bd803dd
+insight_config: reports/test/agent-memory/cycles/agent-memory-20261023-0300/configs/insight.yaml
+verification_bundle:
+  topic: agent-memory
+  research_context:
+    name: Agent Memory
+    description: 研究 AI Agent 如何存储、检索、更新并使用长期经验。
+    scope:
+    - 记忆架构、工作记忆与长期记忆
+    - 记忆写入、检索、压缩、更新与遗忘
+    - 情景记忆、语义记忆与程序性记忆
+    - 记忆评测、可靠性、隐私与安全
+    keywords:
+    - agent memory
+    - long-term memory
+    - episodic memory
+    - memory retrieval
+    - memory consolidation
+  provenance:
+    research_inputs:
+    - id: R1
+      receipt: reports/test/agent-memory/research-batches/agent-memory-20261023-0300/receipt-attempt-1.yaml
+      receipt_sha256: 4b585e2800df5249b7edb1b540eadf077b465844a0798d4fbf7e4ad2462b651b
+      manifest: reports/test/agent-memory/research-batches/agent-memory-20261023-0300/manifest.yaml
+      manifest_sha256: 153c80968f0d1e2f3c852cd897b97e443dd0843f1fbbb0a554849201e645b62f
+      config: reports/test/agent-memory/cycles/agent-memory-20261023-0300/configs/research.yaml
+      config_sha256: d42d47aee86865449d35a52d58525b973d9ee0c8e7be8796896e7e83bfac9d2a
+      topics_sha256: 651cea40a6dbfa2568b324491a102b785230a3c63a7ce03f03252ff3b0cdf18d
+      models: &id002
+        research: gpt-6-luna
+        review: gpt-6.1-sol
+      events: &id003
+      - path: reports/test/agent-memory/research-batches/agent-memory-20261023-0300/events/000001.yaml
+        sha256: c2555ccb7e9b23e059ea9d0ccfffc78d5a9f6230af00d81d6cf0fc7d3eab46d8
+      - path: reports/test/agent-memory/research-batches/agent-memory-20261023-0300/events/000002.yaml
+        sha256: d1067efa074171f92691bfc95e6e9334933c0b52d311da6e43f1c595effbf52e
+      - path: reports/test/agent-memory/research-batches/agent-memory-20261023-0300/events/000003.yaml
+        sha256: ec3c37c8c3967773d126445bcc96e891b2b6096dd978b56854912bab655aa3c7
+      - path: reports/test/agent-memory/research-batches/agent-memory-20261023-0300/events/000004.yaml
+        sha256: 41007b18ea13ed83eeab9cb7c51722ec75019c4b3e3ae48941b59b512bc084b3
+      - path: reports/test/agent-memory/research-batches/agent-memory-20261023-0300/events/000005.yaml
+        sha256: 1132dec45f3a353ba2e62c00489231205dcd293155c2ff55d8772c0644302d2e
+      - path: reports/test/agent-memory/research-batches/agent-memory-20261023-0300/events/000006.yaml
+        sha256: 60de0b356aa8fb70d09f40431474d249df2a8666a007de09ad1ea7590c0fe2da
+      - path: reports/test/agent-memory/research-batches/agent-memory-20261023-0300/events/000007.yaml
+        sha256: dd0f930f3c6c88a16c23d89f094fda437f69f81b097d41cb23b4c352003d8813
+      - path: reports/test/agent-memory/research-batches/agent-memory-20261023-0300/events/000008.yaml
+        sha256: 697cb0475eb9ac4fc46e2369e7c59f03781948c59b89a61488dac5fa76b8d3c0
+      - path: reports/test/agent-memory/research-batches/agent-memory-20261023-0300/events/000009.yaml
+        sha256: f9755ba41af5ab736b049376aa63320a9ff80bb5e65aa24d5006a0a17be97568
+      - path: reports/test/agent-memory/research-batches/agent-memory-20261023-0300/events/000010.yaml
+        sha256: d73f4592cbdc7e9116e9f0c6c55fcfe9696694eee169825c1bf18cfdf6a91041
+      item_keys: &id004
+      - arxiv-d9523f400d3a
+      - arxiv-e05d9eb84420
+      path: reports/test/agent-memory/research-batches/agent-memory-20261023-0300/items/arxiv-d9523f400d3a/report.md
+      sha256: 7f58d262d6d6b6f14b7f6374debe0cb99265083dd00e8915b11b52396a6d71cf
+      source_id: paper-ef2bb506-9872-4221-8434-03dc4c74646a
+      source_ids:
+      - paper-ef2bb506-9872-4221-8434-03dc4c74646a
+      source_url: https://arxiv.org/abs/2510.13084v2
+      identity_keys: &id001
+      - arxiv:2510.13084
+      - doi:10.1016/j.patcog.2026.115113
+      - url:https://arxiv.org/abs/2510.13084
+      source_identities:
+      - source_id: paper-ef2bb506-9872-4221-8434-03dc4c74646a
+        identity_keys: *id001
+      coverage: abstract_only
+      origin: reviewed_research
+      candidate_path: reports/test/agent-memory/research-batches/agent-memory-20261023-0300/items/arxiv-d9523f400d3a/candidate.yaml
+      candidate_sha256: b592cb1ad1613000b84dc73275d6a992af0120d529cc25969074c35b33890511
+      content_sha256: b8a7c83e0c5d96af39789dab1e20a9868c158ac901accb6e18fd8d4945f69d5f
+      metadata_sha256: 93b035dc02b128ae0e41927a53b06f79673aba2c052e0f33152ddd2bd04188a4
+      evidence_sha256: 28788430c915d6a110373909ce837b91dec9550e17261ee0f471317545b149a3
+      original_material_sha256: 28788430c915d6a110373909ce837b91dec9550e17261ee0f471317545b149a3
+      checkpoints:
+      - role: research
+        revision: 0
+        path: reports/test/agent-memory/research-batches/agent-memory-20261023-0300/items/arxiv-d9523f400d3a/checkpoints/research-0.yaml
+        sha256: a39a89887cb8e171c0064c844fd7db7b723e19e7c9419c5e6c3d5a281215f440
+      - role: review
+        revision: 0
+        path: reports/test/agent-memory/research-batches/agent-memory-20261023-0300/items/arxiv-d9523f400d3a/checkpoints/review-0.yaml
+        sha256: 1f69a2e2556586b6c6653daa8767309e64feae8ddb3a42e891f8bea9239ef21d
+    - id: R2
+      receipt: reports/test/agent-memory/research-batches/agent-memory-20261023-0300/receipt-attempt-1.yaml
+      receipt_sha256: 4b585e2800df5249b7edb1b540eadf077b465844a0798d4fbf7e4ad2462b651b
+      manifest: reports/test/agent-memory/research-batches/agent-memory-20261023-0300/manifest.yaml
+      manifest_sha256: 153c80968f0d1e2f3c852cd897b97e443dd0843f1fbbb0a554849201e645b62f
+      config: reports/test/agent-memory/cycles/agent-memory-20261023-0300/configs/research.yaml
+      config_sha256: d42d47aee86865449d35a52d58525b973d9ee0c8e7be8796896e7e83bfac9d2a
+      topics_sha256: 651cea40a6dbfa2568b324491a102b785230a3c63a7ce03f03252ff3b0cdf18d
+      models: *id002
+      events: *id003
+      item_keys: *id004
+      path: reports/test/agent-memory/research-batches/agent-memory-20261023-0300/items/arxiv-e05d9eb84420/report.md
+      sha256: 02f784c6d50e22efaee33f20ddeb46d2518a69b2453bd954ea1a1f7eb7b31219
+      source_id: paper-2fa6f60d-0b98-43ab-b4bb-c2a94bd803dd
+      source_ids:
+      - paper-2fa6f60d-0b98-43ab-b4bb-c2a94bd803dd
+      source_url: https://arxiv.org/abs/2610.23313v1
+      identity_keys: &id005
+      - arxiv:2610.23313
+      - url:https://arxiv.org/abs/2610.23313
+      source_identities:
+      - source_id: paper-2fa6f60d-0b98-43ab-b4bb-c2a94bd803dd
+        identity_keys: *id005
+      coverage: abstract_only
+      origin: reviewed_research
+      candidate_path: reports/test/agent-memory/research-batches/agent-memory-20261023-0300/items/arxiv-e05d9eb84420/candidate.yaml
+      candidate_sha256: 35e903465e932b867a6a28a7e213943211af75d39e401590f1ef17cd2095bbf0
+      content_sha256: e8e10f94167e00be9857009684bfd72271fe34aa98994623fc729f456fdc71c1
+      metadata_sha256: 69436b17f9df298917b1dae3cc6c4553836a8075d3f1dcb22a01999862882a16
+      evidence_sha256: 21cf98961ae1916b11b5c98ba388969f88e1edc519a5e2a5e9cf5e638c0e465b
+      original_material_sha256: 21cf98961ae1916b11b5c98ba388969f88e1edc519a5e2a5e9cf5e638c0e465b
+      checkpoints:
+      - role: research
+        revision: 0
+        path: reports/test/agent-memory/research-batches/agent-memory-20261023-0300/items/arxiv-e05d9eb84420/checkpoints/research-0.yaml
+        sha256: ea62f56935a0c4c96afb4ad856c3193be36a3c022e652170ff24d0f2f0882ed1
+      - role: review
+        revision: 0
+        path: reports/test/agent-memory/research-batches/agent-memory-20261023-0300/items/arxiv-e05d9eb84420/checkpoints/review-0.yaml
+        sha256: 2c2b696125481b9c625e6f38a9cd25f897fd109b87a3db3ab2bfa307ee4a0564
+    historical_inputs:
+    - id: H1
+      origin: human_baseline
+      path: sources/blogs/agent-memory/blog-05c33166-b18e-425e-91e0-36ddd26f21aa.md
+      sha256: e41eecff5dec1f01b27eae70df70bbc71de57107c8d8e3f51c786022334f642e
+      source_ids: &id006
+      - blog-05c33166-b18e-425e-91e0-36ddd26f21aa
+      source_urls: &id007
+      - https://www.langchain.com/blog/context-engineering-deep-agents-remember
+      source_url: https://www.langchain.com/blog/context-engineering-deep-agents-remember
+      identity_keys: &id008
+      - url:https://www.langchain.com/blog/context-engineering-deep-agents-remember
+      source_identities: &id009
+      - source_id: blog-05c33166-b18e-425e-91e0-36ddd26f21aa
+        identity_keys:
+        - url:https://www.langchain.com/blog/context-engineering-deep-agents-remember
+      coverage: historical_note
+      independently_reviewed: false
+      can_support_original_facts: false
+    - id: H2
+      origin: human_baseline
+      path: sources/blogs/blog-fec9a2e1-6812-425a-83cd-e6a2464a1110.md
+      sha256: 1c05f28a21a3cef08ff0fc966970a4eed70e2510d0d17468437fb4ff0fa7e99f
+      source_ids: &id010
+      - blog-fec9a2e1-6812-425a-83cd-e6a2464a1110
+      source_urls: &id011
+      - https://www.letta.com/blog/memory-blocks/
+      source_url: https://www.letta.com/blog/memory-blocks/
+      identity_keys: &id012
+      - url:https://www.letta.com/blog/memory-blocks/
+      source_identities: &id013
+      - source_id: blog-fec9a2e1-6812-425a-83cd-e6a2464a1110
+        identity_keys:
+        - url:https://www.letta.com/blog/memory-blocks/
+      coverage: historical_note
+      independently_reviewed: false
+      can_support_original_facts: false
+    - id: H3
+      origin: human_baseline
+      path: sources/papers/agent-memory/paper-2d89084b-a1b1-4a27-b298-a660ef434e61.md
+      sha256: 20ca381ff3e8d96d9e711c763fd3c7ad2eae3dd6f2f381f0edbe573311ec1378
+      source_ids: &id014
+      - paper-2d89084b-a1b1-4a27-b298-a660ef434e61
+      source_urls: &id015
+      - https://arxiv.org/abs/2610.22196
+      source_url: https://arxiv.org/abs/2610.22196
+      identity_keys: &id016
+      - arxiv:2610.22196
+      - url:https://arxiv.org/abs/2610.22196
+      source_identities: &id017
+      - source_id: paper-2d89084b-a1b1-4a27-b298-a660ef434e61
+        identity_keys:
+        - arxiv:2610.22196
+        - url:https://arxiv.org/abs/2610.22196
+      coverage: historical_note
+      independently_reviewed: false
+      can_support_original_facts: false
+    - id: H4
+      origin: human_baseline
+      path: sources/papers/paper-4eb3be4b-7189-49aa-bafd-f88f77a972f4.md
+      sha256: 2fca02def277430ea06e35c370b56b895c82d01b14099c3cea4cb55a1e410274
+      source_ids: &id018
+      - paper-4eb3be4b-7189-49aa-bafd-f88f77a972f4
+      source_urls: &id019
+      - https://arxiv.org/abs/2310.08560
+      source_url: https://arxiv.org/abs/2310.08560
+      identity_keys: &id020
+      - arxiv:2310.08560
+      - doi:10.48550/arxiv.2310.08560
+      - url:https://arxiv.org/abs/2310.08560
+      source_identities: &id021
+      - source_id: paper-4eb3be4b-7189-49aa-bafd-f88f77a972f4
+        identity_keys:
+        - arxiv:2310.08560
+        - doi:10.48550/arxiv.2310.08560
+        - url:https://arxiv.org/abs/2310.08560
+      coverage: historical_note
+      independently_reviewed: false
+      can_support_original_facts: false
+    - id: H5
+      origin: human_baseline
+      path: reports/agent-memory/cycle-agent-memory-gh-20261019-synthesis.md
+      sha256: 445d181c3a8eb2f11204e64279f56a79acc57ec6a127f27e073a34d264e8829d
+      source_ids: &id022
+      - blog-05c33166-b18e-425e-91e0-36ddd26f21aa
+      - blog-fec9a2e1-6812-425a-83cd-e6a2464a1110
+      - paper-2d89084b-a1b1-4a27-b298-a660ef434e61
+      - paper-4eb3be4b-7189-49aa-bafd-f88f77a972f4
+      source_urls: &id023
+      - https://arxiv.org/abs/2310.08560
+      - https://arxiv.org/abs/2610.22196
+      - https://www.langchain.com/blog/context-engineering-deep-agents-remember
+      - https://www.letta.com/blog/memory-blocks/
+      source_url: null
+      identity_keys: &id024
+      - arxiv:2310.08560
+      - arxiv:2610.22196
+      - doi:10.48550/arxiv.2310.08560
+      - url:https://arxiv.org/abs/2310.08560
+      - url:https://arxiv.org/abs/2610.22196
+      - url:https://www.langchain.com/blog/context-engineering-deep-agents-remember
+      - url:https://www.letta.com/blog/memory-blocks/
+      source_identities: &id025
+      - source_id: blog-05c33166-b18e-425e-91e0-36ddd26f21aa
+        identity_keys:
+        - url:https://www.langchain.com/blog/context-engineering-deep-agents-remember
+      - source_id: blog-fec9a2e1-6812-425a-83cd-e6a2464a1110
+        identity_keys:
+        - url:https://www.letta.com/blog/memory-blocks/
+      - source_id: paper-2d89084b-a1b1-4a27-b298-a660ef434e61
+        identity_keys:
+        - arxiv:2610.22196
+        - url:https://arxiv.org/abs/2610.22196
+      - source_id: paper-4eb3be4b-7189-49aa-bafd-f88f77a972f4
+        identity_keys:
+        - arxiv:2310.08560
+        - doi:10.48550/arxiv.2310.08560
+        - url:https://arxiv.org/abs/2310.08560
+      coverage: historical_note
+      independently_reviewed: false
+      can_support_original_facts: false
+    - id: H6
+      origin: human_baseline
+      path: reports/agent-memory/cycle-agent-memory-gh-20261019-research-paper-2d89084b-a1b1-4a27-b298-a660ef434e61.md
+      sha256: dc9bbeb260b478b94ebe7919a7e6c4ab10238ba49fdb14a987b803035af3e5d2
+      source_ids: &id026
+      - paper-2d89084b-a1b1-4a27-b298-a660ef434e61
+      source_urls: &id027
+      - https://arxiv.org/abs/2610.22196
+      source_url: https://arxiv.org/abs/2610.22196
+      identity_keys: &id028
+      - arxiv:2610.22196
+      - url:https://arxiv.org/abs/2610.22196
+      source_identities: &id029
+      - source_id: paper-2d89084b-a1b1-4a27-b298-a660ef434e61
+        identity_keys:
+        - arxiv:2610.22196
+        - url:https://arxiv.org/abs/2610.22196
+      coverage: historical_note
+      independently_reviewed: false
+      can_support_original_facts: false
+  input_fingerprint: c3623fd4f06acf6a922171857a0826c5ae865eef4f1d78b6debe0af5cda6690f
+  evidence:
+  - id: R1
+    origin: reviewed_research
+    path: reports/test/agent-memory/research-batches/agent-memory-20261023-0300/items/arxiv-d9523f400d3a/report.md
+    sha256: 7f58d262d6d6b6f14b7f6374debe0cb99265083dd00e8915b11b52396a6d71cf
+    source_ids:
+    - paper-ef2bb506-9872-4221-8434-03dc4c74646a
+    source_id: paper-ef2bb506-9872-4221-8434-03dc4c74646a
+    source_url: https://arxiv.org/abs/2510.13084v2
+    source_urls:
+    - https://arxiv.org/abs/2510.13084v2
+    coverage: abstract_only
+    identity_keys: *id001
+    source_identities:
+    - source_id: paper-ef2bb506-9872-4221-8434-03dc4c74646a
+      identity_keys: *id001
+    independently_reviewed: true
+    can_support_original_facts: true
+    metadata:
+      title: 'Edit-Your-Interest: Efficient Video Editing via Feature Most-Similar
+        Propagation'
+      source: arXiv
+      source_url: https://arxiv.org/abs/2510.13084
+      authors:
+      - Zuo, Yi
+      - Wang, Zitao
+      - Li, Lingling
+      - Liu, Xu
+      - Liu, Fang
+      - Jiao, Licheng
+      published_at: '2025-10-15'
+      arxiv_id: '2510.13084'
+      source_version: v2
+      doi: 10.1016/j.patcog.2026.115113
+    research_summary: 仅依据论文摘要，概述 Edit-Your-Interest 在视频编辑中使用有界特征记忆与相似性检索传播的设计；材料涉及记忆缓存、检索和更新，但不直接研究通用智能体记忆。
+    research_claims:
+    - kind: fact
+      text: 摘要称，时空特征记忆库（SFM）在固定内存预算下缓存前序帧的空间注意力特征。
+      evidence_ids:
+      - A5
+    - kind: author_claim
+      text: 作者称，SFM维护代表性候选池，以减少对完整序列进行时空建模的计算开销。
+      evidence_ids:
+      - A6
+    - kind: fact
+      text: 摘要称，特征最相似传播（FMP）依据相似度检索相关缓存令牌，并将其传播至当前帧；SFM更新算法则依据特征多样性维护记忆的代表性和非冗余性。
+      evidence_ids:
+      - A7
+      - A9
+    - kind: author_claim
+      text: 作者称，SFM与FMP的设计改善了时间一致性并减少模糊和马赛克状伪影；摘要还称实验中该方法在效率和视觉保真度方面优于当时的先进方法。
+      evidence_ids:
+      - A8
+      - A12
+    research_limitations:
+    - 本次仅覆盖论文摘要，未核验全文、实验细节、实现或结果。
+    - 材料讨论的是视频编辑方法中的特征缓存与检索，不能据此推断其适用于通用智能体的工作记忆或长期记忆。
+    - 摘要未提供可用于独立评估记忆更新策略、内存预算大小或比较实验的具体细节。
+    locators:
+    - id: A1
+      location: abstract_only sentence 1
+      text_sha256: 6593d90678fb6a1cb31a802445f2459638fcd3f992d3a01d100fc8e1153ceb73
+      quote: Text-to-image diffusion models have advanced video editing.
+    - id: A2
+      location: abstract_only sentence 2
+      text_sha256: 899a73a88292a16da313ba7fcf7bab889c7c68d91ecae46c359d899026a18fb2
+      quote: However, existing video editing methods are limited by their high computational
+        overhead and memory consumption.
+    - id: A3
+      location: abstract_only sentence 3
+      text_sha256: 8b6c8d43283639765ee6cd1c763a94846e8910dd741ee4b90c4145999d2a61d2
+      quote: Furthermore, these approaches
+    - id: A4
+      location: abstract_only sentence 4
+      text_sha256: 30ce0eee272e9e592e39b2d8fb6d86bc89738742fb28826c1a608838154c2806
+      quote: ''
+    - id: A5
+      location: abstract_only sentence 5
+      text_sha256: f0ab90cc9a42cf5fdaad4d1698196a3f65ad219210e7085c309b03f60360aec9
+      quote: ''
+    - id: A6
+      location: abstract_only sentence 6
+      text_sha256: d9ce5b3282db5a03ef8a9508849d193919ddcf2f50ec2c037a221ecd8c6d42d9
+      quote: ''
+    - id: A7
+      location: abstract_only sentence 7
+      text_sha256: b108112d8848ba53dc414618f968f33f3d2ea3a993974e386ebbcd28d8e4d8ca
+      quote: ''
+    - id: A8
+      location: abstract_only sentence 8
+      text_sha256: b954b639e4f316a80a5c5ca012d5964ade92fe7c30ef3faa1fb24b908327edba
+      quote: ''
+    - id: A9
+      location: abstract_only sentence 9
+      text_sha256: 909f68f6efe17d77c2f9e96d01e098412ba74065eddea7b5a4b651f18425a600
+      quote: ''
+    - id: A10
+      location: abstract_only sentence 10
+      text_sha256: 37eba3ddb1427cc932129042cc2c1f0fe52acdeacaaa98e7b5eb344191fc1136
+      quote: ''
+    - id: A11
+      location: abstract_only sentence 11
+      text_sha256: cb4a3930c7f2040485c1bf402759cd619cf6f0bc7267d24c483e83db1843c948
+      quote: ''
+    - id: A12
+      location: abstract_only sentence 12
+      text_sha256: 33714a4b0e6c0711a90fdb5940bfc8e52a42398d9544f0e724b6d4c4269dfb3f
+      quote: ''
+    - id: A13
+      location: abstract_only sentence 13
+      text_sha256: d7bd727c8c0ebe7433c40c375258d577badd395245956cd728f31c7d188a3d8e
+      quote: ''
+  - id: R2
+    origin: reviewed_research
+    path: reports/test/agent-memory/research-batches/agent-memory-20261023-0300/items/arxiv-e05d9eb84420/report.md
+    sha256: 02f784c6d50e22efaee33f20ddeb46d2518a69b2453bd954ea1a1f7eb7b31219
+    source_ids:
+    - paper-2fa6f60d-0b98-43ab-b4bb-c2a94bd803dd
+    source_id: paper-2fa6f60d-0b98-43ab-b4bb-c2a94bd803dd
+    source_url: https://arxiv.org/abs/2610.23313v1
+    source_urls:
+    - https://arxiv.org/abs/2610.23313v1
+    coverage: abstract_only
+    identity_keys: *id005
+    source_identities:
+    - source_id: paper-2fa6f60d-0b98-43ab-b4bb-c2a94bd803dd
+      identity_keys: *id005
+    independently_reviewed: true
+    can_support_original_facts: true
+    metadata:
+      title: 'From Memory Hits to Answerable Evidence: Query-Conditioned Memory Compilation
+        for Long-Term Agent Memory'
+      source: arXiv
+      source_url: https://arxiv.org/abs/2610.23313
+      authors:
+      - Li, Shangze
+      - Yao, Yanyu
+      - Xu, Derong
+      - Zheng, Zhi
+      - Xu, Tong
+      published_at: '2026-10-16'
+      arxiv_id: '2610.23313'
+      source_version: v1
+    research_summary: 本文摘要提出面向长期对话记忆的查询条件证据编译框架 MemCompile；以下仅概述所提供的摘要，不代表对论文全文或实验的独立核验。
+    research_claims:
+    - kind: author_claim
+      text: 作者认为，长期智能体记忆需要从分散于多轮对话和多个会话的内容中恢复与回答相关的证据。
+      evidence_ids:
+      - A1
+    - kind: author_claim
+      text: 作者指出，现有系统可能将检索或扩展后的记忆单元直接交给回答模块，导致最终上下文冗余或不完整。
+      evidence_ids:
+      - A2
+    - kind: author_claim
+      text: MemCompile 将处理分为寻址与证据编译：寻址平面定位支持材料并将不同检索命中映射到稳定的 SourcePacket 身份；证据平面则在有限预算内选择互补材料并组织成面向回答的上下文。
+      evidence_ids:
+      - A3
+      - A4
+      - A5
+    - kind: author_claim
+      text: 摘要报告，MemCompile 在 LoCoMo 上取得 80.52% 的 Judge Accuracy，并称其将经验质量—成本帕累托前沿扩展至更高质量区域。
+      evidence_ids:
+      - A6
+    - kind: author_claim
+      text: 作者称其在 LongMemEval-S 上的表现进一步显示，查询条件编译的收益可推广至其他长期对话记忆基准。
+      evidence_ids:
+      - A7
+    research_limitations:
+    - 本次材料仅为论文摘要，未核验全文、实验设置、实现细节或结果。
+    - 摘要未提供评测对照、成本指标定义、统计不确定性或 LongMemEval-S 的具体结果，无法据此独立判断比较幅度或推广范围。
+    locators:
+    - id: A1
+      location: abstract_only sentence 1
+      text_sha256: 2a6d9609e56aebac27185faae70a662dac4e29ab8f53e761127691d658e26489
+      quote: Long-term agent memory requires recovering answer-relevant evidence dispersed
+        across turns and sessions.
+    - id: A2
+      location: abstract_only sentence 2
+      text_sha256: b7587cb569770bcfb76a90e3ecae20178e8034133e9264e1fcbab3749d848a29
+      quote: Existing systems increasingly use structured memories and adaptive retrieval,
+        yet often pass retrieved
+    - id: A3
+      location: abstract_only sentence 3
+      text_sha256: 7e821a6a6e337b0ceb305a7168e7fdbae6bfc58d4093d608a4ad9c97d2783add
+      quote: ''
+    - id: A4
+      location: abstract_only sentence 4
+      text_sha256: be759f667c1db9f00c1ba5e5cd06846b4e69356e6563672a511b4c2fdd55b8ea
+      quote: ''
+    - id: A5
+      location: abstract_only sentence 5
+      text_sha256: e06e678ad8c00025d5ff6798933484e274ca26c27a92c0400b7e108fccb00065
+      quote: ''
+    - id: A6
+      location: abstract_only sentence 6
+      text_sha256: 41ca6a4fdc301fca1e7877cbfb6e9e02d2fb79b54ceb6d255fa4f5e710af8059
+      quote: ''
+    - id: A7
+      location: abstract_only sentence 7
+      text_sha256: 6686c720b25dff38a21f0457f3035c1aef04db5cbc1e91b55d9ab18876efe114
+      quote: ''
+  - id: H1
+    origin: human_baseline
+    path: sources/blogs/agent-memory/blog-05c33166-b18e-425e-91e0-36ddd26f21aa.md
+    sha256: e41eecff5dec1f01b27eae70df70bbc71de57107c8d8e3f51c786022334f642e
+    source_ids: *id006
+    source_urls: *id007
+    source_url: https://www.langchain.com/blog/context-engineering-deep-agents-remember
+    identity_keys: *id008
+    source_identities: *id009
+    coverage: historical_note
+    independently_reviewed: false
+    can_support_original_facts: false
+    historical_status: 历史人工基线，含 AI 辅助内容；未经本次独立原文审阅。推断与旧主张均不可升格为新核验事实。
+  - id: H2
+    origin: human_baseline
+    path: sources/blogs/blog-fec9a2e1-6812-425a-83cd-e6a2464a1110.md
+    sha256: 1c05f28a21a3cef08ff0fc966970a4eed70e2510d0d17468437fb4ff0fa7e99f
+    source_ids: *id010
+    source_urls: *id011
+    source_url: https://www.letta.com/blog/memory-blocks/
+    identity_keys: *id012
+    source_identities: *id013
+    coverage: historical_note
+    independently_reviewed: false
+    can_support_original_facts: false
+    historical_status: 历史人工基线，含 AI 辅助内容；未经本次独立原文审阅。推断与旧主张均不可升格为新核验事实。
+  - id: H3
+    origin: human_baseline
+    path: sources/papers/agent-memory/paper-2d89084b-a1b1-4a27-b298-a660ef434e61.md
+    sha256: 20ca381ff3e8d96d9e711c763fd3c7ad2eae3dd6f2f381f0edbe573311ec1378
+    source_ids: *id014
+    source_urls: *id015
+    source_url: https://arxiv.org/abs/2610.22196
+    identity_keys: *id016
+    source_identities: *id017
+    coverage: historical_note
+    independently_reviewed: false
+    can_support_original_facts: false
+    historical_status: 历史人工基线，含 AI 辅助内容；未经本次独立原文审阅。推断与旧主张均不可升格为新核验事实。
+  - id: H4
+    origin: human_baseline
+    path: sources/papers/paper-4eb3be4b-7189-49aa-bafd-f88f77a972f4.md
+    sha256: 2fca02def277430ea06e35c370b56b895c82d01b14099c3cea4cb55a1e410274
+    source_ids: *id018
+    source_urls: *id019
+    source_url: https://arxiv.org/abs/2310.08560
+    identity_keys: *id020
+    source_identities: *id021
+    coverage: historical_note
+    independently_reviewed: false
+    can_support_original_facts: false
+    historical_status: 历史人工基线，含 AI 辅助内容；未经本次独立原文审阅。推断与旧主张均不可升格为新核验事实。
+  - id: H5
+    origin: human_baseline
+    path: reports/agent-memory/cycle-agent-memory-gh-20261019-synthesis.md
+    sha256: 445d181c3a8eb2f11204e64279f56a79acc57ec6a127f27e073a34d264e8829d
+    source_ids: *id022
+    source_urls: *id023
+    source_url: null
+    identity_keys: *id024
+    source_identities: *id025
+    coverage: historical_note
+    independently_reviewed: false
+    can_support_original_facts: false
+    historical_status: 历史人工基线，含 AI 辅助内容；未经本次独立原文审阅。推断与旧主张均不可升格为新核验事实。
+  - id: H6
+    origin: human_baseline
+    path: reports/agent-memory/cycle-agent-memory-gh-20261019-research-paper-2d89084b-a1b1-4a27-b298-a660ef434e61.md
+    sha256: dc9bbeb260b478b94ebe7919a7e6c4ab10238ba49fdb14a987b803035af3e5d2
+    source_ids: *id026
+    source_urls: *id027
+    source_url: https://arxiv.org/abs/2610.22196
+    identity_keys: *id028
+    source_identities: *id029
+    coverage: historical_note
+    independently_reviewed: false
+    can_support_original_facts: false
+    historical_status: 历史人工基线，含 AI 辅助内容；未经本次独立原文审阅。推断与旧主张均不可升格为新核验事实。
+candidate:
+  outcome: ready
+  coverage_note: R1、R2仅覆盖论文摘要；H1、H2为未经本次独立原文复核的历史人工笔记。历史笔记中的转述不能视为本次核验事实；来源有关联不构成独立验证，现有材料不足以推断行业趋势、因果关系或跨方法性能排名。
+  report:
+    title: 智能体记忆：检索、证据组织与容量约束
+    summary: R1摘要描述视频编辑中的有界特征缓存、相似性检索传播和多样性更新；R2摘要提出面向长期对话记忆的查询条件证据编译。H1、H2的历史笔记分别记录上下文管理和记忆块的工程描述。它们可用于提出记忆选择与组织的研究问题，但R1并非通用智能体记忆研究，R2结果仅为作者报告，历史笔记也未经本次复核，不能据此确认效果或进行性能比较。
+    comparisons:
+    - text: R1摘要描述在固定预算下缓存前序帧特征、按相似性检索并依据特征多样性更新；该设计属于视频编辑场景，不能直接证明其适用于智能体长期记忆。
+      kind: fact
+      evidence_ids:
+      - R1
+    - text: R2摘要描述先定位支持材料、再在有限预算内选择互补证据并组织回答上下文；其报告的 LoCoMo 结果未在本次材料中独立核验。
+      kind: author_claim
+      evidence_ids:
+      - R2
+    - text: H1历史笔记转述了文件卸载、摘要和按需加载等上下文管理机制；这些描述未经本次原文复核，不能据此确认其当前适用性或效果。
+      kind: author_claim
+      evidence_ids:
+      - H1
+    - text: H2历史笔记记录了以用途、容量等组织记忆块的工程视角；与R2的查询条件证据编译并置，可形成“持久组织”与“任务时组装”的研究问题，但不能据此认定两者互补或孰优孰劣。
+      kind: inference
+      evidence_ids:
+      - R2
+      - H2
+    - text: R1讨论视频帧特征传播，R2讨论长期对话中的回答证据编译；任务与对象不同，现有材料不支持跨领域性能排名。
+      kind: inference
+      evidence_ids:
+      - R1
+      - R2
+    limitations:
+    - R1、R2均仅有摘要，缺少可供本次复核的全文、完整实验设置和独立复现；R2摘要未提供成本指标定义及统计不确定性。
+    - R1研究视频编辑特征缓存，不直接研究通用智能体的工作记忆或长期记忆。
+    - H1、H2为历史笔记，未经本次独立原文复核；其中转述的主张不能升格为本次核验事实。
+    - 材料没有统一任务或评测条件，不支持因果结论、行业趋势或方法排名。
+    open_questions:
+    - 查询条件证据编译在不同长期对话任务及独立复现中是否仍有收益？
+    - 记忆预算受限时，如何评估证据的互补性、冗余程度和回答所需的完整性？
+    - 持久记忆块、文件卸载或摘要与查询时证据编译如何组合，是否会导致信息丢失或冲突？
+  insights:
+  - title: 检索命中之后，证据如何变成可回答上下文？
+    hypothesis: 待验证研究假设：对长期记忆检索结果增加面向查询的证据选择与组织步骤，可能比直接呈现检索单元更能控制冗余并保留回答所需支持。R2摘要提出此类编译框架，H1历史笔记记录了卸载和摘要等上下文管理思路；现有材料不能证明该假设成立。
+    evidence_ids:
+    - R2
+    - H1
+    counterpoints:
+    - 编译过程也可能遗漏必要证据，或增加延迟与成本。
+    - H1是未经本次复核的历史笔记，不能作为机制有效的验证。
+    - R2的实验结果与泛化表述仅为摘要中的作者报告。
+    limitations:
+    - R2仅有摘要，缺少足以独立核查的实验设置、成本口径和统计不确定性。
+    - H1仅为历史笔记；两份材料来自不同原始来源，不构成相互验证。
+    validation:
+    - 在同一长期对话任务与模型上，比较直接呈现检索结果和查询条件证据编译，并预先固定上下文预算。
+    - 由盲评者评估答案正确性、支持证据完整性和无关信息比例，同时记录延迟与token成本。
+    - 在多个数据集及独立随机种子下重复实验，公开评估口径和失败案例。
+  - title: 容量受限时，记忆选择与更新规则值得独立评测
+    hypothesis: 待验证研究假设：容量受限的记忆若结合查询相关性与冗余控制，可能在预算内保留更多有用信息。R1描述视频特征多样性更新，H2历史笔记描述有容量约束的记忆块；这些材料不能证明策略可迁移至智能体记忆或能提升实际效果。
+    evidence_ids:
+    - R1
+    - H2
+    counterpoints:
+    - 视频特征的多样性不等同于对话事实的价值、时效性或可信度。
+    - 固定容量和去冗余可能丢弃低频但关键的信息；容量限制本身也不保证记忆质量。
+    - H2是未经本次复核的历史项目方博客笔记，不构成性能证据。
+    limitations:
+    - R1是视频编辑摘要，不是智能体记忆实验；H2是历史笔记。
+    - 当前材料没有针对记忆写入、遗忘、冲突更新及长期正确性的共同评测。
+    validation:
+    - 在长期对话任务中比较不同容量、相关性选择与冗余控制策略，并保持检索和回答组件一致。
+    - 分别测量重要信息保留、过时或冲突记忆处理、最终回答正确性及存储成本。
+    - 使用跨会话、跨任务测试及人工核验的事实来源标签，检查稳定性并识别误删风险。
+  topics:
+  - title: 记忆检索命中之后：为什么还需要证据编译？
+    angle: 以R2摘要中的寻址与证据编译设计为切入点，与H1历史笔记转述的上下文卸载、摘要机制并置，讨论可检验的问题；不把作者报告写成已独立验证的效果。
+    audience: 关注长期对话记忆、检索增强生成与上下文工程的产品和研究人员
+    why_now: 本批资料包含一篇提出查询条件证据编译的论文摘要及一份历史上下文管理笔记，适合讨论检索结果如何转成可回答上下文；这不代表议题热度上升。
+    insight_indices:
+    - 0
+    evidence_ids:
+    - R2
+    - H1
+    key_questions:
+    - 检索命中直接交给回答模块时，冗余或缺漏如何评估？
+    - 证据编译是否改善回答支持度，代价如何衡量？
+    evidence_gaps:
+    - 核验R2全文、实验基线、成本定义与统计不确定性。
+    - 核验H1所据原文及其所述机制当前是否适用。
+    - 需要独立复现和可比评测，不能仅凭摘要与历史笔记下结论。
+  - title: 容量有限时，智能体应如何挑选和更新记忆？
+    angle: 从R1的视频特征多样性更新和H2历史笔记中的容量约束记忆块提出跨领域研究问题，明确区分设计线索与已验证的智能体记忆效果。
+    audience: 研究智能体记忆写入、长期信息维护与可靠性评测的读者
+    why_now: 当前资料同时涉及有界缓存更新和有容量约束的记忆组织，可用于界定后续实验问题；材料没有证据表明这已成为行业趋势。
+    insight_indices:
+    - 1
+    evidence_ids:
+    - R1
+    - H2
+    key_questions:
+    - 对话记忆中的多样性应如何定义，是否能代表信息价值？
+    - 容量约束与冗余控制会不会删除低频但重要的信息？
+    - 如何评估记忆更新对长期正确性的影响？
+    evidence_gaps:
+    - R1不研究通用智能体记忆，不能直接迁移其更新策略。
+    - H2是未经本次独立复核的历史笔记，需核验原文。
+    - 缺少统一任务下关于容量、保留、遗忘与答案正确性的对照实验。
+input_hashes:
+  articles/test/agent-memory/agent-memory-20261023-0300/topic-1.md: b78483d05fd2117044b4dde2c7bc28b70886e0ebd6d506bb2cc6ce05306c2808
+  articles/test/agent-memory/agent-memory-20261023-0300/topic-2.md: 0d4dc29a6b97d8f4797c2d0a9b2adcd540760e99269e4ac1463e5fe8667a1acb
+  insights/test/agent-memory/agent-memory-20261023-0300/insight-1.md: 39e5ff1450bb6b2d8943b5f3e618f1efa0dc81198e2e89ddc9134983f006c6bd
+  insights/test/agent-memory/agent-memory-20261023-0300/insight-2.md: ab8519c560fce099862bc5fbf5e0d9796648cc0a0e8ad261b1ab2694ff9cff2e
+  reports/agent-memory/cycle-agent-memory-gh-20261019-research-paper-2d89084b-a1b1-4a27-b298-a660ef434e61.md: dc9bbeb260b478b94ebe7919a7e6c4ab10238ba49fdb14a987b803035af3e5d2
+  reports/agent-memory/cycle-agent-memory-gh-20261019-synthesis.md: 445d181c3a8eb2f11204e64279f56a79acc57ec6a127f27e073a34d264e8829d
+  reports/test/agent-memory/cycles/agent-memory-20261023-0300/configs/insight.yaml: e7d599b6cb1e12ba1dddefe92f0fb3526889dded37eae2506e13f4a3a54bc33f
+  reports/test/agent-memory/cycles/agent-memory-20261023-0300/configs/research.yaml: d42d47aee86865449d35a52d58525b973d9ee0c8e7be8796896e7e83bfac9d2a
+  reports/test/agent-memory/cycles/agent-memory-20261023-0300/discovery.yaml: a87478aa1cb4c349c9a335cc457eabb3df52cee5afebdada1fa612e1544cda36
+  reports/test/agent-memory/cycles/agent-memory-20261023-0300/history.yaml: 3b26254b6a7e93cb2fc17c6ba1fc467d9c37e234d417cde87e79563f261b381d
+  reports/test/agent-memory/cycles/agent-memory-20261023-0300/insight-result.yaml: 63e9b358c64e562e2e03c5ede2e07daa27fce3d905b0a4c4726d26b2bd1dc393
+  reports/test/agent-memory/cycles/agent-memory-20261023-0300/manifest.yaml: cbd7b419fb10e9655508d490d814cabe35b277463fa24cb27e3ef05d0d35e0fd
+  reports/test/agent-memory/cycles/agent-memory-20261023-0300/pending.yaml: 8a90e5c30b0094ac6a673a3d7f0420f5ded1a0e231769af06dc9fd319b6c2b65
+  reports/test/agent-memory/cycles/agent-memory-20261023-0300/receipt.yaml: e35fb8f62ad96242d1f451774952557921588c47f5011cb32793db0fbbf14414
+  reports/test/agent-memory/cycles/agent-memory-20261023-0300/research-result.yaml: 4b585e2800df5249b7edb1b540eadf077b465844a0798d4fbf7e4ad2462b651b
+  reports/test/agent-memory/cycles/agent-memory-20261023-0300/selection.yaml: 3e8910c9c3b51f5202576720d732770d8c9672c92cb8636eea09afdae553e20c
+  reports/test/agent-memory/insight-runs/agent-memory-20261023-0300/artifact-plan.yaml: b2a4e73f2d589d999015d71ee2d62768daa91502fccf2a59cfe99c5a15c93fdc
+  reports/test/agent-memory/insight-runs/agent-memory-20261023-0300/checkpoints/generation-0.yaml: 038a343a240d89fef68a77760fc0dd0498319d8b23e3a7f1b0a503af5862f619
+  reports/test/agent-memory/insight-runs/agent-memory-20261023-0300/checkpoints/generation-1.yaml: e8f26671b3d6e6369cbd794897dc779f06d9cd2a7909b10e9dd2de7501988586
+  reports/test/agent-memory/insight-runs/agent-memory-20261023-0300/checkpoints/review-1.yaml: 0cbddd50ff90580057e51ccd9a2cff35e59b971da8b0de5db0646be470939e33
+  reports/test/agent-memory/insight-runs/agent-memory-20261023-0300/events/000001.yaml: aa36f26cd762efc1891f5f32998f0dc99e03f2fe8f1435915e8fd5223aecd029
+  reports/test/agent-memory/insight-runs/agent-memory-20261023-0300/events/000002.yaml: f2980d7d9eda82e096a8c70dc49182f5c58804af8a325d26dca83b426464b600
+  reports/test/agent-memory/insight-runs/agent-memory-20261023-0300/events/000003.yaml: 54f4186ee3bb7422f7b434d84fa12db577d4dd1add9a22ddcb569f84d26cbd94
+  reports/test/agent-memory/insight-runs/agent-memory-20261023-0300/events/000004.yaml: 8db76b1f4467dbc9a0442bc1ecd4f30458aae665f78e57e87190f180cfdc1083
+  reports/test/agent-memory/insight-runs/agent-memory-20261023-0300/events/000005.yaml: 39d453cb2ca48bd0f0dc2e65344d842d8348a4d07dfba237c8229b55c5215e99
+  reports/test/agent-memory/insight-runs/agent-memory-20261023-0300/events/000006.yaml: 973e283ca8e268ea343043d05274a9d3e509cc77bf1bd81dab4b9e663c89602f
+  reports/test/agent-memory/insight-runs/agent-memory-20261023-0300/events/000007.yaml: 06a6b2bd3c31990ac8ae36089a1f120e0a13b16649393f31ea4e6461e371ac0f
+  reports/test/agent-memory/insight-runs/agent-memory-20261023-0300/manifest.yaml: fe1a09397b6b88bc3e4d79f80e988f9d6549388b70f9e15d4bcc4a7db3e3ba4e
+  reports/test/agent-memory/insight-runs/agent-memory-20261023-0300/receipt.yaml: 63e9b358c64e562e2e03c5ede2e07daa27fce3d905b0a4c4726d26b2bd1dc393
+  reports/test/agent-memory/insight-runs/agent-memory-20261023-0300/report.md: a30117dd5b40e695f0aa37decdb1d2b4b0fb82114875339f038ebcb31c966686
+  reports/test/agent-memory/research-batches/agent-memory-20261023-0300/events/000001.yaml: c2555ccb7e9b23e059ea9d0ccfffc78d5a9f6230af00d81d6cf0fc7d3eab46d8
+  reports/test/agent-memory/research-batches/agent-memory-20261023-0300/events/000002.yaml: d1067efa074171f92691bfc95e6e9334933c0b52d311da6e43f1c595effbf52e
+  reports/test/agent-memory/research-batches/agent-memory-20261023-0300/events/000003.yaml: ec3c37c8c3967773d126445bcc96e891b2b6096dd978b56854912bab655aa3c7
+  reports/test/agent-memory/research-batches/agent-memory-20261023-0300/events/000004.yaml: 41007b18ea13ed83eeab9cb7c51722ec75019c4b3e3ae48941b59b512bc084b3
+  reports/test/agent-memory/research-batches/agent-memory-20261023-0300/events/000005.yaml: 1132dec45f3a353ba2e62c00489231205dcd293155c2ff55d8772c0644302d2e
+  reports/test/agent-memory/research-batches/agent-memory-20261023-0300/events/000006.yaml: 60de0b356aa8fb70d09f40431474d249df2a8666a007de09ad1ea7590c0fe2da
+  reports/test/agent-memory/research-batches/agent-memory-20261023-0300/events/000007.yaml: dd0f930f3c6c88a16c23d89f094fda437f69f81b097d41cb23b4c352003d8813
+  reports/test/agent-memory/research-batches/agent-memory-20261023-0300/events/000008.yaml: 697cb0475eb9ac4fc46e2369e7c59f03781948c59b89a61488dac5fa76b8d3c0
+  reports/test/agent-memory/research-batches/agent-memory-20261023-0300/events/000009.yaml: f9755ba41af5ab736b049376aa63320a9ff80bb5e65aa24d5006a0a17be97568
+  reports/test/agent-memory/research-batches/agent-memory-20261023-0300/events/000010.yaml: d73f4592cbdc7e9116e9f0c6c55fcfe9696694eee169825c1bf18cfdf6a91041
+  reports/test/agent-memory/research-batches/agent-memory-20261023-0300/items/arxiv-d9523f400d3a/candidate.yaml: b592cb1ad1613000b84dc73275d6a992af0120d529cc25969074c35b33890511
+  reports/test/agent-memory/research-batches/agent-memory-20261023-0300/items/arxiv-d9523f400d3a/checkpoints/research-0.yaml: a39a89887cb8e171c0064c844fd7db7b723e19e7c9419c5e6c3d5a281215f440
+  reports/test/agent-memory/research-batches/agent-memory-20261023-0300/items/arxiv-d9523f400d3a/checkpoints/review-0.yaml: 1f69a2e2556586b6c6653daa8767309e64feae8ddb3a42e891f8bea9239ef21d
+  reports/test/agent-memory/research-batches/agent-memory-20261023-0300/items/arxiv-d9523f400d3a/report.md: 7f58d262d6d6b6f14b7f6374debe0cb99265083dd00e8915b11b52396a6d71cf
+  reports/test/agent-memory/research-batches/agent-memory-20261023-0300/items/arxiv-d9523f400d3a/result.yaml: 0320f3746868cafc774e330a38d6700f88e7382c5c991ced0adcb7a67ffc70bf
+  reports/test/agent-memory/research-batches/agent-memory-20261023-0300/items/arxiv-e05d9eb84420/candidate.yaml: 35e903465e932b867a6a28a7e213943211af75d39e401590f1ef17cd2095bbf0
+  reports/test/agent-memory/research-batches/agent-memory-20261023-0300/items/arxiv-e05d9eb84420/checkpoints/research-0.yaml: ea62f56935a0c4c96afb4ad856c3193be36a3c022e652170ff24d0f2f0882ed1
+  reports/test/agent-memory/research-batches/agent-memory-20261023-0300/items/arxiv-e05d9eb84420/checkpoints/review-0.yaml: 2c2b696125481b9c625e6f38a9cd25f897fd109b87a3db3ab2bfa307ee4a0564
+  reports/test/agent-memory/research-batches/agent-memory-20261023-0300/items/arxiv-e05d9eb84420/report.md: 02f784c6d50e22efaee33f20ddeb46d2518a69b2453bd954ea1a1f7eb7b31219
+  reports/test/agent-memory/research-batches/agent-memory-20261023-0300/items/arxiv-e05d9eb84420/result.yaml: 92e93b901077b60f6e5a6ac3f148b5f53696be350a36443a7c1ad23a86bd70d9
+  reports/test/agent-memory/research-batches/agent-memory-20261023-0300/manifest.yaml: 153c80968f0d1e2f3c852cd897b97e443dd0843f1fbbb0a554849201e645b62f
+  reports/test/agent-memory/research-batches/agent-memory-20261023-0300/receipt-attempt-1.yaml: 4b585e2800df5249b7edb1b540eadf077b465844a0798d4fbf7e4ad2462b651b
+  reports/test/agent-memory/research-batches/agent-memory-20261023-0300/source-attempts/arxiv-d9523f400d3a/attempt-1.yaml: 52ae1a4bd3689b303600fe708f44e6cf9119ef71b09cf91263c33b33e6968f0b
+  reports/test/agent-memory/research-batches/agent-memory-20261023-0300/source-attempts/arxiv-e05d9eb84420/attempt-1.yaml: 7a3357e1bdab9c3abf4b5c3277be4684c7fe86b9889de3e46c69f9dfc92d4daf
+  sources/blogs/agent-memory/blog-05c33166-b18e-425e-91e0-36ddd26f21aa.md: e41eecff5dec1f01b27eae70df70bbc71de57107c8d8e3f51c786022334f642e
+  sources/blogs/blog-fec9a2e1-6812-425a-83cd-e6a2464a1110.md: 1c05f28a21a3cef08ff0fc966970a4eed70e2510d0d17468437fb4ff0fa7e99f
+  sources/papers/agent-memory/paper-2d89084b-a1b1-4a27-b298-a660ef434e61.md: 20ca381ff3e8d96d9e711c763fd3c7ad2eae3dd6f2f381f0edbe573311ec1378
+  sources/papers/paper-4eb3be4b-7189-49aa-bafd-f88f77a972f4.md: 2fca02def277430ea06e35c370b56b895c82d01b14099c3cea4cb55a1e410274
+protected_notes:
+  sources/README.md: ea97baad3b8b4e68c5c0dfa81611a92d257bcf2023f3810b039624f3ff1cd517
+  sources/blogs/blog-fec9a2e1-6812-425a-83cd-e6a2464a1110.md: 1c05f28a21a3cef08ff0fc966970a4eed70e2510d0d17468437fb4ff0fa7e99f
+  sources/blogs/test/agent-memory/blog-2ba2d1cb-b637-4842-afd7-efab7210fd2f.md: bf6cf9fa1c1b4879316cf23c419ebcc9f2f34d9a9e41d5d12f98cc2b0158609f
+  sources/blogs/test/agent-memory/blog-56521361-c491-428a-b75e-3c92c603161e.md: 4dd2745bcc4ae45256cbc0b1260d070c375b9950418e0b59ed740bd8fc0a4bd7
+  sources/blogs/test/agent-memory/blog-be47c817-56d3-4fa5-bb9a-bd19be5c68df.md: 622374debc4763b7ba8e6ca8777784a411244361bc692618ce2ec11bd4a0b1db
+  sources/blogs/agent-memory/blog-05c33166-b18e-425e-91e0-36ddd26f21aa.md: e41eecff5dec1f01b27eae70df70bbc71de57107c8d8e3f51c786022334f642e
+  sources/test/README.md: 32b0263d9fd210ccd50354362b98e86102e842d1e8abb600a013bd76ec61655d
+  sources/papers/paper-4eb3be4b-7189-49aa-bafd-f88f77a972f4.md: 2fca02def277430ea06e35c370b56b895c82d01b14099c3cea4cb55a1e410274
+  sources/papers/test.md: 52bf9809aa70dbc3fc8ee55dd96a58a7b85c45717a21e5f7c557a70b4ee07115
+  sources/papers/test/agent-memory/paper-b45f152e-83b7-43ca-9ff5-0e2e7c66e5f9.md: d96bae1c966846f600d98b0d2285dc58ec7078bf83626a45c9b10e5fddc94663
+  sources/papers/test/agent-memory/paper-a5a3171a-9891-4dea-8bfc-cdf0cf15bce0.md: 357373843b03679cf7a0241fac42bada0cfeeb447c430e2edabb344c29a96126
+  sources/papers/agent-memory/paper-f5ce4a88-8dda-4ad0-b219-a0abb5a40c21.md: d4057557d856d97aae4de246f2a9a29f3937f25e94424d5ef5a27c3f60197fef
+  sources/papers/agent-memory/paper-2d89084b-a1b1-4a27-b298-a660ef434e61.md: 20ca381ff3e8d96d9e711c763fd3c7ad2eae3dd6f2f381f0edbe573311ec1378
+  sources/papers/agent-memory/paper-0d7a0c77-ff16-47d6-a6ea-91407aa2cc80.md: 4449fd83ea5e0a282ebddde0114d3020b467ccb98107fc703ce422059ccd537c
+  reports/2026-10-18-agent-memory-memgpt-memory-blocks.md: 02b197e040a40022a004e692395b0f5e6ce3b1e3611ea9b374f440bb7ba23e96
+  reports/README.md: 901c94e139c67ba26c99451c2f0b6f7fcb0280a70e4a82f2f1416b6c1f02b77b
+  reports/test/README.md: 6ef91886517177cf196851c9cbfcab564f209143e618a42af6678d1e6b7bf15f
+  reports/test/agent-memory/cycles/cycle-agent-memory-gh-20261019/acceptance.md: 2749674eec59d8d2b536ad24209ef45b6eed115462e6cc33af87469ce5b02351
+  reports/test/agent-memory/collect-real-sources-20261019-check-a1/summary-attempt-1.md: 4f02a33bcbb3be3240a0681e7ca3f7e494c1821ccf5233bdcca595ad5631efd6
+  reports/test/agent-memory/offline-acceptance-20261018/summary-attempt-1.md: 920a438b21b036923bb8fc6b291af824d4d2c5441bbe16d55f2b8cefc82f0191
+  reports/test/agent-memory/offline-acceptance-20261018/summary-attempt-2.md: 920a438b21b036923bb8fc6b291af824d4d2c5441bbe16d55f2b8cefc82f0191
+  reports/test/agent-memory/offline-acceptance-20261018/acceptance.md: bbcc12d9ca0a95ecd68a55fef5554f0f8486aef25b9a625e9574fe3b4e597db6
+  reports/test/agent-memory/research-batches/cycle-agent-memory-20261019/items/arxiv-54b2c1a25a4c/report.md: 6c92dbd34e1aa1be83d01cf1c3cd21f1d558a5e60c2fcac36bf734b8bf5dcb3d
+  reports/test/agent-memory/research-batches/cycle-agent-memory-20261019/items/langchain-fb2f55573b1a/report.md: fdc8fa7ff4a022571803122c8eec9fa37b466c74fc969c9a0bcd15b972450c54
+  reports/test/agent-memory/research-batches/agent-memory-20261020-0300/items/arxiv-c2d979272f50/report.md: 66f3574de1fab185282d998fe866a8c26983e6636a5ee98d5f7bf739b3587e74
+  reports/test/agent-memory/research-batches/agent-memory-20261020-0300/items/arxiv-8930960ae8ce/report.md: dd89cf4167d1123369ae295951b58311d45203bdf88f1456b048978d43abc0e7
+  reports/test/agent-memory/research-batches/agent-memory-20261023-0300/items/arxiv-d9523f400d3a/report.md: 7f58d262d6d6b6f14b7f6374debe0cb99265083dd00e8915b11b52396a6d71cf
+  reports/test/agent-memory/research-batches/agent-memory-20261023-0300/items/arxiv-e05d9eb84420/report.md: 02f784c6d50e22efaee33f20ddeb46d2518a69b2453bd954ea1a1f7eb7b31219
+  reports/test/agent-memory/research-batches/cycle-agent-memory-gh-20261019/items/arxiv-e11f080635a9/report.md: d1075deea8d8f1631cef86cad93c7aeeea222e33ef525b1f6539e5d1a57d9cdd
+  reports/test/agent-memory/research-batches/cycle-agent-memory-gh-20261019/items/langchain-9098f9f1ed8c/report.md: 925a3d9a97f52fbaed43fd0e05e12bea1abbddc202ac37b598a2a98bbc4680e0
+  reports/test/agent-memory/research-batches/configured-research-20261019/acceptance.md: 48d3d28bc2ff961b36f25f36f9fe812d71e0ac1691680d0798f68df76905f526
+  reports/test/agent-memory/research-batches/configured-research-20261019/items/letta-memory-blog/report.md: fb84fd764c0a422cb67f0104dfe38a16a4426cb3f4807071bf5d96ad114a2ae5
+  reports/test/agent-memory/research-batches/configured-research-20261019/items/amem-paper/report.md: d64aee8548e44dee1bacf359d162e3ac33b184f8d61447328366941333ba62e2
+  reports/test/agent-memory/writing-runs/writing-offline-20261019/acceptance.md: 04822464855a9ec249d142c20bc116cb78d5235250fa19da26465b8410e14007
+  reports/test/agent-memory/writing-runs/writing-approval-20261019-161304-eeb7d0a7582e/sync-check-20261020.md: dc1ccf3019a75aaffdaf09538d5b42fa25f7fd8f4631dff6e6660a475eda70e1
+  reports/test/agent-memory/writing-runs/writing-approval-20261019-161304-eeb7d0a7582e/acceptance.md: 10a789bb26ffa43bb0f2f36c75d2121d9486b91068e31aae434e2343d718fefb
+  reports/test/agent-memory/collect-real-sources-20261018-a1/summary-attempt-1.md: 62a11b23f22bae24616d3486dc7eff9b69762d4e623e2f4b841eba6d7e84ff05
+  reports/test/agent-memory/collections/real-sources-20261019-check/summary-attempt-1.md: 6f208dc265b50fc30d7d07e2d4293253159a9bf1922669f0135551f6a6959cd3
+  reports/test/agent-memory/collections/real-sources-20261019-check/analysis-bundle-attempt-1.md: bb258a774fff44130085adef9e25f35badd1e235401c2ee3dcd153fdf6d381eb
+  reports/test/agent-memory/collections/real-sources-20261018/summary-attempt-1.md: ca2ac6c74d10ab3e7be4db1e7fa4b4f23023219dfa85261a5de1846983dcb3a1
+  reports/test/agent-memory/collections/real-sources-20261018/analysis-bundle-attempt-1.md: b80f2ca5a5e7c3f13dbe11bd9e3d0ceeb926be59cdaa25f0a56e346fef7cab78
+  reports/test/agent-memory/collections/real-sources-20261018/acceptance.md: e42877b6de62360ee9af6c762899b0cc172597570fb1b413656656185d8d9764
+  reports/test/agent-memory/insight-runs/cycle-agent-memory-20261019/report.md: 9e6ebb9c72dfe91fcadcfa1b3f4be9ce69aea26c8b8ca6293def847726dbab8a
+  reports/test/agent-memory/insight-runs/agent-memory-20261023-0300/report.md: a30117dd5b40e695f0aa37decdb1d2b4b0fb82114875339f038ebcb31c966686
+  reports/test/agent-memory/insight-runs/insight-agent-memory-20261019/report.md: 6b5db92c0c2c7e20454444d2451e160c4ecceb7ea2c70d623ea30325deadb679
+  reports/test/agent-memory/insight-runs/insight-agent-memory-20261019/acceptance.md: aa5cbac90c174a25f6bbe7a947db795f3c9e89ccdec79592dcee3285a9efd1f0
+  reports/test/agent-memory/insight-runs/cycle-agent-memory-gh-20261019/report.md: 47eda356203ad49145ca105fbc500ac34c3dd4eee6e5f65ed0bc35b0d00a3b2c
+  reports/test/agent-memory/insight-runs/agent-memory-20261020-0300-recovery-1/report.md: 466eee21e35a861e52c0dc4cfff23bc5a2c5682c9b8c9d01fa9ff67f1261910b
+  reports/test/agent-memory/membership/member-arxiv-20261019/report.md: c38e9209e92d97731385777bba9663ebd606ce2f1085e16167e295506815c003
+  reports/test/agent-memory/membership/member-arxiv-20261019/acceptance.md: 79eb32c015ca56dda28f9ef2ceabf142f6b13a46a56bb61f47c0539f16ec9f27
+  reports/agent-memory/cycle-agent-memory-gh-20261019-research-blog-05c33166-b18e-425e-91e0-36ddd26f21aa.md: 0a5293847491db21ff15b4c88eec4b8afce0e6bcbcb52e08a5e705af8fdac24d
+  reports/agent-memory/cycle-agent-memory-gh-20261019-synthesis.md: 445d181c3a8eb2f11204e64279f56a79acc57ec6a127f27e073a34d264e8829d
+  reports/agent-memory/agent-memory-20261020-0300-recovery-1-research-paper-f5ce4a88-8dda-4ad0-b219-a0abb5a40c21.md: 7ac58401dcd754ab98fab604f73496f53cb79c8d7da88710b6c71f21bd2acd0e
+  reports/agent-memory/agent-memory-20261020-0300-recovery-1-research-paper-0d7a0c77-ff16-47d6-a6ea-91407aa2cc80.md: da7e30b6de3b4beda77fe67b8d7fc6aa28f8b602eccf3865779e6806ed3b6353
+  reports/agent-memory/agent-memory-20261020-0300-recovery-1-synthesis.md: 7524f04a87cf64d07748b5cad7e716d7fa39d44b016363e91597e862a1364d6a
+  reports/agent-memory/cycle-agent-memory-gh-20261019-research-paper-2d89084b-a1b1-4a27-b298-a660ef434e61.md: dc9bbeb260b478b94ebe7919a7e6c4ab10238ba49fdb14a987b803035af3e5d2
+  reports/agent-memory/writing-admissions/writing-approval-20261019-161304-eeb7d0a7582e/acceptance.md: 4917be85318d4cd875eb122f89fa74157a0a9c2699a3b13a99dc8940f138057e
+  insights/2026-10-18-agent-memory-traceable-updates.md: 5996061dc64dea1ff86ac9275b40ac20b813f95c95fa370fcfc3ba453d5929a2
+  insights/2026-10-18-agent-memory-usable-memory.md: 6bdbac554506f14147aebdcbbb35a8ea62e4800f9f2a804f1d84ecc414b54212
+  insights/README.md: 2a639098b6adaa6cc549d1831065c544afaf03293495a68776e68452f1fabd95
+  insights/test/README.md: 00d6f9133d46c5c4641f1e6ef24a0e358cebbc6c86336fe849052f3385e4e2c7
+  insights/test/agent-memory/cycle-agent-memory-20261019/insight-1.md: 17cecd7c7af170aa79e166306cfef299996cba13fb418b92814d6ab9a366b855
+  insights/test/agent-memory/cycle-agent-memory-20261019/insight-2.md: 6e1a640f87840a6767393a4ba66eaa1e5d1ef85aabde6b31374838d49e0127c8
+  insights/test/agent-memory/agent-memory-20261023-0300/insight-1.md: 39e5ff1450bb6b2d8943b5f3e618f1efa0dc81198e2e89ddc9134983f006c6bd
+  insights/test/agent-memory/agent-memory-20261023-0300/insight-2.md: ab8519c560fce099862bc5fbf5e0d9796648cc0a0e8ad261b1ab2694ff9cff2e
+  insights/test/agent-memory/insight-agent-memory-20261019/insight-1.md: 86ccd8f53df37c0634c469d98919b00d8c19781bcb2b36e5871749337afd15dd
+  insights/test/agent-memory/insight-agent-memory-20261019/insight-2.md: da721c6d0d0ea1785f59576323947b3da0039dcfb07e0b7e2571e3a519e4431c
+  insights/test/agent-memory/cycle-agent-memory-gh-20261019/insight-1.md: 66440eb5f248de4788b07ab973eee41de93f85a204f25e2b4d3ec5eedc557f1c
+  insights/test/agent-memory/agent-memory-20261020-0300-recovery-1/insight-1.md: a91145655ee8c12b981cace02278edba41693fdcde243903cc40496fd8025f76
+  insights/test/agent-memory/agent-memory-20261020-0300-recovery-1/insight-2.md: 7ae17d28f930302f14e39c02e21c6d09106b1d2a6d89a932fe4530c0f249be61
+  insights/agent-memory/cycle-agent-memory-gh-20261019-insight-1.md: 0884c498da6c91e02b38526918896b94b461c403d44e7f42bb6b6b469134fcde
+  insights/agent-memory/agent-memory-20261020-0300-recovery-1-insight-2.md: 77326ce194fb63170d8d22d2052d72087514df8b7dd1a413d971094e849e6af3
+  insights/agent-memory/agent-memory-20261020-0300-recovery-1-insight-1.md: 556588320f0d42840480a33be7f8c01bdfc400fa4848591a81ced7b4d127d853
+  articles/2026-10-18-agent-memory-saving-vs-remembering-outline.md: 9505994ab7c1a55a71e07f052caa9e9dccb6e7474b607f2ce5e668ca5df27775
+  articles/README.md: 1a221c8239e8b298a621752e0e440f0acf701ae0fba012462fe501dd629ee571
+  articles/2026-10-18-agent-memory-saving-vs-remembering-release-candidate.md: f74992ec6c9a408eb74600648939e4baf54c21698f2a30fcb98fc284b21afaac
+  articles/2026-10-18-agent-memory-saving-vs-remembering-draft.md: f73efed024a6dff196588ae90f43fe26b360b60d3f859334455399b2a17a83d3
+  articles/test/README.md: f18fb8cb94b0181266c3d3c52c21de0b6fdce2b58f08fe98be4616169fbedd45
+  articles/test/agent-memory/cycle-agent-memory-20261019/topic-2.md: 38b22a1d263e6cc2d64e8fdbc7582f7aa6a99bfc012ff5595351280f301f4c84
+  articles/test/agent-memory/cycle-agent-memory-20261019/topic-1.md: b88239e326d9d826dbd96cb1f5a435e6106bf479368dd561228688630cfb5489
+  articles/test/agent-memory/writing-offline-20261019/outline.md: a70cd05aeb86ffa88afa90d3b0a75758d6bbe94b9372b58c26c8df3b029daa25
+  articles/test/agent-memory/writing-offline-20261019/draft.md: 6e6f5a567d62ad2589735871dc13d096fd4186441134b73eab98f4cab41e10cf
+  articles/test/agent-memory/writing-offline-20261019/candidate.md: 550f258a8e4c632adf027be184ec8200a2cdb1a65dc7c298dd5f3a39281faab3
+  articles/test/agent-memory/writing-approval-20261019-161304-eeb7d0a7582e/outline.md: 51df9e48da561b763153eb5c15318bbc88aca048cd90ca854018019062d0d065
+  articles/test/agent-memory/writing-approval-20261019-161304-eeb7d0a7582e/draft.md: e7c81bddcf7c029f7f9692a741d6e888b716372cb440424d6e4fd25b7c5e3bf7
+  articles/test/agent-memory/writing-approval-20261019-161304-eeb7d0a7582e/candidate.md: 7545c1a858b75a6508f9d3a1deed79373eaa5a3b73f9b986cf4920c11b68e4f0
+  articles/test/agent-memory/agent-memory-20261023-0300/topic-2.md: 0d4dc29a6b97d8f4797c2d0a9b2adcd540760e99269e4ac1463e5fe8667a1acb
+  articles/test/agent-memory/agent-memory-20261023-0300/topic-1.md: b78483d05fd2117044b4dde2c7bc28b70886e0ebd6d506bb2cc6ce05306c2808
+  articles/test/agent-memory/insight-agent-memory-20261019/topic-2.md: 158caed10e51afb85d9527fe76f2a698b661d92456f2904d121d6962f673d4bf
+  articles/test/agent-memory/insight-agent-memory-20261019/topic-1.md: 133749e927a6e32e8d63fea8d0cd151c2d0b607ea8550cec672d37f2ee8f8190
+  articles/test/agent-memory/cycle-agent-memory-gh-20261019/topic-1.md: 783433cfb6cff91bf6c644063aa7d33743dbced526131c698372e13c4e5c72e9
+  articles/test/agent-memory/agent-memory-20261020-0300-recovery-1/topic-2.md: 73a965c9a920c6431fbaf66175c3c2c4974c38e17ef9266abd1db3d41a0e0c11
+  articles/test/agent-memory/agent-memory-20261020-0300-recovery-1/topic-1.md: 7640bb2b120cd88c637f891565055b19d49fc255f56f9aa99c17c4daf884c1e9
+  articles/agent-memory/agent-memory-20261020-0300-recovery-1-topic-1.md: 2a1bafef2f59b0eb6ae36894776418a64f4d8fef9be1f2c7f7d5aa04fa058044
+  articles/agent-memory/cycle-agent-memory-gh-20261019-topic-1.md: d1aef5e28d07006cc041da6d547b4b36c0f84612afa7cd4c97971eae50003760
+  articles/agent-memory/writing-approval-20261019-161304-eeb7d0a7582e-draft.md: 11753b0296c66266abb858f2f621c37c5bc0deee4ed4ff1948a46a16d7985a0c
+  articles/agent-memory/writing-approval-20261019-161304-eeb7d0a7582e-candidate.md: c724c46a69be078f034aec704aac076ec433f93053aea3ceb2823b1340dc29b8
+  articles/agent-memory/writing-approval-20261019-161304-eeb7d0a7582e-outline.md: 112d00b787627c005eadd8925c44bbcf6fcc137c4b7ef7ea694d4eb555ea1826
+  articles/agent-memory/agent-memory-20261020-0300-recovery-1-topic-2.md: 0616c2641c9801aca023002f70af085a007ffa99e8861bb45ec566a09c9a7724
+files:
+  reports/agent-memory/agent-memory-20261023-0300-synthesis.md: "---\nschema_version:\
+    \ 1\nid: formal-report-agent-memory-agent-memory-20261023-0300\nkind: synthesis\n\
+    title: 智能体记忆：检索、证据组织与容量约束\ntopic: agent-memory\nstatus: accepted\nevidence_ids:\n\
+    - H1\n- H2\n- R1\n- R2\napproval_required: false\nwriting_started: false\npublish_authorized:\
+    \ false\ninput_fingerprint: c3623fd4f06acf6a922171857a0826c5ae865eef4f1d78b6debe0af5cda6690f\n\
+    topics:\n- agent-memory\n---\n\n> AI 自动研究记录，已通过独立模型审阅；阅读范围及证据限制见正文，未复现实验。\n\n\
+    # 智能体记忆：检索、证据组织与容量约束\n\nR1、R2仅覆盖论文摘要；H1、H2为未经本次独立原文复核的历史人工笔记。历史笔记中的转述不能视为本次核验事实；来源有关联不构成独立验证，现有材料不足以推断行业趋势、因果关系或跨方法性能排名。\n\
+    \n## 综合摘要\n\nR1摘要描述视频编辑中的有界特征缓存、相似性检索传播和多样性更新；R2摘要提出面向长期对话记忆的查询条件证据编译。H1、H2的历史笔记分别记录上下文管理和记忆块的工程描述。它们可用于提出记忆选择与组织的研究问题，但R1并非通用智能体记忆研究，R2结果仅为作者报告，历史笔记也未经本次复核，不能据此确认效果或进行性能比较。\n\
+    \n## 比较与证据\n\n- **原文事实**：R1摘要描述在固定预算下缓存前序帧特征、按相似性检索并依据特征多样性更新；该设计属于视频编辑场景，不能直接证明其适用于智能体长期记忆。（[R1](agent-memory-20261023-0300-research-paper-ef2bb506-9872-4221-8434-03dc4c74646a.md)）\n\
+    - **作者声称，未独立复现**：R2摘要描述先定位支持材料、再在有限预算内选择互补证据并组织回答上下文；其报告的 LoCoMo 结果未在本次材料中独立核验。（[R2](agent-memory-20261023-0300-research-paper-2fa6f60d-0b98-43ab-b4bb-c2a94bd803dd.md)）\n\
+    - **作者声称，未独立复现**：H1历史笔记转述了文件卸载、摘要和按需加载等上下文管理机制；这些描述未经本次原文复核，不能据此确认其当前适用性或效果。（[H1](../../sources/blogs/agent-memory/blog-05c33166-b18e-425e-91e0-36ddd26f21aa.md)）\n\
+    - **我们的推断**：H2历史笔记记录了以用途、容量等组织记忆块的工程视角；与R2的查询条件证据编译并置，可形成“持久组织”与“任务时组装”的研究问题，但不能据此认定两者互补或孰优孰劣。（[R2](agent-memory-20261023-0300-research-paper-2fa6f60d-0b98-43ab-b4bb-c2a94bd803dd.md)、[H2](../../sources/blogs/blog-fec9a2e1-6812-425a-83cd-e6a2464a1110.md)）\n\
+    - **我们的推断**：R1讨论视频帧特征传播，R2讨论长期对话中的回答证据编译；任务与对象不同，现有材料不支持跨领域性能排名。（[R1](agent-memory-20261023-0300-research-paper-ef2bb506-9872-4221-8434-03dc4c74646a.md)、[R2](agent-memory-20261023-0300-research-paper-2fa6f60d-0b98-43ab-b4bb-c2a94bd803dd.md)）\n\
+    \n## 局限\n\n- R1、R2均仅有摘要，缺少可供本次复核的全文、完整实验设置和独立复现；R2摘要未提供成本指标定义及统计不确定性。\n- R1研究视频编辑特征缓存，不直接研究通用智能体的工作记忆或长期记忆。\n\
+    - H1、H2为历史笔记，未经本次独立原文复核；其中转述的主张不能升格为本次核验事实。\n- 材料没有统一任务或评测条件，不支持因果结论、行业趋势或方法排名。\n\
+    \n## 待验证问题\n\n- 查询条件证据编译在不同长期对话任务及独立复现中是否仍有收益？\n- 记忆预算受限时，如何评估证据的互补性、冗余程度和回答所需的完整性？\n\
+    - 持久记忆块、文件卸载或摘要与查询时证据编译如何组合，是否会导致信息丢失或冲突？\n\n## 输入与来源\n\n- [H1](../../sources/blogs/agent-memory/blog-05c33166-b18e-425e-91e0-36ddd26f21aa.md)：human_baseline；来源\
+    \ ID：blog-05c33166-b18e-425e-91e0-36ddd26f21aa。\n  - [原始来源](https://www.langchain.com/blog/context-engineering-deep-agents-remember)；覆盖：historical_note。\n\
+    - [H2](../../sources/blogs/blog-fec9a2e1-6812-425a-83cd-e6a2464a1110.md)：human_baseline；来源\
+    \ ID：blog-fec9a2e1-6812-425a-83cd-e6a2464a1110。\n  - [原始来源](https://www.letta.com/blog/memory-blocks/)；覆盖：historical_note。\n\
+    - [R1](agent-memory-20261023-0300-research-paper-ef2bb506-9872-4221-8434-03dc4c74646a.md)：reviewed_research；来源\
+    \ ID：paper-ef2bb506-9872-4221-8434-03dc4c74646a。\n  - [原始来源](https://arxiv.org/abs/2510.13084v2)；覆盖：abstract_only。\n\
+    - [R2](agent-memory-20261023-0300-research-paper-2fa6f60d-0b98-43ab-b4bb-c2a94bd803dd.md)：reviewed_research；来源\
+    \ ID：paper-2fa6f60d-0b98-43ab-b4bb-c2a94bd803dd。\n  - [原始来源](https://arxiv.org/abs/2610.23313v1)；覆盖：abstract_only。\n\
+    \n## 准入记录\n\n[独立审阅与输入输出散列](admissions/agent-memory-20261023-0300/accepted.yaml)。\n"
+  insights/agent-memory/agent-memory-20261023-0300-insight-1.md: '---
+
+    schema_version: 1
+
+    id: formal-insight-agent-memory-agent-memory-20261023-0300-1
+
+    kind: insight
+
+    title: 检索命中之后，证据如何变成可回答上下文？
+
+    topic: agent-memory
+
+    status: accepted
+
+    evidence_ids:
+
+    - R2
+
+    - H1
+
+    approval_required: false
+
+    writing_started: false
+
+    publish_authorized: false
+
+    input_fingerprint: c3623fd4f06acf6a922171857a0826c5ae865eef4f1d78b6debe0af5cda6690f
+
+    topics:
+
+    - agent-memory
+
+    ---
+
+
+    > AI 自动研究记录，已通过独立模型审阅；阅读范围及证据限制见正文，未复现实验。
+
+
+    # 检索命中之后，证据如何变成可回答上下文？
+
+
+    ## 待验证假设
+
+
+    待验证研究假设：对长期记忆检索结果增加面向查询的证据选择与组织步骤，可能比直接呈现检索单元更能控制冗余并保留回答所需支持。R2摘要提出此类编译框架，H1历史笔记记录了卸载和摘要等上下文管理思路；现有材料不能证明该假设成立。
+
+
+    依据：[R2](../../reports/agent-memory/agent-memory-20261023-0300-research-paper-2fa6f60d-0b98-43ab-b4bb-c2a94bd803dd.md)、[H1](../../sources/blogs/agent-memory/blog-05c33166-b18e-425e-91e0-36ddd26f21aa.md)
+
+
+    ## 反例与替代解释
+
+
+    - 编译过程也可能遗漏必要证据，或增加延迟与成本。
+
+    - H1是未经本次复核的历史笔记，不能作为机制有效的验证。
+
+    - R2的实验结果与泛化表述仅为摘要中的作者报告。
+
+
+    ## 局限
+
+
+    - R2仅有摘要，缺少足以独立核查的实验设置、成本口径和统计不确定性。
+
+    - H1仅为历史笔记；两份材料来自不同原始来源，不构成相互验证。
+
+
+    ## 验证计划（尚未执行）
+
+
+    - 在同一长期对话任务与模型上，比较直接呈现检索结果和查询条件证据编译，并预先固定上下文预算。
+
+    - 由盲评者评估答案正确性、支持证据完整性和无关信息比例，同时记录延迟与token成本。
+
+    - 在多个数据集及独立随机种子下重复实验，公开评估口径和失败案例。
+
+
+    ## 准入记录
+
+
+    [独立审阅与输入输出散列](../../reports/agent-memory/admissions/agent-memory-20261023-0300/accepted.yaml)。
+
+    '
+  insights/agent-memory/agent-memory-20261023-0300-insight-2.md: '---
+
+    schema_version: 1
+
+    id: formal-insight-agent-memory-agent-memory-20261023-0300-2
+
+    kind: insight
+
+    title: 容量受限时，记忆选择与更新规则值得独立评测
+
+    topic: agent-memory
+
+    status: accepted
+
+    evidence_ids:
+
+    - R1
+
+    - H2
+
+    approval_required: false
+
+    writing_started: false
+
+    publish_authorized: false
+
+    input_fingerprint: c3623fd4f06acf6a922171857a0826c5ae865eef4f1d78b6debe0af5cda6690f
+
+    topics:
+
+    - agent-memory
+
+    ---
+
+
+    > AI 自动研究记录，已通过独立模型审阅；阅读范围及证据限制见正文，未复现实验。
+
+
+    # 容量受限时，记忆选择与更新规则值得独立评测
+
+
+    ## 待验证假设
+
+
+    待验证研究假设：容量受限的记忆若结合查询相关性与冗余控制，可能在预算内保留更多有用信息。R1描述视频特征多样性更新，H2历史笔记描述有容量约束的记忆块；这些材料不能证明策略可迁移至智能体记忆或能提升实际效果。
+
+
+    依据：[R1](../../reports/agent-memory/agent-memory-20261023-0300-research-paper-ef2bb506-9872-4221-8434-03dc4c74646a.md)、[H2](../../sources/blogs/blog-fec9a2e1-6812-425a-83cd-e6a2464a1110.md)
+
+
+    ## 反例与替代解释
+
+
+    - 视频特征的多样性不等同于对话事实的价值、时效性或可信度。
+
+    - 固定容量和去冗余可能丢弃低频但关键的信息；容量限制本身也不保证记忆质量。
+
+    - H2是未经本次复核的历史项目方博客笔记，不构成性能证据。
+
+
+    ## 局限
+
+
+    - R1是视频编辑摘要，不是智能体记忆实验；H2是历史笔记。
+
+    - 当前材料没有针对记忆写入、遗忘、冲突更新及长期正确性的共同评测。
+
+
+    ## 验证计划（尚未执行）
+
+
+    - 在长期对话任务中比较不同容量、相关性选择与冗余控制策略，并保持检索和回答组件一致。
+
+    - 分别测量重要信息保留、过时或冲突记忆处理、最终回答正确性及存储成本。
+
+    - 使用跨会话、跨任务测试及人工核验的事实来源标签，检查稳定性并识别误删风险。
+
+
+    ## 准入记录
+
+
+    [独立审阅与输入输出散列](../../reports/agent-memory/admissions/agent-memory-20261023-0300/accepted.yaml)。
+
+    '
+  articles/agent-memory/agent-memory-20261023-0300-topic-1.md: '---
+
+    schema_version: 1
+
+    id: formal-topic-agent-memory-agent-memory-20261023-0300-1
+
+    kind: topic_proposal
+
+    title: 记忆检索命中之后：为什么还需要证据编译？
+
+    topic: agent-memory
+
+    status: proposed
+
+    evidence_ids:
+
+    - R2
+
+    - H1
+
+    approval_required: true
+
+    writing_started: false
+
+    publish_authorized: false
+
+    input_fingerprint: c3623fd4f06acf6a922171857a0826c5ae865eef4f1d78b6debe0af5cda6690f
+
+    topics:
+
+    - agent-memory
+
+    ---
+
+
+    > AI 自动研究记录，已通过独立模型审阅；阅读范围及证据限制见正文，未复现实验。
+
+
+    # 记忆检索命中之后：为什么还需要证据编译？
+
+
+    **待用户确认选题、角度与受众；未授权或启动 Writing，不是文章大纲或草稿。**
+
+
+    - 写作角度：以R2摘要中的寻址与证据编译设计为切入点，与H1历史笔记转述的上下文卸载、摘要机制并置，讨论可检验的问题；不把作者报告写成已独立验证的效果。
+
+    - 目标读者：关注长期对话记忆、检索增强生成与上下文工程的产品和研究人员
+
+    - 选题理由：本批资料包含一篇提出查询条件证据编译的论文摘要及一份历史上下文管理笔记，适合讨论检索结果如何转成可回答上下文；这不代表议题热度上升。
+
+    - 关联洞察：formal-insight-agent-memory-agent-memory-20261023-0300-1
+
+    - 证据：[R2](../../reports/agent-memory/agent-memory-20261023-0300-research-paper-2fa6f60d-0b98-43ab-b4bb-c2a94bd803dd.md)、[H1](../../sources/blogs/agent-memory/blog-05c33166-b18e-425e-91e0-36ddd26f21aa.md)
+
+
+    ## 拟回答的问题
+
+
+    - 检索命中直接交给回答模块时，冗余或缺漏如何评估？
+
+    - 证据编译是否改善回答支持度，代价如何衡量？
+
+
+    ## 写作前的证据缺口
+
+
+    - 核验R2全文、实验基线、成本定义与统计不确定性。
+
+    - 核验H1所据原文及其所述机制当前是否适用。
+
+    - 需要独立复现和可比评测，不能仅凭摘要与历史笔记下结论。
+
+
+    ## 准入记录
+
+
+    [独立审阅与输入输出散列](../../reports/agent-memory/admissions/agent-memory-20261023-0300/accepted.yaml)。
+
+    '
+  articles/agent-memory/agent-memory-20261023-0300-topic-2.md: '---
+
+    schema_version: 1
+
+    id: formal-topic-agent-memory-agent-memory-20261023-0300-2
+
+    kind: topic_proposal
+
+    title: 容量有限时，智能体应如何挑选和更新记忆？
+
+    topic: agent-memory
+
+    status: proposed
+
+    evidence_ids:
+
+    - R1
+
+    - H2
+
+    approval_required: true
+
+    writing_started: false
+
+    publish_authorized: false
+
+    input_fingerprint: c3623fd4f06acf6a922171857a0826c5ae865eef4f1d78b6debe0af5cda6690f
+
+    topics:
+
+    - agent-memory
+
+    ---
+
+
+    > AI 自动研究记录，已通过独立模型审阅；阅读范围及证据限制见正文，未复现实验。
+
+
+    # 容量有限时，智能体应如何挑选和更新记忆？
+
+
+    **待用户确认选题、角度与受众；未授权或启动 Writing，不是文章大纲或草稿。**
+
+
+    - 写作角度：从R1的视频特征多样性更新和H2历史笔记中的容量约束记忆块提出跨领域研究问题，明确区分设计线索与已验证的智能体记忆效果。
+
+    - 目标读者：研究智能体记忆写入、长期信息维护与可靠性评测的读者
+
+    - 选题理由：当前资料同时涉及有界缓存更新和有容量约束的记忆组织，可用于界定后续实验问题；材料没有证据表明这已成为行业趋势。
+
+    - 关联洞察：formal-insight-agent-memory-agent-memory-20261023-0300-2
+
+    - 证据：[R1](../../reports/agent-memory/agent-memory-20261023-0300-research-paper-ef2bb506-9872-4221-8434-03dc4c74646a.md)、[H2](../../sources/blogs/blog-fec9a2e1-6812-425a-83cd-e6a2464a1110.md)
+
+
+    ## 拟回答的问题
+
+
+    - 对话记忆中的多样性应如何定义，是否能代表信息价值？
+
+    - 容量约束与冗余控制会不会删除低频但重要的信息？
+
+    - 如何评估记忆更新对长期正确性的影响？
+
+
+    ## 写作前的证据缺口
+
+
+    - R1不研究通用智能体记忆，不能直接迁移其更新策略。
+
+    - H2是未经本次独立复核的历史笔记，需核验原文。
+
+    - 缺少统一任务下关于容量、保留、遗忘与答案正确性的对照实验。
+
+
+    ## 准入记录
+
+
+    [独立审阅与输入输出散列](../../reports/agent-memory/admissions/agent-memory-20261023-0300/accepted.yaml)。
+
+    '
+  reports/agent-memory/agent-memory-20261023-0300-research-paper-ef2bb506-9872-4221-8434-03dc4c74646a.md: '---
+
+    schema_version: 1
+
+    id: research-agent-memory-20261023-0300-paper-ef2bb506-9872-4221-8434-03dc4c74646a
+
+    kind: research_report
+
+    title: ''Edit-Your-Interest: Efficient Video Editing via Feature Most-Similar
+    Propagation''
+
+    topic: agent-memory
+
+    topics:
+
+    - agent-memory
+
+    status: accepted
+
+    source_id: paper-ef2bb506-9872-4221-8434-03dc4c74646a
+
+    coverage: abstract_only
+
+    ---
+
+
+    # Edit-Your-Interest: Efficient Video Editing via Feature Most-Similar Propagation
+
+
+    > AI 自动研究记录，已通过独立模型审阅；阅读范围及证据限制见正文，未复现实验。
+
+
+    - 来源：[Edit-Your-Interest: Efficient Video Editing via Feature Most-Similar Propagation](https://arxiv.org/abs/2510.13084v2)。
+
+    - 覆盖范围：仅论文摘要，未核验全文或实验数据。
+
+    - 研究模型：`gpt-6-luna`；独立审阅：`gpt-6.1-sol`。
+
+    - 审阅：`pass`；修订次数：0；原始材料仅在内存中提供给模型。
+
+
+    ## 研究概述
+
+
+    仅依据论文摘要，概述 Edit-Your-Interest 在视频编辑中使用有界特征记忆与相似性检索传播的设计；材料涉及记忆缓存、检索和更新，但不直接研究通用智能体记忆。
+
+
+    ## 主张与证据
+
+
+    - **原文事实**：摘要称，时空特征记忆库（SFM）在固定内存预算下缓存前序帧的空间注意力特征。（[A5](https://arxiv.org/abs/2510.13084v2)）
+
+    - **作者声称（未独立核验）**：作者称，SFM维护代表性候选池，以减少对完整序列进行时空建模的计算开销。（[A6](https://arxiv.org/abs/2510.13084v2)）
+
+    - **原文事实**：摘要称，特征最相似传播（FMP）依据相似度检索相关缓存令牌，并将其传播至当前帧；SFM更新算法则依据特征多样性维护记忆的代表性和非冗余性。（[A7、A9](https://arxiv.org/abs/2510.13084v2)）
+
+    - **作者声称（未独立核验）**：作者称，SFM与FMP的设计改善了时间一致性并减少模糊和马赛克状伪影；摘要还称实验中该方法在效率和视觉保真度方面优于当时的先进方法。（[A8、A12](https://arxiv.org/abs/2510.13084v2)）
+
+
+    ## 局限
+
+
+    - 本次仅覆盖论文摘要，未核验全文、实验细节、实现或结果。
+
+    - 材料讨论的是视频编辑方法中的特征缓存与检索，不能据此推断其适用于通用智能体的工作记忆或长期记忆。
+
+    - 摘要未提供可用于独立评估记忆更新策略、内存预算大小或比较实验的具体细节。
+
+
+    ## 独立审阅
+
+
+
+    正式来源：[paper-ef2bb506-9872-4221-8434-03dc4c74646a](../../sources/papers/agent-memory/paper-ef2bb506-9872-4221-8434-03dc4c74646a.md)。
+
+
+    准入记录：[输入、审阅与输出散列](admissions/agent-memory-20261023-0300/accepted.yaml)。
+
+    '
+  sources/papers/agent-memory/paper-ef2bb506-9872-4221-8434-03dc4c74646a.md: '---
+
+    schema_version: 1
+
+    id: paper-ef2bb506-9872-4221-8434-03dc4c74646a
+
+    kind: paper
+
+    title: ''Edit-Your-Interest: Efficient Video Editing via Feature Most-Similar
+    Propagation''
+
+    source: arXiv
+
+    source_url: https://arxiv.org/abs/2510.13084
+
+    authors:
+
+    - Zuo, Yi
+
+    - Wang, Zitao
+
+    - Li, Lingling
+
+    - Liu, Xu
+
+    - Liu, Fang
+
+    - Jiao, Licheng
+
+    published_at: ''2025-10-15''
+
+    arxiv_id: ''2510.13084''
+
+    source_version: v2
+
+    doi: 10.1016/j.patcog.2026.115113
+
+    collected_at: ''2026-10-23''
+
+    updated_at: ''2026-10-23''
+
+    topics:
+
+    - agent-memory
+
+    status: inbox
+
+    related_sources: []
+
+    related_notes:
+
+    - reports/agent-memory/agent-memory-20261023-0300-research-paper-ef2bb506-9872-4221-8434-03dc4c74646a.md
+
+    - reports/agent-memory/agent-memory-20261023-0300-synthesis.md
+
+    ---
+
+
+    # Edit-Your-Interest: Efficient Video Editing via Feature Most-Similar Propagation
+
+
+    > AI 自动研究记录，已通过独立模型审阅；阅读范围及证据限制见正文，未复现实验。
+
+
+    - 来源：[Edit-Your-Interest: Efficient Video Editing via Feature Most-Similar Propagation](https://arxiv.org/abs/2510.13084v2)。
+
+    - 覆盖范围：仅论文摘要，未核验全文或实验数据。
+
+    - 研究模型：`gpt-6-luna`；独立审阅：`gpt-6.1-sol`。
+
+    - 审阅：`pass`；修订次数：0；原始材料仅在内存中提供给模型。
+
+
+    ## 研究概述
+
+
+    仅依据论文摘要，概述 Edit-Your-Interest 在视频编辑中使用有界特征记忆与相似性检索传播的设计；材料涉及记忆缓存、检索和更新，但不直接研究通用智能体记忆。
+
+
+    ## 主张与证据
+
+
+    - **原文事实**：摘要称，时空特征记忆库（SFM）在固定内存预算下缓存前序帧的空间注意力特征。（[A5](https://arxiv.org/abs/2510.13084v2)）
+
+    - **作者声称（未独立核验）**：作者称，SFM维护代表性候选池，以减少对完整序列进行时空建模的计算开销。（[A6](https://arxiv.org/abs/2510.13084v2)）
+
+    - **原文事实**：摘要称，特征最相似传播（FMP）依据相似度检索相关缓存令牌，并将其传播至当前帧；SFM更新算法则依据特征多样性维护记忆的代表性和非冗余性。（[A7、A9](https://arxiv.org/abs/2510.13084v2)）
+
+    - **作者声称（未独立核验）**：作者称，SFM与FMP的设计改善了时间一致性并减少模糊和马赛克状伪影；摘要还称实验中该方法在效率和视觉保真度方面优于当时的先进方法。（[A8、A12](https://arxiv.org/abs/2510.13084v2)）
+
+
+    ## 局限
+
+
+    - 本次仅覆盖论文摘要，未核验全文、实验细节、实现或结果。
+
+    - 材料讨论的是视频编辑方法中的特征缓存与检索，不能据此推断其适用于通用智能体的工作记忆或长期记忆。
+
+    - 摘要未提供可用于独立评估记忆更新策略、内存预算大小或比较实验的具体细节。
+
+
+    ## 独立审阅
+
+
+
+    正式来源：[paper-ef2bb506-9872-4221-8434-03dc4c74646a](paper-ef2bb506-9872-4221-8434-03dc4c74646a.md)。
+
+
+    准入记录：[输入、审阅与输出散列](../../../reports/agent-memory/admissions/agent-memory-20261023-0300/accepted.yaml)。
+
+
+    ## 人工笔记
+
+
+    '
+  reports/agent-memory/agent-memory-20261023-0300-research-paper-2fa6f60d-0b98-43ab-b4bb-c2a94bd803dd.md: "---\n\
+    schema_version: 1\nid: research-agent-memory-20261023-0300-paper-2fa6f60d-0b98-43ab-b4bb-c2a94bd803dd\n\
+    kind: research_report\ntitle: 'From Memory Hits to Answerable Evidence: Query-Conditioned\
+    \ Memory Compilation\n  for Long-Term Agent Memory'\ntopic: agent-memory\ntopics:\n\
+    - agent-memory\nstatus: accepted\nsource_id: paper-2fa6f60d-0b98-43ab-b4bb-c2a94bd803dd\n\
+    coverage: abstract_only\n---\n\n# From Memory Hits to Answerable Evidence: Query-Conditioned\
+    \ Memory Compilation for Long-Term Agent Memory\n\n> AI 自动研究记录，已通过独立模型审阅；阅读范围及证据限制见正文，未复现实验。\n\
+    \n- 来源：[From Memory Hits to Answerable Evidence: Query-Conditioned Memory Compilation\
+    \ for Long-Term Agent Memory](https://arxiv.org/abs/2610.23313v1)。\n- 覆盖范围：仅论文摘要，未核验全文或实验数据。\n\
+    - 研究模型：`gpt-6-luna`；独立审阅：`gpt-6.1-sol`。\n- 审阅：`pass`；修订次数：0；原始材料仅在内存中提供给模型。\n\n\
+    ## 研究概述\n\n本文摘要提出面向长期对话记忆的查询条件证据编译框架 MemCompile；以下仅概述所提供的摘要，不代表对论文全文或实验的独立核验。\n\
+    \n## 主张与证据\n\n- **作者声称（未独立核验）**：作者认为，长期智能体记忆需要从分散于多轮对话和多个会话的内容中恢复与回答相关的证据。（[A1](https://arxiv.org/abs/2610.23313v1)）\n\
+    - **作者声称（未独立核验）**：作者指出，现有系统可能将检索或扩展后的记忆单元直接交给回答模块，导致最终上下文冗余或不完整。（[A2](https://arxiv.org/abs/2610.23313v1)）\n\
+    - **作者声称（未独立核验）**：MemCompile 将处理分为寻址与证据编译：寻址平面定位支持材料并将不同检索命中映射到稳定的 SourcePacket\
+    \ 身份；证据平面则在有限预算内选择互补材料并组织成面向回答的上下文。（[A3、A4、A5](https://arxiv.org/abs/2610.23313v1)）\n\
+    - **作者声称（未独立核验）**：摘要报告，MemCompile 在 LoCoMo 上取得 80.52% 的 Judge Accuracy，并称其将经验质量—成本帕累托前沿扩展至更高质量区域。（[A6](https://arxiv.org/abs/2610.23313v1)）\n\
+    - **作者声称（未独立核验）**：作者称其在 LongMemEval-S 上的表现进一步显示，查询条件编译的收益可推广至其他长期对话记忆基准。（[A7](https://arxiv.org/abs/2610.23313v1)）\n\
+    \n## 局限\n\n- 本次材料仅为论文摘要，未核验全文、实验设置、实现细节或结果。\n- 摘要未提供评测对照、成本指标定义、统计不确定性或 LongMemEval-S\
+    \ 的具体结果，无法据此独立判断比较幅度或推广范围。\n\n## 独立审阅\n\n\n正式来源：[paper-2fa6f60d-0b98-43ab-b4bb-c2a94bd803dd](../../sources/papers/agent-memory/paper-2fa6f60d-0b98-43ab-b4bb-c2a94bd803dd.md)。\n\
+    \n准入记录：[输入、审阅与输出散列](admissions/agent-memory-20261023-0300/accepted.yaml)。\n"
+  sources/papers/agent-memory/paper-2fa6f60d-0b98-43ab-b4bb-c2a94bd803dd.md: "---\n\
+    schema_version: 1\nid: paper-2fa6f60d-0b98-43ab-b4bb-c2a94bd803dd\nkind: paper\n\
+    title: 'From Memory Hits to Answerable Evidence: Query-Conditioned Memory Compilation\n\
+    \  for Long-Term Agent Memory'\nsource: arXiv\nsource_url: https://arxiv.org/abs/2610.23313\n\
+    authors:\n- Li, Shangze\n- Yao, Yanyu\n- Xu, Derong\n- Zheng, Zhi\n- Xu, Tong\n\
+    published_at: '2026-10-16'\narxiv_id: '2610.23313'\nsource_version: v1\ncollected_at:\
+    \ '2026-10-23'\nupdated_at: '2026-10-23'\ntopics:\n- agent-memory\nstatus: inbox\n\
+    related_sources: []\nrelated_notes:\n- reports/agent-memory/agent-memory-20261023-0300-research-paper-2fa6f60d-0b98-43ab-b4bb-c2a94bd803dd.md\n\
+    - reports/agent-memory/agent-memory-20261023-0300-synthesis.md\n---\n\n# From\
+    \ Memory Hits to Answerable Evidence: Query-Conditioned Memory Compilation for\
+    \ Long-Term Agent Memory\n\n> AI 自动研究记录，已通过独立模型审阅；阅读范围及证据限制见正文，未复现实验。\n\n- 来源：[From\
+    \ Memory Hits to Answerable Evidence: Query-Conditioned Memory Compilation for\
+    \ Long-Term Agent Memory](https://arxiv.org/abs/2610.23313v1)。\n- 覆盖范围：仅论文摘要，未核验全文或实验数据。\n\
+    - 研究模型：`gpt-6-luna`；独立审阅：`gpt-6.1-sol`。\n- 审阅：`pass`；修订次数：0；原始材料仅在内存中提供给模型。\n\n\
+    ## 研究概述\n\n本文摘要提出面向长期对话记忆的查询条件证据编译框架 MemCompile；以下仅概述所提供的摘要，不代表对论文全文或实验的独立核验。\n\
+    \n## 主张与证据\n\n- **作者声称（未独立核验）**：作者认为，长期智能体记忆需要从分散于多轮对话和多个会话的内容中恢复与回答相关的证据。（[A1](https://arxiv.org/abs/2610.23313v1)）\n\
+    - **作者声称（未独立核验）**：作者指出，现有系统可能将检索或扩展后的记忆单元直接交给回答模块，导致最终上下文冗余或不完整。（[A2](https://arxiv.org/abs/2610.23313v1)）\n\
+    - **作者声称（未独立核验）**：MemCompile 将处理分为寻址与证据编译：寻址平面定位支持材料并将不同检索命中映射到稳定的 SourcePacket\
+    \ 身份；证据平面则在有限预算内选择互补材料并组织成面向回答的上下文。（[A3、A4、A5](https://arxiv.org/abs/2610.23313v1)）\n\
+    - **作者声称（未独立核验）**：摘要报告，MemCompile 在 LoCoMo 上取得 80.52% 的 Judge Accuracy，并称其将经验质量—成本帕累托前沿扩展至更高质量区域。（[A6](https://arxiv.org/abs/2610.23313v1)）\n\
+    - **作者声称（未独立核验）**：作者称其在 LongMemEval-S 上的表现进一步显示，查询条件编译的收益可推广至其他长期对话记忆基准。（[A7](https://arxiv.org/abs/2610.23313v1)）\n\
+    \n## 局限\n\n- 本次材料仅为论文摘要，未核验全文、实验设置、实现细节或结果。\n- 摘要未提供评测对照、成本指标定义、统计不确定性或 LongMemEval-S\
+    \ 的具体结果，无法据此独立判断比较幅度或推广范围。\n\n## 独立审阅\n\n\n正式来源：[paper-2fa6f60d-0b98-43ab-b4bb-c2a94bd803dd](paper-2fa6f60d-0b98-43ab-b4bb-c2a94bd803dd.md)。\n\
+    \n准入记录：[输入、审阅与输出散列](../../../reports/agent-memory/admissions/agent-memory-20261023-0300/accepted.yaml)。\n\
+    \n## 人工笔记\n\n"
+output_hashes:
+  reports/agent-memory/agent-memory-20261023-0300-synthesis.md: 4255efd76f3150d4ec0eac62fc7412c729a30c7eb292d4f137c244310c4ebf08
+  insights/agent-memory/agent-memory-20261023-0300-insight-1.md: d4f72d12bd7c8dbe1a759d634ba7d93f54b8c66f483a25ba911a2c47e2a57c18
+  insights/agent-memory/agent-memory-20261023-0300-insight-2.md: 816a009a9c2ab23343476c38fba3fed7dc057090c9a47ccf81415fc5b0ee5b1f
+  articles/agent-memory/agent-memory-20261023-0300-topic-1.md: cd16fd83dae20dad7b29fb9050753491ae1415a80d8fef11af8a273aa84ae77a
+  articles/agent-memory/agent-memory-20261023-0300-topic-2.md: 5c301f42f7c85a0e7e2e0976f6f9326fc972ca3ccabe7e8ef40959f3b6621158
+  reports/agent-memory/agent-memory-20261023-0300-research-paper-ef2bb506-9872-4221-8434-03dc4c74646a.md: c29cc56cb8f4e88e3182e6dc9953b7bcc5dad65d831298eadf9db63430442629
+  sources/papers/agent-memory/paper-ef2bb506-9872-4221-8434-03dc4c74646a.md: 16db82204f1b32954aca09a5539c7e6982e1c67765164febeadbafff4923a34f
+  reports/agent-memory/agent-memory-20261023-0300-research-paper-2fa6f60d-0b98-43ab-b4bb-c2a94bd803dd.md: 3924a6a394547717c5c850e25bd4f448a6c10fb5f9a7ec8ffb9a246a2c2e371e
+  sources/papers/agent-memory/paper-2fa6f60d-0b98-43ab-b4bb-c2a94bd803dd.md: 231312c94bc6021a60ddf1c880f258a159c642fd9edbbe92655a34b895f7632d
+writing_started: false
+publish_authorized: false

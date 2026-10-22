@@ -1,0 +1,78 @@
+schema_version: 1
+mode: research_cycle_test
+backend: chatgpt_plan
+topic: agent-memory
+cycle_id: agent-memory-20261023-0300
+status: partial
+window_start: '2026-10-15T22:00:36.795903+00:00'
+window_end: '2026-10-22T22:00:36.795903+00:00'
+discovery_complete: false
+source_status:
+- id: arxiv
+  adapter: arxiv
+  entry_url: https://export.arxiv.org/api/query
+  status: truncated
+  discovered: 2486
+  inspected: 20
+  eligible: 17
+  selected: 2
+  complete_window: false
+  error_types: []
+  requested_url: https://export.arxiv.org/api/query?search_query=all%3A%22agent+memory%22+OR+all%3A%22long-term+memory%22+OR+all%3A%22episodic+memory%22+OR+all%3A%22memory+retrieval%22+OR+all%3A%22memory+consolidation%22&sortBy=lastUpdatedDate&sortOrder=descending&start=0&max_results=20
+- id: letta
+  adapter: letta
+  entry_url: https://www.letta.com/blog/
+  status: truncated
+  discovered: 28
+  inspected: 20
+  eligible: 0
+  selected: 0
+  complete_window: false
+  error_types: []
+  coverage: bounded_listing_only_no_archive_cursor
+- id: langchain
+  adapter: langchain
+  entry_url: https://www.langchain.com/blog
+  status: truncated
+  discovered: 19
+  inspected: 19
+  eligible: 0
+  selected: 0
+  complete_window: false
+  error_types: []
+  coverage: bounded_listing_only_no_archive_cursor
+stages:
+  research:
+    status: test_accepted
+    reserved_calls: 4
+  insight:
+    status: test_accepted
+    reserved_calls: 3
+reserved_calls: 7
+pending_count: 88
+input_hashes:
+  reports/test/agent-memory/cycles/agent-memory-20261023-0300/manifest.yaml: cbd7b419fb10e9655508d490d814cabe35b277463fa24cb27e3ef05d0d35e0fd
+  reports/test/agent-memory/cycles/agent-memory-20261023-0300/discovery.yaml: a87478aa1cb4c349c9a335cc457eabb3df52cee5afebdada1fa612e1544cda36
+  reports/test/agent-memory/cycles/agent-memory-20261023-0300/selection.yaml: 3e8910c9c3b51f5202576720d732770d8c9672c92cb8636eea09afdae553e20c
+  sources/blogs/agent-memory/blog-05c33166-b18e-425e-91e0-36ddd26f21aa.md: e41eecff5dec1f01b27eae70df70bbc71de57107c8d8e3f51c786022334f642e
+  sources/blogs/blog-fec9a2e1-6812-425a-83cd-e6a2464a1110.md: 1c05f28a21a3cef08ff0fc966970a4eed70e2510d0d17468437fb4ff0fa7e99f
+  sources/papers/agent-memory/paper-2d89084b-a1b1-4a27-b298-a660ef434e61.md: 20ca381ff3e8d96d9e711c763fd3c7ad2eae3dd6f2f381f0edbe573311ec1378
+  sources/papers/paper-4eb3be4b-7189-49aa-bafd-f88f77a972f4.md: 2fca02def277430ea06e35c370b56b895c82d01b14099c3cea4cb55a1e410274
+  reports/agent-memory/cycle-agent-memory-gh-20261019-synthesis.md: 445d181c3a8eb2f11204e64279f56a79acc57ec6a127f27e073a34d264e8829d
+  reports/agent-memory/cycle-agent-memory-gh-20261019-research-paper-2d89084b-a1b1-4a27-b298-a660ef434e61.md: dc9bbeb260b478b94ebe7919a7e6c4ab10238ba49fdb14a987b803035af3e5d2
+  reports/test/agent-memory/cycles/agent-memory-20261023-0300/history.yaml: 3b26254b6a7e93cb2fc17c6ba1fc467d9c37e234d417cde87e79563f261b381d
+  reports/test/agent-memory/cycles/agent-memory-20261023-0300/research-result.yaml: 4b585e2800df5249b7edb1b540eadf077b465844a0798d4fbf7e4ad2462b651b
+  reports/test/agent-memory/cycles/agent-memory-20261023-0300/configs/research.yaml: d42d47aee86865449d35a52d58525b973d9ee0c8e7be8796896e7e83bfac9d2a
+  reports/test/agent-memory/research-batches/agent-memory-20261023-0300/receipt-attempt-1.yaml: 4b585e2800df5249b7edb1b540eadf077b465844a0798d4fbf7e4ad2462b651b
+  reports/test/agent-memory/cycles/agent-memory-20261023-0300/configs/insight.yaml: e7d599b6cb1e12ba1dddefe92f0fb3526889dded37eae2506e13f4a3a54bc33f
+  reports/test/agent-memory/cycles/agent-memory-20261023-0300/insight-result.yaml: 63e9b358c64e562e2e03c5ede2e07daa27fce3d905b0a4c4726d26b2bd1dc393
+  reports/test/agent-memory/insight-runs/agent-memory-20261023-0300/receipt.yaml: 63e9b358c64e562e2e03c5ede2e07daa27fce3d905b0a4c4726d26b2bd1dc393
+output_hashes:
+  reports/test/agent-memory/insight-runs/agent-memory-20261023-0300/report.md: a30117dd5b40e695f0aa37decdb1d2b4b0fb82114875339f038ebcb31c966686
+  insights/test/agent-memory/agent-memory-20261023-0300/insight-1.md: 39e5ff1450bb6b2d8943b5f3e618f1efa0dc81198e2e89ddc9134983f006c6bd
+  insights/test/agent-memory/agent-memory-20261023-0300/insight-2.md: ab8519c560fce099862bc5fbf5e0d9796648cc0a0e8ad261b1ab2694ff9cff2e
+  articles/test/agent-memory/agent-memory-20261023-0300/topic-1.md: b78483d05fd2117044b4dde2c7bc28b70886e0ebd6d506bb2cc6ce05306c2808
+  articles/test/agent-memory/agent-memory-20261023-0300/topic-2.md: 0d4dc29a6b97d8f4797c2d0a9b2adcd540760e99269e4ac1463e5fe8667a1acb
+production_accepted: false
+writing_started: false
+publish_authorized: false
