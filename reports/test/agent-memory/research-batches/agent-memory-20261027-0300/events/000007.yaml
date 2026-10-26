@@ -1,0 +1,14 @@
+type: call_completed
+key: arxiv-f3bd8a4047b5
+reservation_id: arxiv-f3bd8a4047b5:research:0
+role: research
+revision: 0
+model_id: gpt-6-luna
+at: '2026-10-26T22:58:05.340298+00:00'
+response_path: reports/test/agent-memory/research-batches/agent-memory-20261027-0300/items/arxiv-f3bd8a4047b5/checkpoints/research-0.yaml
+response_sha256: 59c2ae6eb5e6bccf2fd2b866f50c8503916ccae61c7f1ef7dc768e53fcd3e7e2
+usage:
+  input_tokens: 813
+  output_tokens: 446
+  total_tokens: 1259
+usage_status: reported

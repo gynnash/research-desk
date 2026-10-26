@@ -1,0 +1,74 @@
+candidate:
+  key: arxiv-f3bd8a4047b5
+  kind: paper
+  topic: agent-memory
+  metadata:
+    title: 'AgentOdyssey: Open-Ended Long-Horizon Text Game Generation for Test-Time
+      Continual Learning Agents'
+    source: arXiv
+    source_url: https://arxiv.org/abs/2606.24893
+    authors:
+    - Zhang, Zheyuan
+    - Wen, Zehao
+    - Zhang, Alvin
+    - Wang, Andrew
+    - Xie, Jianwen
+    - Khashabi, Daniel
+    - Shu, Tianmin
+    published_at: '2026-05-29'
+    arxiv_id: '2606.24893'
+    source_version: v2
+  evidence:
+    coverage: abstract_only
+    extraction_coverage: abstract_only
+    source_url: https://arxiv.org/abs/2606.24893
+    source_version: v2
+    content_hash: 31c6f8d5c98716025e80b30c35c89ea8e31d33e2b0c710b5a674cfae2ac069f3
+    evidence_sha256: c3d7c5f07b2c283f6f8f9e2b1015d909c6569bbb7bae4c85258c8590ae152fd3
+    locators:
+    - id: A1
+      location: abstract_only sentence 1
+      text_sha256: 1f59d5ce925de04cdebb02e0c876dd58913633a786f4d4d43abb38dac5a55d8b
+      quote: For agents to learn continuously from interaction with the world at test
+        time, they must be able to explore effectively, acquire new world knowledge
+        and
+    - id: A2
+      location: abstract_only sentence 2
+      text_sha256: 300b3716309012aff5cf30beaf1b663bd4fab1fa78d238f1d73a396ea190020d
+      quote: ''
+    - id: A3
+      location: abstract_only sentence 3
+      text_sha256: 6303072798663ca83c38cd5ad5e157b7e434a09e8d871fff24290ce6f551e4bb
+      quote: ''
+    - id: A4
+      location: abstract_only sentence 4
+      text_sha256: 4450b5924db676612447ac94a9f0f91f67d1d675ad31e2e54494b497aa0954c1
+      quote: ''
+    - id: A5
+      location: abstract_only sentence 5
+      text_sha256: 93b7c053d67a88286b2c1b88f5be8db00aa2a246476006cdecdc100f1038c906
+      quote: ''
+    - id: A6
+      location: abstract_only sentence 6
+      text_sha256: 7be6b5945d9767bf5603016293fc550c169deda6dd0990b995e17f022b20c680
+      quote: ''
+    - id: A7
+      location: abstract_only sentence 7
+      text_sha256: 69cf33bdcb59dedea86e8779c0b5e14c3bd393dbfce512c362e3999523dfd333
+      quote: ''
+    - id: A8
+      location: abstract_only sentence 8
+      text_sha256: b53a851dafee51517bbed3fa58219e64ac64ab1ccc493e63c5fc8e3d3825987e
+      quote: ''
+  identity_keys:
+  - arxiv:2606.24893
+  - url:https://arxiv.org/abs/2606.24893
+  source_id: paper-bc0d7d05-0ed7-4d63-8a1b-f8552566bf17
+  existing_source_path: null
+  existing_source_metadata: null
+  content_hash: 31c6f8d5c98716025e80b30c35c89ea8e31d33e2b0c710b5a674cfae2ac069f3
+  metadata_hash: 2b7dc004220926a40cdb2522122b3450ab714ff42e3a07281b92b329ec4d507a
+  upstream_updated_at: '2026-10-16'
+material_sha256: c3d7c5f07b2c283f6f8f9e2b1015d909c6569bbb7bae4c85258c8590ae152fd3
+action: research
+reason: no_completed_real_research

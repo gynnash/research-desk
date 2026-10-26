@@ -1,0 +1,13 @@
+binding: f93f26ffbd1c416f27bc3d89268128c51c38d1cf7f2b23266a5721d890be6c3d
+result:
+  text: '{"summary":"本次仅覆盖 LangChain 博客提供的节选，讨论 Deep Agents 如何管理运行中的上下文以缓解节选所称的“context
+    rot”；这涉及长期记忆，但内容主要聚焦上下文管理机制，不能据此判断其完整记忆架构或实际效果。","claims":[{"kind":"author_claim","text":"作者认为，长任务会累积指令、工具结果和文件等信息；上下文过多、历史与噪声增加，可能不利于模型准确性和推理。","evidence_ids":["A3","A4","A5"]},{"kind":"fact","text":"节选将上下文管理分为两类：阻止不必要信息进入上下文，以及管理和筛选已经进入上下文的信息。","evidence_ids":["A7"]},{"kind":"fact","text":"节选称
+    Deep Agents 使用文件卸载、对话摘要、按需加载技能、子代理和跨会话文件记忆等方式管理信息。","evidence_ids":["A9","A10","A11","A12","A13","A14"]},{"kind":"author_claim","text":"节选描述的卸载机制会在工具结果超过约
+    20,000 tokens 时将完整结果写入文件，并向模型提供预览和路径；超长用户消息也会以较高阈值另行保存。","evidence_ids":["A25","A26","A28"]},{"kind":"author_claim","text":"节选称摘要中间件默认在上下文使用量达到模型窗口的
+    85% 后调用另一个 LLM 压缩较早消息，并保留最近消息原文。","evidence_ids":["A31","A32"]}],"limitations":["仅阅读博客节选，未核验全文、实现代码、实验或实际部署效果。","节选中的机制和阈值是作者的描述；材料未提供独立验证，也未报告这些方法对准确性或推理质量的量化影响。","节选未充分说明长期记忆文件的写入、检索、更新、遗忘、隐私与安全策略。"]}'
+  model: gpt-6-luna
+  response_id: resp_079c81c7bfe92c33016adfdb09e70887d0b76a4a1532cab482
+  usage:
+    input_tokens: 1759
+    output_tokens: 466
+    total_tokens: 2225

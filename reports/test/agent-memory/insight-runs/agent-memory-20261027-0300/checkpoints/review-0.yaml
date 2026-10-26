@@ -1,0 +1,32 @@
+binding: b946ed15b13d6fe7cf87c6eef66ef37fd2cabcce2eb7bcaaa112914bbece5b7a
+result:
+  text: "{\n  \"decision\": \"pass\",\n  \"coverage_acknowledged\": true,\n  \"topic_gate_confirmed\"\
+    : true,\n  \"issues\": [\n    {\n      \"severity\": \"info\",\n      \"location\"\
+    : \"candidate.coverage_note / report.limitations\",\n      \"reason\": \"已正确区分摘要、博客节选与历史基线；R3与H1对应同一原始来源，未被当作独立验证。H2、H4的历史描述也未被升格为本轮核验事实，未混用H5正文中的旧引用编号。\"\
+    ,\n      \"suggestion\": \"后续继续保留这些覆盖范围和来源非独立性说明；核验原文后再更新历史主张的证据状态。\"\n    },\n\
+    \    {\n      \"severity\": \"info\",\n      \"location\": \"candidate.outcome\
+    \ / topics\",\n      \"reason\": \"当前选题均为有证据边界的研究提案，没有宣称效果已验证，也没有启动Writing或授权发布；“ready”仅可理解为候选材料可供用户确认。\"\
+    ,\n      \"suggestion\": \"维持选题待用户确认状态；取得用户明确确认前，不启动Writing或发布。\"\n    }\n  ],\n\
+    \  \"checks\": [\n    {\n      \"target\": \"report\",\n      \"verdict\": \"\
+    supported\",\n      \"evidence_ids\": [\"R1\", \"R2\", \"R3\", \"H1\", \"H2\"\
+    , \"H3\", \"H4\", \"H5\", \"H6\"]\n    },\n    {\n      \"target\": \"report.comparisons.0\"\
+    ,\n      \"verdict\": \"supported\",\n      \"evidence_ids\": [\"R1\"]\n    },\n\
+    \    {\n      \"target\": \"report.comparisons.1\",\n      \"verdict\": \"supported\"\
+    ,\n      \"evidence_ids\": [\"R2\"]\n    },\n    {\n      \"target\": \"report.comparisons.2\"\
+    ,\n      \"verdict\": \"supported\",\n      \"evidence_ids\": [\"R3\", \"H1\"\
+    ]\n    },\n    {\n      \"target\": \"report.comparisons.3\",\n      \"verdict\"\
+    : \"supported\",\n      \"evidence_ids\": [\"R1\", \"H2\"]\n    },\n    {\n  \
+    \    \"target\": \"report.comparisons.4\",\n      \"verdict\": \"supported\",\n\
+    \      \"evidence_ids\": [\"R2\", \"H4\"]\n    },\n    {\n      \"target\": \"\
+    insights.0\",\n      \"verdict\": \"supported\",\n      \"evidence_ids\": [\"\
+    R1\", \"H2\"]\n    },\n    {\n      \"target\": \"insights.1\",\n      \"verdict\"\
+    : \"supported\",\n      \"evidence_ids\": [\"R2\", \"H4\"]\n    },\n    {\n  \
+    \    \"target\": \"topics.0\",\n      \"verdict\": \"supported\",\n      \"evidence_ids\"\
+    : [\"R1\", \"H2\"]\n    },\n    {\n      \"target\": \"topics.1\",\n      \"verdict\"\
+    : \"supported\",\n      \"evidence_ids\": [\"R2\", \"H4\"]\n    }\n  ]\n}"
+  model: gpt-6.1-sol
+  response_id: resp_09d7d16f6613cdb7016adfdb48213487d0b07d88d3dda46c83
+  usage:
+    input_tokens: 15539
+    output_tokens: 798
+    total_tokens: 16337

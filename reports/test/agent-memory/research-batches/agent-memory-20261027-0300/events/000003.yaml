@@ -1,0 +1,9 @@
+type: call_reserved
+key: arxiv-103b29e543dc
+reservation_id: arxiv-103b29e543dc:review:0
+role: review
+revision: 0
+model_id: gpt-6.1-sol
+month: 2026-10
+at: '2026-10-26T22:57:39.606477+00:00'
+usage_status: unknown
