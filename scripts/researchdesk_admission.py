@@ -502,11 +502,65 @@ def _render(root, topic, cycle_id, config, bundle, candidate, records, source_ma
     return files, source_map
 
 
+def _verify_source_revalidations(root, value):
+    """Validate timestamp-only blog checks without changing reviewed evidence."""
+    if 'source_revalidations' not in value:
+        return  # Historical immutable plans predate this optional audit.
+    records = value['source_revalidations']
+    if not isinstance(records, list):
+        raise store.OfflineError('来源复核记录必须为列表')
+    bound = {proof['candidate_path']: proof['candidate_sha256']
+             for proof in value['verification_bundle']['provenance']['research_inputs']}
+    fields = {'candidate_path', 'candidate_sha256', 'source_url',
+              'reviewed_upstream_updated_at', 'observed_upstream_updated_at',
+              'reviewed_metadata_hash', 'observed_metadata_hash', 'content_hash',
+              'material_sha256', 'checked_at'}
+    seen = set()
+    for record in records:
+        if not isinstance(record, dict) or set(record) != fields:
+            raise store.OfflineError('来源复核记录字段无效')
+        path = record['candidate_path']
+        if not isinstance(path, str) or path not in bound or path in seen:
+            raise store.OfflineError('来源复核记录未绑定本轮唯一候选')
+        seen.add(path)
+        payload = _checked(root, path)
+        candidate = payload['candidate']
+        observed = record['observed_upstream_updated_at']
+        try:
+            checked = datetime.fromisoformat(record['checked_at'].replace('Z', '+00:00'))
+            if checked.tzinfo is None:
+                raise ValueError('timezone required')
+            if observed is not None:
+                datetime.fromisoformat(observed.replace('Z', '+00:00'))
+        except (AttributeError, TypeError, ValueError) as exc:
+            raise store.OfflineError('来源复核时间无效') from exc
+        expected = {
+            'candidate_path': path, 'candidate_sha256': bound[path],
+            'source_url': candidate['metadata']['source_url'],
+            'reviewed_upstream_updated_at': candidate.get('upstream_updated_at'),
+            'observed_upstream_updated_at': observed,
+            'reviewed_metadata_hash': candidate['metadata_hash'],
+            'observed_metadata_hash': store.digest({
+                'metadata': candidate['metadata'], 'upstream_updated_at': observed}),
+            'content_hash': candidate['content_hash'],
+            'material_sha256': payload['material_sha256'], 'checked_at': record['checked_at']}
+        if (record != expected or candidate.get('kind') != 'blog'
+                or record['candidate_sha256'] != store.digest(_location(root, path).read_bytes())
+                or observed == candidate.get('upstream_updated_at')
+                or candidate['metadata_hash'] != store.digest({
+                    'metadata': candidate['metadata'],
+                    'upstream_updated_at': candidate.get('upstream_updated_at')})
+                or candidate['evidence']['evidence_sha256'] != payload['material_sha256']
+                or candidate['evidence']['content_hash'] != candidate['content_hash']):
+            raise store.OfflineError('来源复核记录与已审阅候选不一致')
+
+
 def _verify_plan(root, value, topic, cycle_id):
     if (value.get('schema_version') != 1 or value.get('mode') != 'formal_admission_plan'
             or value.get('topic') != topic or value.get('cycle_id') != cycle_id):
         raise store.OfflineError('准入计划不属于当前轮次')
     _verify_hashes(root, value['input_hashes'])
+    _verify_source_revalidations(root, value)
     research.verify_notes(root, value['protected_notes'])
     if set(value['files']) != set(value['output_hashes']):
         raise store.OfflineError('准入文件清单与输出散列集合不同')
@@ -549,7 +603,9 @@ def _plan(root, topic, cycle_id, fetcher=None):
     _verify_hashes(root, cycle['output_hashes'])
     config_path = cycle_base + '/configs/insight.yaml'
     config = inputs.load_config(root, config_path)
-    bundle = inputs.prepare_bundle(root, config, fetcher=fetcher)
+    source_revalidations = []
+    bundle = inputs.prepare_bundle(root, config, fetcher=fetcher,
+                                   blog_timestamp_revalidations=source_revalidations)
     import researchdesk_recovery as recovery
     recovery.verify_if_present(root, topic, cycle_id, bundle=bundle)
     candidate, receipt, manifest, insight_base = _insight_proof(root, config, bundle, cycle_id, True)
@@ -591,6 +647,7 @@ def _plan(root, topic, cycle_id, fetcher=None):
     value = {'schema_version': 1, 'mode': 'formal_admission_plan', 'topic': topic, 'cycle_id': cycle_id,
         'source_id_map': source_map, 'insight_config': config_path, 'verification_bundle': compact_bundle,
         'candidate': candidate, 'input_hashes': _hashes(root, paths), 'protected_notes': research.notes_snapshot(root),
+        'source_revalidations': source_revalidations,
         'files': files, 'output_hashes': {path: store.digest(content.encode()) for path, content in files.items()},
         'writing_started': False, 'publish_authorized': False}
     _verify_plan(root, value, topic, cycle_id)
