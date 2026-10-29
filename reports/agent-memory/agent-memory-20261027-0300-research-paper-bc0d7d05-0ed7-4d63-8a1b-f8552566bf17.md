@@ -1,0 +1,45 @@
+---
+schema_version: 1
+id: research-agent-memory-20261027-0300-paper-bc0d7d05-0ed7-4d63-8a1b-f8552566bf17
+kind: research_report
+title: 'AgentOdyssey: Open-Ended Long-Horizon Text Game Generation for Test-Time Continual
+  Learning Agents'
+topic: agent-memory
+topics:
+- agent-memory
+status: accepted
+source_id: paper-bc0d7d05-0ed7-4d63-8a1b-f8552566bf17
+coverage: abstract_only
+---
+
+# AgentOdyssey: Open-Ended Long-Horizon Text Game Generation for Test-Time Continual Learning Agents
+
+> AI 自动研究记录，已通过独立模型审阅；阅读范围及证据限制见正文，未复现实验。
+
+- 来源：[AgentOdyssey: Open-Ended Long-Horizon Text Game Generation for Test-Time Continual Learning Agents](https://arxiv.org/abs/2606.24893v2)。
+- 覆盖范围：仅论文摘要，未核验全文或实验数据。
+- 研究模型：`gpt-6-luna`；独立审阅：`gpt-6.1-sol`。
+- 审阅：`pass`；修订次数：0；原始材料仅在内存中提供给模型。
+
+## 研究概述
+
+仅依据论文摘要，AgentOdyssey面向测试时持续学习智能体，提出程序化生成开放式文本游戏的评测框架，并报告了智能体能力与测试时训练方面的实验观察；以下不代表对全文或实验的独立核验。
+
+## 主张与证据
+
+- **原文事实**：摘要介绍 AgentOdyssey：一个程序化生成开放式文本游戏的评测框架，游戏包含丰富实体、世界动态和长程任务。（[A2](https://arxiv.org/abs/2606.24893v2)）
+- **原文事实**：摘要称其评测方法除游戏进度外，还涵盖世界知识获取、情景记忆、物体与动作探索、动作多样性及模型成本。（[A4](https://arxiv.org/abs/2606.24893v2)）
+- **作者声称（未独立核验）**：作者称，他们在六款生成的游戏中评估了多种智能体范式，并观察到智能体关键能力的局限及影响其有效规划时域的因素。（[A5、A6](https://arxiv.org/abs/2606.24893v2)）
+- **作者声称（未独立核验）**：作者称，测试时训练的专项研究发现短期记忆有益，但经监督微调训练的智能体仍会发生灾难性遗忘；有效的参数化持续学习仍是未解决的问题。（[A8](https://arxiv.org/abs/2606.24893v2)）
+
+## 局限
+
+- 本次只读论文摘要，未核验全文、实验细节、实现或结果；作者报告的发现不应视为独立验证。
+- 材料对记忆的讨论限于摘要中有关情景记忆、短期记忆与灾难性遗忘的概述，未提供记忆机制的详细描述。
+
+## 独立审阅
+
+
+正式来源：[paper-bc0d7d05-0ed7-4d63-8a1b-f8552566bf17](../../sources/papers/agent-memory/paper-bc0d7d05-0ed7-4d63-8a1b-f8552566bf17.md)。
+
+准入记录：[输入、审阅与输出散列](admissions/agent-memory-20261027-0300/accepted.yaml)。
