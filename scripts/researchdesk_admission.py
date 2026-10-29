@@ -393,8 +393,10 @@ def _source_footer_links(content, source_path, report_path, accepted_path, requi
 
 
 def _render(root, topic, cycle_id, config, bundle, candidate, records, source_map=None):
-    index = store.source_index(root)
-    all_ids = {identifier for values in index.values() for identifier in values}
+    from researchdesk_identity import source_index
+    index = source_index(root)
+    # Keep every reserved UUID, including aliases collapsed for comparison.
+    all_ids = {identifier for values in store.source_index(root).values() for identifier in values}
     formal = {}
     for key, values in index.items():
         formal[key] = {identifier: value for identifier, value in values.items()
