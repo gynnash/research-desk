@@ -1,5 +1,7 @@
 # ResearchDesk
 
+阅读入口：**[研究首页](研究首页.md)** · [动态资料库（Obsidian）](workbench/动态资料库.md) · [全部资料索引](workbench/资料索引.md) · [我的研究问题](notes/我的研究问题.md)。已有研究、稿件与 Obsidian 配置保持原样；[使用说明](workbench/README.md)介绍阅读与同步。
+
 ResearchDesk 是一个以 Markdown、YAML、GitHub 和 Obsidian 为基础的 AI 技术研究工作台：保存论文与技术博客、研究证据和历史判断，发现技术变化，并为微信公众号提供可追溯的选题与文章。框架面向开源，用户可配置自己的研究方向、来源、模型和预算，并使用自己授权的 ChatGPT 会员。
 
 当前已完成知识库基础设施、离线骨架、arXiv/Letta/LangChain 真实采集与本地官方 ChatGPT 会员接入。2026-10-19 已通过 YAML 配置驱动的一篇论文摘要与一篇博客节选研究，两项独立审阅通过，4 次请求，中断补跑未重复调用，详见[批次真实验收](reports/test/agent-memory/research-batches/configured-research-20261019/acceptance.md)。[上一阶段单篇测试](reports/test/agent-memory/membership/member-arxiv-20261019/acceptance.md)和模拟结果继续保留。Research 与 Insight 先写测试区，[正式准入](workflows/formal-admission.md)已实现：核实独立审阅及散列后仅创建新正式文件，保留旧资料和测试回执。定时代码已准备，最终启用值以 [automation.yaml](config/automation.yaml) 为准；远端准入与首个定时执行需看实际回执。未发布公众号，不使用数据库或复杂 Agent 框架，已有 Vault 设置保持原样。
@@ -34,6 +36,9 @@ ResearchDesk 是一个以 Markdown、YAML、GitHub 和 Obsidian 为基础的 AI 
 
 ```text
 research-desk/
+├── 研究首页.md               # 阅读导读、选题、稿件和笔记入口
+├── workbench/                # 普通资料索引与可选 Obsidian Bases 动态视图
+├── notes/                    # 独立保存的人工研究问题与判断
 ├── config/
 │   ├── research_topics.yaml    # 研究方向及启用状态
 │   ├── membership_budget.yaml  # 本仓库会员调用的共享月度请求预算

@@ -1,0 +1,27 @@
+filters:
+  and:
+    - 'file.ext == "md"'
+    - 'file.folder == "articles/agent-memory"'
+    - 'note.kind == "topic_proposal"'
+    - 'note.id.startsWith("formal-topic-")'
+    - '/[0-9]{8}/.matches(file.name)'
+formulas:
+  document: 'file.asLink(if(note.title, note.title, file.name))'
+  cycle_date: 'file.name.replace(/^.*?([0-9]{4})([0-9]{2})([0-9]{2}).*$/, "$1-$2-$3")'
+properties:
+  formula.document:
+    displayName: 选题提案
+  formula.cycle_date:
+    displayName: 研究轮次
+views:
+  - type: table
+    name: 选题提案
+    limit: 10
+    order:
+      - formula.document
+      - formula.cycle_date
+    sort:
+      - property: formula.cycle_date
+        direction: DESC
+      - property: file.name
+        direction: DESC
