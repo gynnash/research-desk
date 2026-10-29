@@ -1,0 +1,261 @@
+candidate:
+  key: langchain-015544c923ee
+  kind: blog
+  topic: agent-memory
+  metadata:
+    title: How We Built Our Design Agent
+    source: LangChain
+    source_url: https://www.langchain.com/blog/design-agent
+    authors:
+    - Amal Irgashev
+    - Shreya Talegaonkar
+    published_at: '2026-10-27'
+  evidence:
+    coverage: excerpt
+    extraction_coverage: fulltext
+    source_url: https://www.langchain.com/blog/design-agent
+    source_version: null
+    content_hash: 66e796a01b90bb7487c3f0520903bb2830254c05c5ec001eafeca379add421b0
+    evidence_sha256: 6971f9b28d694098c8d1eaefbb005691b9c796e7798c204dd219d0786227a38f
+    locators:
+    - id: A1
+      location: excerpt sentence 1
+      text_sha256: 32011fa57b2c02b370c18eae625f81db79276fb57d794aad6dfb380128d387a2
+      quote: The promo above was made by Content Studio, our design agent that can
+        create videos, social graphics, recreated UI images, slide decks, and more
+        from
+    - id: A2
+      location: excerpt sentence 2
+      text_sha256: 169732a420972686d88fa99acea9ca25c2698adbf13919af1b7a8d07d99539a7
+      quote: ''
+    - id: A3
+      location: excerpt sentence 3
+      text_sha256: d39500f23e2001fe9ac9b9e536bda45f4343172cb4d8f619cc052ae779a04d8c
+      quote: ''
+    - id: A4
+      location: excerpt sentence 4
+      text_sha256: 3dfe7a1428b7a2a56ea4acec72ef07d64f0e59a6d6f7d6d676dfc24b4f05f87e
+      quote: ''
+    - id: A5
+      location: excerpt sentence 5
+      text_sha256: 5ddd8c2c337041a91ae5aa441605042b6de11753852ac6121808e67060d9ebd6
+      quote: ''
+    - id: A6
+      location: excerpt sentence 6
+      text_sha256: f60cd4885c0dffde4e241d71ab75abf236a04223ed7dad0c1d528a3438f39473
+      quote: ''
+    - id: A7
+      location: excerpt sentence 7
+      text_sha256: 7251f944d277a2c007674db5fdc2f04a38d20eca0beaa8637e661d47ed2ebdaa
+      quote: ''
+    - id: A8
+      location: excerpt sentence 8
+      text_sha256: 026ed8a7f8c8bb3e459a37bb71b2f5e26e1d862bfd77cda15adb58a46274a89f
+      quote: ''
+    - id: A9
+      location: excerpt sentence 9
+      text_sha256: aa8356aba494afaf5558eba8dbf3899e4dbc5163230d5716e263ef1bda59dec7
+      quote: ''
+    - id: A10
+      location: excerpt sentence 10
+      text_sha256: 7afe997155fefc1297a63db8166822d91c6ce56fc098cc97f6d5657888ea931f
+      quote: ''
+    - id: A11
+      location: excerpt sentence 11
+      text_sha256: 757151eefb7e4550c697ecc0b7a0279bac888a5e8036b53a4a1c70beafa33e38
+      quote: ''
+    - id: A12
+      location: excerpt sentence 12
+      text_sha256: 42c7aa9371b25fb6783af90287604b4aacb506db99ff12f45eb0c8fb0ba874c4
+      quote: ''
+    - id: A13
+      location: excerpt sentence 13
+      text_sha256: 0c08b1ce6049db549fb44a2451454109a572d20db666dcce0c2640bef0240ecd
+      quote: ''
+    - id: A14
+      location: excerpt sentence 14
+      text_sha256: a1c8e72685cf91525ba9b6b6e1dc1b0a5d3d3520a3deb54525e6811742dbc5bf
+      quote: ''
+    - id: A15
+      location: excerpt sentence 15
+      text_sha256: 408d3de5579d48990d62a328637f47798a52b714409339d35749d08865f42533
+      quote: ''
+    - id: A16
+      location: excerpt sentence 16
+      text_sha256: f46c9beb91e563d28ae3c41931d378a1722ba1819b8ba0e973554051273e0a70
+      quote: ''
+    - id: A17
+      location: excerpt sentence 17
+      text_sha256: bdf34cd81e661ae70ec2d847fb2cdb221d39eb77434e875cb4be81daa72a50cf
+      quote: ''
+    - id: A18
+      location: excerpt sentence 18
+      text_sha256: 83f243a3784dd2e3a8fb015e77334580c9f5f61ba267972a4afd87e29a6b0b54
+      quote: ''
+    - id: A19
+      location: excerpt sentence 19
+      text_sha256: b19ed0a5802b41060bb208de957a591e3d07ede055b837b42487b4982dc84777
+      quote: ''
+    - id: A20
+      location: excerpt sentence 20
+      text_sha256: 6d93514a64d383bed7a3975b3fc23c284ef0e8598af770c7f62a83f193484db2
+      quote: ''
+    - id: A21
+      location: excerpt sentence 21
+      text_sha256: d328d2fd8b1a2f669260d3471a2c202c765fa7029e2d1db14081d2cf6c60cefb
+      quote: ''
+    - id: A22
+      location: excerpt sentence 22
+      text_sha256: 37ffa6ff2110e8f34b055bbeeeb46b98582f84c2a16b521789f9608c4be8cf6b
+      quote: ''
+    - id: A23
+      location: excerpt sentence 23
+      text_sha256: 6be0dd5c10e4b276235324c8d2b6a16032349583e171dcbdf70e550fd8c10149
+      quote: ''
+    - id: A24
+      location: excerpt sentence 24
+      text_sha256: e922669e4f97a762738c068249ed2f6bf32c8c5ccb385ebd4d18a1f4c90a27fd
+      quote: ''
+    - id: A25
+      location: excerpt sentence 25
+      text_sha256: 6f6b4a3316f491bc7dbcb876ac77fed61ac4417cecf5459f950ef223c82df40e
+      quote: ''
+    - id: A26
+      location: excerpt sentence 26
+      text_sha256: 1cd450f3a6efc435adf3067d5a72dd198e2cf20bab329bcab58ecbd1c0d174b1
+      quote: ''
+    - id: A27
+      location: excerpt sentence 27
+      text_sha256: d49a1e76e0492161a61dbf015dc7552aeacb7b20b4a6c77a3c17c2d1c279ec92
+      quote: ''
+    - id: A28
+      location: excerpt sentence 28
+      text_sha256: 4b222a9b98e385296cadda4c6400a585b808abd66d38a6687526e63ecc7dbb3b
+      quote: ''
+    - id: A29
+      location: excerpt sentence 29
+      text_sha256: 6a3b3b9a4359100333516e951d7907d0eafdf04dca775f8d01d408be172203d6
+      quote: ''
+    - id: A30
+      location: excerpt sentence 30
+      text_sha256: c83ed14716567cdc989e591477218b27f58bd523a213afea0c0b0b66acf4723d
+      quote: ''
+    - id: A31
+      location: excerpt sentence 31
+      text_sha256: 46380dff7db03b6639cb939f7d6c1cbf8c010d602c80c0f816bcdf161906f154
+      quote: ''
+    - id: A32
+      location: excerpt sentence 32
+      text_sha256: a846c4264caf20fb7f5c52d7db1e88fee0b5930751b401d34511f7c69895b9c9
+      quote: ''
+    - id: A33
+      location: excerpt sentence 33
+      text_sha256: ed534adfbb051bfba67e4beb54a6732d7760d3d75fe3725cb63777c03fe90204
+      quote: ''
+    - id: A34
+      location: excerpt sentence 34
+      text_sha256: 178c573abf76f6f864520106dcddae9f1fd6c5aa86f84f298b8af968c365bfe4
+      quote: ''
+    - id: A35
+      location: excerpt sentence 35
+      text_sha256: 24147f6684b950bd75a8b4d9c8a18a22148efec2e90217af32f68e7ab0df15b7
+      quote: ''
+    - id: A36
+      location: excerpt sentence 36
+      text_sha256: 4e5615cedf76e4a92631963f7eb1cdd5bcff1a2479564b6e88a255977cfd9e89
+      quote: ''
+    - id: A37
+      location: excerpt sentence 37
+      text_sha256: 78001e14e9b4c0f1517e450ae805c2c4a4566c44aa897c4cff86d927769ce2c0
+      quote: ''
+    - id: A38
+      location: excerpt sentence 38
+      text_sha256: 3421652159fe9e3c3bf3126b4407b515c80027714b14e85e27f20408080a9f47
+      quote: ''
+    - id: A39
+      location: excerpt sentence 39
+      text_sha256: 43e3aaf20e6d8887e5dc53c375ee5c0582d94f1d0f19a1194afd85df13409718
+      quote: ''
+    - id: A40
+      location: excerpt sentence 40
+      text_sha256: e6e3920282263293e7fbba2504d897a10719a9c05180a44797fff5960654081a
+      quote: ''
+    - id: A41
+      location: excerpt sentence 41
+      text_sha256: 9f6705dcb7822d2cbf86f4ef4bb4d4c244a9324d727a2365e56f2568e8d2e592
+      quote: ''
+    - id: A42
+      location: excerpt sentence 42
+      text_sha256: e7962860f6bab40cc9468b795865bc04ad2e1839ce66cfbc95334574bc4f1732
+      quote: ''
+    - id: A43
+      location: excerpt sentence 43
+      text_sha256: ec74e2c4f1fc8ed2519f2ae2ea2ef61cd63e1fdca23987885ad66e5e29aff00d
+      quote: ''
+    - id: A44
+      location: excerpt sentence 44
+      text_sha256: b7afb53518f7d1041b26877b789c986d5a63f55df89ba0cfabb4dbad83ba9803
+      quote: ''
+    - id: A45
+      location: excerpt sentence 45
+      text_sha256: 53562f293aa12952cbc6750d62ae4909be99a278e79a28b11e90426d3696516a
+      quote: ''
+    - id: A46
+      location: excerpt sentence 46
+      text_sha256: 5de39fc45e93a964d05effe9a864ade694b58df0811a3582fd1292b1c8d5db76
+      quote: ''
+    - id: A47
+      location: excerpt sentence 47
+      text_sha256: 1a048e3b0e288e639b9415b102a5a896d36baccd0f17e3b377858d66b831babf
+      quote: ''
+    - id: A48
+      location: excerpt sentence 48
+      text_sha256: 75c6fd84cd330caa65dfc2dccde5f6ade5d5e7f1fb616e45318e3779206a181e
+      quote: ''
+    - id: A49
+      location: excerpt sentence 49
+      text_sha256: de8da903e6385d157bba4379a68fd5699d40c860c864cbbb1daf851563ef6555
+      quote: ''
+    - id: A50
+      location: excerpt sentence 50
+      text_sha256: 4312cab502e6a8d38d69aaf332a96a8fb2eed293e69b508d4b210d1ce4d83af0
+      quote: ''
+    - id: A51
+      location: excerpt sentence 51
+      text_sha256: 2beeb05bd48f9c31e326e77e81098a1c75eb7e3b36911d7f02f7ccde1690d8ce
+      quote: ''
+    - id: A52
+      location: excerpt sentence 52
+      text_sha256: fc4308969c46f579a950c39f10e0ac6d7d7a3873e0814524ccd21b7e6239cfd1
+      quote: ''
+    - id: A53
+      location: excerpt sentence 53
+      text_sha256: 6357e0eff8550a7cc3050c39149a54009566d2972c5a1baa7bc67b4476ec0511
+      quote: ''
+    - id: A54
+      location: excerpt sentence 54
+      text_sha256: 0e753c6b03d18d6abd2b219a45a532f15d2cdc91ff50cb381d75e5a3d3374ad2
+      quote: ''
+    - id: A55
+      location: excerpt sentence 55
+      text_sha256: 64c544d281d35fb224558f13ed07d8076a57e4e7d9d593186f084fbc078ea829
+      quote: ''
+    - id: A56
+      location: excerpt sentence 56
+      text_sha256: 347945f7cd7f9cbb68ed7366a665303d112ac0eb9b9f99b54db379910ae4ea22
+      quote: ''
+    - id: A57
+      location: excerpt sentence 57
+      text_sha256: a0b5f3b2a75c34eac93bcb92f13829ab88017eac082a7ec2cfc43a10c4d1dbbd
+      quote: ''
+  identity_keys:
+  - url:https://www.langchain.com/blog/design-agent
+  source_id: blog-2c7372dc-2b55-40b2-bdbf-8cf136b56cd0
+  existing_source_path: null
+  existing_source_metadata: null
+  content_hash: 66e796a01b90bb7487c3f0520903bb2830254c05c5ec001eafeca379add421b0
+  metadata_hash: 8e538cb94a193625389a97f640612e2715ac10fa66c9b4a4209b654b827a9cae
+  upstream_updated_at: '2026-10-28T21:31:38.087Z'
+material_sha256: 6971f9b28d694098c8d1eaefbb005691b9c796e7798c204dd219d0786227a38f
+action: research
+reason: no_completed_real_research

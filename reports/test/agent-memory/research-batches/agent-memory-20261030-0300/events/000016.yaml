@@ -1,0 +1,14 @@
+type: call_completed
+key: langchain-9098f9f1ed8c
+reservation_id: langchain-9098f9f1ed8c:research:1
+role: research
+revision: 1
+model_id: gpt-6-luna
+at: '2026-10-29T23:05:17.029496+00:00'
+response_path: reports/test/agent-memory/research-batches/agent-memory-20261030-0300/items/langchain-9098f9f1ed8c/checkpoints/research-1.yaml
+response_sha256: f7e7fbffdef3717b3ad2e261bf1f41ca90784bbc2ae5adb4e95deea9b3c22d52
+usage:
+  input_tokens: 2537
+  output_tokens: 551
+  total_tokens: 3088
+usage_status: reported

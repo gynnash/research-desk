@@ -1,0 +1,8 @@
+type: item_finished
+key: langchain-015544c923ee
+status: test_accepted
+result_path: reports/test/agent-memory/research-batches/agent-memory-20261030-0300/items/langchain-015544c923ee/result.yaml
+result_sha256: 157cdeb3607a22d9712c59d111fa738c58940bb9e53bff320d59b78a27eff89f
+at: '2026-10-29T23:05:37.940906+00:00'
+output: reports/test/agent-memory/research-batches/agent-memory-20261030-0300/items/langchain-015544c923ee/report.md
+output_sha256: d8c85333b22f8cde3fbfcd6a1fb060a4d885af6db81827d2bb32fd14b8b29875

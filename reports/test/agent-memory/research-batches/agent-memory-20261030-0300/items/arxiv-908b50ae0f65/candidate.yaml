@@ -1,0 +1,69 @@
+candidate:
+  key: arxiv-908b50ae0f65
+  kind: paper
+  topic: agent-memory
+  metadata:
+    title: 'From Relevant Memories to Sufficient Evidence: Rethinking Memory Utilization
+      in LLM Agents'
+    source: arXiv
+    source_url: https://arxiv.org/abs/2610.22668
+    authors:
+    - Li, Shixuan
+    - Yang, Wei
+    - Zhang, Peiyu
+    - Cheng, Anzhe
+    - Ping, Heng
+    - Zhang, Xiaole
+    - Thomason, Jesse
+    - Ma, Xuezhe
+    - Zhao, Yue
+    - Bogdan, Paul
+    published_at: '2026-10-15'
+    arxiv_id: '2610.22668'
+    source_version: v1
+  evidence:
+    coverage: abstract_only
+    extraction_coverage: abstract_only
+    source_url: https://arxiv.org/abs/2610.22668
+    source_version: v1
+    content_hash: 484ff4380a0de81648e6616db061e57cb07ef652ebe685d0cfcd4cb168d30598
+    evidence_sha256: f0c44881beb94ef55e956a3457940ab65390a67b739d0615760fdf0a89ff0b52
+    locators:
+    - id: A1
+      location: abstract_only sentence 1
+      text_sha256: d1ce3af0e9d1e84b2c983a811b5c46649b540dc0fa0a2cbc40f65e152cd60756
+      quote: Long-term memory enables LLM agents to reuse past experiences, yet retrieving
+        relevant memories does not necessarily provide sufficient evidence for answering
+        a query.
+    - id: A2
+      location: abstract_only sentence 2
+      text_sha256: f6225087b97ac3ae52f891374ae12049a56b7a83f03d23aa8392b7afba242697
+      quote: Essential information
+    - id: A3
+      location: abstract_only sentence 3
+      text_sha256: 7c202e6c6d27798f07e7ba4207a5e32ddfafe0e80f1623b01cd667bd85557c18
+      quote: ''
+    - id: A4
+      location: abstract_only sentence 4
+      text_sha256: dd6bae4b26184f80886a2923da978d745635f88b3fd260a8e7d58351b6a41e2a
+      quote: ''
+    - id: A5
+      location: abstract_only sentence 5
+      text_sha256: 8462c6a8d23b65cec4ae23f4ff64305ac615ac884335c4d49f111397e789c1a8
+      quote: ''
+    - id: A6
+      location: abstract_only sentence 6
+      text_sha256: afe617fd7d400a356166b73485f10f3f33b8068ed31cd55d200d4309ff744ef6
+      quote: ''
+  identity_keys:
+  - arxiv:2610.22668
+  - url:https://arxiv.org/abs/2610.22668
+  source_id: paper-f794b398-b1d9-451d-89a0-03897daeede2
+  existing_source_path: null
+  existing_source_metadata: null
+  content_hash: 484ff4380a0de81648e6616db061e57cb07ef652ebe685d0cfcd4cb168d30598
+  metadata_hash: bc3d9250957656cb0b00beb76fdb6872236494019ee88aae1cdd116f2366723f
+  upstream_updated_at: '2026-10-15'
+material_sha256: f0c44881beb94ef55e956a3457940ab65390a67b739d0615760fdf0a89ff0b52
+action: research
+reason: no_completed_real_research
