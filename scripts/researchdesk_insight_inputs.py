@@ -8,6 +8,7 @@ in this module.
 """
 
 import json
+from datetime import datetime, timezone
 from pathlib import Path
 import re
 import tempfile
@@ -269,7 +270,7 @@ def _checkpoint_binding(root, base, manifest, config, candidate, material, revis
     return previous_research, previous_review, proofs
 
 
-def _research_evidence(root, config, fetcher):
+def _research_evidence(root, config, fetcher, blog_timestamp_revalidations=None):
     evidence, provenance, seen = [], [], set()
     for entry in config['research_inputs']:
         base, manifest, original_config, receipt, proof = _checked_research(root, config, entry)
@@ -296,8 +297,16 @@ def _research_evidence(root, config, fetcher):
             with tempfile.TemporaryDirectory(prefix='researchdesk-insight-input-') as empty:
                 fresh, material = research_inputs.fetch_candidate(Path(empty), original_config, source, fetcher)
             fields = ('key', 'kind', 'topic', 'metadata', 'evidence', 'identity_keys',
-                      'content_hash', 'metadata_hash', 'upstream_updated_at')
+                      'content_hash')
+            metadata_valid = all(value.get('metadata_hash') == store.digest({
+                'metadata': value.get('metadata'),
+                'upstream_updated_at': value.get('upstream_updated_at')})
+                for value in (candidate, fresh))
+            timestamp_changed = candidate.get('upstream_updated_at') != fresh.get('upstream_updated_at')
+            timestamp_allowed = (blog_timestamp_revalidations is not None
+                                 and candidate.get('kind') == 'blog')
             if (any(candidate.get(key) != fresh.get(key) for key in fields)
+                    or not metadata_valid or (timestamp_changed and not timestamp_allowed)
                     or plan.get('material_sha256') != store.digest(material.encode())
                     or candidate.get('evidence', {}).get('evidence_sha256') != plan.get('material_sha256')
                     or candidate['evidence'].get('content_hash') != candidate.get('content_hash')
@@ -313,6 +322,21 @@ def _research_evidence(root, config, fetcher):
                 raise store.OfflineError('Research 报告已修改，拒绝沿用旧审阅')
             if report.read_text(encoding='utf-8') != batch.render(manifest, candidate, research, review, item['revision_count']):
                 raise store.OfflineError('Research 报告不再对应已审阅的结构化结果')
+            # Admission may accept a CMS timestamp-only change, but the exact
+            # reviewed candidate still owns the model proof and fingerprint.
+            # Keep this audit outside the model payload and provenance.
+            if timestamp_changed:
+                blog_timestamp_revalidations.append({
+                    'candidate_path': path,
+                    'candidate_sha256': store.digest(store.safe_path(root, path).read_bytes()),
+                    'source_url': candidate['metadata']['source_url'],
+                    'reviewed_upstream_updated_at': candidate.get('upstream_updated_at'),
+                    'observed_upstream_updated_at': fresh.get('upstream_updated_at'),
+                    'reviewed_metadata_hash': candidate['metadata_hash'],
+                    'observed_metadata_hash': fresh['metadata_hash'],
+                    'content_hash': candidate['content_hash'],
+                    'material_sha256': plan['material_sha256'],
+                    'checked_at': datetime.now(timezone.utc).isoformat()})
             identifier = 'R%s' % (len(evidence) + 1)
             source_url = candidate['metadata']['source_url']
             if candidate['kind'] == 'paper' and candidate['metadata'].get('arxiv_id'):
@@ -499,14 +523,17 @@ def model_payload(bundle, prompt_version='insight-v1'):
     return payload
 
 
-def prepare_bundle(root, config, fetcher=None):
+def prepare_bundle(root, config, fetcher=None, blog_timestamp_revalidations=None):
     root = Path(root).resolve()
     # A caller cannot reuse a stale loaded configuration after an edit.
     fresh = load_config(root, config['_config_path'])
     if fresh != config:
         raise store.OfflineError('Insight 配置或研究方向在准备输入前已变化')
     historical, historical_provenance = _historical_evidence(root, config)
-    research, research_provenance = _research_evidence(root, config, fetcher or SafeFetcher(retries=0))
+    if blog_timestamp_revalidations is not None and not isinstance(blog_timestamp_revalidations, list):
+        raise store.OfflineError('博客时间戳复核记录必须使用显式列表')
+    research, research_provenance = _research_evidence(
+        root, config, fetcher or SafeFetcher(retries=0), blog_timestamp_revalidations)
     bundle = {'topic': config['topic'], 'research_context': {'name': config['topic_name'],
         'description': config['topic_description'], 'scope': config['topic_scope'], 'keywords': config['topic_keywords']},
         'evidence': research + historical,

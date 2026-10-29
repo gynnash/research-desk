@@ -29,7 +29,7 @@ class October27Aliases(unittest.TestCase):
     def setUp(self):
         temp = tempfile.TemporaryDirectory()
         self.addCleanup(temp.cleanup)
-        self.root = Path(temp.name)
+        self.root = Path(temp.name).resolve()
         for folder in ('config', 'sources', 'reports', 'insights', 'articles'):
             shutil.copytree(ROOT / folder, self.root / folder)
         base = 'reports/test/agent-memory/insight-runs/' + CYCLE
