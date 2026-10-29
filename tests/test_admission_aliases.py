@@ -30,8 +30,21 @@ class October27Aliases(unittest.TestCase):
         temp = tempfile.TemporaryDirectory()
         self.addCleanup(temp.cleanup)
         self.root = Path(temp.name).resolve()
+        # Replay before this cycle's admission even after its real outputs
+        # have been added to the repository. Earlier alias proofs stay intact.
+        base = 'reports/agent-memory/admissions/' + CYCLE + '/'
+        stored_plan = ROOT / (base + 'plan.yaml')
+        omitted = set()
+        if stored_plan.is_file():
+            omitted.update(yaml.safe_load(stored_plan.read_text())['files'])
+            omitted.update(base + name for name in ('accepted.yaml', 'accepted.yaml.sha256'))
+
+        def ignore(directory, names):
+            relative = Path(directory).relative_to(ROOT)
+            return [name for name in names if (relative / name).as_posix() in omitted]
+
         for folder in ('config', 'sources', 'reports', 'insights', 'articles'):
-            shutil.copytree(ROOT / folder, self.root / folder)
+            shutil.copytree(ROOT / folder, self.root / folder, ignore=ignore)
         base = 'reports/test/agent-memory/insight-runs/' + CYCLE
         manifest = store.checked_yaml(self.root, base + '/manifest.yaml')
         self.bundle = {'input_fingerprint': manifest['input_fingerprint'],
