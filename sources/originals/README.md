@@ -8,4 +8,4 @@
 
 正式原文由确定性准入新增；已有文件和人工笔记不覆盖。精确重放检查点在`reports/test/<方向>/research-batches/<批次>/items/<来源>/original.yaml`，用于断网审阅与补跑；日常阅读使用本目录的Markdown。
 
-[研究首页](../../研究首页.md) · [正式资料索引](../../workbench/资料索引.md) · [采集与归档说明](../../workflows/source-coverage-and-archive.md)
+[项目与资料入口](../../README.md) · [采集与归档说明](../../workflows/source-coverage-and-archive.md)

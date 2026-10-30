@@ -46,7 +46,7 @@ ARTICLE_RESEARCH_INSTRUCTIONS = FULLTEXT_RESEARCH_INSTRUCTIONS + '''
 当输入没有 reading_scope.reading_profile、也没有 acquisition_attempts 时，abstract_only 仅表示按摘要研究；没有获取记录不能声称已经尝试或获取全文失败。'''
 
 ARTICLE_REVIEW_INSTRUCTIONS = FULLTEXT_REVIEW_INSTRUCTIONS + '''
-同时审阅完整可读正文，包括 summary、每段解释、段落承接、意义与因果措辞，而非只确认 claims 的引用编号。summary 和过渡句不得引入 claims/evidence 未支持的新事实、暗含效果已验证或虚构例子；作者报告与我们的推断须在自然语言中可辨认。缺陷写入 issues；任何无依据扩写或丢失重要范围边界均不得 pass。保持同一审阅 JSON schema 和逐项 checks，不新增润色步骤。'''
+同时审阅完整可读正文，包括 summary、每段解释、段落承接、意义与因果措辞，而非只确认 claims 的引用编号。summary 和过渡句不得引入 claims/evidence 未支持的新事实、暗含效果已验证或虚构例子；作者报告与我们的推断须在自然语言中可辨认。正文不应夹带内部证据编号、逐段引用、脚注或运行信息。缺陷写入 issues；任何无依据扩写或丢失重要范围边界均不得 pass。保持同一审阅 JSON schema 和逐项 checks，不新增润色步骤。'''
 
 
 def instructions_for(config):
@@ -514,7 +514,8 @@ def render_article(manifest, candidate, research, review, revision):
              'abstract_only': '仅阅读摘要，未核验全文或复现实验'}[evidence['coverage']]
     if evidence['coverage'] == 'abstract_only' and evidence.get('reading_profile'):
         scope = '全文未能获取，本次仅阅读摘要，未核验全文或复现实验'
-    lines = ['# ' + metadata['title'], '', research['summary'], '', '## 问题、方法与结果', '']
+    lines = ['# ' + metadata['title'], '', '> TEST：运行中间产物，未正式入库。', '',
+             research['summary'], '', '## 问题、方法与结果', '']
     for claim in research['claims']:
         lines += [claim['text'], '']
     lines += ['## 如何理解这些结论的边界', '']

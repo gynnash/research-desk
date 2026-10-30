@@ -560,7 +560,9 @@ def select_history(root, topic, max_documents=6, lookback_days=None, as_of=None)
             # Marker-last admission can leave files after an interrupted
             # install. Only admitted AI records may become later history.
             # Human edits of an admitted note remain a new human baseline.
-            if '> AI 自动研究记录，已通过独立模型审阅' in text and relative.as_posix() not in admitted:
+            generated = (isinstance(metadata, dict) and metadata.get('status') == 'accepted'
+                         and str(metadata.get('id', '')).startswith(('research-', 'formal-')))
+            if ('> AI 自动研究记录，已通过独立模型审阅' in text or generated) and relative.as_posix() not in admitted:
                 continue
             explicit = isinstance(metadata, dict) and isinstance(metadata.get('topics'), list) and topic in metadata['topics']
             if parts[0] == 'sources':

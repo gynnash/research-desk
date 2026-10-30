@@ -290,31 +290,6 @@ class RecoveryJobTransfer(unittest.TestCase):
         self.admission.assert_called_once_with(self.root, TOPIC, RECOVERY)
         self.assertTrue(result['production_accepted'])
 
-    def test_catalog_failure_does_not_block_admission_or_stage_user_index(self):
-        index_path = 'workbench/资料索引.md'
-        original = '# 人工索引\n\n保留自己的批注。\n'.encode('utf-8')
-        index = self.root / index_path
-        index.parent.mkdir()
-        index.write_bytes(original)
-        self.original_bytes[index_path] = original
-        self.baseline[index_path] = job.sha(original)
-        plan_path = 'reports/%s/admissions/%s/plan.yaml' % (TOPIC, RECOVERY)
-        self.artifact_for({RECOVERY_BASE + '/recovery.yaml': b'offline: checkpoint\n',
-                           plan_path: b'files: {}\n'})
-        self.enabled.return_value = True
-        catalog = SimpleNamespace(TARGET=index_path, update=mock.Mock(side_effect=KeyError('broken historical proof')))
-        with mock.patch.dict(sys.modules, {'researchdesk_catalog': catalog}), \
-                contextlib.redirect_stderr(io.StringIO()) as errors:
-            result = self.apply()
-        self.assertTrue(result['production_accepted'])
-        self.admission.assert_called_once_with(self.root, TOPIC, RECOVERY)
-        catalog.update.assert_called_once_with(self.root, write=True)
-        self.assertNotIn(index_path, self.staged)
-        self.assertEqual(index.read_bytes(), original)
-        self.assertIn('资料索引未更新', errors.getvalue())
-        self.assertTrue(any(call.args[1] == 'commit' for call in self.git.call_args_list))
-        self.assertTrue(any(call.args[1:] == ('push', 'origin', 'HEAD:refs/heads/main')
-                            for call in self.git.call_args_list))
 
     def test_recovery_admission_still_requires_enabled_policy(self):
         plan_path = 'reports/%s/admissions/%s/plan.yaml' % (TOPIC, RECOVERY)

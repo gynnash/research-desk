@@ -1,6 +1,6 @@
 # 研究工作流
 
-日常阅读从[研究首页](../研究首页.md)和[正式资料索引](../workbench/资料索引.md)开始。本目录保存操作说明、设计与历史验收；历史调用数和时间是当时快照，当前行为以配置与实际回执为准。
+日常阅读从 [README 的四类资料入口](../README.md)开始。本目录保存运行所需依赖、校验、操作说明与历史验收；当前行为以配置与实际回执为准。
 
 ## 当前流程
 
@@ -20,8 +20,7 @@
 | 确认选题或撤回 | [真实选题确认页](topic-confirmation-mvp.md) |
 | 生成与准入三阶段稿件 | [会员 Writing](writing-agent-member.md)、[Writing 正式准入](writing-formal-admission.md) |
 | 检查 Markdown 与来源字段 | [资料 Schema](source-schema.md)、[模板](templates/) |
-| 阅读与同步 Obsidian | [研究工作台说明](../workbench/README.md) |
-| 文章式正文、观点来源与历史阅读版 | [可读研究规范](readable-research.md) |
+| 四类资料、正文与 Obsidian 同步 | [项目说明](../README.md) |
 
 研究调度为每周二、周五北京时间 03:00，最终开关见 [automation.yaml](../config/automation.yaml)。个人 Codex 09:00 简报单独读取已有正式结果，不再次启动模型。执行器需要在线；实际成功与失败看工作流和接受回执，不能用历史演练代替。
 

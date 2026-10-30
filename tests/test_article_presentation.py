@@ -10,9 +10,13 @@ import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
 import researchdesk_batch as batch
-import researchdesk_catalog as catalog
+import researchdesk_admission as admission
+import researchdesk_confirmation as confirmation
+import researchdesk_confirmation_inputs as confirmation_inputs
+import researchdesk_cycle_discovery as discovery
 import researchdesk_insight as insight
 import researchdesk_insight_inputs as inputs
+import researchdesk_job as job
 import researchdesk_offline as store
 import test_research_batch as research_fixtures
 from test_fulltext_review import FulltextFetcher
@@ -84,6 +88,7 @@ class ArticleResearch(unittest.TestCase):
         self.assertIn('reading_scope', generation)
         self.assertIn('summary', self.client.calls[1]['instructions'])
         report = (self.root / result['items'][0]['report_path']).read_text()
+        job.check_text(report.encode(), result['items'][0]['report_path'])
         body, sources = report.split('## 资料来源与阅读范围', 1)
         self.assertNotIn('[^', report)
         self.assertNotIn('## 主张与证据', body)
@@ -149,6 +154,7 @@ class ArticleInsight(unittest.TestCase):
             if not relative.endswith('.md'):
                 continue
             text = (self.root / relative).read_text()
+            job.check_text(text.encode(), relative)
             body, sources = text.split('## 资料来源与阅读范围', 1)
             body = body.split('---', 2)[2]
             self.assertNotRegex(body, r'\[(?:R|H)\d+\]')
@@ -221,11 +227,11 @@ class FormalArticleCycle(unittest.TestCase):
     def test_archived_v3_v5_formal_files_remain_verifiable_and_linked(self):
         plan, accepted, identifier, client, fetcher = archive_fixtures.ArchivedFormalCycle.run_archived_cycle(
             self, presentation='technical_article')
-        entries, proofs = catalog.collect(self.root)
-        self.assertEqual(len(proofs), 1)
-        self.assertTrue({'synthesis', 'research', 'topic_proposal', 'original_snapshot', 'source'}
-                        .issubset({entry['group'] for entry in entries}))
-        self.assertIn('测试记忆材料的有限比较', catalog.render(self.root))
+        kinds = {path: yaml.safe_load(content.split('---', 2)[1])['kind']
+                 for path, content in plan['files'].items() if content.startswith('---\n')}
+        self.assertTrue({'synthesis', 'research_report', 'topic_proposal', 'original_snapshot', 'paper'}
+                        .issubset(set(kinds.values())))
+        self.assertNotIn('insight', kinds.values())
         for path, content in plan['files'].items():
             if not path.endswith('.md'):
                 continue
@@ -234,13 +240,39 @@ class FormalArticleCycle(unittest.TestCase):
                     continue
                 self.assertNotIn('/test/', target)
                 self.assertTrue((self.root / Path(path).parent / target).resolve().is_file(), (path, target))
-        synthesis_path = next(entry['path'] for entry in entries if entry['group'] == 'synthesis')
+        synthesis_paths = [path for path, kind in kinds.items() if kind == 'synthesis']
+        self.assertEqual(len(synthesis_paths), 1)
+        synthesis_path = synthesis_paths[0]
+        self.assertEqual(synthesis_path, 'insights/custom-topic/' + identifier + '-synthesis.md')
         synthesis = (self.root / synthesis_path).read_text()
         self.assertIn('## 资料来源与阅读范围', synthesis)
         self.assertNotIn('[^', synthesis)
         self.assertNotIn('> TEST', synthesis)
         source_ids = yaml.safe_load(synthesis.split('---', 2)[1])['source_ids']
         self.assertFalse(set(source_ids) & set(accepted['source_id_map']))
+        known_sources = {source for values in store.source_index(self.root).values() for source in values}
+        self.assertTrue(set(source_ids).issubset(known_sources))
+        selected = discovery.select_history(self.root, 'custom-topic', 30,
+                                             lookback_days=180, as_of='2026-10-31T01:00:00Z')
+        self.assertTrue(any(item['path'] == synthesis_path for item in selected))
+        marker = self.root / ('reports/custom-topic/admissions/' + identifier + '/accepted.yaml')
+        original_marker = marker.read_bytes()
+        marker.unlink()
+        try:
+            selected = discovery.select_history(self.root, 'custom-topic', 30,
+                                                 lookback_days=180, as_of='2026-10-31T01:00:00Z')
+            self.assertFalse(any(item['path'] == synthesis_path for item in selected))
+        finally:
+            marker.write_bytes(original_marker)
+        self.assertTrue(admission.run(self.root, 'custom-topic', identifier, fetcher=fetcher)['cached'])
+        config = yaml.safe_load((Path(__file__).resolve().parents[1] / 'config/confirmation.yaml').read_text())
+        config['topics'] = ['custom-topic']
+        (self.root / 'config/confirmation.yaml').write_text(yaml.safe_dump(config, allow_unicode=True))
+        topic_path = next(path for path, kind in kinds.items() if kind == 'topic_proposal')
+        topic_id = store.frontmatter(self.root / topic_path)['id']
+        preview = confirmation_inputs.prepare_preview(self.root, confirmation.load_config(self.root), topic_id)
+        self.assertEqual({item['path'] for item in preview['insights']}, {synthesis_path})
+        self.assertFalse(preview['writing_started'])
         self.assertEqual(len(client.calls), 4)
         self.assertEqual(accepted['new_model_calls'], 0)
         fetcher.fetch.assert_not_called()

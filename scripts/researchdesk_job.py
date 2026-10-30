@@ -445,16 +445,6 @@ def apply(root, artifact):
                               capture_output=True, check=False)
     if validate.returncode:
         raise JobError('published_test_schema_invalid_preserve_artifact')
-    if production_accepted and (root / 'workbench/资料索引.md').is_file():
-        # This navigation file is derived locally by the trusted publisher; it
-        # is never accepted from a worker artifact. A user's index edits must
-        # not block saving already reviewed research or get overwritten.
-        try:
-            import researchdesk_catalog as catalog
-            if catalog.update(root, write=True):
-                additions.append((catalog.TARGET, safe(root, catalog.TARGET).read_bytes()))
-        except Exception:
-            print('资料索引未更新：保留人工内容或待核实历史证明；正式研究仍可保存。', file=sys.stderr)
     if additions:
         git(root, 'config', 'user.name', 'github-actions[bot]')
         git(root, 'config', 'user.email', '41898282+github-actions[bot]@users.noreply.github.com')

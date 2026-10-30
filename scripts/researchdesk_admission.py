@@ -512,7 +512,8 @@ def _render(root, topic, cycle_id, config, bundle, candidate, records, source_ma
                 raise store.OfflineError('正式材料不能将测试正文作为研究依据')
             return '[%s](%s)' % (label, posixpath.relpath(destination, posixpath.dirname(new_path)))
         body = re.sub(r'\[([^\]]+)\]\(([^)\n]+)\)', rebase, body)
-        body = '\n'.join(NOTICE if line.startswith('> TEST：') else line for line in body.splitlines()) + '\n'
+        body = '\n'.join(NOTICE if line.startswith('> TEST：') else line for line in body.splitlines()
+                         if not (simple and line.startswith('> TEST：'))) + '\n'
         for old_id, new_id in {**source_map, **id_map}.items():
             body = body.replace(old_id, new_id)
         if not simple:
@@ -534,7 +535,8 @@ def _render(root, topic, cycle_id, config, bundle, candidate, records, source_ma
         lines = body.splitlines()
         lines[0] = '# ' + original['metadata']['title']
         lines = [NOTICE if line.startswith('> TEST：') else line for line in lines
-                 if not line.startswith('- 资料标识：') and line != '逐项核查、证据摘要与实际用量见同目录检查点及单项回执。']
+                 if not line.startswith('- 资料标识：') and line != '逐项核查、证据摘要与实际用量见同目录检查点及单项回执。'
+                 and not (simple and line.startswith('> TEST：'))]
         body = '\n'.join(lines) + '\n'
         if not simple:
             body += '\n正式来源：[%s](%s)。\n' % (target['id'], posixpath.relpath(target['path'], posixpath.dirname(target['report'])))

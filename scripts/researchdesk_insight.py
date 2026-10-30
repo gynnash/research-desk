@@ -45,7 +45,7 @@ HISTORY_SCOPE_INSTRUCTIONS = '''本轮历史由明确90–180天窗口抽样，h
 ARTICLE_GENERATION_INSTRUCTIONS = '''写给实际阅读技术内容的人，正文应是连续、具体的技术解读，而不是审核表或引用编号摘要。使用原有 JSON 字段，不新增 schema，不开始 Writing，不生成公众号文章。summary 用约120至200字交代本轮研究问题、分歧与主要判断；每个 report.comparisons.text 用约100至180字解释一个比较，交代具体机制、共同点或差异及为什么值得注意，按逻辑承接。insights.hypothesis 用约150至250字展开一个待验证判断的推理依据与潜在意义，counterpoints/limitations 用自然句说明替代解释和边界，validation 具体说明还需核实什么。选题 angle 和 why_now 具体、易懂，不重复口号。
 正文用论文名、方法名或博客标题指代来源，不要写 R1/H2/A1 等内部编号，不生成链接、脚注或引用占位符。evidence_ids 只供内部证据关联与审阅，正文不写逐段引用，程序仅在文末统一列出资料来源与实际阅读范围。直接基于给定原始材料和历史背景形成自洽总结与深度理解，不要逐条转述内部证据卡。kind=author_claim 的段落自然写明“作者提出/作者报告”；kind=inference 明确“我们据此推测/一种待验证的可能”，无需机械重复核验标签。每段保持一种判断类型。summary 和段落衔接也不能引入新事实、无依据例子或因果。不足以支持细节就缩短，不凑字；报告、洞察、选题所有正文合计建议1600至2400字，包含 JSON 键名的完整响应仍须遵守当前输出字符预算。'''
 
-ARTICLE_REVIEW_INSTRUCTIONS = '''同时核验完整叙述，包括 summary、comparisons 的解释和衔接、insights 的推理、选题价值及因果措辞，不能只检查引用存在。可读性不能以丢失范围、把作者主张或历史假设变成事实为代价；正文须自然区分作者报告和我们的推断，缺失证据不能靠修辞补齐。report 根检查须覆盖摘要与过渡；所有新扩写都由本次同一独立审阅检查，不新增润色或写作步骤。'''
+ARTICLE_REVIEW_INSTRUCTIONS = '''同时核验完整叙述，包括 summary、comparisons 的解释和衔接、insights 的推理、选题价值及因果措辞，不能只检查引用存在。可读性不能以丢失范围、把作者主张或历史假设变成事实为代价；正文须自然区分作者报告和我们的推断，缺失证据不能靠修辞补齐。正文不应夹带内部证据编号、逐段引用、脚注或运行信息。report 根检查须覆盖摘要与过渡；所有新扩写都由本次同一独立审阅检查，不新增润色或写作步骤。'''
 
 
 def instructions_for(config):
@@ -400,7 +400,8 @@ def render_article_outputs(root, base, config, batch_id, candidate, bundle):
         metadata = yaml.safe_load(original[path].split('---', 2)[1])
         metadata['source_ids'] = sorted({source for key in refs for source in evidence[key]['source_ids']})
         frontmatter = yaml.safe_dump(metadata, allow_unicode=True, sort_keys=False).strip()
-        lines = ['---', frontmatter, '---', '', '# ' + title, ''] + body
+        lines = ['---', frontmatter, '---', '', '# ' + title, '',
+                 '> TEST：运行中间产物，未正式入库。', ''] + body
         lines += ['## 资料来源与阅读范围', '']
         sources = {}
         for key in sorted(refs, key=lambda key: evidence[key]['origin'] != 'reviewed_research'):
