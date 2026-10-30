@@ -8,7 +8,7 @@ in this module.
 """
 
 import json
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from pathlib import Path
 import re
 import tempfile
@@ -23,6 +23,85 @@ from researchdesk_sources import SafeFetcher
 HASH = re.compile(r'[0-9a-f]{64}\Z')
 SOURCE_ID = re.compile(r'(?:paper|blog)-[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\Z')
 SOURCE_ID_IN_TEXT = re.compile(r'\b(?:paper|blog)-[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\b')
+HISTORY_FIELDS = {'historical_origin', 'research_date', 'date_basis', 'published_dates', 'history_window'}
+
+
+def _date(value):
+    """An explicit document date, never a filesystem timestamp."""
+    if isinstance(value, (date, datetime)):
+        return value.date().isoformat() if isinstance(value, datetime) else value.isoformat()
+    if not isinstance(value, str):
+        return None
+    try:
+        return date.fromisoformat(value[:10]).isoformat()
+    except ValueError:
+        return None
+
+
+def history_details(root, relative, metadata, payload, sources=None, admissions=None):
+    """Describe old evidence without claiming a fresh original-source review.
+
+    Admission cycle dates are planned research days, not execution timestamps.
+    Human edits retain their historical identity but lose AI-byte equivalence.
+    """
+    if admissions is None:
+        from researchdesk_identity import accepted_records
+        admissions = list(accepted_records(root))
+    records = [record for record in admissions if relative in record.get('output_hashes', {})]
+    dated = []
+    for record in records:
+        match = re.search(r'(?<!\d)(\d{8})(?!\d)', str(record.get('cycle_id', '')))
+        value = _date('%s-%s-%s' % (match[1][:4], match[1][4:6], match[1][6:])) if match else None
+        if value:
+            dated.append(value)
+    collected = _date(metadata.get('collected_at')) if isinstance(metadata, dict) else None
+    research_date = max(dated) if dated else collected
+    basis = 'admission_cycle_plan' if dated else ('collected_at' if collected else 'unknown')
+    digest = store.digest(payload)
+    unchanged = any(record['output_hashes'][relative] == digest for record in records)
+    if records and not unchanged:
+        # A proven generated-footer repair is still admitted AI content. It
+        # must not be presented as a human edit merely because old immutable
+        # receipts correctly retain the original hash.
+        for record in records:
+            base = 'reports/%s/admissions/%s/' % (record['topic'], record['cycle_id'])
+            if (Path(root) / (base + 'link-repair.yaml')).is_file():
+                import researchdesk_admission as admission
+                plan = admission._checked(root, base + 'plan.yaml')
+                if store.digest((Path(root) / (base + 'plan.yaml')).read_bytes()) != record['plan_sha256']:
+                    raise store.OfflineError('历史链接修复准入计划散列无效')
+                unchanged = admission.effective_output_hashes(root, plan).get(relative) == digest
+                if unchanged:
+                    break
+    historical_origin = ('admitted_ai' if unchanged else 'human_modified') if records else 'human_note'
+    source_metadata = ([metadata] if Path(relative).parts[0] == 'sources' else
+                       [value for key, value in (sources or {}).items() if key in set(SOURCE_ID_IN_TEXT.findall(payload.decode('utf-8')))])
+    published = sorted({value for item in source_metadata for value in [_date(item.get('published_at'))] if value})
+    return {'historical_origin': historical_origin, 'research_date': research_date,
+            'date_basis': basis, 'published_dates': published}
+
+
+def _history_window(value):
+    research_inputs.fields(value, {'start', 'end', 'lookback_days'}, '历史时间窗')
+    if (type(value['lookback_days']) is not int or not 90 <= value['lookback_days'] <= 180
+            or any(_date(value[key]) != value[key] for key in ('start', 'end'))
+            or (date.fromisoformat(value['end']) - date.fromisoformat(value['start'])).days != value['lookback_days']):
+        raise store.OfflineError('历史时间窗须使用明确的90–180天日期范围')
+    return value
+
+
+def history_coverage(evidence):
+    historical = [item for item in evidence if item.get('origin') == 'human_baseline']
+    dated = sorted({item['research_date'] for item in historical if item.get('research_date')
+                    and (not item.get('history_window') or item['history_window']['start'] <=
+                         item['research_date'] <= item['history_window']['end'])})
+    windows = [item['history_window'] for item in historical if item.get('history_window')]
+    return {'window': windows[0] if windows else None, 'documents': len(historical),
+            'independent_sources': len({source for item in historical for source in item.get('source_ids', [])}),
+            'dated_documents': sum(bool(item.get('research_date')) for item in historical),
+            'undated_documents': sum(not item.get('research_date') for item in historical),
+            'actual_start': dated[0] if dated else None, 'actual_end': dated[-1] if dated else None,
+            'actual_span_days': (date.fromisoformat(dated[-1]) - date.fromisoformat(dated[0])).days if dated else 0}
 
 
 def _relative(root, value, name):
@@ -106,7 +185,7 @@ def load_config(root, path):
     if config['models']['generation'] == config['models']['review']:
         raise store.OfflineError('Insight 生成与独立审阅须为不同的实际模型')
     ranges = {'max_calls': (2, 4), 'month_max_calls': (2, 1000),
-              'max_input_chars': (1000, 600000 if config.get('prompts', {}).get('version') == 'insight-v3' else 60000),
+              'max_input_chars': (1000, 600000 if config.get('prompts', {}).get('version') in {'insight-v3', 'insight-v4'} else 60000),
               'max_output_chars': (1000, 12000), 'timeout_seconds': (1, 120), 'max_revisions': (0, 1)}
     research_inputs.fields(config['budget'], ranges, 'Insight 预算')
     for name, (low, high) in ranges.items():
@@ -114,7 +193,7 @@ def load_config(root, path):
     if config['budget']['max_calls'] > config['budget']['month_max_calls']:
         raise store.OfflineError('Insight 请求上限不可超过月度上限')
     research_inputs.fields(config['prompts'], {'version'}, 'Insight 提示词')
-    if config['prompts']['version'] not in {'insight-v1', 'insight-v2', 'insight-v3'}:
+    if config['prompts']['version'] not in {'insight-v1', 'insight-v2', 'insight-v3', 'insight-v4'}:
         raise store.OfflineError('未知 Insight 提示词版本')
     if not isinstance(config['research_inputs'], list) or not 1 <= len(config['research_inputs']) <= 4:
         raise store.OfflineError('须明确登记 1–4 个通过审阅的 Research 批次')
@@ -133,16 +212,35 @@ def load_config(root, path):
         if entry['receipt'] in receipts:
             raise store.OfflineError('Research 输入回执重复')
         receipts.add(entry['receipt'])
-    if not isinstance(config['historical_inputs'], list) or not 1 <= len(config['historical_inputs']) <= 10:
-        raise store.OfflineError('须明确登记 1–10 份历史资料，不遍历整个知识库')
+    history_limit = 40 if config['prompts']['version'] == 'insight-v4' else 10
+    if not isinstance(config['historical_inputs'], list) or not 1 <= len(config['historical_inputs']) <= history_limit:
+        raise store.OfflineError('须明确登记 1–%s 份历史资料，不遍历整个知识库' % history_limit)
     histories = set()
     for entry in config['historical_inputs']:
-        research_inputs.fields(entry, {'path', 'sha256', 'origin'}, '历史输入')
+        research_inputs.fields(entry, {'path', 'sha256', 'origin'} |
+                              (HISTORY_FIELDS if config['prompts']['version'] == 'insight-v4' else set()), '历史输入')
         _history_path(root, entry['path'], topic)
         if entry['origin'] != 'human_baseline' or not isinstance(entry['sha256'], str) or not HASH.fullmatch(entry['sha256']):
             raise store.OfflineError('历史输入必须明确标为 human_baseline 并固定 SHA-256')
         if entry['path'] in histories:
             raise store.OfflineError('历史输入重复')
+        if config['prompts']['version'] == 'insight-v4':
+            if (entry['historical_origin'] not in {'admitted_ai', 'human_note', 'human_modified'}
+                    or entry['date_basis'] not in {'admission_cycle_plan', 'collected_at', 'unknown'}
+                    or (entry['research_date'] is not None and _date(entry['research_date']) != entry['research_date'])
+                    or (entry['date_basis'] == 'unknown') != (entry['research_date'] is None)
+                    or not isinstance(entry['published_dates'], list)
+                    or entry['published_dates'] != sorted(set(entry['published_dates']))
+                    or any(_date(value) != value for value in entry['published_dates'])):
+                raise store.OfflineError('历史来源类型或日期无效')
+            window = _history_window(entry['history_window'])
+            if histories and window != config['historical_inputs'][0]['history_window']:
+                raise store.OfflineError('历史输入须共享同一显式时间窗')
+            if entry['research_date'] and not window['start'] <= entry['research_date'] <= window['end']:
+                # Source identity files are required dependencies even when
+                # their first collection predates the selected report window.
+                if Path(entry['path']).parts[0] != 'sources':
+                    raise store.OfflineError('历史报告或洞察超出已登记时间窗')
         histories.add(entry['path'])
     config.update(_config_sha256=store.digest(path.read_bytes()), _topics_sha256=store.digest(topics_path.read_bytes()),
         _config_path=path.relative_to(root).as_posix(), _topics_path=topics_path.relative_to(root).as_posix(),
@@ -414,7 +512,22 @@ def _historical_evidence(root, config):
                  'source_identities': [{'source_id': source_id, 'identity_keys': store.identities(sources[source_id])}
                                        for source_id in source_ids],
                  'coverage': 'historical_note', 'independently_reviewed': False, 'can_support_original_facts': False}
-        evidence.append(dict(proof, text=text, historical_status='历史人工基线，含 AI 辅助内容；未经本次独立原文审阅。推断与旧主张均不可升格为新核验事实。'))
+        status = '历史人工基线，含 AI 辅助内容；未经本次独立原文审阅。推断与旧主张均不可升格为新核验事实。'
+        if config['prompts']['version'] == 'insight-v4':
+            details = history_details(root, entry['path'], metadata, text.encode(), sources)
+            if any(entry[key] != value for key, value in details.items()):
+                raise store.OfflineError('历史类型或日期与正式准入记录及原笔记不一致')
+            proof.update(details, history_window=entry['history_window'])
+            proof['temporal_eligible'] = bool(details['research_date'] and
+                entry['history_window']['start'] <= details['research_date'] <= entry['history_window']['end'])
+            labels = {'admitted_ai': '已准入的历史 AI 研究', 'human_note': '人工历史笔记',
+                      'human_modified': '已被人工修改的历史研究'}
+            status = labels[details['historical_origin']] + '；未经本轮独立原文复核，旧主张和假设不能升格为新事实。'
+            if details['date_basis'] == 'admission_cycle_plan':
+                status += '研究日期是准入周期的计划日，不代表实际执行时刻。'
+            if not proof['temporal_eligible']:
+                status += '日期未知或不在历史窗口内，仅作背景/身份依赖，不能支持跨时间趋势。'
+        evidence.append(dict(proof, text=text, historical_status=status))
         provenance.append(proof)
     return evidence, provenance
 
@@ -509,10 +622,10 @@ def model_payload(bundle, prompt_version='insight-v1'):
     claims and original material, so their rendered text and integrity proofs
     stay in the full bundle instead of being sent a second time to the model.
     """
-    if prompt_version not in {'insight-v1', 'insight-v2', 'insight-v3'}:
+    if prompt_version not in {'insight-v1', 'insight-v2', 'insight-v3', 'insight-v4'}:
         raise store.OfflineError('未知 Insight 提示词版本')
     payload = {'topic': bundle['topic'], 'research_context': bundle['research_context'], 'evidence': []}
-    if prompt_version in {'insight-v2', 'insight-v3'}:
+    if prompt_version in {'insight-v2', 'insight-v3', 'insight-v4'}:
         payload['evidence_index'] = {
             record['id']: dict(title=evidence_title(record), **{
                 key: record[key] for key in ('origin', 'coverage', 'source_ids', 'source_urls')})
@@ -521,12 +634,16 @@ def model_payload(bundle, prompt_version='insight-v1'):
         keys = {'id', 'origin', 'path', 'source_ids', 'source_url', 'source_urls', 'coverage', 'historical_status'}
         keys |= ({'metadata', 'research_summary', 'research_claims', 'research_limitations', 'original_material'}
                  if record['origin'] == 'reviewed_research' else {'text'})
-        if prompt_version == 'insight-v3' and record['origin'] == 'reviewed_research':
+        if prompt_version in {'insight-v3', 'insight-v4'} and record['origin'] == 'reviewed_research':
             keys |= {'reading_scope', 'locators', 'acquisition_attempts'}
+        if prompt_version == 'insight-v4' and record['origin'] == 'human_baseline':
+            keys |= HISTORY_FIELDS | {'temporal_eligible'}
         projected = {key: value for key, value in record.items() if key in keys}
-        if prompt_version in {'insight-v2', 'insight-v3'} and record['origin'] == 'human_baseline':
+        if prompt_version in {'insight-v2', 'insight-v3', 'insight-v4'} and record['origin'] == 'human_baseline':
             projected['text'], projected['historical_reference_ids'] = scoped_history(record)
         payload['evidence'].append(projected)
+    if prompt_version == 'insight-v4':
+        payload['history_coverage'] = history_coverage(bundle['evidence'])
     return payload
 
 

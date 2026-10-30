@@ -41,8 +41,8 @@ def _prompt_version(config):
     version = config.get('prompts', {}).get('version')
     if version in {'insight-v1', 'insight-v2'}:
         return 'insight-v2'
-    if version == 'insight-v3':
-        return 'insight-v3'
+    if version in {'insight-v3', 'insight-v4'}:
+        return version
     raise store.OfflineError('恢复原始 Insight 提示词版本无效')
 
 

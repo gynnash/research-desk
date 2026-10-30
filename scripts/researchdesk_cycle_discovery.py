@@ -70,7 +70,7 @@ def _context(root, config):
     return selected
 
 
-def _arxiv_url(entry, keywords, limit):
+def _arxiv_url(entry, keywords, limit, start=None, end=None, offset=0):
     entry = validate_url(entry)
     parts = urlsplit(entry)
     if parts.hostname not in {'arxiv.org', 'export.arxiv.org'} or parts.path != '/api/query':
@@ -81,12 +81,15 @@ def _arxiv_url(entry, keywords, limit):
     search = query.get('search_query', [None])[0]
     if not search:
         search = ' OR '.join('all:"%s"' % re.sub(r'["\\]', '', word) for word in keywords)
+    if start is not None:
+        search = '(%s) AND submittedDate:[%s TO %s]' % (
+            search, start.strftime('%Y%m%d%H%M'), end.strftime('%Y%m%d%H%M'))
     return urlunsplit(('https', parts.hostname, parts.path, urlencode({
-        'search_query': search, 'sortBy': 'lastUpdatedDate', 'sortOrder': 'descending',
-        'start': 0, 'max_results': limit}), ''))
+        'search_query': search, 'sortBy': 'submittedDate' if start is not None else 'lastUpdatedDate',
+        'sortOrder': 'descending', 'start': offset, 'max_results': limit}), ''))
 
 
-def _window_reason(record, start, end):
+def _window_reason(record, start, end, published_only=False):
     published = record['metadata'].get('published_at')
     if published is None:
         return None, 'unknown_publication_date'
@@ -95,9 +98,43 @@ def _window_reason(record, start, end):
     update_date = _instant(updated) if updated else None
     if start <= date < end:
         return 'published', None
-    if date < end and update_date is not None and start <= update_date < end:
+    if not published_only and date < end and update_date is not None and start <= update_date < end:
         return 'updated', None
     return None, 'outside_window'
+
+
+def previously_selected(root, topic, cycle_id):
+    """Build one in-memory identity ledger, never a new persistent database.
+
+    A rolling discovery does not pick an old version/update/failed selection
+    again. Recovery stays in the original frozen cycle; deliberate deepening
+    remains a separate explicit batch. Mock-only source notes are excluded.
+    """
+    from researchdesk_identity import source_index
+    root = Path(root).resolve()
+    used = set()
+    for key, values in source_index(root).items():
+        if any('test' not in Path(path).parts for path, _ in values.values()):
+            used.add(key)
+    import researchdesk_batch as batch
+    current = 'reports/test/%s/research-batches/%s' % (topic, cycle_id)
+    for _, candidate, _, _ in batch.previous_candidates(root, current, 'chatgpt_plan'):
+        used.update(store.identities(candidate['metadata']))
+    for path in (root / ('reports/test/' + topic + '/cycles')).glob('*/selection.yaml'):
+        if path.parent.name == cycle_id:
+            continue
+        manifest_path = path.parent / 'manifest.yaml'
+        if not manifest_path.is_file():
+            continue
+        manifest = store.checked_yaml(root, manifest_path.relative_to(root))
+        if manifest.get('backend') != 'chatgpt_plan' or manifest.get('mode') != 'research_cycle_test':
+            continue
+        selection = store.checked_yaml(root, path.relative_to(root))
+        for item in selection.get('candidates', []):
+            metadata = item.get('metadata')
+            if metadata:
+                used.update(store.identities(metadata))
+    return used
 
 
 def discover(root, config, cycle_id, fetcher=None):
@@ -116,8 +153,9 @@ def discover(root, config, cycle_id, fetcher=None):
     start, end = _instant(config['window_start']), _instant(config['window_end'])
     if start >= end:
         raise store.OfflineError('Cycle 时间窗必须递增')
-    bounds = {'max_candidates': (1, 20), 'max_documents': (1, 5),
-              'max_per_source': (1, 2), 'evidence_max_chars': (200, 10000)}
+    rolling = config.get('window', {}).get('mode') == 'rolling'
+    bounds = {'max_candidates': (1, 100 if rolling else 20), 'max_documents': (1, 5),
+              'max_per_source': (1, 5 if rolling else 2), 'evidence_max_chars': (200, 10000)}
     values = {}
     for key, (low, high) in bounds.items():
         value = limits.get(key, 6000 if key == 'evidence_max_chars' else None)
@@ -134,6 +172,7 @@ def discover(root, config, cycle_id, fetcher=None):
     fetcher = fetcher or SafeFetcher(retries=1)
     candidates, deferred, statuses, eligible = [], [], [], []
     seen = set()
+    used = previously_selected(root, config['topic'], cycle_id) if rolling else set()
     for source, adapter in zip(sources, adapters):
         entry = source.get('entry_url', DEFAULT_ENTRIES[adapter])
         entry = validate_url(entry)
@@ -145,23 +184,49 @@ def discover(root, config, cycle_id, fetcher=None):
         try:
             cap = values['max_candidates']
             if adapter == 'arxiv':
-                query = _arxiv_url(entry, topic['keywords'], cap)
-                response = fetcher.fetch(query)
-                _content(response, xml=True)
-                records = parse_arxiv_feed(response['text'])
-                # The first page may end before the requested window is covered.
-                feed = ET.fromstring(response['text'])
-                total_text = feed.findtext('{http://a9.com/-/spec/opensearch/1.1/}totalResults')
-                total = int(total_text) if total_text and total_text.isdigit() else None
-                oldest = min((_instant(r.get('upstream_updated_at') or r['metadata']['published_at'])
-                              for r in records if r.get('upstream_updated_at') or r['metadata'].get('published_at')),
-                             default=None)
-                truncated = len(records) >= cap and (total is None or total > len(records))
-                complete = not truncated or (oldest is not None and oldest < start)
-                status.update(discovered=total if total is not None else len(records),
-                              inspected=min(len(records), cap), status='complete' if complete else 'truncated',
-                              complete_window=complete, requested_url=query)
-                records = records[:cap]
+                if rolling:
+                    total, complete, requests = None, False, []
+                    for offset in range(0, cap, 20):
+                        page_size = min(20, cap - offset)
+                        query = _arxiv_url(entry, topic['keywords'], page_size, start, end, offset)
+                        requests.append(query)
+                        try:
+                            response = fetcher.fetch(query)
+                            _content(response, xml=True)
+                            page = parse_arxiv_feed(response['text'])
+                            feed = ET.fromstring(response['text'])
+                            count = feed.findtext('{http://a9.com/-/spec/opensearch/1.1/}totalResults')
+                            if count and count.isdigit():
+                                total = int(count)
+                            records.extend(page[:page_size])
+                            if len(page) < page_size or (total is not None and offset + len(page) >= total):
+                                complete = True
+                                break
+                        except SourceError as exc:
+                            status['error_types'].append(type(exc).__name__)
+                            status['error_type'] = type(exc).__name__
+                            break
+                    status.update(discovered=total if total is not None else len(records),
+                        inspected=len(records), status=('complete' if complete else 'truncated' if records else 'failed'),
+                        complete_window=complete, requested_urls=requests, coverage='bounded_published_window')
+                else:
+                    query = _arxiv_url(entry, topic['keywords'], cap)
+                    response = fetcher.fetch(query)
+                    _content(response, xml=True)
+                    records = parse_arxiv_feed(response['text'])
+                    # The first page may end before the requested window is covered.
+                    feed = ET.fromstring(response['text'])
+                    total_text = feed.findtext('{http://a9.com/-/spec/opensearch/1.1/}totalResults')
+                    total = int(total_text) if total_text and total_text.isdigit() else None
+                    oldest = min((_instant(r.get('upstream_updated_at') or r['metadata']['published_at'])
+                                  for r in records if r.get('upstream_updated_at') or r['metadata'].get('published_at')),
+                                 default=None)
+                    truncated = len(records) >= cap and (total is None or total > len(records))
+                    complete = not truncated or (oldest is not None and oldest < start)
+                    status.update(discovered=total if total is not None else len(records),
+                                  inspected=min(len(records), cap), status='complete' if complete else 'truncated',
+                                  complete_window=complete, requested_url=query)
+                    records = records[:cap]
             else:
                 if urlsplit(entry).hostname not in ({'letta.com', 'www.letta.com'} if adapter == 'letta' else
                                                      {'langchain.com', 'www.langchain.com', 'blog.langchain.com'}):
@@ -199,7 +264,7 @@ def discover(root, config, cycle_id, fetcher=None):
                 if not relevant:
                     reason = 'topic_mismatch'
                 else:
-                    event, reason = _window_reason(record, start, end)
+                    event, reason = _window_reason(record, start, end, published_only=rolling)
                 item = {'adapter': adapter, 'kind': record['kind'], 'url': url,
                         'metadata': metadata, 'published_at': metadata.get('published_at'),
                         'upstream_updated_at': record.get('upstream_updated_at'),
@@ -207,6 +272,8 @@ def discover(root, config, cycle_id, fetcher=None):
                         'discovery_event': event, 'coverage': record['coverage']}
                 if reason is None and seen.intersection(keys):
                     reason = 'same_cycle_duplicate'
+                if reason is None and used.intersection(keys):
+                    reason = 'previously_selected'
                 seen.update(keys)
                 if reason:
                     deferred.append(dict(item, reason=reason))
@@ -234,7 +301,28 @@ def discover(root, config, cycle_id, fetcher=None):
             status['error_type'] = type(exc).__name__
     # Source order is deliberate: one paper and one publisher by default. Each
     # source sorts by newest explicit publication/update, with URL as a tie-break.
-    for adapter in adapters:
+    attention_summary = None
+    if 'selection' in config:
+        from researchdesk_attention import rank_candidates
+        # Alternate publishers before applying a shared lookup budget.
+        groups = [[item for item in eligible if item['adapter'] == key] for key in adapters]
+        from itertools import zip_longest
+        balanced = [item for row in zip_longest(*groups) for item in row if item is not None]
+        ranked, attention_summary = rank_candidates(balanced, fetcher, config['selection'],
+                                                    start.isoformat(), end.isoformat())
+        deferred.extend(attention_summary.pop('deferred'))
+        counts = {}
+        for item in ranked:
+            adapter = item['adapter']
+            if counts.get(adapter, 0) >= values['max_per_source']:
+                deferred.append(dict(item, reason='per_source_limit'))
+            elif len(candidates) >= values['max_documents']:
+                deferred.append(dict(item, reason='cycle_document_limit'))
+            else:
+                candidates.append(item)
+                counts[adapter] = counts.get(adapter, 0) + 1
+                next(s for s in statuses if s['adapter'] == adapter)['selected'] += 1
+    for adapter in adapters if 'selection' not in config else []:
         items = [item for item in eligible if item['adapter'] == adapter]
         items.sort(key=lambda item: (item.get('upstream_updated_at') or item['published_at'], item['url']), reverse=True)
         for index, item in enumerate(items):
@@ -248,13 +336,18 @@ def discover(root, config, cycle_id, fetcher=None):
     failures = [status for status in statuses if status['status'] == 'failed']
     state = ('failed' if len(failures) == len(statuses) else 'partial' if failures or any(
         status['status'] == 'truncated' for status in statuses) else 'complete')
-    return {'schema_version': 1, 'mode': 'cycle_discovery_test', 'topic': config['topic'],
+    if attention_summary is not None and attention_summary.get('status') != 'complete' and state == 'complete':
+        state = 'partial'
+    result = {'schema_version': 1, 'mode': 'cycle_discovery_test', 'topic': config['topic'],
             'cycle_id': cycle_id, 'window_start': config['window_start'], 'window_end': config['window_end'],
             'status': state, 'source_status': statuses, 'candidates': candidates, 'deferred': deferred,
             'production_accepted': False}
+    if attention_summary is not None:
+        result['selection'] = attention_summary
+    return result
 
 
-def select_history(root, topic, max_documents=6):
+def select_history(root, topic, max_documents=6, lookback_days=None, as_of=None):
     """Select current-topic formal notes, including every cited source UUID.
 
     A report/insight is skipped when dependencies are missing or do not fit the
@@ -262,17 +355,27 @@ def select_history(root, topic, max_documents=6):
     strict historical input reader, without treating old notes as fresh facts.
     """
     root = Path(root).resolve()
-    if type(max_documents) is not int or not 1 <= max_documents <= 10:
-        raise store.OfflineError('历史资料上限必须是 1–10')
+    limit = 40 if lookback_days is not None else 10
+    if type(max_documents) is not int or not 1 <= max_documents <= limit:
+        raise store.OfflineError('历史资料上限必须是 1–%s' % limit)
+    window = None
+    if lookback_days is not None:
+        from datetime import timedelta
+        if type(lookback_days) is not int or not 90 <= lookback_days <= 180 or as_of is None:
+            raise store.OfflineError('历史选择须明确90–180天范围与截至时刻')
+        end = _instant(as_of).date()
+        window = {'start': (end - timedelta(days=lookback_days)).isoformat(),
+                  'end': end.isoformat(), 'lookback_days': lookback_days}
     topics = store.load_yaml(root / 'config/research_topics.yaml').get('topics', {})
     selected_topic = topics.get(topic)
     if not isinstance(selected_topic, dict):
         raise store.OfflineError('历史资料研究方向不存在')
     name = selected_topic.get('name', topic)
     from researchdesk_identity import accepted_records
-    admitted = {path for record in accepted_records(root) if record.get('topic')==topic
+    admissions = [record for record in accepted_records(root) if record.get('topic') == topic]
+    admitted = {path for record in admissions
                 for path in record.get('output_hashes',{})}
-    source_paths, notes = {}, []
+    source_paths, notes, details, source_metadata = {}, [], {}, {}
     for folder in ('sources/papers', 'sources/blogs', 'reports', 'insights'):
         for path in sorted((root / folder).rglob('*.md')):
             relative = path.relative_to(root)
@@ -312,11 +415,70 @@ def select_history(root, topic, max_documents=6):
                 if identifier in source_paths:
                     raise store.OfflineError('正式历史来源存在重复稳定 ID')
                 source_paths[identifier] = (relative.as_posix(), store.digest(payload))
+                source_metadata[identifier] = metadata
             elif explicit or re.search(r'(?:研究主题|主题)\s*[:：]\s*(?:%s|%s)(?:\s|$)' % (
                     re.escape(name), re.escape(topic)), text):
                 refs = sorted(set(SOURCE_IDS.findall(text)))
                 if refs:
                     notes.append((relative.as_posix(), store.digest(payload), refs))
+            if window is not None:
+                details[relative.as_posix()] = (metadata, payload)
+    if window is not None:
+        from researchdesk_insight_inputs import history_details
+        descriptions = {path: history_details(root, path, metadata, payload, source_metadata, admissions)
+                        for path, (metadata, payload) in details.items()}
+        def eligible(path):
+            when = descriptions[path]['research_date']
+            return when is not None and window['start'] <= when <= window['end']
+        # One pass per observed calendar month before taking another record
+        # from the same month. A source UUID remains one underlying source,
+        # even when its report, synthesis and insight repeat its claims.
+        months = {}
+        for note in notes:
+            if eligible(note[0]) and all(identifier in source_paths for identifier in note[2]):
+                months.setdefault(descriptions[note[0]]['research_date'][:7], []).append(note)
+        chosen, seen = {}, set()
+        while months:
+            progress = False
+            for month in sorted(list(months), reverse=True):
+                values = months[month]
+                values.sort(key=lambda note: (len(set(note[2]) - seen),
+                    descriptions[note[0]]['research_date'], note[0]), reverse=True)
+                for note in list(values):
+                    path, digest, refs = note
+                    dependencies = [source_paths[key] for key in refs if source_paths[key][0] not in chosen]
+                    if len(chosen) + len(dependencies) + 1 <= max_documents:
+                        for source_path, source_hash in dependencies:
+                            chosen[source_path] = source_hash
+                        chosen[path] = digest
+                        seen.update(refs)
+                        values.remove(note)
+                        progress = True
+                        break
+                if not values:
+                    del months[month]
+            if not progress or len(chosen) >= max_documents:
+                break
+        # Direct source notes can fill remaining room, ordered by explicit
+        # collection/research day rather than UUID spelling or file mtime.
+        sources = [(identifier, path, digest) for identifier, (path, digest) in source_paths.items()
+                   if eligible(path) and path not in chosen]
+        source_months = {}
+        for item in sources:
+            source_months.setdefault(descriptions[item[1]]['research_date'][:7], []).append(item)
+        while source_months and len(chosen) < max_documents:
+            for month in sorted(list(source_months), reverse=True):
+                values = source_months[month]
+                values.sort(key=lambda item: (item[0] not in seen, descriptions[item[1]]['research_date'], item[1]), reverse=True)
+                identifier, path, digest = values.pop(0)
+                chosen[path] = digest
+                seen.add(identifier)
+                if not values:
+                    del source_months[month]
+                if len(chosen) >= max_documents:
+                    break
+        return [dict(path=path, sha256=digest, origin='human_baseline', **descriptions[path],
+                     history_window=dict(window)) for path, digest in chosen.items()]
     chosen = {}
     # Recent reports then insights provide a coherent context; dependencies are
     # inserted before the note. File names provide deterministic ordering, not

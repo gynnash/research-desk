@@ -38,6 +38,9 @@ FULLTEXT_GENERATION_INSTRUCTIONS = GENERATION_INSTRUCTIONS.replace(
     '论文仅摘要、博客仅节选，', '各来源按实际全文、章节节选或摘要范围判断，').replace(
     '明确摘要/节选及人工历史基线限制', '逐项明确实际全文/章节节选/摘要降级及人工历史基线限制')
 
+HISTORY_SCOPE_INSTRUCTIONS = '''本轮历史由明确90–180天窗口抽样，history_coverage说明实际覆盖，不能把配置180天说成已经积累半年。H来源的origin=human_baseline仅为旧证明兼容字段，以historical_origin区分admitted_ai已准入历史AI研究、human_note人工笔记和human_modified人工修改笔记；这些材料均未经本轮独立原文复核，旧主张/假设不得升级成新事实。research_date的date_basis=admission_cycle_plan仅代表计划研究日，不是实际执行时间；published_dates是原始文章发表日，不是采集研究日。temporal_eligible=false的无日期或窗外依赖只作背景，不支撑跨时间趋势。
+使用现有report.comparisons比较机制、观点的共同点与分歧，比较历史窗口较近90天与较早91–180天的延续和变化；只有实际材料覆盖的日期段才比较，缺失日期段须明确说明。每条趋势或演进判断须给出至少两个独立原始来源、各自可追溯时间、反例或替代解释；同一来源的旧报告/洞察不算独立证据。仅重复发表日期、旧文近期入库或少量同源报道不能证明行业趋势；跨来源或跨时间不足时称研究线索/待验证假设。用insights表达有边界的深度看法，用open_questions与validation明确值得深入研究的问题和需要补齐的证据，选题仅待用户确认，不新增任务或开始写作。'''
+
 
 def instructions_for(config):
     version = config['prompts']['version']
@@ -51,6 +54,11 @@ def instructions_for(config):
     if version == 'insight-v3':
         return (FULLTEXT_GENERATION_INSTRUCTIONS + '\n' + CITATION_SCOPE_INSTRUCTIONS + '\n' + FULLTEXT_SCOPE_INSTRUCTIONS,
                 REVIEW_INSTRUCTIONS + '\n' + CITATION_SCOPE_INSTRUCTIONS + '\n' + FULLTEXT_SCOPE_INSTRUCTIONS)
+    if version == 'insight-v4':
+        generation = FULLTEXT_GENERATION_INSTRUCTIONS.replace('H1 等显式人工历史基线', 'H1 等显式历史材料')
+        review = REVIEW_INSTRUCTIONS.replace('含R研究、原始材料与H人工历史', '含R研究、原始材料与H历史材料')
+        suffix = '\n' + CITATION_SCOPE_INSTRUCTIONS + '\n' + FULLTEXT_SCOPE_INSTRUCTIONS + '\n' + HISTORY_SCOPE_INSTRUCTIONS
+        return generation + suffix, review + suffix
     raise store.OfflineError('未知 Insight 提示词版本')
 
 
@@ -276,6 +284,8 @@ def render_outputs(root, base, config, batch_id, candidate, bundle):
     topic = config['topic']
     evidence = {e['id']: e for e in bundle['evidence']}
     notice = '> TEST：会员真实综合与独立审阅；论文摘要/博客节选及人工历史基线，未正式入库。'
+    if config['prompts']['version'] == 'insight-v4':
+        notice = '> TEST：会员综合与独立审阅；各资料按实际读取范围使用，历史材料未经本轮原文复核，未正式入库。'
     def cite(refs, output):
         return '、'.join('[%s](%s)' % (key, posixpath.relpath(evidence[key]['path'], posixpath.dirname(output))) for key in refs)
     def header(kind, identity, title, refs, proposed=False):
@@ -289,7 +299,19 @@ def render_outputs(root, base, config, batch_id, candidate, bundle):
     report = candidate['report']
     refs = sorted(targets(candidate)['report'])
     lines = header('synthesis', 'report-%s-%s' % (topic, batch_id), report['title'], refs)
-    lines += [candidate['coverage_note'], '', '## 综合摘要', '', report['summary'], '', '## 比较与证据', '']
+    lines += [candidate['coverage_note'], '']
+    if config['prompts']['version'] == 'insight-v4':
+        coverage = inputs.history_coverage(bundle['evidence'])
+        window = coverage['window']
+        lines += ['## 历史覆盖', '',
+                  '- 配置窗口：%s 至 %s（%s 天，抽样，不代表完整覆盖）。' % (
+                      window['start'], window['end'], window['lookback_days']),
+                  '- 本轮历史：%s 份文件（含来源依赖），%s 个原始来源；%s 份有日期，%s 份无日期。' % (
+                      coverage['documents'], coverage['independent_sources'], coverage['dated_documents'], coverage['undated_documents']),
+                  '- 窗口内实际日期：%s 至 %s，跨度 %s 天；计划研究日不代表实际执行时间。' % (
+                      coverage['actual_start'] or '无', coverage['actual_end'] or '无', coverage['actual_span_days']),
+                  '- 无日期或窗外身份依赖不能支撑跨时间趋势；原文发表日期与工作台研究日期分开保留。', '']
+    lines += ['## 综合摘要', '', report['summary'], '', '## 比较与证据', '']
     labels = {'fact': '原文事实', 'author_claim': '作者声称，未独立复现', 'inference': '我们的推断'}
     for claim in report['comparisons']:
         lines += ['- **%s**：%s（%s）' % (labels[claim['kind']], claim['text'], cite(claim['evidence_ids'], path))]
@@ -301,7 +323,12 @@ def render_outputs(root, base, config, batch_id, candidate, bundle):
         lines += ['- %s：%s；来源 ID：%s。' % (cite([key], path), e['origin'], '、'.join(e['source_ids']))]
         if e.get('source_url'):
             lines += ['  - [原始来源](%s)；覆盖：%s。' % (e['source_url'], e.get('coverage', 'historical_note'))]
-        if config['prompts']['version'] == 'insight-v3' and e.get('reading_scope'):
+        if config['prompts']['version'] == 'insight-v4' and e.get('historical_origin'):
+            labels = {'admitted_ai': '已准入历史 AI 研究', 'human_note': '人工笔记', 'human_modified': '人工修改的历史研究'}
+            lines += ['  - 历史类型：%s；研究/采集日：%s（%s）；原文发表日：%s；可作窗口内时间证据：%s。' % (
+                labels[e['historical_origin']], e.get('research_date') or '未知', e['date_basis'],
+                '、'.join(e['published_dates']) or '未知', '是' if e.get('temporal_eligible') else '否')]
+        if config['prompts']['version'] in {'insight-v3', 'insight-v4'} and e.get('reading_scope'):
             scope = e['reading_scope']
             lines += ['  - [本次读取正文](%s)；媒介：%s；字符：%s / %s；截断：%s。' % (
                 scope.get('document_url', e['source_url']), scope.get('format', 'unknown'),

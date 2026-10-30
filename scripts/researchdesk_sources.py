@@ -26,7 +26,8 @@ class SourceError(ValueError):
 
 
 HOSTS = frozenset({'arxiv.org', 'export.arxiv.org', 'www.letta.com', 'letta.com',
-                   'www.langchain.com', 'langchain.com', 'blog.langchain.com'})
+                   'www.langchain.com', 'langchain.com', 'blog.langchain.com',
+                   'huggingface.co', 'hn.algolia.com'})
 SOURCE_HOSTS = {'letta': {'letta.com', 'www.letta.com'},
                 'langchain': {'langchain.com', 'www.langchain.com', 'blog.langchain.com'}}
 SOURCE_NAMES = {'letta': 'Letta', 'langchain': 'LangChain'}
@@ -107,6 +108,27 @@ class SafeFetcher:
     def fetch(self, url):
         return self._fetch(url, pdf=False)
 
+    def fetch_json(self, url):
+        """Fetch bounded public JSON with the same network protections as HTML."""
+        result = self._fetch(url, json_response=True)
+        try:
+            def pairs(values):
+                value = {}
+                for key, item in values:
+                    if key in value:
+                        raise ValueError('Duplicate JSON key')
+                    value[key] = item
+                return value
+
+            def constant(value):
+                raise ValueError('Non-finite JSON number')
+
+            result['json'] = json.loads(result['text'], object_pairs_hook=pairs,
+                                        parse_constant=constant)
+        except (ValueError, TypeError, RecursionError) as exc:
+            raise SourceError('Source response is not valid JSON') from exc
+        return result
+
     def fetch_pdf(self, url):
         """Fetch an official arXiv PDF in memory; never decode or save it."""
         checked = validate_url(url)
@@ -117,7 +139,7 @@ class SafeFetcher:
             raise SourceError('PDF fetching requires an official arXiv PDF URL')
         return self._fetch(checked, pdf=True)
 
-    def _fetch(self, url, pdf=False):
+    def _fetch(self, url, pdf=False, json_response=False):
         requested = validate_url(url)
         current, redirects = requested, []
         max_bytes = 20_000_000 if pdf else self.max_bytes
@@ -129,7 +151,7 @@ class SafeFetcher:
                 self._wait_arxiv(host)
                 request = Request(current, headers={
                     'User-Agent': 'ResearchDesk/0.1 (public-source test; no model calls)',
-                    'Accept': ('application/pdf' if pdf else
+                    'Accept': ('application/json' if json_response else 'application/pdf' if pdf else
                                'text/html, application/atom+xml, application/xml;q=0.9'),
                     'Accept-Encoding': 'identity'})
                 try:
@@ -172,7 +194,7 @@ class SafeFetcher:
                 if actual != current:
                     raise SourceError('Transport followed an unvalidated redirect')
                 content_type = response.headers.get('Content-Type', '').split(';', 1)[0].strip().lower()
-                allowed_types = ({'application/pdf'} if pdf else
+                allowed_types = ({'application/json'} if json_response else {'application/pdf'} if pdf else
                                  {'text/html', 'application/xhtml+xml', 'application/atom+xml',
                                   'application/xml', 'text/xml'})
                 if content_type not in allowed_types:

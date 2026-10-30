@@ -7,12 +7,16 @@ reading:
   mode: full_text_preferred
   paper_max_chars: 120000
 window:
-  initial_days: 7
-  overlap_hours: 48
+  mode: rolling
+  days: 60
+selection:
+  mode: community_attention
+  min_score: 0.1
+  max_requests: 240
 discovery:
-  max_candidates: 20
+  max_candidates: 80
   max_documents: 5
-  max_per_source: 2
+  max_per_source: 5
   evidence_max_chars: 6000
   sources:
     - id: arxiv
@@ -37,4 +41,5 @@ budget:
   timeout_seconds: 120
   max_revisions: 1
 history:
-  max_documents: 6
+  lookback_days: 180
+  max_documents: 30

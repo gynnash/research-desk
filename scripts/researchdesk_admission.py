@@ -392,6 +392,25 @@ def _source_footer_links(content, source_path, report_path, accepted_path, requi
     raise store.OfflineError('来源脚注不是预期的两条机器链接，拒绝自动纠正')
 
 
+def _source_card(source, original, source_path, report_path, synthesis_path, accepted_path):
+    """A source has one reference card; detailed analysis lives in reports."""
+    directory = posixpath.dirname(source_path)
+    evidence = original['evidence']
+    url = original['metadata']['source_url']
+    if original['kind'] == 'paper' and original['metadata'].get('source_version'):
+        url = 'https://arxiv.org/abs/' + original['metadata']['arxiv_id'] + original['metadata']['source_version']
+    labels = {'full_text': '完整抽取正文', 'excerpt': '节选', 'abstract_only': '摘要'}
+    lines = ['# ' + source['title'], '', NOTICE, '', '## 原文与取材记录', '',
+             '- [打开原文](%s)。' % url,
+             '- 本次分析范围：%s；来源卡不保存原文全文副本。' % labels[evidence['coverage']],
+             '- [单篇详细研究](%s) · [本轮综合报告](%s)。' % (
+                 posixpath.relpath(report_path, directory), posixpath.relpath(synthesis_path, directory)),
+             '', '正式来源：[%s](%s)。' % (source['id'], posixpath.basename(source_path)),
+             '准入记录：[输入、审阅与输出散列](%s)。' % posixpath.relpath(accepted_path, directory),
+             '', '## 人工笔记', '']
+    return _frontmatter(source, '\n'.join(lines))
+
+
 def _render(root, topic, cycle_id, config, bundle, candidate, records, source_map=None):
     from researchdesk_identity import source_index
     index = source_index(root)
@@ -496,9 +515,13 @@ def _render(root, topic, cycle_id, config, bundle, candidate, records, source_ma
                 'published_at': original['metadata'].get('published_at'), 'collected_at': collected,
                 'updated_at': collected, 'topics': [topic], 'status': 'inbox',
                 'related_sources': [], 'related_notes': [target['report'], synthesis_path]}
-            source_content = _frontmatter(source, body + '\n## 人工笔记\n\n')
-            files[target['path']] = _source_footer_links(
-                source_content, target['path'], target['report'], accepted_path)
+            if config['prompts']['version'] == 'insight-v4':
+                files[target['path']] = _source_card(source, original, target['path'], target['report'],
+                                                     synthesis_path, accepted_path)
+            else:
+                source_content = _frontmatter(source, body + '\n## 人工笔记\n\n')
+                files[target['path']] = _source_footer_links(
+                    source_content, target['path'], target['report'], accepted_path)
     return files, source_map
 
 

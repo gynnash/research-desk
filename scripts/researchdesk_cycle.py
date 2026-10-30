@@ -44,7 +44,15 @@ def load_config(root, path, snapshot=None):
         config_sha256 = snapshot['_config_sha256']
     common.fields(config, {'schema_version', 'mode', 'backend', 'topic', 'topics_file', 'window',
                           'discovery', 'models', 'budget', 'history'} |
-                  ({'reading'} if 'reading' in config else set()), '研究轮次配置')
+                  ({'reading'} if 'reading' in config else set()) |
+                  ({'selection'} if 'selection' in config else set()), '研究轮次配置')
+    if 'selection' in config:
+        common.fields(config['selection'], {'mode', 'min_score', 'max_requests'}, '候选排序')
+        if (config['selection']['mode'] != 'community_attention'
+                or type(config['selection']['min_score']) not in (int, float)
+                or not 0 < config['selection']['min_score'] <= 100):
+            raise store.OfflineError('仅支持有可核实信号的社区关注度排序')
+        common.positive(config['selection']['max_requests'], 1, 500, 'max_requests')
     if 'reading' in config:
         common.fields(config['reading'], {'mode', 'paper_max_chars'}, '论文阅读配置')
         if config['reading']['mode'] != 'full_text_preferred':
@@ -61,9 +69,13 @@ def load_config(root, path, snapshot=None):
     common.fields(config['models'], {'research', 'insight', 'review'}, '轮次模型')
     if any(not isinstance(x, str) or not x.strip() for x in config['models'].values()) or config['models']['review'] in {config['models']['research'], config['models']['insight']}:
         raise store.OfflineError('生成与独立审阅必须配置不同模型')
-    common.fields(config['window'], {'initial_days', 'overlap_hours'}, '扫描时间窗')
-    common.positive(config['window']['initial_days'], 1, 365, 'initial_days')
-    common.positive(config['window']['overlap_hours'], 0, 168, 'overlap_hours')
+    if config['window'].get('mode') == 'rolling':
+        common.fields(config['window'], {'mode', 'days'}, '滚动采集时间窗')
+        common.positive(config['window']['days'], 1, 365, 'days')
+    else:
+        common.fields(config['window'], {'initial_days', 'overlap_hours'}, '扫描时间窗')
+        common.positive(config['window']['initial_days'], 1, 365, 'initial_days')
+        common.positive(config['window']['overlap_hours'], 0, 168, 'overlap_hours')
     ranges = {'max_calls_per_cycle': (4, 20), 'research_max_calls': (2, 16), 'insight_max_calls': (2, 4),
               'max_input_chars': (1000, 600000), 'max_output_chars': (1000, 12000),
               'timeout_seconds': (1, 120), 'max_revisions': (0, 1)}
@@ -72,10 +84,16 @@ def load_config(root, path, snapshot=None):
         common.positive(config['budget'][key], low, high, key)
     if config['budget']['research_max_calls'] + config['budget']['insight_max_calls'] > config['budget']['max_calls_per_cycle']:
         raise store.OfflineError('子阶段预算之和超过轮次上限')
-    common.fields(config['history'], {'max_documents'}, '历史选择')
-    common.positive(config['history']['max_documents'], 1, 10, 'max_documents')
+    common.fields(config['history'], {'max_documents'} |
+                  ({'lookback_days'} if 'lookback_days' in config['history'] else set()), '历史选择')
+    if 'lookback_days' in config['history']:
+        common.positive(config['history']['lookback_days'], 90, 180, 'history.lookback_days')
+    common.positive(config['history']['max_documents'], 1,
+                    40 if 'lookback_days' in config['history'] else 10, 'max_documents')
     common.fields(config['discovery'], {'max_candidates', 'max_documents', 'max_per_source', 'evidence_max_chars', 'sources'}, '资料发现')
-    for key, bounds in {'max_candidates': (1,20), 'max_documents': (1,5), 'max_per_source': (1,2), 'evidence_max_chars': (200,10000)}.items():
+    expanded = config['window'].get('mode') == 'rolling'
+    for key, bounds in {'max_candidates': (1,100 if expanded else 20), 'max_documents': (1,5),
+                        'max_per_source': (1,5 if expanded else 2), 'evidence_max_chars': (200,10000)}.items():
         common.positive(config['discovery'][key], *bounds, key)
     topics_sha256 = store.digest(topic_path.read_bytes())
     if snapshot is not None and snapshot['_topics_sha256'] != topics_sha256:
@@ -123,17 +141,18 @@ def discover_cycle(root, config_path, cycle_id, fetcher=None):
             raise store.OfflineError('轮次已绑定配置与研究方向，不能重置')
     else:
         end = datetime.now(timezone.utc)
-        start = end - timedelta(days=config['window']['initial_days'])
-        # Resume from the last fully covered source window. Bounded publisher
-        # listings never advance an unproven archive cursor.
-        prior_receipts = sorted((root / ('reports/test/' + config['topic'] + '/cycles')).glob('*/receipt.yaml'))
-        cursors = []
-        for path in prior_receipts:
-            previous = store.checked_yaml(root, path.relative_to(root))
-            if previous.get('discovery_complete') and previous.get('window_end'):
-                cursors.append(previous['window_end'])
-        if cursors:
-            start = datetime.fromisoformat(max(cursors)) - timedelta(hours=config['window']['overlap_hours'])
+        rolling = config['window'].get('mode') == 'rolling'
+        start = end - timedelta(days=config['window']['days'] if rolling else config['window']['initial_days'])
+        if not rolling:
+            # Legacy cycles alone resume the last proven complete scan.
+            prior_receipts = sorted((root / ('reports/test/' + config['topic'] + '/cycles')).glob('*/receipt.yaml'))
+            cursors = []
+            for path in prior_receipts:
+                previous = store.checked_yaml(root, path.relative_to(root))
+                if previous.get('discovery_complete') and previous.get('window_end'):
+                    cursors.append(previous['window_end'])
+            if cursors:
+                start = datetime.fromisoformat(max(cursors)) - timedelta(hours=config['window']['overlap_hours'])
         manifest = {'schema_version':1, 'mode':'research_cycle_test', 'backend':'chatgpt_plan',
                     'cycle_id':cycle_id, 'topic':config['topic'], 'config':config,
                     'window_start':start.isoformat(), 'window_end':end.isoformat(),
@@ -176,22 +195,43 @@ class CycleFetcher:
             self.responses[url] = self.delegate.fetch_pdf(url)
         return dict(self.responses[url])
 
+    def fetch_json(self, url):
+        if url not in self.responses:
+            self.responses[url] = self.delegate.fetch_json(url)
+        return dict(self.responses[url])
+
 
 def plan_candidates(root, config, cycle_id, snapshot, fetcher):
     base = base_path(config, cycle_id)
     path = base + '/selection.yaml'
     if store.safe_path(root,path).exists():
         return store.checked_yaml(root,path)
+    rolling = config['window'].get('mode') == 'rolling'
     pool = []
-    for pending_path in sorted((root/('reports/test/'+config['topic']+'/cycles')).glob('*/pending.yaml')):
-        if pending_path.parent.name != cycle_id:
-            pool += [item for item in store.checked_yaml(root,pending_path.relative_to(root)).get('items',[]) if item.get('source')]
-    pool += snapshot['candidates'] + [item for item in snapshot.get('deferred',[]) if item.get('source')]
+    if not rolling:
+        for pending_path in sorted((root/('reports/test/'+config['topic']+'/cycles')).glob('*/pending.yaml')):
+            if pending_path.parent.name != cycle_id:
+                pool += [item for item in store.checked_yaml(root,pending_path.relative_to(root)).get('items',[]) if item.get('source')]
+    pool += snapshot['candidates'] + [item for item in snapshot.get('deferred',[]) if item.get('source')
+        and (not rolling or item.get('reason') in {'per_source_limit', 'cycle_document_limit'})]
     # Prefer the newest discovery for a stable identity. Otherwise an old
     # version left in a previous pending list could hide every later update.
     latest = {}
     for item in pool:
         latest[item['source']['id']] = item
+    if rolling:
+        # Re-scan the same bounded rolling window each time. No cross-cycle
+        # pending queue/cursor can smuggle expired or previously picked papers.
+        used = discovery.previously_selected(root, config['topic'], cycle_id)
+        latest = {key: item for key, item in latest.items()
+                  if not set(item.get('identity_keys', [])).intersection(used)
+                  and item.get('published_at')
+                  and discovery._instant(snapshot['window_start']) <= discovery._instant(item['published_at'])
+                      < discovery._instant(snapshot['window_end'])}
+        if 'selection' in config:
+            latest = dict(sorted(latest.items(), key=lambda pair: (
+                -pair[1].get('attention', {}).get('community_attention_score', 0),
+                pair[1].get('published_at', ''), pair[0])))
     selected, skipped, pending, per_source, seen = [], [], [], {}, set()
     child_config = {'topic':config['topic']}
     for item in list(latest.values())[:1000]:
@@ -249,7 +289,11 @@ def run(root, config_path, cycle_id, client=None, fetcher=None, fail_after=None)
             if store.safe_path(root, history_path).exists():
                 historical = store.checked_yaml(root, history_path)['items']
             else:
-                historical = discovery.select_history(root, config['topic'], config['history']['max_documents'])
+                history_options = ({'lookback_days': config['history']['lookback_days'],
+                                    'as_of': manifest['window_end']}
+                                   if 'lookback_days' in config['history'] else {})
+                historical = discovery.select_history(root, config['topic'], config['history']['max_documents'],
+                                                       **history_options)
                 store.save_yaml(root, history_path, {'items':historical})
             if not historical:
                 status = 'awaiting_history'
@@ -298,7 +342,8 @@ def run(root, config_path, cycle_id, client=None, fetcher=None, fail_after=None)
                         'topics_file':config['topics_file'],'models':{'generation':config['models']['insight'],'review':config['models']['review']},
                         'budget':{'max_calls':budget['insight_max_calls'],'month_max_calls':monthly_cap,
                                   **{key:budget[key] for key in ('max_input_chars','max_output_chars','timeout_seconds','max_revisions')}},
-                        'prompts':{'version':'insight-v3' if 'reading' in config else 'insight-v2'},
+                        'prompts':{'version':'insight-v4' if 'lookback_days' in config['history'] else
+                                            'insight-v3' if 'reading' in config else 'insight-v2'},
                         'research_inputs':[{'receipt':original_receipt,'config':research_path,'item_keys':keys}],
                         'historical_inputs':historical}
                     insight_path = base+'/configs/insight.yaml'
@@ -308,7 +353,7 @@ def run(root, config_path, cycle_id, client=None, fetcher=None, fail_after=None)
                         # still rejects changes to any other bound input.
                         previous = store.checked_yaml(root, insight_path)
                         version = previous.get('prompts', {}).get('version')
-                        if version not in {'insight-v1', 'insight-v2', 'insight-v3'}:
+                        if version not in {'insight-v1', 'insight-v2', 'insight-v3', 'insight-v4'}:
                             raise store.OfflineError('已有 Insight 配置的提示词版本无效')
                         insight_cfg['prompts']['version'] = version
                     store.save_yaml(root, insight_path, insight_cfg)
