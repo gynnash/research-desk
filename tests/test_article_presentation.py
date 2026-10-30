@@ -51,6 +51,9 @@ class FrozenInstructions(unittest.TestCase):
             self.assertIn('输出字符预算', generation)
             self.assertIn('evidence_ids', generation)
             self.assertIn('未复现实验', generation.replace('未独立复现实验', '未复现实验'))
+            self.assertIn('正文不写逐段引用', generation)
+            self.assertNotIn('程序会生成段末脚注', generation)
+            self.assertNotIn('程序负责段末简洁脚注', generation)
 
 
 class ArticleResearch(unittest.TestCase):
@@ -72,7 +75,7 @@ class ArticleResearch(unittest.TestCase):
         self.config_path.write_text(yaml.safe_dump(self.config, allow_unicode=True, sort_keys=False))
         return batch.run(self.root, self.config_path, identity, self.client, fetcher=self.fetcher)
 
-    def test_v3_reuses_same_body_for_two_roles_and_renders_source_footnotes(self):
+    def test_v3_reuses_same_body_for_two_roles_and_renders_plain_prose(self):
         result = self.run_batch()
         self.assertEqual(result['completed_calls'], 2)
         generation, review = [call['payload'] for call in self.client.calls]
@@ -81,29 +84,41 @@ class ArticleResearch(unittest.TestCase):
         self.assertIn('reading_scope', generation)
         self.assertIn('summary', self.client.calls[1]['instructions'])
         report = (self.root / result['items'][0]['report_path']).read_text()
-        body, sources = report.split('## 来源与阅读范围', 1)
-        self.assertIn('[^1]', body)
+        body, sources = report.split('## 资料来源与阅读范围', 1)
+        self.assertNotIn('[^', report)
         self.assertNotIn('## 主张与证据', body)
         self.assertNotIn('**作者声称', body)
-        self.assertNotIn('研究模型', body)
-        self.assertRegex(sources, r'\[\^1\]: \[[^\n]+\]\(https://arxiv.org/abs/2610.01234v2\)')
-        self.assertIn('https://arxiv.org/html/2610.01234v2#method', sources)
+        self.assertRegex(sources, r'- \[[^\n]+\]\(https://arxiv.org/abs/2610.01234v2\)')
+        self.assertIn('完整抽取正文', sources)
         self.assertIn('未独立复现实验', report)
-        self.assertIn('作者报告，未独立复现', sources)
-        self.assertIn('字符', sources)
+        for internal in ('研究模型', '独立审阅', '字符', '散列', '修订次数', '获取失败：', 'A1', 'S1'):
+            self.assertNotIn(internal, report)
 
     def test_excerpt_and_failed_fulltext_boundaries_survive_article_rendering(self):
         self.config['sources'][0]['evidence_max_chars'] = 700
         result = self.run_batch('excerpt')
         report = (self.root / result['items'][0]['report_path']).read_text()
-        self.assertIn('仅阅读按章节组织的正文节选', report)
-        self.assertIn('按预算截断：是', report)
+        self.assertIn('仅阅读正文节选', report)
+        candidate = store.checked_yaml(self.root,
+            'reports/test/custom-topic/research-batches/excerpt/items/paper-one/candidate.yaml')['candidate']
+        self.assertTrue(candidate['evidence']['truncated'])
         self.fetcher.fulltext_unavailable = True
         result = self.run_batch('fallback')
         report = (self.root / result['items'][0]['report_path']).read_text()
-        self.assertIn('全文获取失败后降级为仅摘要', report)
-        self.assertIn('获取失败：html；原因：Synthetic full-text unavailable', report)
-        self.assertIn('获取失败：pdf；原因：Synthetic full-text unavailable', report)
+        self.assertIn('全文未能获取，本次仅阅读摘要', report)
+        self.assertNotIn('Synthetic full-text unavailable', report)
+        candidate = store.checked_yaml(self.root,
+            'reports/test/custom-topic/research-batches/fallback/items/paper-one/candidate.yaml')['candidate']
+        self.assertEqual({entry['format'] for entry in candidate['acquisition_attempts'] if entry['status'] == 'failed'},
+                         {'html', 'pdf'})
+
+    def test_plain_abstract_does_not_claim_a_fulltext_fetch_failed(self):
+        self.config['sources'][0].pop('reading')
+        result = self.run_batch()
+        report = (self.root / result['items'][0]['report_path']).read_text()
+        self.assertIn('仅阅读摘要', report)
+        self.assertNotIn('全文未能获取', report)
+        self.assertNotIn('[^', report)
 
 
 class ArticleInsight(unittest.TestCase):
@@ -118,7 +133,7 @@ class ArticleInsight(unittest.TestCase):
         entry['history_window'] = {'start': (end - timedelta(days=180)).isoformat(),
                                    'end': end.isoformat(), 'lookback_days': 180}
 
-    def test_v5_uses_reviewed_objects_and_portable_source_footnotes(self):
+    def test_v5_keeps_evidence_internal_and_only_lists_sources_at_end(self):
         original = self.history_path.read_bytes()
         insight_fixtures.InsightLoop.write_config(self)
         result = insight.run(self.root, self.config_path, 'readable', self.client, fetcher=self.fetcher)
@@ -129,25 +144,32 @@ class ArticleInsight(unittest.TestCase):
         self.assertIn('history_coverage', generation)
         self.assertEqual(generation['evidence'][-1]['historical_origin'], 'human_note')
         self.assertIn('完整叙述', self.client.calls[1]['instructions'])
+        self.assertEqual(result['outputs']['insights'], [])
         for relative in result['output_hashes']:
             if not relative.endswith('.md'):
                 continue
             text = (self.root / relative).read_text()
-            body, sources = text.split('## 来源与阅读范围', 1)
+            body, sources = text.split('## 资料来源与阅读范围', 1)
+            body = body.split('---', 2)[2]
             self.assertNotRegex(body, r'\[(?:R|H)\d+\]')
-            self.assertRegex(body, r'\[\^\d+\]')
-            self.assertRegex(sources, r'\[\^\d+\]: \[[^\n]+\]\(https://')
-            self.assertIn('[研究记录](', sources)
-            self.assertNotRegex(sources, re.compile(r'^\[\^\d+\]: reports/', re.M))
+            self.assertNotIn('[^', text)
+            self.assertRegex(sources, r'- \[[^\n]+\]\(https://')
+            for internal in ('研究记录', '独立审阅', '字符', '散列', '修订次数', '跨度', 'R1', 'H1', 'A1'):
+                self.assertNotIn(internal, body + sources)
             self.assertIn('未经本轮原文复核', sources)
-            self.assertIn('仅摘要', sources)
+            self.assertIn('仅阅读摘要', sources)
+        self.assertEqual(generation['history_coverage']['actual_span_days'], 0)
         synthesis = (self.root / result['outputs']['report']).read_text()
-        self.assertIn('跨度 0 天', synthesis)
-        self.assertIn('不代表完整覆盖', synthesis)
-        item = (self.root / result['outputs']['insights'][0]).read_text()
-        self.assertIn('## 这个判断为什么仍需验证', item)
-        self.assertNotIn('## 待验证假设', item)
+        self.assertIn('## 记忆的可用性需要独立验证', synthesis)
+        self.assertIn('可把记忆保存与任务使用分开验证', synthesis)
+        self.assertIn('这些有限材料没有直接比较不同方案', synthesis)
+        self.assertIn('设计跨会话任务', synthesis)
+        metadata = yaml.safe_load(synthesis.split('---', 2)[1])
+        self.assertEqual(set(metadata['source_ids']), {identifier for record in generation['evidence']
+                                                       for identifier in record['source_ids']})
         topic = (self.root / result['outputs']['topics'][0]).read_text()
+        self.assertIn('[本轮深度思考](', topic)
+        self.assertNotIn('insight-1.md', topic)
         self.assertIn('待你确认选题', topic)
         self.assertIn('approval_required: true', topic)
         self.assertIn('writing_started: false', topic)
@@ -201,7 +223,7 @@ class FormalArticleCycle(unittest.TestCase):
             self, presentation='technical_article')
         entries, proofs = catalog.collect(self.root)
         self.assertEqual(len(proofs), 1)
-        self.assertTrue({'synthesis', 'research', 'insight', 'topic_proposal', 'original_snapshot', 'source'}
+        self.assertTrue({'synthesis', 'research', 'topic_proposal', 'original_snapshot', 'source'}
                         .issubset({entry['group'] for entry in entries}))
         self.assertIn('测试记忆材料的有限比较', catalog.render(self.root))
         for path, content in plan['files'].items():
@@ -212,9 +234,13 @@ class FormalArticleCycle(unittest.TestCase):
                     continue
                 self.assertNotIn('/test/', target)
                 self.assertTrue((self.root / Path(path).parent / target).resolve().is_file(), (path, target))
-        synthesis = (self.root / ('reports/custom-topic/' + identifier + '-synthesis.md')).read_text()
-        self.assertIn('[^1]: [', synthesis)
+        synthesis_path = next(entry['path'] for entry in entries if entry['group'] == 'synthesis')
+        synthesis = (self.root / synthesis_path).read_text()
+        self.assertIn('## 资料来源与阅读范围', synthesis)
+        self.assertNotIn('[^', synthesis)
         self.assertNotIn('> TEST', synthesis)
+        source_ids = yaml.safe_load(synthesis.split('---', 2)[1])['source_ids']
+        self.assertFalse(set(source_ids) & set(accepted['source_id_map']))
         self.assertEqual(len(client.calls), 4)
         self.assertEqual(accepted['new_model_calls'], 0)
         fetcher.fetch.assert_not_called()

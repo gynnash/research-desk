@@ -237,6 +237,10 @@ def prepare_preview(root, config, topic_id, choices=None):
                      id='formal-insight-%s-%s-%s' % (topic, cycle_id, number + 1),
                      path='insights/%s/%s-insight-%s.md' % (topic, cycle_id, number + 1))
                 for number in card['insight_indices']]
+    merged = 'insights/%s/%s-synthesis.md' % (topic, cycle_id)
+    if merged in effective:
+        for item in insights:
+            item['path'] = merged
     result = {'schema_version': 1, 'mode': 'real_topic_preview', 'workbench_id': config['workbench_id'],
         'topic_id': topic_id, 'id': topic_id, 'topic': topic, 'path': relative,
         'cycle_id': cycle_id, 'status': 'proposed', 'date': metadata.get('created_at'),

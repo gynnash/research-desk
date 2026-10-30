@@ -444,7 +444,8 @@ def _render(root, topic, cycle_id, config, bundle, candidate, records, source_ma
                        if Path(value[0]).parts[2:3] != ('test',)}
     source_map = dict(source_map or {})
     path_map, sources = {}, {}
-    synthesis_path = 'reports/%s/%s-synthesis.md' % (topic, cycle_id)
+    simple = config['prompts']['version'] == 'insight-v5'
+    synthesis_path = '%s/%s/%s-synthesis.md' % ('insights' if simple else 'reports', topic, cycle_id)
     accepted_path = _base(topic, cycle_id) + '/accepted.yaml'
     for record in records:
         original = record['candidate']
@@ -496,6 +497,9 @@ def _render(root, topic, cycle_id, config, bundle, candidate, records, source_ma
         metadata = yaml.safe_load(content.split('---', 2)[1])
         body = content.split('---', 2)[2].lstrip()
         metadata.update(id=id_map[metadata['id']], topics=[topic])
+        if simple:
+            metadata['source_ids'] = [source_map.get(identifier, identifier)
+                                      for identifier in metadata.get('source_ids', [])]
         metadata['status'] = 'proposed' if metadata['kind'] == 'topic_proposal' else 'accepted'
         new_path = path_map[old_path]
         def rebase(match):
@@ -511,7 +515,8 @@ def _render(root, topic, cycle_id, config, bundle, candidate, records, source_ma
         body = '\n'.join(NOTICE if line.startswith('> TEST：') else line for line in body.splitlines()) + '\n'
         for old_id, new_id in {**source_map, **id_map}.items():
             body = body.replace(old_id, new_id)
-        body += '\n## 准入记录\n\n[独立审阅与输入输出散列](%s)。\n' % posixpath.relpath(accepted_path, posixpath.dirname(new_path))
+        if not simple:
+            body += '\n## 准入记录\n\n[独立审阅与输入输出散列](%s)。\n' % posixpath.relpath(accepted_path, posixpath.dirname(new_path))
         files[new_path] = _frontmatter(metadata, body)
     collected = datetime.now(timezone(timedelta(hours=8))).date().isoformat()
     for record in records:
@@ -530,12 +535,18 @@ def _render(root, topic, cycle_id, config, bundle, candidate, records, source_ma
         lines[0] = '# ' + original['metadata']['title']
         lines = [NOTICE if line.startswith('> TEST：') else line for line in lines
                  if not line.startswith('- 资料标识：') and line != '逐项核查、证据摘要与实际用量见同目录检查点及单项回执。']
-        body = '\n'.join(lines) + '\n\n正式来源：[%s](%s)。\n' % (target['id'], posixpath.relpath(target['path'], posixpath.dirname(target['report'])))
-        if target['existing']:
+        body = '\n'.join(lines) + '\n'
+        if not simple:
+            body += '\n正式来源：[%s](%s)。\n' % (target['id'], posixpath.relpath(target['path'], posixpath.dirname(target['report'])))
+        if target['existing'] and not simple:
             body += '\n本文件为独立更新或补充研究；原来源笔记、阅读状态与人工关联保持不变。\n'
         if archive_path:
-            body += '\n原文归档：[本次完整可用抽取正文](%s)；实际研究范围见上文。\n' % posixpath.relpath(archive_path, posixpath.dirname(target['report']))
-        body += '\n准入记录：[输入、审阅与输出散列](%s)。\n' % posixpath.relpath(accepted_path, posixpath.dirname(target['report']))
+            if simple:
+                body += '\n[原始资料](%s)。\n' % posixpath.relpath(archive_path, posixpath.dirname(target['report']))
+            else:
+                body += '\n原文归档：[本次完整可用抽取正文](%s)；实际研究范围见上文。\n' % posixpath.relpath(archive_path, posixpath.dirname(target['report']))
+        if not simple:
+            body += '\n准入记录：[输入、审阅与输出散列](%s)。\n' % posixpath.relpath(accepted_path, posixpath.dirname(target['report']))
         files[target['report']] = _frontmatter(metadata, body)
         if not target['existing']:
             source = {'schema_version': 1, 'id': target['id'], 'kind': original['kind'],

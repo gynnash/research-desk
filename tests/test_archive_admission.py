@@ -122,9 +122,11 @@ class ArchivedFormalCycle(unittest.TestCase):
         self.assertTrue(accepted['production_accepted'])
         self.assertEqual(accepted['new_model_calls'], 0)
         self.assertEqual(len(client.calls), 4)
-        synthesis = (self.root / ('reports/custom-topic/' + identifier + '-synthesis.md')).read_text()
-        self.assertIn('跨度 122 天', synthesis)
-        self.assertIn('## 来源与阅读范围' if presentation else '## 历史覆盖', synthesis)
+        synthesis_path = ('insights' if presentation else 'reports') + '/custom-topic/' + identifier + '-synthesis.md'
+        synthesis = (self.root / synthesis_path).read_text()
+        if not presentation:
+            self.assertIn('跨度 122 天', synthesis)
+        self.assertIn('## 资料来源与阅读范围' if presentation else '## 历史覆盖', synthesis)
         source_cards = [content for relative, content in plan['files'].items() if relative.startswith('sources/papers/')]
         self.assertEqual(len(source_cards), 1)
         self.assertIn('单篇详细研究', source_cards[0])
