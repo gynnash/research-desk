@@ -21,6 +21,7 @@
 | 生成与准入三阶段稿件 | [会员 Writing](writing-agent-member.md)、[Writing 正式准入](writing-formal-admission.md) |
 | 检查 Markdown 与来源字段 | [资料 Schema](source-schema.md)、[模板](templates/) |
 | 阅读与同步 Obsidian | [研究工作台说明](../workbench/README.md) |
+| 文章式正文、观点来源与历史阅读版 | [可读研究规范](readable-research.md) |
 
 研究调度为每周二、周五北京时间 03:00，最终开关见 [automation.yaml](../config/automation.yaml)。个人 Codex 09:00 简报单独读取已有正式结果，不再次启动模型。执行器需要在线；实际成功与失败看工作流和接受回执，不能用历史演练代替。
 

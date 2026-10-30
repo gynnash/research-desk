@@ -543,7 +543,7 @@ def _render(root, topic, cycle_id, config, bundle, candidate, records, source_ma
                 'published_at': original['metadata'].get('published_at'), 'collected_at': collected,
                 'updated_at': collected, 'topics': [topic], 'status': 'inbox',
                 'related_sources': [], 'related_notes': [target['report'], synthesis_path]}
-            if config['prompts']['version'] == 'insight-v4':
+            if config['prompts']['version'] in {'insight-v4', 'insight-v5'}:
                 files[target['path']] = _source_card(source, original, target['path'], target['report'],
                                                      synthesis_path, accepted_path)
             else:

@@ -97,13 +97,44 @@ def collect(root):
     return sorted(entries.values(), key=lambda item: (item['date'], item['path']), reverse=True), proofs
 
 
+def reading_versions(root, entries):
+    """Link editorial reading copies only while their admitted inputs still match."""
+    root = Path(root).resolve()
+    admitted = {item['path']: item for item in entries}
+    versions = {}
+    for path in sorted(root.glob('workbench/阅读/*/*.md')):
+        relative = path.relative_to(root).as_posix()
+        text = admission._location(root, relative).read_text(encoding='utf-8')
+        if not text.startswith('---\n') or '\n---\n' not in text[4:]:
+            continue
+        metadata = yaml.load(text.split('\n---\n', 1)[0][4:], Loader=store.UniqueKeyLoader)
+        if not isinstance(metadata, dict) or metadata.get('kind') != 'research_reading':
+            continue
+        topic, cycle = metadata.get('topic'), metadata.get('source_cycle')
+        synthesis = 'reports/%s/%s-synthesis.md' % (topic, cycle)
+        references = metadata.get('derived_from')
+        if (metadata.get('status') != 'editorial' or not isinstance(metadata.get('title'), str)
+                or not metadata['title'].strip() or not isinstance(references, dict)
+                or synthesis not in references or synthesis in versions):
+            raise store.OfflineError('阅读版属性或研究轮次无效: ' + relative)
+        for source, expected in references.items():
+            if (source not in admitted or admitted[source]['topic'] != topic
+                    or store.digest(admission._location(root, source).read_bytes()) != expected):
+                raise store.OfflineError('阅读版依据尚未准入或已经变化: ' + relative)
+        versions[synthesis] = {'path': relative, 'title': metadata['title']}
+    return versions
+
+
 def render(root):
     entries, proofs = collect(root)
+    versions = reading_versions(root, entries)
     latest = max((item['date'] for item in entries), default='尚无正式入库资料')
     lines = ['# 正式资料索引', '', '[研究首页](../研究首页.md) · [使用说明](README.md) · '
              '[Obsidian 动态视图](动态资料库.md) · [我的研究问题](../notes/我的研究问题.md)', '',
-             '最新已核验轮次：**%s**。本区只列本地接受记录、准入计划和正式文件校验通过的成果。' % latest,
+             '最新已核验轮次：**%s**。本区列出本地接受记录、准入计划及文件校验通过的正式资料，和注明的编辑阅读版。' % latest,
              '日期是研究轮次，标题沿用已保存的原文或中文研究标题。同步到本机后才能显示新成果；未自动翻译标题。', '',
+             '综合报告优先提供已有的**阅读版**：按技术文章编辑，段末脚注标明来源；'
+             '它是既有成果的编辑整理，未另做独立审阅，旁边保留原研究记录。启用文章式配置的新轮次直接采用文章式正文。', '',
              '选题卡是历史提案，当前确认、撤回与执行状态请查看[当前 Mac 选题页](http://127.0.0.1:8765)。'
              '在 iPhone 上该地址指向手机本机。趋势判断须保留正文中的证据、不确定性和观察范围。', '']
     for group, heading in GROUPS:
@@ -115,8 +146,13 @@ def render(root):
         lines += ['| 研究轮次 | 方向 | 资料 | 阅读范围 / 类型 |', '| --- | --- | --- | --- |']
         for item in selected:
             link = posixpath.relpath(item['path'], 'workbench')
-            lines.append('| %s | %s | [%s](%s) | %s |' %
-                         (_text(item['date']), _text(item['topic']), _text(item['title']), link, _text(item['coverage'])))
+            label = '[%s](%s)' % (_text(item['title']), link)
+            if item['path'] in versions:
+                version = versions[item['path']]
+                label = '[%s · 阅读版](%s) · [研究记录](%s)' % (
+                    _text(version['title']), posixpath.relpath(version['path'], 'workbench'), link)
+            lines.append('| %s | %s | %s | %s |' %
+                         (_text(item['date']), _text(item['topic']), label, _text(item['coverage'])))
         lines += ['']
     lines += ['## 核验依据', '', '索引不重新研究原文，也不批准写作或发布。正式内容和人工笔记均不由索引生成器修改。', '']
     for path in sorted(proofs, key=lambda path: (_date(path.split('/')[-2]), path), reverse=True):

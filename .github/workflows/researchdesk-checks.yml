@@ -44,7 +44,7 @@ jobs:
       - name: Check full-text acquisition, reading scope and immutable updates without model calls
         run: python -m unittest discover -s tests -p 'test_fulltext*.py' -v
       - name: Check rolling discovery, attention, historical comparison and reading index
-        run: PYTHONPATH=tests python -m unittest test_rolling_selection test_attention test_history_window test_catalog test_source_card -v
+        run: PYTHONPATH=tests python -m unittest test_rolling_selection test_attention test_history_window test_article_presentation test_catalog test_source_card -v
       - name: Check publisher feeds, archive coverage and offline original replay
         run: PYTHONPATH=tests python -m unittest test_feeds test_blog_archive_discovery test_archive test_archive_admission test_archive_transfer -v
       - name: Check create-only admission without model calls

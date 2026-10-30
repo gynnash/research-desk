@@ -42,6 +42,12 @@ HISTORY_SCOPE_INSTRUCTIONS = '''本轮历史由明确90–180天窗口抽样，h
 使用现有report.comparisons比较机制、观点的共同点与分歧，比较历史窗口较近90天与较早91–180天的延续和变化；只有实际材料覆盖的日期段才比较，缺失日期段须明确说明。每条趋势或演进判断须给出至少两个独立原始来源、各自可追溯时间、反例或替代解释；同一来源的旧报告/洞察不算独立证据。仅重复发表日期、旧文近期入库或少量同源报道不能证明行业趋势；跨来源或跨时间不足时称研究线索/待验证假设。用insights表达有边界的深度看法，用open_questions与validation明确值得深入研究的问题和需要补齐的证据，选题仅待用户确认，不新增任务或开始写作。'''
 
 
+ARTICLE_GENERATION_INSTRUCTIONS = '''写给实际阅读技术内容的人，正文应是连续、具体的技术解读，而不是审核表或引用编号摘要。使用原有 JSON 字段，不新增 schema，不开始 Writing，不生成公众号文章。summary 用约120至200字交代本轮研究问题、分歧与主要判断；每个 report.comparisons.text 用约100至180字解释一个比较，交代具体机制、共同点或差异及为什么值得注意，按逻辑承接。insights.hypothesis 用约150至250字展开一个待验证判断的推理依据与潜在意义，counterpoints/limitations 用自然句说明替代解释和边界，validation 具体说明还需核实什么。选题 angle 和 why_now 具体、易懂，不重复口号。
+正文用论文名、方法名或博客标题指代来源，不要写 R1/H2/A1 等内部编号，不生成链接、脚注或引用占位符；引用只填 evidence_ids，程序负责段末简洁脚注和篇末来源。kind=author_claim 的段落自然写明“作者提出/作者报告”；kind=inference 明确“我们据此推测/一种待验证的可能”，无需机械重复核验标签。每段保持一种判断类型。summary 和段落衔接也不能引入新事实、无依据例子或因果。不足以支持细节就缩短，不凑字；报告、洞察、选题所有正文合计建议1600至2400字，包含 JSON 键名的完整响应仍须遵守当前输出字符预算。'''
+
+ARTICLE_REVIEW_INSTRUCTIONS = '''同时核验完整叙述，包括 summary、comparisons 的解释和衔接、insights 的推理、选题价值及因果措辞，不能只检查引用存在。可读性不能以丢失范围、把作者主张或历史假设变成事实为代价；正文须自然区分作者报告和我们的推断，缺失证据不能靠修辞补齐。report 根检查须覆盖摘要与过渡；所有新扩写都由本次同一独立审阅检查，不新增润色或写作步骤。'''
+
+
 def instructions_for(config):
     version = config['prompts']['version']
     if version == 'insight-v1':
@@ -59,6 +65,12 @@ def instructions_for(config):
         review = REVIEW_INSTRUCTIONS.replace('含R研究、原始材料与H人工历史', '含R研究、原始材料与H历史材料')
         suffix = '\n' + CITATION_SCOPE_INSTRUCTIONS + '\n' + FULLTEXT_SCOPE_INSTRUCTIONS + '\n' + HISTORY_SCOPE_INSTRUCTIONS
         return generation + suffix, review + suffix
+    if version == 'insight-v5':
+        generation, review = instructions_for({'prompts': {'version': 'insight-v4'}})
+        # Research prose is allowed; the user-controlled Writing gate is not
+        # bypassed. Frozen v1-v4 instructions retain their exact old wording.
+        generation = generation.replace('不写文章、大纲或正文', '不生成公众号文章、大纲或草稿')
+        return generation + '\n' + ARTICLE_GENERATION_INSTRUCTIONS, review + '\n' + ARTICLE_REVIEW_INSTRUCTIONS
     raise store.OfflineError('未知 Insight 提示词版本')
 
 
@@ -280,6 +292,8 @@ def create_output(root, path, content, topic, batch_id):
 
 
 def render_outputs(root, base, config, batch_id, candidate, bundle):
+    if config['prompts']['version'] == 'insight-v5':
+        return render_article_outputs(root, base, config, batch_id, candidate, bundle)
     import posixpath
     topic = config['topic']
     evidence = {e['id']: e for e in bundle['evidence']}
@@ -365,6 +379,128 @@ def render_outputs(root, base, config, batch_id, candidate, bundle):
         lines += ['- ' + v for v in card['key_questions']]
         lines += ['', '## 写作前的证据缺口', ''] + ['- ' + v for v in card['evidence_gaps']]
         contents[path] = '\n'.join(lines) + '\n'
+    return outputs, contents
+
+
+def render_article_outputs(root, base, config, batch_id, candidate, bundle):
+    """Readable prose from the same reviewed objects, with portable footnotes."""
+    import posixpath
+    legacy = dict(config, prompts={'version': 'insight-v4'})
+    outputs, original = render_outputs(root, base, legacy, batch_id, candidate, bundle)
+    evidence = {record['id']: record for record in bundle['evidence']}
+    coverage_labels = {'full_text': '完整抽取正文，未独立复现实验',
+                       'excerpt': '正文节选', 'abstract_only': '仅摘要',
+                       'historical_note': '历史笔记，未经本轮原文复核'}
+    kind_labels = {'fact': '原文直接说明', 'author_claim': '作者报告，未独立复现',
+                   'inference': '我们的推断'}
+
+    def document(path, title, body_builder, with_history=False):
+        notes, used = {}, set()
+
+        def cite(refs, kind=None):
+            key = (tuple(sorted(refs)), kind)
+            if key not in notes:
+                notes[key] = len(notes) + 1
+            used.update(refs)
+            return '[^%s]' % notes[key]
+
+        prefix = original[path].split('\n# ', 1)[0]
+        lines = [prefix, '# ' + title, ''] + body_builder(cite)
+        lines += ['## 来源与阅读范围', '', candidate['coverage_note'], '']
+        if with_history:
+            coverage = inputs.history_coverage(bundle['evidence'])
+            window = coverage['window']
+            if window:
+                lines += ['配置历史窗口为 %s 至 %s（%s 天，抽样，不代表完整覆盖）。本轮纳入 %s 份历史文件，'
+                          '涉及 %s 个原始来源；窗口内实际日期为 %s 至 %s，跨度 %s 天。研究计划日不等于实际执行时间，'
+                          '无日期或窗外依赖不能支持跨时间趋势。' % (
+                              window['start'], window['end'], window['lookback_days'], coverage['documents'],
+                              coverage['independent_sources'], coverage['actual_start'] or '未知',
+                              coverage['actual_end'] or '未知', coverage['actual_span_days']), '']
+
+        def description(key):
+            record = evidence[key]
+            record_title = inputs.evidence_title(record).replace('[', '［').replace(']', '］').replace('\n', ' ')
+            relative = posixpath.relpath(record['path'], posixpath.dirname(path))
+            value = '[%s](%s)' % (record_title, record.get('source_url') or relative)
+            if record.get('source_url'):
+                value += ' · [研究记录](%s)' % relative
+            value += '；' + coverage_labels.get(record.get('coverage'), '范围见研究记录')
+            if record.get('origin') == 'human_baseline':
+                labels = {'admitted_ai': '已准入的历史 AI 研究', 'human_note': '人工历史笔记',
+                          'human_modified': '人工修改的历史研究'}
+                value += '；' + labels.get(record.get('historical_origin'), '历史材料')
+                if record.get('research_date'):
+                    value += '；研究/采集日 ' + record['research_date']
+                    if record.get('date_basis') == 'admission_cycle_plan':
+                        value += '（计划研究日）'
+            return value
+
+        for (refs, kind), number in notes.items():
+            text = '；'.join(description(key) for key in refs)
+            if kind:
+                text += '；判断性质：' + kind_labels[kind]
+            lines += ['[^%s]: %s。' % (number, text)]
+        for key in sorted(used):
+            record = evidence[key]
+            scope = record.get('reading_scope')
+            if scope:
+                lines += ['', '### ' + inputs.evidence_title(record), '',
+                          '- [本次读取正文](%s)；媒介：%s；字符：%s / %s；截断：%s。' % (
+                              scope.get('document_url', record.get('source_url')), scope.get('format', 'unknown'),
+                              scope.get('selected_chars', 0), scope.get('total_chars', 0),
+                              '是' if scope.get('truncated') else '否')]
+                for section in scope.get('sections', []):
+                    lines += ['- %s（%s）：%s / %s 字符。' % (section['title'], section['location'],
+                              section['selected_chars'], section['total_chars'])]
+                limitations = scope.get('limitations', [])
+                for limitation in limitations if isinstance(limitations, list) else [limitations]:
+                    if limitation:
+                        lines += ['- 抽取限制或降级原因：' + limitation]
+                for attempt in record.get('acquisition_attempts', []):
+                    if attempt.get('status') == 'failed':
+                        lines += ['- 获取失败：%s；原因：%s。' % (attempt.get('format', 'unknown'), attempt.get('reason', 'unknown'))]
+            if record.get('historical_origin'):
+                lines += ['', '历史材料的原文发表日：%s；可作窗口内时间证据：%s。历史主张未在本轮重新核验。' % (
+                    '、'.join(record.get('published_dates', [])) or '未知',
+                    '是' if record.get('temporal_eligible') else '否')]
+        return '\n'.join(lines).rstrip() + '\n'
+
+    report = candidate['report']
+    report_refs = sorted(targets(candidate)['report'])
+    def report_body(cite):
+        lines = [report['summary'] + cite(report_refs), '', '## 这些研究的共同点与分歧', '']
+        for claim in report['comparisons']:
+            lines += [claim['text'] + cite(claim['evidence_ids'], claim['kind']), '']
+        lines += ['## 如何理解当前结论', '']
+        for limitation in report['limitations']:
+            lines += [limitation, '']
+        lines += ['## 值得继续追问的问题', ''] + ['- ' + value for value in report['open_questions']] + ['']
+        return lines
+    contents = {outputs['report']: document(outputs['report'], report['title'], report_body, with_history=True)}
+    for number, item in enumerate(candidate['insights']):
+        def insight_body(cite):
+            lines = [item['hypothesis'] + cite(item['evidence_ids'], 'inference'), '',
+                     '## 这个判断为什么仍需验证', '']
+            for value in item['counterpoints'] + item['limitations']:
+                lines += [value, '']
+            return lines + ['## 下一步需要核实什么', ''] + ['- ' + value for value in item['validation']] + ['']
+        path = outputs['insights'][number]
+        contents[path] = document(path, item['title'], insight_body)
+    for number, item in enumerate(candidate['topics']):
+        path = outputs['topics'][number]
+        def topic_body(cite):
+            lines = ['**待你确认选题、角度与读者后才启动 Writing；当前是选题提案，尚未写作或发布。**', '',
+                     item['angle'] + cite(item['evidence_ids']), '', item['why_now'] + cite(item['evidence_ids']), '',
+                     '## 适合谁读', '', item['audience'], '', '## 准备回答的问题', '']
+            lines += ['- ' + value for value in item['key_questions']]
+            lines += ['', '## 写作前还缺少什么', ''] + ['- ' + value for value in item['evidence_gaps']]
+            lines += ['', '## 相关洞察', '']
+            for index in item['insight_indices']:
+                target = posixpath.relpath(outputs['insights'][index], posixpath.dirname(path))
+                lines += ['- [%s](%s)' % (candidate['insights'][index]['title'], target)]
+            return lines + ['']
+        contents[path] = document(path, item['title'], topic_body)
     return outputs, contents
 
 

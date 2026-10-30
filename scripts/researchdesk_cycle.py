@@ -46,7 +46,12 @@ def load_config(root, path, snapshot=None):
                           'discovery', 'models', 'budget', 'history'} |
                   ({'reading'} if 'reading' in config else set()) |
                   ({'selection'} if 'selection' in config else set()) |
-                  ({'archive'} if 'archive' in config else set()), '研究轮次配置')
+                  ({'archive'} if 'archive' in config else set()) |
+                  ({'presentation'} if 'presentation' in config else set()), '研究轮次配置')
+    if 'presentation' in config and config['presentation'] != 'technical_article':
+        raise store.OfflineError('presentation 仅支持 technical_article')
+    if 'presentation' in config and 'lookback_days' not in config['history']:
+        raise store.OfflineError('技术文章式输出须配置显式 history.lookback_days 时间窗')
     if 'archive' in config and type(config['archive']) is not bool:
         raise store.OfflineError('archive 必须是显式布尔值')
     if 'selection' in config:
@@ -354,7 +359,8 @@ def run(root, config_path, cycle_id, client=None, fetcher=None, fail_after=None)
                     'budget':{'max_documents':len(candidates), 'max_calls_per_item':4,
                         'max_calls_per_batch':min(budget['research_max_calls'],len(candidates)*4), 'month_max_calls':monthly_cap,
                         **{key:budget[key] for key in ('max_input_chars','max_output_chars','timeout_seconds','max_revisions')}},
-                    'prompts':{'version':'research-batch-v2' if 'reading' in config else 'research-batch-v1'},
+                    'prompts':{'version':'research-batch-v3' if config.get('presentation') == 'technical_article' else
+                                        'research-batch-v2' if 'reading' in config else 'research-batch-v1'},
                     'sources':[item['source'] for item in candidates]}
                 research_path = base + '/configs/research.yaml'
                 store.save_yaml(root, research_path, research_cfg)
@@ -397,7 +403,8 @@ def run(root, config_path, cycle_id, client=None, fetcher=None, fail_after=None)
                         'topics_file':config['topics_file'],'models':{'generation':config['models']['insight'],'review':config['models']['review']},
                         'budget':{'max_calls':budget['insight_max_calls'],'month_max_calls':monthly_cap,
                                   **{key:budget[key] for key in ('max_input_chars','max_output_chars','timeout_seconds','max_revisions')}},
-                        'prompts':{'version':'insight-v4' if 'lookback_days' in config['history'] else
+                        'prompts':{'version':'insight-v5' if config.get('presentation') == 'technical_article' else
+                                            'insight-v4' if 'lookback_days' in config['history'] else
                                             'insight-v3' if 'reading' in config else 'insight-v2'},
                         'research_inputs':[{'receipt':original_receipt,'config':research_path,'item_keys':keys}],
                         'historical_inputs':historical}
@@ -408,7 +415,7 @@ def run(root, config_path, cycle_id, client=None, fetcher=None, fail_after=None)
                         # still rejects changes to any other bound input.
                         previous = store.checked_yaml(root, insight_path)
                         version = previous.get('prompts', {}).get('version')
-                        if version not in {'insight-v1', 'insight-v2', 'insight-v3', 'insight-v4'}:
+                        if version not in {'insight-v1', 'insight-v2', 'insight-v3', 'insight-v4', 'insight-v5'}:
                             raise store.OfflineError('已有 Insight 配置的提示词版本无效')
                         insight_cfg['prompts']['version'] = version
                     store.save_yaml(root, insight_path, insight_cfg)

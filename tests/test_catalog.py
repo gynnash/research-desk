@@ -12,6 +12,29 @@ import researchdesk_offline as store
 
 
 class ReadingCatalog(unittest.TestCase):
+    def test_reading_version_requires_matching_admitted_inputs(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = 'reports/agent-memory/cycle-synthesis.md'
+            original = root / source
+            original.parent.mkdir(parents=True)
+            original.write_text('已审阅内容', encoding='utf-8')
+            reading = root / 'workbench/阅读/agent-memory/example.md'
+            reading.parent.mkdir(parents=True)
+            metadata = {'title': '可读技术文章', 'kind': 'research_reading', 'status': 'editorial',
+                        'topic': 'agent-memory', 'source_cycle': 'cycle',
+                        'derived_from': {source: store.digest(original.read_bytes())}}
+            import yaml
+            reading.write_text('---\n' + yaml.safe_dump(metadata, allow_unicode=True)
+                               + '---\n\n正文。\n', encoding='utf-8')
+            entries = [{'path': source, 'topic': 'agent-memory'}]
+            self.assertEqual(catalog.reading_versions(root, entries)[source]['title'], '可读技术文章')
+            with self.assertRaises(store.OfflineError):
+                catalog.reading_versions(root, [])
+            original.write_text('后来修改的依据', encoding='utf-8')
+            with self.assertRaises(store.OfflineError):
+                catalog.reading_versions(root, entries)
+
     def test_adopts_manual_snapshot_without_deleting_its_text(self):
         old = '---\ntitle: 手工索引\n---\n\n# 自己的阅读记录\n\n保留全部判断。\n'
         document = catalog.managed_document(old, '# 新索引\n')

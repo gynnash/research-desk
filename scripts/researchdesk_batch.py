@@ -40,12 +40,23 @@ FULLTEXT_REVIEW_INSTRUCTIONS = '''你是未参与生成的独立审阅模型。�
 逐条检查所有主张，零起始下标。pass 必须全部有支持、无阻塞问题并确认实际阅读范围。full_text 只表示已提供的抽取正文文本，不表示实验复现；excerpt 不能代表遗漏章节，abstract_only 不能验证未提供的正文。完整正文研究仍须注明未复现实验，不得将作者报告写成已独立验证的结果。范围越界 revise/reject，信息不足 blocked。'''
 
 
+ARTICLE_RESEARCH_INSTRUCTIONS = FULLTEXT_RESEARCH_INSTRUCTIONS + '''
+正文供人在 GitHub 和 Obsidian 连续阅读，应像一篇简明技术解读，不能写成核验清单。保持同一 JSON schema 和3至5条 claims；summary 是120至200字的导读，说明研究问题、主要方法和结论边界。每个 claims.text 写成约120至220字、能独立理解又承接前文的解释段落，按问题动机、关键机制、作者报告的结果及意义组织；材料不足时缩短，不凑字、不引入新的例子或事实。同一段只表达同一种 kind，作者主张用“作者提出/作者报告”等自然措辞，我们的推断明确写“我们据此推测/这提示一种待验证的可能”；不要机械重复标签，不把推测改写成事实。
+正文使用论文或方法名称指代资料，不出现 A1、S1 等内部编号、链接、引用占位符或括号里的审核术语，引用仅放在 evidence_ids，程序会生成段末脚注。summary、段落之间的承接和意义解释也只能来自所给材料，不得靠流畅表达补造因果。正文合计约700至1300字，limitations 合并重复边界、保留具体限制；整个 JSON 必须服从当前输出字符预算，不增加字段。
+当输入没有 reading_scope.reading_profile、也没有 acquisition_attempts 时，abstract_only 仅表示按摘要研究；没有获取记录不能声称已经尝试或获取全文失败。'''
+
+ARTICLE_REVIEW_INSTRUCTIONS = FULLTEXT_REVIEW_INSTRUCTIONS + '''
+同时审阅完整可读正文，包括 summary、每段解释、段落承接、意义与因果措辞，而非只确认 claims 的引用编号。summary 和过渡句不得引入 claims/evidence 未支持的新事实、暗含效果已验证或虚构例子；作者报告与我们的推断须在自然语言中可辨认。缺陷写入 issues；任何无依据扩写或丢失重要范围边界均不得 pass。保持同一审阅 JSON schema 和逐项 checks，不新增润色步骤。'''
+
+
 def instructions_for(config):
     version = config if isinstance(config, str) else config['prompts']['version']
     if version == 'research-batch-v1':
         return RESEARCH_INSTRUCTIONS, REVIEW_INSTRUCTIONS
     if version == 'research-batch-v2':
         return FULLTEXT_RESEARCH_INSTRUCTIONS, FULLTEXT_REVIEW_INSTRUCTIONS
+    if version == 'research-batch-v3':
+        return ARTICLE_RESEARCH_INSTRUCTIONS, ARTICLE_REVIEW_INSTRUCTIONS
     raise store.OfflineError('未知 Research 提示词版本')
 
 
@@ -63,7 +74,7 @@ def original_request(config, candidate, material):
     request = {'topic': config['topic'], 'research_context': context,
                'metadata': candidate['metadata'], 'coverage': candidate['evidence']['coverage'],
                'original_material': material}
-    if config['prompts']['version'] == 'research-batch-v2':
+    if config['prompts']['version'] in {'research-batch-v2', 'research-batch-v3'}:
         request['reading_scope'] = reading_scope(candidate)
         request['evidence_index'] = [{key: locator[key] for key in ('id', 'section_id', 'location')
                                      if key in locator} for locator in candidate['evidence']['locators']]
@@ -419,6 +430,8 @@ def classify(root, base, candidate, backend, seen):
 
 
 def render(manifest, candidate, research, review, revision):
+    if manifest.get('prompt_version') == 'research-batch-v3':
+        return render_article(manifest, candidate, research, review, revision)
     metadata = candidate['metadata']
     citation_url = metadata['source_url']
     if candidate['kind'] == 'paper' and metadata.get('arxiv_id') and metadata.get('source_version'):
@@ -487,6 +500,56 @@ def render(manifest, candidate, research, review, revision):
     lines += ['', '## 局限', ''] + ['- ' + text for text in research['limitations']]
     lines += ['', '## 独立审阅', '', '逐项核查、证据摘要与实际用量见同目录检查点及单项回执。']
     lines += ['- %s：%s；建议：%s' % (issue['location'], issue['reason'], issue['suggestion']) for issue in review['issues']]
+    return '\n'.join(lines) + '\n'
+
+
+def render_article(manifest, candidate, research, review, revision):
+    """Render the same reviewed fields as prose; legacy renderers stay frozen."""
+    legacy_manifest = dict(manifest, prompt_version='research-batch-v2')
+    legacy = render(legacy_manifest, candidate, research, review, revision)
+    metadata, evidence = candidate['metadata'], candidate['evidence']
+    source_url = metadata['source_url']
+    if candidate['kind'] == 'paper' and metadata.get('arxiv_id') and metadata.get('source_version'):
+        source_url = 'https://arxiv.org/abs/' + metadata['arxiv_id'] + metadata['source_version']
+    notice = next(line for line in legacy.splitlines() if line.startswith('> TEST：'))
+    scope = next(line.removeprefix('- 覆盖范围：') for line in legacy.splitlines()
+                 if line.startswith('- 覆盖范围：'))
+    lines = [legacy.splitlines()[0], '', notice, '', research['summary'] + '[^1]', '',
+             '## 问题、方法与结果', '']
+    notes = ['[^1]: [%s](%s)；阅读范围：%s' % (metadata['title'], source_url, scope)]
+    labels = {'fact': '原文直接说明', 'author_claim': '作者报告，未独立复现', 'inference': '我们的推断'}
+    locators = {item['id']: item for item in evidence['locators']}
+    sections = {item['id']: item for item in evidence.get('sections', [])}
+    for number, claim in enumerate(research['claims'], 2):
+        lines += [claim['text'] + '[^%s]' % number, '']
+        locations = []
+        for key in claim['evidence_ids']:
+            locator = locators[key]
+            section = sections.get(locator.get('section_id'), {})
+            location = section.get('location', '')
+            destination = evidence.get('document_url', source_url)
+            if location.startswith('#'):
+                destination = destination.split('#', 1)[0] + location
+            elif location.startswith(destination.split('#', 1)[0] + '#'):
+                destination = location
+            title = section.get('title') or '原文'
+            locations.append('[%s · %s](%s)' % (title, locator['location'], destination))
+        notes.append('[^%s]: %s；%s。' % (number, '、'.join(locations), labels[claim['kind']]))
+    lines += ['## 如何理解这些结论的边界', '']
+    for limitation in research['limitations']:
+        lines += [limitation, '']
+    lines += ['## 来源与阅读范围', ''] + notes + ['']
+    if '\n## 正文阅读记录\n' in legacy:
+        reading = legacy.split('\n## 正文阅读记录\n', 1)[1].split('\n## 研究概述\n', 1)[0]
+        lines += ['### 本次实际读取内容', '', reading.strip(), '']
+    lines += ['## 研究与审阅记录', '',
+              '- 研究模型：`%s`；独立审阅：`%s`。' % (manifest['models']['research'], manifest['models']['review']),
+              '- 审阅：`%s`；修订次数：%s；%s。' % (review['decision'], revision,
+                  '原始抽取文本已不可变归档，可离线重放；研究与审阅使用同一份阅读材料' if 'archive' in candidate
+                  else '原始材料仅在内存中提供给模型'), '',
+              '逐项核查、证据摘要与实际用量见同目录检查点及单项回执。']
+    lines += ['- %s：%s；建议：%s' % (issue['location'], issue['reason'], issue['suggestion'])
+              for issue in review['issues']]
     return '\n'.join(lines) + '\n'
 
 

@@ -22,7 +22,7 @@ class ArchivedFormalCycle(unittest.TestCase):
     def setUp(self):
         batch_fixtures.ConfigDrivenResearchBatch.setUp(self)
 
-    def run_archived_cycle(self):
+    def run_archived_cycle(self, presentation=None):
         class CombinedClient(FakeInsightClient):
             def infer(self, model, instructions, input_text, **limits):
                 if 'evidence' not in json.loads(input_text):
@@ -61,6 +61,8 @@ class ArchivedFormalCycle(unittest.TestCase):
             'budget': {'max_calls_per_cycle': 8, 'research_max_calls': 4, 'insight_max_calls': 4,
                 'max_input_chars': 500000, 'max_output_chars': 10000, 'timeout_seconds': 120, 'max_revisions': 1},
             'history': {'lookback_days': 180, 'max_documents': 30}}
+        if presentation:
+            config['presentation'] = presentation
         path = self.root / 'config/cycles/custom-topic.yaml'
         path.parent.mkdir()
         path.write_text(yaml.safe_dump(config, sort_keys=False))
@@ -88,9 +90,9 @@ class ArchivedFormalCycle(unittest.TestCase):
                           datetime.fromisoformat(receipt['window_start'])).days, 60)
         base = 'reports/test/custom-topic/cycles/' + identifier
         child = store.checked_yaml(self.root, base + '/configs/insight.yaml')
-        self.assertEqual(child['prompts']['version'], 'insight-v4')
+        self.assertEqual(child['prompts']['version'], 'insight-v5' if presentation else 'insight-v4')
         self.assertEqual(store.checked_yaml(self.root, base + '/configs/research.yaml')['prompts']['version'],
-                         'research-batch-v2')
+                         'research-batch-v3' if presentation else 'research-batch-v2')
         research_calls = [call['payload'] for call in client.calls if 'evidence' not in call['payload']]
         self.assertEqual(research_calls[0]['coverage'], 'full_text')
         self.assertEqual(research_calls[0], {key: value for key, value in research_calls[1].items() if key != 'candidate'})
@@ -122,7 +124,7 @@ class ArchivedFormalCycle(unittest.TestCase):
         self.assertEqual(len(client.calls), 4)
         synthesis = (self.root / ('reports/custom-topic/' + identifier + '-synthesis.md')).read_text()
         self.assertIn('跨度 122 天', synthesis)
-        self.assertIn('## 历史覆盖', synthesis)
+        self.assertIn('## 来源与阅读范围' if presentation else '## 历史覆盖', synthesis)
         source_cards = [content for relative, content in plan['files'].items() if relative.startswith('sources/papers/')]
         self.assertEqual(len(source_cards), 1)
         self.assertIn('单篇详细研究', source_cards[0])

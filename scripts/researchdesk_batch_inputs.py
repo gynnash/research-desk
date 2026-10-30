@@ -93,7 +93,7 @@ def load_config(root, path):
     if config['budget']['max_calls_per_batch'] > config['budget']['month_max_calls']:
         raise store.OfflineError('批次请求上限不可超过月度上限')
     fields(config['prompts'], {'version'}, '提示词配置')
-    if config['prompts']['version'] not in {'research-batch-v1', 'research-batch-v2'}:
+    if config['prompts']['version'] not in {'research-batch-v1', 'research-batch-v2', 'research-batch-v3'}:
         raise store.OfflineError('未知提示词版本')
     sources = config['sources']
     if not isinstance(sources, list) or not 1 <= len(sources) <= config['budget']['max_documents']:
@@ -110,8 +110,8 @@ def load_config(root, path):
         if 'reading' in source:
             fields(source['reading'], {'mode'}, '全文阅读配置')
             if (source['reading']['mode'] != 'full_text_preferred' or source['adapter'] != 'arxiv'
-                    or config['prompts']['version'] != 'research-batch-v2'):
-                raise store.OfflineError('全文阅读需要 arXiv 与 research-batch-v2')
+                    or config['prompts']['version'] not in {'research-batch-v2', 'research-batch-v3'}):
+                raise store.OfflineError('全文阅读需要 arXiv 与 research-batch-v2/v3')
         if not isinstance(source['id'], str) or not store.SAFE_ID.fullmatch(source['id']) or source['id'] in ids:
             raise store.OfflineError('来源 ID 无效或重复')
         ids.add(source['id'])

@@ -4,6 +4,7 @@ backend: chatgpt_plan
 topic: agent-memory
 topics_file: config/research_topics.yaml
 archive: true
+presentation: technical_article
 reading:
   mode: full_text_preferred
   paper_max_chars: 120000

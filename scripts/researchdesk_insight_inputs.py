@@ -185,7 +185,7 @@ def load_config(root, path):
     if config['models']['generation'] == config['models']['review']:
         raise store.OfflineError('Insight 生成与独立审阅须为不同的实际模型')
     ranges = {'max_calls': (2, 4), 'month_max_calls': (2, 1000),
-              'max_input_chars': (1000, 600000 if config.get('prompts', {}).get('version') in {'insight-v3', 'insight-v4'} else 60000),
+              'max_input_chars': (1000, 600000 if config.get('prompts', {}).get('version') in {'insight-v3', 'insight-v4', 'insight-v5'} else 60000),
               'max_output_chars': (1000, 12000), 'timeout_seconds': (1, 120), 'max_revisions': (0, 1)}
     research_inputs.fields(config['budget'], ranges, 'Insight 预算')
     for name, (low, high) in ranges.items():
@@ -193,7 +193,7 @@ def load_config(root, path):
     if config['budget']['max_calls'] > config['budget']['month_max_calls']:
         raise store.OfflineError('Insight 请求上限不可超过月度上限')
     research_inputs.fields(config['prompts'], {'version'}, 'Insight 提示词')
-    if config['prompts']['version'] not in {'insight-v1', 'insight-v2', 'insight-v3', 'insight-v4'}:
+    if config['prompts']['version'] not in {'insight-v1', 'insight-v2', 'insight-v3', 'insight-v4', 'insight-v5'}:
         raise store.OfflineError('未知 Insight 提示词版本')
     if not isinstance(config['research_inputs'], list) or not 1 <= len(config['research_inputs']) <= 4:
         raise store.OfflineError('须明确登记 1–4 个通过审阅的 Research 批次')
@@ -212,19 +212,19 @@ def load_config(root, path):
         if entry['receipt'] in receipts:
             raise store.OfflineError('Research 输入回执重复')
         receipts.add(entry['receipt'])
-    history_limit = 40 if config['prompts']['version'] == 'insight-v4' else 10
+    history_limit = 40 if config['prompts']['version'] in {'insight-v4', 'insight-v5'} else 10
     if not isinstance(config['historical_inputs'], list) or not 1 <= len(config['historical_inputs']) <= history_limit:
         raise store.OfflineError('须明确登记 1–%s 份历史资料，不遍历整个知识库' % history_limit)
     histories = set()
     for entry in config['historical_inputs']:
         research_inputs.fields(entry, {'path', 'sha256', 'origin'} |
-                              (HISTORY_FIELDS if config['prompts']['version'] == 'insight-v4' else set()), '历史输入')
+                              (HISTORY_FIELDS if config['prompts']['version'] in {'insight-v4', 'insight-v5'} else set()), '历史输入')
         _history_path(root, entry['path'], topic)
         if entry['origin'] != 'human_baseline' or not isinstance(entry['sha256'], str) or not HASH.fullmatch(entry['sha256']):
             raise store.OfflineError('历史输入必须明确标为 human_baseline 并固定 SHA-256')
         if entry['path'] in histories:
             raise store.OfflineError('历史输入重复')
-        if config['prompts']['version'] == 'insight-v4':
+        if config['prompts']['version'] in {'insight-v4', 'insight-v5'}:
             if (entry['historical_origin'] not in {'admitted_ai', 'human_note', 'human_modified'}
                     or entry['date_basis'] not in {'admission_cycle_plan', 'collected_at', 'unknown'}
                     or (entry['research_date'] is not None and _date(entry['research_date']) != entry['research_date'])
@@ -518,7 +518,7 @@ def _historical_evidence(root, config):
                                        for source_id in source_ids],
                  'coverage': 'historical_note', 'independently_reviewed': False, 'can_support_original_facts': False}
         status = '历史人工基线，含 AI 辅助内容；未经本次独立原文审阅。推断与旧主张均不可升格为新核验事实。'
-        if config['prompts']['version'] == 'insight-v4':
+        if config['prompts']['version'] in {'insight-v4', 'insight-v5'}:
             details = history_details(root, entry['path'], metadata, text.encode(), sources)
             if any(entry[key] != value for key, value in details.items()):
                 raise store.OfflineError('历史类型或日期与正式准入记录及原笔记不一致')
@@ -627,10 +627,10 @@ def model_payload(bundle, prompt_version='insight-v1'):
     claims and original material, so their rendered text and integrity proofs
     stay in the full bundle instead of being sent a second time to the model.
     """
-    if prompt_version not in {'insight-v1', 'insight-v2', 'insight-v3', 'insight-v4'}:
+    if prompt_version not in {'insight-v1', 'insight-v2', 'insight-v3', 'insight-v4', 'insight-v5'}:
         raise store.OfflineError('未知 Insight 提示词版本')
     payload = {'topic': bundle['topic'], 'research_context': bundle['research_context'], 'evidence': []}
-    if prompt_version in {'insight-v2', 'insight-v3', 'insight-v4'}:
+    if prompt_version in {'insight-v2', 'insight-v3', 'insight-v4', 'insight-v5'}:
         payload['evidence_index'] = {
             record['id']: dict(title=evidence_title(record), **{
                 key: record[key] for key in ('origin', 'coverage', 'source_ids', 'source_urls')})
@@ -639,15 +639,15 @@ def model_payload(bundle, prompt_version='insight-v1'):
         keys = {'id', 'origin', 'path', 'source_ids', 'source_url', 'source_urls', 'coverage', 'historical_status'}
         keys |= ({'metadata', 'research_summary', 'research_claims', 'research_limitations', 'original_material'}
                  if record['origin'] == 'reviewed_research' else {'text'})
-        if prompt_version in {'insight-v3', 'insight-v4'} and record['origin'] == 'reviewed_research':
+        if prompt_version in {'insight-v3', 'insight-v4', 'insight-v5'} and record['origin'] == 'reviewed_research':
             keys |= {'reading_scope', 'locators', 'acquisition_attempts'}
-        if prompt_version == 'insight-v4' and record['origin'] == 'human_baseline':
+        if prompt_version in {'insight-v4', 'insight-v5'} and record['origin'] == 'human_baseline':
             keys |= HISTORY_FIELDS | {'temporal_eligible'}
         projected = {key: value for key, value in record.items() if key in keys}
-        if prompt_version in {'insight-v2', 'insight-v3', 'insight-v4'} and record['origin'] == 'human_baseline':
+        if prompt_version in {'insight-v2', 'insight-v3', 'insight-v4', 'insight-v5'} and record['origin'] == 'human_baseline':
             projected['text'], projected['historical_reference_ids'] = scoped_history(record)
         payload['evidence'].append(projected)
-    if prompt_version == 'insight-v4':
+    if prompt_version in {'insight-v4', 'insight-v5'}:
         payload['history_coverage'] = history_coverage(bundle['evidence'])
     return payload
 
