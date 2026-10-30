@@ -51,3 +51,9 @@
 测试审阅结果记在运行清单，不增加 Frontmatter 字段；通过模拟门禁的来源仍初始化 `inbox`。正式与测试来源的 ID 全局唯一，身份重复在各自区域分别检查，Frontmatter 的 `related_sources`/`related_notes` 不得跨区。默认校验正式资料，`--include-test` 同时检查测试资料；测试目录不是旧资料豁免。具体见[离线说明](offline-research.md)。
 
 真实来源采集测试不标成虚构原文，其统一横幅为 `> TEST：真实来源采集，分析与审阅均为模拟，不可作为正式研究结论。`。原始元数据与模拟分析必须区分，正文只保留必要短证据。详见[真实采集说明](real-source-collection.md)。
+
+## 原文快照独立类型
+
+`sources/originals/<topic>/<source-id>-<snapshot-sha256>.md`使用`kind: original_snapshot`，保留`schema_version`、标题、`source_id`、`topics`、原文URL、获取时间、内容散列、抽取范围`coverage`与实际研究范围`research_coverage`。可附作者、来源、发表日期与版本。它不分配第二个来源UUID，不参与论文/博客身份重复计数，也不能冒充第二份独立研究证据。
+
+快照由已绑定的原文检查点确定性生成、正式准入仅新增；篡改归档或派生正文会使重放校验失败。摘要降级必须标明`abstract_only`，不因保存原文而修改旧研究覆盖声明。详细格式和边界见[采集与原文归档](source-coverage-and-archive.md)。

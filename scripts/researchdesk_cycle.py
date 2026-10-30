@@ -45,7 +45,10 @@ def load_config(root, path, snapshot=None):
     common.fields(config, {'schema_version', 'mode', 'backend', 'topic', 'topics_file', 'window',
                           'discovery', 'models', 'budget', 'history'} |
                   ({'reading'} if 'reading' in config else set()) |
-                  ({'selection'} if 'selection' in config else set()), '研究轮次配置')
+                  ({'selection'} if 'selection' in config else set()) |
+                  ({'archive'} if 'archive' in config else set()), '研究轮次配置')
+    if 'archive' in config and type(config['archive']) is not bool:
+        raise store.OfflineError('archive 必须是显式布尔值')
     if 'selection' in config:
         common.fields(config['selection'], {'mode', 'min_score', 'max_requests'}, '候选排序')
         if (config['selection']['mode'] != 'community_attention'
@@ -95,6 +98,43 @@ def load_config(root, path, snapshot=None):
     for key, bounds in {'max_candidates': (1,100 if expanded else 20), 'max_documents': (1,5),
                         'max_per_source': (1,5 if expanded else 2), 'evidence_max_chars': (200,10000)}.items():
         common.positive(config['discovery'][key], *bounds, key)
+    sources = config['discovery']['sources']
+    if not isinstance(sources, list) or not 1 <= len(sources) <= 12:
+        raise store.OfflineError('发现来源须为1–12项')
+    ids = set()
+    from researchdesk_sources import approved_hosts, validate_url, SourceError
+    for source in sources:
+        if not isinstance(source, dict):
+            raise store.OfflineError('发现来源必须为映射')
+        expected = {'id', 'adapter', 'entry_url'}
+        if source.get('adapter') == 'rss':
+            expected |= {'publisher', 'allowed_hosts'}
+        expected |= {key for key in ('sitemap_url', 'sitemap_max_pages') if key in source}
+        common.fields(source, expected, '发现来源')
+        if (not isinstance(source['id'], str) or not store.SAFE_ID.fullmatch(source['id'])
+                or source['id'] in ids or source['adapter'] not in {'arxiv', 'letta', 'langchain', 'rss'}):
+            raise store.OfflineError('发现来源身份重复或适配器无效')
+        ids.add(source['id'])
+        try:
+            if source['adapter'] == 'rss':
+                if not isinstance(source['allowed_hosts'], list) or not 1 <= len(source['allowed_hosts']) <= 20:
+                    raise store.OfflineError('RSS每来源允许域名须为1–20项')
+                hosts = approved_hosts(source['allowed_hosts'])
+                if not isinstance(source['publisher'], str) or not source['publisher'].strip() or len(source['publisher']) > 120:
+                    raise store.OfflineError('RSS出版商名称无效')
+                validate_url(source['entry_url'], hosts)
+                if 'sitemap_url' in source or 'sitemap_max_pages' in source:
+                    raise store.OfflineError('RSS来源不使用sitemap配置')
+            else:
+                validate_url(source['entry_url'])
+            if 'sitemap_url' in source:
+                if source['adapter'] not in {'letta', 'langchain'}:
+                    raise store.OfflineError('仅官方博客适配器使用sitemap')
+                validate_url(source['sitemap_url'])
+            if 'sitemap_max_pages' in source:
+                common.positive(source['sitemap_max_pages'], 1, 10, 'sitemap_max_pages')
+        except SourceError as exc:
+            raise store.OfflineError(str(exc)) from exc
     topics_sha256 = store.digest(topic_path.read_bytes())
     if snapshot is not None and snapshot['_topics_sha256'] != topics_sha256:
         raise store.OfflineError('历史轮次的研究方向配置已变化，不能替换旧上下文')
@@ -181,8 +221,9 @@ def _cached(root, receipt):
 
 class CycleFetcher:
     """Keep a bounded cycle's source versions in memory, never in Git."""
-    def __init__(self, delegate=None):
-        self.delegate = delegate or SafeFetcher(retries=0)
+    def __init__(self, delegate=None, sources=()):
+        hosts = {host for source in sources for host in source.get('allowed_hosts', [])}
+        self.delegate = delegate or SafeFetcher(retries=0, allowed_hosts=hosts or None)
         self.responses = {}
 
     def fetch(self, url):
@@ -236,6 +277,9 @@ def plan_candidates(root, config, cycle_id, snapshot, fetcher):
     child_config = {'topic':config['topic']}
     for item in list(latest.values())[:1000]:
         source = dict(item['source'])
+        per_source_key = item.get('source_id', source['adapter'])
+        if config.get('archive'):
+            source['archive'] = True
         # Pending candidates from an older cycle adopt the new cycle's reading
         # policy, without mutating their frozen discovery/checkpoint records.
         if source['adapter'] == 'arxiv':
@@ -246,7 +290,7 @@ def plan_candidates(root, config, cycle_id, snapshot, fetcher):
                 source.pop('reading', None)
                 source['evidence_max_chars'] = config['discovery']['evidence_max_chars']
         item = dict(item, source=source)
-        if len(selected)>=config['discovery']['max_documents'] or per_source.get(source['adapter'],0)>=config['discovery']['max_per_source']:
+        if len(selected)>=config['discovery']['max_documents'] or per_source.get(per_source_key,0)>=config['discovery']['max_per_source']:
             pending.append(dict(item,reason='cycle_capacity'))
             continue
         try:
@@ -259,7 +303,7 @@ def plan_candidates(root, config, cycle_id, snapshot, fetcher):
             skipped.append({'source':source,**action})
             continue
         selected.append(item)
-        per_source[source['adapter']]=per_source.get(source['adapter'],0)+1
+        per_source[per_source_key]=per_source.get(per_source_key,0)+1
     result={'candidates':selected,'skipped':skipped,'pending':pending}
     store.save_yaml(root,path,result)
     return result
@@ -271,7 +315,7 @@ def run(root, config_path, cycle_id, client=None, fetcher=None, fail_after=None)
     base = base_path(initial, cycle_id)
     if fail_after not in (None, 'after_research'):
         raise store.OfflineError('无效轮次断点')
-    fetcher = CycleFetcher(fetcher)
+    fetcher = CycleFetcher(fetcher, initial['discovery']['sources'])
     with cycle_lock(root, initial['topic']):
         config, manifest, snapshot = discover_cycle(root, config_path, cycle_id, fetcher=fetcher)
         receipt_path = base + '/receipt.yaml'
@@ -329,6 +373,17 @@ def run(root, config_path, cycle_id, client=None, fetcher=None, fail_after=None)
                 input_hashes[research_path] = store.digest((root/research_path).read_bytes())
                 original_receipt = research_result['receipt_path']
                 input_hashes[original_receipt] = store.digest((root/original_receipt).read_bytes())
+                for item in research_result['items']:
+                    original_path = 'reports/test/%s/research-batches/%s/items/%s/candidate.yaml' % (
+                        config['topic'], cycle_id, item['key'])
+                    if (root / original_path).is_file():
+                        original = store.checked_yaml(root, original_path)['candidate']
+                        if 'archive' in original:
+                            from researchdesk_archive import load
+                            load(root, original)
+                            for path in (original_path, original_path + '.sha256', original['archive']['path'],
+                                         original['archive']['path'] + '.sha256', original['archive']['markdown_path']):
+                                input_hashes[path] = store.digest((root / path).read_bytes())
                 if fail_after == 'after_research' and not store.safe_path(root, base+'/interruption.yaml').exists():
                     store.save_yaml(root, base+'/interruption.yaml', {'phase':'after_research','reserved_calls':research_result['reserved_calls']})
                     raise store.SimulatedInterruption('Research已保存；同轮补跑只继续Insight')

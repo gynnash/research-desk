@@ -19,6 +19,8 @@ class FulltextRecovery(unittest.TestCase):
 
     def setUp(self):
         cycle_fixture.FulltextCycle.setUp(self)
+        if getattr(self, 'archive_enabled', False):
+            self.config['archive'] = True
         self.config['budget']['max_calls_per_cycle'] = 16
         self.config_path.write_text(yaml.safe_dump(self.config, allow_unicode=True, sort_keys=False))
         self.research_run.side_effect = self.real_research_run
@@ -103,6 +105,39 @@ class FulltextRecovery(unittest.TestCase):
         self.assertEqual(recovery.verify_lineage(self.root, 'custom-topic', self.identifier)['max_calls_per_cycle'], 16)
         self.assertEqual(self.original_bytes,
                          {relative: (self.root / relative).read_bytes() for relative in self.original_bytes})
+
+
+class ArchivedFulltextRecovery(unittest.TestCase):
+    """Reuse the real failed-cycle fixture, changing only its archive policy."""
+
+    archive_enabled = True
+    setUp = FulltextRecovery.setUp
+    fake_research = FulltextRecovery.fake_research
+    fake_insight = FulltextRecovery.fake_insight
+    insight_scope = staticmethod(FulltextRecovery.insight_scope)
+
+    def test_linked_recovery_uses_immutable_archives_with_all_fetches_offline(self):
+        originals = [relative for relative in self.request['original_files']
+                     if relative.endswith(('/original.yaml', '/original.yaml.sha256', '/original.md'))]
+        self.assertEqual(len(originals), 6)  # Two exact originals, hashes and reading views.
+        with mock.patch.object(self.fetcher, 'fetch', side_effect=AssertionError('Recovery must replay archives')) as fetch, \
+                mock.patch.object(self.fetcher, 'fetch_pdf', side_effect=AssertionError('Recovery must not download PDFs')) as pdf:
+            result = recovery.run(self.root, self.config_path, 'first', self.client, fetcher=self.fetcher)
+            self.assertEqual(result['status'], 'completed')
+            self.assertEqual(result['new_reserved_calls'], 2)
+            self.assertEqual(result['reserved_calls'], 8)
+            lineage = recovery.verify_lineage(self.root, 'custom-topic', self.identifier)
+            self.assertTrue(set(originals).issubset(lineage['original_files']))
+            self.assertTrue(recovery.run(self.root, self.config_path, 'first', self.client, fetcher=self.fetcher)['cached'])
+            fetch.assert_not_called()
+            pdf.assert_not_called()
+        self.assertEqual(len(self.old_client.research.calls), 4)
+        self.assertEqual(len(self.client.calls), 2)
+        self.assertEqual(self.original_bytes,
+                         {relative: (self.root / relative).read_bytes() for relative in self.original_bytes})
+        old = self.old_client.insight.calls[0]['payload']['evidence'][0]
+        current = self.client.calls[0]['payload']['evidence'][0]
+        self.assertEqual(old['original_material'], current['original_material'])
 
 
 if __name__ == '__main__':

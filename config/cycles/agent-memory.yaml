@@ -3,6 +3,7 @@ mode: research_cycle_test
 backend: chatgpt_plan
 topic: agent-memory
 topics_file: config/research_topics.yaml
+archive: true
 reading:
   mode: full_text_preferred
   paper_max_chars: 120000
@@ -25,9 +26,28 @@ discovery:
     - id: letta
       adapter: letta
       entry_url: https://www.letta.com/blog/
+      sitemap_url: https://www.letta.com/sitemap.xml
+      sitemap_max_pages: 5
     - id: langchain
       adapter: langchain
       entry_url: https://www.langchain.com/blog
+      sitemap_url: https://www.langchain.com/sitemap.xml
+      sitemap_max_pages: 5
+    - id: huggingface-blog
+      adapter: rss
+      publisher: Hugging Face Blog
+      entry_url: https://huggingface.co/blog/feed.xml
+      allowed_hosts: [huggingface.co]
+    - id: meituan-tech
+      adapter: rss
+      publisher: 美团技术团队
+      entry_url: https://tech.meituan.com/feed/
+      allowed_hosts: [tech.meituan.com]
+    - id: ruanyifeng-blog
+      adapter: rss
+      publisher: 阮一峰的网络日志
+      entry_url: https://www.ruanyifeng.com/blog/atom.xml
+      allowed_hosts: [www.ruanyifeng.com]
 models:
   research: gpt-6-luna
   insight: gpt-6-luna

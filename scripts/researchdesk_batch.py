@@ -438,7 +438,9 @@ def render(manifest, candidate, research, review, revision):
         '- 资料标识：`%s`；已有资料：`%s`。' % (candidate['source_id'], candidate.get('existing_source_path') or '无；仅预留身份，未新建来源笔记'),
         '- 覆盖范围：%s。' % scope,
         '- 研究模型：`%s`；独立审阅：`%s`。' % (manifest['models']['research'], manifest['models']['review']),
-        '- 审阅：`%s`；修订次数：%s；原始材料仅在内存中提供给模型。' % (review['decision'], revision),
+        '- 审阅：`%s`；修订次数：%s；%s。' % (review['decision'], revision,
+            '原始抽取文本已不可变归档，可离线重放；研究与审阅使用同一份阅读材料' if 'archive' in candidate
+            else '原始材料仅在内存中提供给模型'),
         '', '## 研究概述', '', research['summary'], '', '## 主张与证据', '']
     if fulltext_profile:
         evidence = candidate['evidence']
@@ -564,7 +566,7 @@ def run(root, config_path, batch_id, client, fetcher=None, fail_after=None):
     research_instructions, review_instructions = instructions_for(config)
     fingerprint = store.digest({'config': config, 'authorization': auth,
         'research_prompt': research_instructions, 'review_prompt': review_instructions})
-    fetcher = fetcher or SafeFetcher(retries=0)
+    fetcher = fetcher or inputs.default_fetcher(config['sources'])
     with global_budget_lock(root), store.topic_lock(root, topic):
         manifest_path = base + '/manifest.yaml'
         if store.safe_path(root, manifest_path).exists():
@@ -590,6 +592,9 @@ def run(root, config_path, batch_id, client, fetcher=None, fail_after=None):
             if finished:
                 result = store.checked_yaml(root, finished[-1]['result_path'])
                 plan = store.checked_yaml(root, '%s/items/%s/candidate.yaml' % (base, key))
+                if source.get('archive') is True or 'archive' in plan['candidate']:
+                    from researchdesk_archive import load
+                    load(root, plan['candidate'], source=source, config=config)
                 seen.update(plan['candidate']['identity_keys'])
                 results.append(result)
                 continue
@@ -603,12 +608,22 @@ def run(root, config_path, batch_id, client, fetcher=None, fail_after=None):
             attempt = len(list(attempts_dir.glob('attempt-*.yaml'))) + 1
             source_attempt = '%s/source-attempts/%s/attempt-%s.yaml' % (base, key, attempt)
             plan_path = '%s/items/%s/candidate.yaml' % (base, key)
+            capture = {} if source.get('archive') is True else None
+            bound = None
             try:
                 bound = (store.checked_yaml(root, plan_path)['candidate']
-                         if source.get('reading') and store.safe_path(root, plan_path).exists() else None)
-                candidate, material = (inputs.fetch_candidate(root, config, source, fetcher, binding=bound)
-                                       if source.get('reading') else inputs.fetch_candidate(root, config, source, fetcher))
+                         if store.safe_path(root, plan_path).exists() else None)
+                if bound is not None and (source.get('archive') is True or 'archive' in bound):
+                    from researchdesk_archive import load
+                    candidate, material, _ = load(root, bound, source=source, config=config)
+                else:
+                    arguments = {'binding': bound} if source.get('reading') else {}
+                    if capture is not None:
+                        arguments['capture'] = capture
+                    candidate, material = inputs.fetch_candidate(root, config, source, fetcher, **arguments)
             except Exception as exc:
+                if bound is not None and (source.get('archive') is True or 'archive' in bound):
+                    raise  # A broken immutable original cannot be replaced by a new fetch.
                 store.save_yaml(root, source_attempt, {'key': key, 'status': 'failed',
                     'error_type': type(exc).__name__, 'at': now(), 'retry': 'same_batch_only'})
                 results.append({'key': key, 'status': 'source_failed', 'reason': type(exc).__name__, 'production_accepted': False})
@@ -622,6 +637,9 @@ def run(root, config_path, batch_id, client, fetcher=None, fail_after=None):
                 seen.update(candidate['identity_keys'])
             else:
                 action = classify(root, base, candidate, config['backend'], seen)
+                if source.get('archive') is True:
+                    from researchdesk_archive import save
+                    candidate = save(root, base, candidate, material, source, capture)
                 plan = {'candidate': candidate, 'material_sha256': store.digest(material.encode()), **action}
                 store.save_yaml(root, plan_path, plan)
             store.save_yaml(root, source_attempt, {'key': key, 'status': 'collected', 'at': now(),

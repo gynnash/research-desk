@@ -36,12 +36,22 @@ ARXIV_ID = re.compile(r'(?P<base>(?:\d{4}\.\d{4,5}|[a-z][a-z.\-]+/\d{7}))(?P<ver
 MAX_TEXT = 100_000
 
 
-def validate_url(url):
+def approved_hosts(value):
+    """Explicit public publisher hosts from trusted YAML, never from content."""
+    if (not isinstance(value, (list, tuple, set, frozenset)) or not 1 <= len(value) <= 256
+            or any(not isinstance(host, str) or len(host) > 253 or not re.fullmatch(
+                r'(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}', host) for host in value)):
+        raise SourceError('Publisher hosts must be an explicit bounded list of lowercase domains')
+    return frozenset(value)
+
+
+def validate_url(url, allowed_hosts=None):
     if not isinstance(url, str) or len(url) > 4096 or re.search(r'[\x00-\x20\\]', url):
         raise SourceError('Invalid source URL')
     try:
         parts = urlsplit(url)
-        if (parts.scheme != 'https' or parts.hostname not in HOSTS or parts.username is not None
+        hosts = HOSTS if allowed_hosts is None else approved_hosts(allowed_hosts)
+        if (parts.scheme != 'https' or parts.hostname not in hosts or parts.username is not None
                 or parts.password is not None or parts.port not in (None, 443)):
             raise SourceError('Source URL must use HTTPS and an approved public host')
     except ValueError as exc:
@@ -58,7 +68,7 @@ class SafeFetcher:
     """Bounded HTTPS GET with explicit redirects and injectable test transport."""
 
     def __init__(self, timeout=20, max_bytes=2_000_000, retries=2, arxiv_interval=3.0,
-                 opener=None, sleep=None, monotonic=None, resolver=None):
+                 opener=None, sleep=None, monotonic=None, resolver=None, allowed_hosts=None):
         if not 0 < timeout <= 60 or not 1 <= max_bytes <= 4_000_000 or not 0 <= retries <= 2:
             raise SourceError('Invalid fetch limits')
         if arxiv_interval < 3.0:
@@ -70,6 +80,7 @@ class SafeFetcher:
         self.monotonic = monotonic or time.monotonic
         self.resolver = resolver or socket.getaddrinfo
         self.last_arxiv = None
+        self.allowed_hosts = HOSTS | (approved_hosts(allowed_hosts) if allowed_hosts else frozenset())
 
     def _check_host(self, host):
         try:
@@ -140,7 +151,7 @@ class SafeFetcher:
         return self._fetch(checked, pdf=True)
 
     def _fetch(self, url, pdf=False, json_response=False):
-        requested = validate_url(url)
+        requested = validate_url(url, self.allowed_hosts)
         current, redirects = requested, []
         max_bytes = 20_000_000 if pdf else self.max_bytes
         for _ in range(6):
@@ -180,7 +191,7 @@ class SafeFetcher:
                     location = response.headers.get('Location')
                     if not location:
                         raise SourceError('Redirect lacks Location')
-                    target = validate_url(urljoin(current, location))
+                    target = validate_url(urljoin(current, location), self.allowed_hosts)
                     if pdf and (urlsplit(target).hostname != 'arxiv.org'
                                 or not urlsplit(target).path.startswith('/pdf/')):
                         raise SourceError('PDF redirect left the official arXiv PDF origin')
@@ -190,13 +201,13 @@ class SafeFetcher:
                 if status != 200:
                     raise SourceError('Public source HTTP %s' % status)
                 # A custom transport must not silently follow unvalidated redirects.
-                actual = validate_url(response.geturl()) if hasattr(response, 'geturl') else current
+                actual = validate_url(response.geturl(), self.allowed_hosts) if hasattr(response, 'geturl') else current
                 if actual != current:
                     raise SourceError('Transport followed an unvalidated redirect')
                 content_type = response.headers.get('Content-Type', '').split(';', 1)[0].strip().lower()
                 allowed_types = ({'application/json'} if json_response else {'application/pdf'} if pdf else
                                  {'text/html', 'application/xhtml+xml', 'application/atom+xml',
-                                  'application/xml', 'text/xml'})
+                                  'application/xml', 'text/xml', 'application/rss+xml'})
                 if content_type not in allowed_types:
                     raise SourceError('Unexpected source Content-Type: %s' % content_type)
                 encoding = response.headers.get('Content-Encoding', 'identity').lower()
@@ -245,14 +256,14 @@ def _date(value):
     return value[:10]
 
 
-def _record(kind, metadata, body, coverage, updated=None):
+def _record(kind, metadata, body, coverage, updated=None, retain_full=False):
     body = _clean(body)
     if not metadata.get('title') or len(body) < 30:
         raise SourceError('Missing source title or article text')
-    # The complete extracted article is only held in memory by this adapter. The
-    # caller persists bounded excerpts and this hash, never a full HTML archive.
-    return {'kind': kind, 'metadata': metadata, 'body_text': body[:MAX_TEXT],
-            'coverage': 'excerpt' if len(body) > MAX_TEXT else coverage,
+    if retain_full and len(body) > 500_000:
+        raise SourceError('Complete article exceeds the archive extraction limit')
+    return {'kind': kind, 'metadata': metadata, 'body_text': body if retain_full else body[:MAX_TEXT],
+            'coverage': 'excerpt' if len(body) > MAX_TEXT and not retain_full else coverage,
             'upstream_updated_at': updated,
             'content_hash': hashlib.sha256(body.encode('utf-8')).hexdigest()}
 
@@ -463,7 +474,7 @@ def _visible_authors(doc):
     return authors
 
 
-def parse_blog_article(text, url, source):
+def parse_blog_article(text, url, source, retain_full=False):
     source = _source_key(source)
     requested = _blog_url(url, source)
     doc = _Document(text)
@@ -500,7 +511,7 @@ def parse_blog_article(text, url, source):
         _date(updated)
     metadata = {'title': title, 'source': SOURCE_NAMES[source], 'source_url': canonical,
                 'authors': _visible_authors(doc), 'published_at': _date(published)}
-    return _record('blog', metadata, body, 'fulltext', updated)
+    return _record('blog', metadata, body, 'fulltext', updated, retain_full=retain_full)
 
 
 def parse_arxiv_abstract(text, url):

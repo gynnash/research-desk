@@ -287,7 +287,10 @@ def acquire_paper(record, fetcher, expected_format=None):
             sections, coverage, limitations = (_html_sections(response, url, base, version) if fmt == 'html'
                                                 else _pdf_sections(response, url, base, version))
             attempts.append({'format': fmt, 'url': url, 'status': 'success', 'reason': 'extracted'})
-            return _result(sections, fmt, coverage, url, attempts, limitations)
+            result = _result(sections, fmt, coverage, url, attempts, limitations)
+            result['http'] = {key: response[key] for key in (
+                'url', 'requested_url', 'content_type', 'fetched_at', 'sha256') if key in response}
+            return result
         except _IdentityError:
             raise
         except SourceError as exc:

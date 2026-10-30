@@ -319,6 +319,31 @@ def check(root, include_test=False):
                     fail(path, f"重复来源 {key[0]}，已存在于 {identities[scoped_key]}")
                 identities[scoped_key] = path
 
+    # Originals are extracted snapshots, not duplicate paper/blog identity cards.
+    for file in sorted((root / 'sources/originals').glob('*/*.md')):
+        path = file.relative_to(root).as_posix()
+        if file.name == 'README.md':
+            continue
+        data = frontmatter(read(path), path)
+        if not isinstance(data, dict):
+            continue
+        if (data.get('schema_version') != 1 or data.get('kind') != 'original_snapshot'
+                or file.parent.name not in topics or data.get('topics') != [file.parent.name]):
+            fail(path, '原文快照的类型、版本或方向无效')
+        identifier = data.get('source_id', '')
+        if (not isinstance(identifier, str) or not re.fullmatch(
+                r'(?:paper|blog)-[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}', identifier)
+                or not re.fullmatch(re.escape(identifier) + r'-[0-9a-f]{64}\.md', file.name)):
+            fail(path, '原文快照文件名或来源ID无效')
+        for key in ('title', 'source_url', 'captured_at'):
+            if not isinstance(data.get(key), str) or not data[key].strip():
+                fail(path, f'原文快照缺少 {key}')
+        if not isinstance(data.get('content_sha256'), str) or not re.fullmatch(r'[0-9a-f]{64}', data['content_sha256']):
+            fail(path, '原文内容散列无效')
+        for key in ('coverage', 'research_coverage'):
+            if data.get(key) not in {'full_text', 'excerpt', 'abstract_only'}:
+                fail(path, f'{key} 必须如实标明全文、节选或摘要')
+
     # Resolve after collecting all IDs, so references do not depend on file order.
     for path, data, zone in records:
         related = data.get("related_sources")

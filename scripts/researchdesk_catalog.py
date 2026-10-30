@@ -25,7 +25,7 @@ LABELS = {'full_text': '完整抽取正文', 'excerpt': '节选', 'abstract_only
           'historical_note': '历史笔记'}
 GROUPS = [('synthesis', '综合报告'), ('research', '单篇研究与更新'),
           ('insight', '洞察与趋势判断'), ('topic_proposal', '公众号选题提案'),
-          ('writing', '文章稿件'), ('source', '正式来源卡')]
+          ('writing', '文章稿件'), ('source', '正式来源卡'), ('original_snapshot', '原文归档')]
 
 
 def _date(identifier):

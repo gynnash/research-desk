@@ -12,7 +12,7 @@ from urllib.parse import parse_qs, urlencode, urlsplit, urlunsplit
 import xml.etree.ElementTree as ET
 
 import researchdesk_offline as store
-from researchdesk_sources import (SafeFetcher, SourceError, parse_arxiv_feed,
+from researchdesk_sources import (HOSTS, SafeFetcher, SourceError, parse_arxiv_feed,
                                   parse_blog_article, parse_blog_list, validate_url)
 
 
@@ -41,7 +41,7 @@ def _instant(value):
 
 def _content(response, xml=False):
     kind = response.get('content_type', '').split(';', 1)[0].strip().lower()
-    expected = {'application/atom+xml', 'application/xml', 'text/xml'} if xml else {
+    expected = {'application/atom+xml', 'application/xml', 'text/xml', 'application/rss+xml'} if xml else {
         'text/html', 'application/xhtml+xml'}
     if kind not in expected:
         raise SourceError('Discovery response has an unexpected content type')
@@ -101,6 +101,102 @@ def _window_reason(record, start, end, published_only=False):
     if not published_only and date < end and update_date is not None and start <= update_date < end:
         return 'updated', None
     return None, 'outside_window'
+
+
+def _blog_archive(fetcher, entry, adapter, max_pages=5):
+    """Read a bounded official sitemap, without treating lastmod as publication.
+
+    The index can be complete while the later article inspection is truncated.
+    Sorting by modification date only gives recent articles a chance to enter
+    that bounded inspection; older/unknown modification dates are never dropped.
+    """
+    if type(max_pages) is not int or not 1 <= max_pages <= 10:
+        raise SourceError('Sitemap page limit must be between one and ten')
+    hosts = ({'letta.com', 'www.letta.com'} if adapter == 'letta' else
+             {'langchain.com', 'www.langchain.com', 'blog.langchain.com'})
+
+    def official(url):
+        checked = validate_url(url)
+        if urlsplit(checked).hostname not in hosts:
+            raise SourceError('Sitemap is outside its publisher')
+        return checked
+
+    namespace = '{http://www.sitemaps.org/schemas/sitemap/0.9}'
+    queue, requested, seen, articles, errors = [official(entry)], [], set(), {}, []
+    response_hashes = {}
+    truncated, metadata_errors = False, 0
+    while queue and len(requested) < max_pages:
+        url = queue.pop(0)
+        if url in seen:
+            continue
+        seen.add(url)
+        requested.append(url)
+        try:
+            response = fetcher.fetch(url)
+            official(response['url'])
+            _content(response, xml=True)
+            text = response['text']
+            response_hashes[url] = response.get('sha256') or store.digest(text.encode('utf-8'))
+            if re.search(r'<!\s*(?:DOCTYPE|ENTITY)', text, re.I):
+                raise SourceError('DTD and entities are not accepted in sitemaps')
+            root = ET.fromstring(text)
+            prefix = namespace if root.tag.startswith(namespace) else ''
+            if root.tag not in {prefix + 'urlset', prefix + 'sitemapindex'}:
+                raise SourceError('Official archive is not a sitemap')
+            if root.tag == prefix + 'sitemapindex':
+                for child in root.findall(prefix + 'sitemap'):
+                    target = child.findtext(prefix + 'loc', '').strip()
+                    try:
+                        target = official(target)
+                    except SourceError:
+                        errors.append('SourceError')
+                        continue
+                    if target not in seen and target not in queue:
+                        if len(queue) < 5000:
+                            queue.append(target)
+                        else:
+                            truncated = True
+                continue
+            for child in root.findall(prefix + 'url'):
+                target = child.findtext(prefix + 'loc', '').strip()
+                try:
+                    target = official(target)
+                except SourceError:
+                    # A site-wide sitemap may also contain non-blog locations.
+                    continue
+                path = urlsplit(target).path
+                if (not re.fullmatch(r'/blog/[^/]+/?', path)
+                        or path.startswith(('/blog/tag/', '/blog/author/', '/blog/category/'))):
+                    continue
+                lastmod = child.findtext(prefix + 'lastmod')
+                try:
+                    order = _instant(lastmod).timestamp() if lastmod else None
+                except store.OfflineError:
+                    metadata_errors += 1
+                    order = None
+                existing = articles.get(target)
+                if existing is None:
+                    if len(articles) >= 5000:
+                        truncated = True
+                        continue
+                    articles[target] = {'url': target, 'lastmod': lastmod, 'order': order}
+                elif order is not None and (existing['order'] is None or order > existing['order']):
+                    articles[target] = {'url': target, 'lastmod': lastmod, 'order': order}
+        except (SourceError, ET.ParseError) as exc:
+            errors.append(type(exc).__name__)
+    if queue:
+        truncated = True
+    if not articles:
+        raise SourceError('Official sitemap has no recognized blog articles')
+    rows = sorted(articles.values(), key=lambda item: (
+        item['order'] is None, -(item['order'] or 0), item['url']))
+    return [item['url'] for item in rows], {
+        'requested_urls': requested, 'sitemap_pages': len(requested),
+        'sitemap_response_hashes': response_hashes,
+        'sitemap_index_complete': not truncated and not errors,
+        'sitemap_metadata_errors': metadata_errors,
+        'error_types': errors,
+    }
 
 
 def previously_selected(root, topic, cycle_id):
@@ -164,23 +260,35 @@ def discover(root, config, cycle_id, fetcher=None):
         values[key] = value
     sources = limits.get('sources', [{'id': key, 'adapter': key, 'entry_url': url}
                                      for key, url in DEFAULT_ENTRIES.items()])
-    if not isinstance(sources, list) or not 1 <= len(sources) <= 3:
+    if (not isinstance(sources, list) or not 1 <= len(sources) <= 12
+            or any(not isinstance(source, dict) for source in sources)):
         raise store.OfflineError('Cycle 来源清单无效')
     adapters = [source.get('adapter', source.get('id')) for source in sources]
-    if len(set(adapters)) != len(adapters) or any(adapter not in DEFAULT_ENTRIES for adapter in adapters):
+    source_ids = [source.get('id', adapter) for source, adapter in zip(sources, adapters)]
+    fixed = [adapter for adapter in adapters if adapter != 'rss']
+    if (any(not isinstance(identifier, str) or not store.SAFE_ID.fullmatch(identifier) for identifier in source_ids)
+            or len(set(source_ids)) != len(source_ids) or len(set(fixed)) != len(fixed)
+            or any(adapter not in set(DEFAULT_ENTRIES) | {'rss'} for adapter in adapters)):
         raise store.OfflineError('Cycle 来源重复或未实现')
-    fetcher = fetcher or SafeFetcher(retries=1)
+    if fetcher is None:
+        hosts = set(HOSTS)
+        for source, adapter in zip(sources, adapters):
+            if adapter == 'rss':
+                hosts.update(source.get('allowed_hosts', []))
+        fetcher = SafeFetcher(retries=1, allowed_hosts=hosts)
     candidates, deferred, statuses, eligible = [], [], [], []
     seen = set()
     used = previously_selected(root, config['topic'], cycle_id) if rolling else set()
     for source, adapter in zip(sources, adapters):
-        entry = source.get('entry_url', DEFAULT_ENTRIES[adapter])
-        entry = validate_url(entry)
+        source_id = source.get('id', adapter)
+        entry = source.get('entry_url', DEFAULT_ENTRIES.get(adapter))
+        entry = (validate_url(entry, allowed_hosts=source.get('allowed_hosts', [])) if adapter == 'rss'
+                 else validate_url(entry))
         status = {'id': source.get('id', adapter), 'adapter': adapter, 'entry_url': entry, 'status': 'failed',
                   'discovered': 0, 'inspected': 0, 'eligible': 0, 'selected': 0,
                   'complete_window': False, 'error_types': []}
         statuses.append(status)
-        records = []
+        records, feed_bindings = [], {}
         try:
             cap = values['max_candidates']
             if adapter == 'arxiv':
@@ -227,15 +335,55 @@ def discover(root, config, cycle_id, fetcher=None):
                                   inspected=min(len(records), cap), status='complete' if complete else 'truncated',
                                   complete_window=complete, requested_url=query)
                     records = records[:cap]
+            elif adapter == 'rss':
+                from researchdesk_feeds import parse_feed, parse_article
+                allowed_hosts = source['allowed_hosts']
+                response = fetcher.fetch(entry)
+                _content(response, xml=True)
+                entries = parse_feed(response['text'], response['url'], allowed_hosts)
+                entries.sort(key=lambda item: (
+                    item.get('published_at') is None and item.get('upstream_updated_at') is None,
+                    -_instant(item.get('published_at') or item.get('upstream_updated_at')).timestamp()
+                    if item.get('published_at') or item.get('upstream_updated_at') else 0,
+                    item['source_url']))
+                status.update(discovered=len(entries), status='truncated',
+                              requested_url=entry, coverage='publisher_feed_window_unproven',
+                              feed_response_hash=response.get('sha256') or store.digest(response['text'].encode('utf-8')))
+                for item in entries[:cap]:
+                    url = item['source_url']
+                    status['inspected'] += 1
+                    try:
+                        article_response = fetcher.fetch(url)
+                        _content(article_response)
+                        feed_metadata = {'published_at': item['published_at'], 'feed_url': item['feed_url'],
+                                         'response_sha256': status['feed_response_hash']}
+                        record = parse_article(article_response['text'], article_response['url'],
+                                               source['publisher'], allowed_hosts,
+                                               feed_metadata=feed_metadata)
+                        records.append(record)
+                        feed_bindings[record['metadata']['source_url']] = feed_metadata
+                    except Exception as exc:
+                        status['error_types'].append(type(exc).__name__)
+                        deferred.append({'adapter': adapter, 'source_id': source_id, 'url': url,
+                                         'reason': 'article_failed', 'error_type': type(exc).__name__})
+                if not records and status['error_types']:
+                    status['status'] = 'failed'
+                    status['error_type'] = status['error_types'][-1]
             else:
                 if urlsplit(entry).hostname not in ({'letta.com', 'www.letta.com'} if adapter == 'letta' else
                                                      {'langchain.com', 'www.langchain.com', 'blog.langchain.com'}):
                     raise SourceError('Cycle blog listing is outside its publisher')
-                response = fetcher.fetch(entry)
-                _content(response)
-                urls = parse_blog_list(response['text'], response['url'], adapter)
-                status.update(discovered=len(urls), status='truncated',
-                              coverage='bounded_listing_only_no_archive_cursor')
+                if source.get('sitemap_url') is not None:
+                    urls, archive = _blog_archive(fetcher, source['sitemap_url'], adapter,
+                                                 source.get('sitemap_max_pages', 5))
+                    status.update(archive, discovered=len(urls), status='truncated',
+                                  coverage='official_sitemap_bounded_article_inspection')
+                else:
+                    response = fetcher.fetch(entry)
+                    _content(response)
+                    urls = parse_blog_list(response['text'], response['url'], adapter)
+                    status.update(discovered=len(urls), status='truncated',
+                                  coverage='bounded_listing_only_no_archive_cursor')
                 # Every listed article can affect relevance/date selection; URL
                 # keyword ranking is not a substitute for reading its metadata.
                 for url in urls[:cap]:
@@ -251,8 +399,14 @@ def discover(root, config, cycle_id, fetcher=None):
                 if not records and status['error_types']:
                     status['status'] = 'failed'
                     status['error_type'] = status['error_types'][-1]
-                # Blog pages expose no verified exhaustive window or updated
-                # ordering. Even a short listing cannot advance a full cursor.
+                elif source.get('sitemap_url') is not None:
+                    complete = (status['sitemap_index_complete'] and len(urls) <= cap
+                                and not status['error_types'])
+                    status.update(status='complete' if complete else 'truncated',
+                                  complete_window=complete)
+                # A listing alone exposes no exhaustive window. A sitemap is
+                # complete only when every indexed article was inspected; a
+                # recent lastmod cannot establish the first publication date.
             for record in records:
                 metadata = record['metadata']
                 url = metadata['source_url']
@@ -265,7 +419,9 @@ def discover(root, config, cycle_id, fetcher=None):
                     reason = 'topic_mismatch'
                 else:
                     event, reason = _window_reason(record, start, end, published_only=rolling)
-                item = {'adapter': adapter, 'kind': record['kind'], 'url': url,
+                if reason == 'unknown_publication_date' and status.get('complete_window'):
+                    status.update(status='truncated', complete_window=False)
+                item = {'adapter': adapter, 'source_id': source_id, 'kind': record['kind'], 'url': url,
                         'metadata': metadata, 'published_at': metadata.get('published_at'),
                         'upstream_updated_at': record.get('upstream_updated_at'),
                         'content_hash': record['content_hash'], 'identity_keys': keys,
@@ -288,12 +444,17 @@ def discover(root, config, cycle_id, fetcher=None):
                             deferred.append(dict(item, reason='unknown_arxiv_version'))
                             continue
                         research_url = 'https://arxiv.org/abs/' + metadata['arxiv_id'] + version
-                    item['source'] = {'id': '%s-%s' % (adapter, store.digest(keys)[:12]),
+                    identity = store.digest(keys if len(source_id) <= 80 else [source_id, keys])[:12]
+                    item['source'] = {'id': '%s-%s' % (source_id[:80], identity),
                                       'adapter': adapter, 'kind': record['kind'], 'url': research_url,
                                       'evidence_max_chars': values['evidence_max_chars']}
                     if adapter == 'arxiv' and 'reading' in config:
                         item['source'].update(reading={'mode': config['reading']['mode']},
                             evidence_max_chars=config['reading']['paper_max_chars'])
+                    if adapter == 'rss':
+                        item['source'].update(publisher=source['publisher'],
+                                              allowed_hosts=source['allowed_hosts'],
+                                              feed_metadata=feed_bindings[url])
                     eligible.append(item)
         except Exception as exc:
             status.update(status='failed', complete_window=False)
@@ -305,7 +466,7 @@ def discover(root, config, cycle_id, fetcher=None):
     if 'selection' in config:
         from researchdesk_attention import rank_candidates
         # Alternate publishers before applying a shared lookup budget.
-        groups = [[item for item in eligible if item['adapter'] == key] for key in adapters]
+        groups = [[item for item in eligible if item['source_id'] == key] for key in source_ids]
         from itertools import zip_longest
         balanced = [item for row in zip_longest(*groups) for item in row if item is not None]
         ranked, attention_summary = rank_candidates(balanced, fetcher, config['selection'],
@@ -313,17 +474,17 @@ def discover(root, config, cycle_id, fetcher=None):
         deferred.extend(attention_summary.pop('deferred'))
         counts = {}
         for item in ranked:
-            adapter = item['adapter']
-            if counts.get(adapter, 0) >= values['max_per_source']:
+            source_id = item['source_id']
+            if counts.get(source_id, 0) >= values['max_per_source']:
                 deferred.append(dict(item, reason='per_source_limit'))
             elif len(candidates) >= values['max_documents']:
                 deferred.append(dict(item, reason='cycle_document_limit'))
             else:
                 candidates.append(item)
-                counts[adapter] = counts.get(adapter, 0) + 1
-                next(s for s in statuses if s['adapter'] == adapter)['selected'] += 1
-    for adapter in adapters if 'selection' not in config else []:
-        items = [item for item in eligible if item['adapter'] == adapter]
+                counts[source_id] = counts.get(source_id, 0) + 1
+                next(s for s in statuses if s['id'] == source_id)['selected'] += 1
+    for source_id in source_ids if 'selection' not in config else []:
+        items = [item for item in eligible if item['source_id'] == source_id]
         items.sort(key=lambda item: (item.get('upstream_updated_at') or item['published_at'], item['url']), reverse=True)
         for index, item in enumerate(items):
             if index >= values['max_per_source']:
@@ -332,7 +493,7 @@ def discover(root, config, cycle_id, fetcher=None):
                 deferred.append(dict(item, reason='cycle_document_limit'))
             else:
                 candidates.append(item)
-                next(status for status in statuses if status['adapter'] == adapter)['selected'] += 1
+                next(status for status in statuses if status['id'] == source_id)['selected'] += 1
     failures = [status for status in statuses if status['status'] == 'failed']
     state = ('failed' if len(failures) == len(statuses) else 'partial' if failures or any(
         status['status'] == 'truncated' for status in statuses) else 'complete')

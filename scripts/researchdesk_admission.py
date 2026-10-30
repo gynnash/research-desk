@@ -58,6 +58,9 @@ def _base(topic, cycle_id):
 
 def _allowed(relative, topic, cycle_id):
     parts = Path(relative).parts
+    if (len(parts) == 4 and parts[:3] == ('sources', 'originals', topic)
+            and re.fullmatch(r'(?:paper|blog)-[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}-[0-9a-f]{64}\.md', parts[3])):
+        return True
     if (len(parts) == 4 and parts[:2] in {('sources', 'papers'), ('sources', 'blogs')}
             and parts[2] == topic and parts[3].endswith('.md')):
         return True
@@ -308,6 +311,10 @@ def effective_output_hashes(root, value):
 def _check_links(root, files, accepted_path):
     """Reject broken local Markdown references before formal files are installed."""
     for relative, content in files.items():
+        if Path(relative).parts[:2] == ('sources', 'originals'):
+            # Extracted original prose/code is not repository navigation.
+            # These bytes are independently rebuilt from the bound archive.
+            continue
         for target in re.findall(r'\[[^\]]+\]\(([^)\n]+)\)', content):
             if '://' in target or target.startswith(('#', 'mailto:')):
                 continue
@@ -411,6 +418,21 @@ def _source_card(source, original, source_path, report_path, synthesis_path, acc
     return _frontmatter(source, '\n'.join(lines))
 
 
+def _archive_file(root, original, source_id):
+    import researchdesk_archive as archive
+    _, _, snapshot = archive.load(root, original)
+    content = archive.render_markdown(snapshot, formal=True)
+    frontmatter, body = content[4:].split('\n---\n', 1)
+    metadata = yaml.safe_load(frontmatter)
+    metadata['source_id'] = source_id
+    content = _frontmatter(metadata, body.lstrip())
+    path = archive.relative_path(dict(original, source_id=source_id))
+    source_path = 'sources/%s/%s/%s.md' % (
+        'papers' if original['kind'] == 'paper' else 'blogs', original['topic'], source_id)
+    content += '\n## 关联来源\n\n[来源卡与研究链接](%s)。\n' % posixpath.relpath(source_path, posixpath.dirname(path))
+    return path, content
+
+
 def _render(root, topic, cycle_id, config, bundle, candidate, records, source_map=None):
     from researchdesk_identity import source_index
     index = source_index(root)
@@ -495,6 +517,10 @@ def _render(root, topic, cycle_id, config, bundle, candidate, records, source_ma
     for record in records:
         original, result = record['candidate'], record['research']
         target = sources[original['source_id']]
+        archive_path = None
+        if 'archive' in original:
+            archive_path, archive_content = _archive_file(root, original, target['id'])
+            files[archive_path] = archive_content
         metadata = {'schema_version': 1, 'id': 'research-%s-%s' % (cycle_id, target['id']),
             'kind': 'research_update' if target['existing'] else 'research_report',
             'title': original['metadata']['title'], 'topic': topic, 'topics': [topic],
@@ -507,6 +533,8 @@ def _render(root, topic, cycle_id, config, bundle, candidate, records, source_ma
         body = '\n'.join(lines) + '\n\n正式来源：[%s](%s)。\n' % (target['id'], posixpath.relpath(target['path'], posixpath.dirname(target['report'])))
         if target['existing']:
             body += '\n本文件为独立更新或补充研究；原来源笔记、阅读状态与人工关联保持不变。\n'
+        if archive_path:
+            body += '\n原文归档：[本次完整可用抽取正文](%s)；实际研究范围见上文。\n' % posixpath.relpath(archive_path, posixpath.dirname(target['report']))
         body += '\n准入记录：[输入、审阅与输出散列](%s)。\n' % posixpath.relpath(accepted_path, posixpath.dirname(target['report']))
         files[target['report']] = _frontmatter(metadata, body)
         if not target['existing']:
@@ -522,6 +550,9 @@ def _render(root, topic, cycle_id, config, bundle, candidate, records, source_ma
                 source_content = _frontmatter(source, body + '\n## 人工笔记\n\n')
                 files[target['path']] = _source_footer_links(
                     source_content, target['path'], target['report'], accepted_path)
+            if archive_path:
+                files[target['path']] = files[target['path']].replace('\n## 人工笔记',
+                    '\n[本地原文快照](%s)。\n\n## 人工笔记' % posixpath.relpath(archive_path, posixpath.dirname(target['path'])), 1)
     return files, source_map
 
 
@@ -602,6 +633,15 @@ def _verify_plan(root, value, topic, cycle_id):
     config = inputs.load_config(root, value['insight_config'])
     for entry in config['research_inputs']:
         inputs._checked_research(root, config, entry)
+    expected_archives = {}
+    for proof in value['verification_bundle']['provenance']['research_inputs']:
+        original = store.checked_yaml(root, proof['candidate_path'])['candidate']
+        if 'archive' in original:
+            path, content = _archive_file(root, original, value['source_id_map'][original['source_id']])
+            expected_archives[path] = content
+    if expected_archives != {path: content for path, content in value['files'].items()
+                             if Path(path).parts[:2] == ('sources', 'originals')}:
+        raise store.OfflineError('正式原文与已审阅输入归档不一致')
     candidate, _, _, _ = _insight_proof(root, config, value['verification_bundle'], cycle_id, False)
     if candidate != value['candidate']:
         raise store.OfflineError('最终候选与准入计划不同')

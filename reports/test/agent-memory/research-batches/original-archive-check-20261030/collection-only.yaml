@@ -1,0 +1,30 @@
+schema_version: 1
+mode: public_original_archive_check
+model_calls: 0
+production_accepted: false
+research_performed: false
+items:
+- title: Multimodal Filesystem Memory For Long-Horizon Embodied Agents
+  source_url: https://arxiv.org/abs/2610.22686
+  published_at: '2026-10-15'
+  archive:
+    path: reports/test/agent-memory/research-batches/original-archive-check-20261030/items/arxiv-original/original.yaml
+    sha256: 75cbff46fd7298803e18a937ee3ac79869e57f963e9d8daed2933c56939649d6
+    markdown_path: reports/test/agent-memory/research-batches/original-archive-check-20261030/items/arxiv-original/original.md
+    markdown_sha256: a1ea8329899eaea718551afaa745788da0403c60b3b4ac4a92b51670b1bc7e3a
+  original_chars: 88776
+  model_material_chars: 91759
+  research_coverage: full_text
+  format: html
+- title: 如何在“不能出错”的系统里使用 AI Coding？分布式存储实践与边界
+  source_url: https://tech.meituan.com/2026/10/29/AI-Coding-IN-Distributed-Storage-System.html
+  published_at: '2026-10-29'
+  archive:
+    path: reports/test/agent-memory/research-batches/original-archive-check-20261030/items/meituan-original/original.yaml
+    sha256: b4be335a3957de6ef118dd8811978cf49b68fa1f83757ba65c23077bfbf7993b
+    markdown_path: reports/test/agent-memory/research-batches/original-archive-check-20261030/items/meituan-original/original.md
+    markdown_sha256: f23151fc54aed0fc1832fd9f165186c515cff24330e05c30306e9c0eb4d0cce5
+  original_chars: 13757
+  model_material_chars: 6228
+  research_coverage: excerpt
+  format: publisher_html

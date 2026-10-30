@@ -2,6 +2,8 @@
 """Trusted-main worker, checkpoint transfer and reviewed create-only admission."""
 
 import argparse
+from contextlib import contextmanager
+from copy import deepcopy
 import hashlib
 import json
 import os
@@ -10,6 +12,9 @@ import re
 import stat
 import subprocess
 import sys
+import tempfile
+
+import yaml
 
 
 class JobError(RuntimeError):
@@ -70,21 +75,129 @@ def allowed(path, topic, cycle, formal_files=None):
             and not any(part.startswith('.') for part in parts))
 
 
-def check_text(payload, path, formal=False):
-    if len(payload) > 2_000_000:
+def check_text(payload, path, formal=False, public_metadata=None):
+    plan = re.fullmatch(r'reports/[a-z0-9-]+/admissions/[a-z0-9-]+/plan\.yaml', path)
+    if len(payload) > (12_000_000 if plan else 2_000_000):
         raise JobError('transfer_file_too_large')
     try:
         text = payload.decode('utf-8')
     except UnicodeError as exc:
         raise JobError('transfer_must_be_utf8') from exc
-    if (re.search(r'(?i)\b(?:access_token|refresh_token|id_token|client_secret|code_verifier|api_key)\s*["\']?\s*:', text)
-            or re.search(r'\bBearer\s+[A-Za-z0-9._-]{20,}|\beyJ[A-Za-z0-9_-]{30,}\.[A-Za-z0-9_-]{20,}\.', text)
-            or re.search(r'\bsk-[A-Za-z0-9_-]{20,}', text)
-            or re.search(r'(?<![\w:])/(?:Users|home|private|tmp|var|root)/', text)):
+    import researchdesk_archive as archive
+    import researchdesk_offline as store
+    try:
+        archive.check_public_tokens(text)
+        if public_metadata is not None:
+            archive.check_public_tokens(public_metadata)
+    except store.OfflineError as exc:
+        raise JobError('possible_secret_in_transfer') from exc
+    inspected = text if public_metadata is None else public_metadata
+    if (re.search(r'(?i)\b(?:access_token|refresh_token|id_token|client_secret|code_verifier|api_key)\s*["\']?\s*:', inspected)
+            or re.search(r'(?<![\w:])/(?:Users|home|private|tmp|var|root)/', inspected)):
         raise JobError('possible_secret_in_transfer')
     if path.endswith('.md') and not formal and '> TEST' not in text:
         raise JobError('test_notice_missing')
     return text
+
+
+def _guard_bytes(root, relative, baseline_root=None):
+    """Prefer transferred bytes; never hide a changed transfer with old bytes."""
+    for directory in (root, baseline_root):
+        if directory is None:
+            continue
+        path = safe(directory, relative)
+        if path.exists():
+            if not path.is_file() or not stat.S_ISREG(path.lstat().st_mode):
+                raise JobError('unverified_original_transfer')
+            return path.read_bytes()
+    raise FileNotFoundError(relative)
+
+
+def _guard_yaml(root, relative, baseline_root=None):
+    import researchdesk_offline as store
+    payload = _guard_bytes(root, relative, baseline_root)
+    limit = 12_000_000 if re.fullmatch(r'reports/[a-z0-9-]+/admissions/[a-z0-9-]+/plan\.yaml', relative) else 2_000_000
+    if len(payload) > limit:
+        raise JobError('transfer_file_too_large')
+    marker = _guard_bytes(root, relative + '.sha256', baseline_root)
+    if marker.decode('utf-8').strip() != sha(payload):
+        raise JobError('unverified_original_transfer')
+    return yaml.load(payload.decode('utf-8'), Loader=store.UniqueKeyLoader)
+
+
+@contextmanager
+def _guard_archive(root, candidate, baseline_root=None):
+    """Rebuild just the pinned archive using a read-only overlay of both roots."""
+    import researchdesk_archive as archive
+    yaml_path, markdown_path = archive._paths(candidate)
+    with tempfile.TemporaryDirectory(prefix='researchdesk-transfer-original-') as temporary:
+        isolated = Path(temporary).resolve()
+        for relative in (yaml_path, yaml_path + '.sha256', markdown_path):
+            payload = _guard_bytes(root, relative, baseline_root)
+            if len(payload) > archive.MAX_BYTES:
+                raise JobError('transfer_file_too_large')
+            target = safe(isolated, relative)
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_bytes(payload)
+        _, _, snapshot = archive.load(isolated, candidate)
+        yield isolated, snapshot
+
+
+def _public_guard_metadata(root, relative, topic, cycle, baseline_root=None):
+    """Only remove source prose whose archive can be reconstructed exactly."""
+    import researchdesk_archive as archive
+    import researchdesk_admission as admission
+    import researchdesk_offline as store
+    original = re.fullmatch(r'(reports/test/[a-z0-9-]+/research-batches/[a-z0-9-]+/items/[a-z0-9-]+/)original\.(?:yaml|md)', relative)
+    try:
+        if original:
+            try:
+                candidate = _guard_yaml(root, original[1] + 'candidate.yaml', baseline_root)['candidate']
+            except FileNotFoundError:
+                # An interruption before the candidate is saved does not gain
+                # an exception: ordinary strict checks still apply to its bytes.
+                return None
+            if relative not in {candidate.get('archive', {}).get('path'),
+                                candidate.get('archive', {}).get('markdown_path')}:
+                raise JobError('unverified_original_transfer')
+            with _guard_archive(root, candidate, baseline_root) as (_, snapshot):
+                return archive.public_metadata(snapshot)
+
+        plan_path = 'reports/%s/admissions/%s/plan.yaml' % (topic, cycle)
+        formal_original = Path(relative).parts[:3] == ('sources', 'originals', topic)
+        if relative != plan_path and not formal_original:
+            return None
+        plan = _guard_yaml(root, plan_path, baseline_root)
+        public_files = {name: content for name, content in plan.get('files', {}).items()
+                        if Path(name).parts[:2] == ('sources', 'originals')}
+        if not public_files:
+            return None
+        rebuilt, metadata = {}, []
+        for proof in plan['verification_bundle']['provenance']['research_inputs']:
+            candidate_path = proof['candidate_path']
+            if not re.fullmatch(r'reports/test/' + re.escape(topic)
+                    + r'/research-batches/[a-z0-9-]+/items/[a-z0-9-]+/candidate\.yaml', candidate_path):
+                raise JobError('unverified_original_transfer')
+            candidate = _guard_yaml(root, candidate_path, baseline_root)['candidate']
+            if 'archive' not in candidate:
+                continue
+            with _guard_archive(root, candidate, baseline_root) as (isolated, snapshot):
+                path, content = admission._archive_file(isolated, candidate,
+                                                       plan['source_id_map'][candidate['source_id']])
+                rebuilt[path] = content
+                metadata.append(archive.public_metadata(snapshot))
+        if rebuilt != public_files:
+            raise JobError('unverified_original_transfer')
+        if formal_original:
+            if relative not in rebuilt or _guard_bytes(root, relative, baseline_root) != rebuilt[relative].encode('utf-8'):
+                raise JobError('unverified_original_transfer')
+            return '\n'.join(metadata)
+        value = deepcopy(plan)
+        for name in public_files:
+            value['files'][name] = '[verified public extracted original]'
+        return yaml.safe_dump(value, allow_unicode=True, sort_keys=False) + '\n' + '\n'.join(metadata)
+    except (store.OfflineError, FileNotFoundError, KeyError, TypeError, ValueError, yaml.YAMLError) as exc:
+        raise JobError('unverified_original_transfer') from exc
 
 
 def formal_plan(root, topic, cycle):
@@ -102,7 +215,7 @@ def formal_plan(root, topic, cycle):
     # A plan cannot widen the transfer boundary to configuration or old notes.
     for relative in value['files']:
         parts = Path(relative).parts
-        source = len(parts)==4 and parts[:2] in {('sources','papers'),('sources','blogs')} and parts[2]==topic
+        source = len(parts)==4 and parts[:2] in {('sources','papers'),('sources','blogs'),('sources','originals')} and parts[2]==topic
         derived = len(parts)>=3 and parts[0] in {'reports','insights','articles'} and parts[1]==topic
         if not (source or derived) or Path(relative).suffix != '.md' or any(part.startswith('.') for part in parts):
             raise JobError('formal_plan_path_invalid')
@@ -125,7 +238,7 @@ def admission_enabled(root, topic):
     return policy['enabled'] and topic in policy['topics']
 
 
-def inspect_files(root, files, topic, cycle, formal_files=None):
+def inspect_files(root, files, topic, cycle, formal_files=None, baseline_root=None):
     if formal_files is None:
         _, formal_files = formal_plan(root, topic, cycle)
     for relative in files:
@@ -134,7 +247,13 @@ def inspect_files(root, files, topic, cycle, formal_files=None):
         path = safe(root, relative)
         if not path.is_file() or not stat.S_ISREG(path.lstat().st_mode):
             raise JobError('transfer_not_regular_file')
-        check_text(path.read_bytes(), relative, relative in formal_files)
+        payload = path.read_bytes()
+        # Concrete token shapes are rejected before any public-content parsing.
+        # The second call retains ordinary checks unless exact reconstruction
+        # provides a strict metadata-only projection for this original.
+        check_text(payload, relative, relative in formal_files, public_metadata='')
+        metadata = _public_guard_metadata(root, relative, topic, cycle, baseline_root)
+        check_text(payload, relative, relative in formal_files, public_metadata=metadata)
         if relative.endswith('.yaml'):
             marker = safe(root, relative + '.sha256')
             if not marker.is_file() or marker.read_text().strip() != sha(path.read_bytes()):
@@ -282,7 +401,7 @@ def apply(root, artifact):
     _, formal_files = formal_plan(payload, manifest['topic'], manifest['cycle_id'])
     if not formal_files:
         _, formal_files = formal_plan(root, manifest['topic'], manifest['cycle_id'])
-    inspect_files(payload, files, manifest['topic'], manifest['cycle_id'], formal_files)
+    inspect_files(payload, files, manifest['topic'], manifest['cycle_id'], formal_files, baseline_root=root)
     additions = []
     for relative, expected in files.items():
         content = safe(payload, relative).read_bytes()

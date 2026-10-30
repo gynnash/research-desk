@@ -393,9 +393,14 @@ def _research_evidence(root, config, fetcher, blog_timestamp_revalidations=None)
             seen.update(candidate['identity_keys'])
             # fetch_candidate normally searches a Vault for note identities. An
             # isolated empty root disables that scan; the reviewed ID is kept.
-            with tempfile.TemporaryDirectory(prefix='researchdesk-insight-input-') as empty:
-                fresh, material = (research_inputs.fetch_candidate(Path(empty), original_config, source, fetcher, binding=candidate)
-                                   if source.get('reading') else research_inputs.fetch_candidate(Path(empty), original_config, source, fetcher))
+            if source.get('archive') is True or 'archive' in candidate:
+                from researchdesk_archive import load
+                fresh, material, _ = load(root, candidate, source=source, config=original_config)
+            else:
+                with tempfile.TemporaryDirectory(prefix='researchdesk-insight-input-') as empty:
+                    current_fetcher = fetcher or research_inputs.default_fetcher(original_config['sources'])
+                    fresh, material = (research_inputs.fetch_candidate(Path(empty), original_config, source, current_fetcher, binding=candidate)
+                                       if source.get('reading') else research_inputs.fetch_candidate(Path(empty), original_config, source, current_fetcher))
             fields = ('key', 'kind', 'topic', 'metadata', 'evidence', 'identity_keys',
                       'content_hash')
             metadata_valid = all(value.get('metadata_hash') == store.digest({
@@ -657,7 +662,7 @@ def prepare_bundle(root, config, fetcher=None, blog_timestamp_revalidations=None
     if blog_timestamp_revalidations is not None and not isinstance(blog_timestamp_revalidations, list):
         raise store.OfflineError('博客时间戳复核记录必须使用显式列表')
     research, research_provenance = _research_evidence(
-        root, config, fetcher or SafeFetcher(retries=0), blog_timestamp_revalidations)
+        root, config, fetcher, blog_timestamp_revalidations)
     bundle = {'topic': config['topic'], 'research_context': {'name': config['topic_name'],
         'description': config['topic_description'], 'scope': config['topic_scope'], 'keywords': config['topic_keywords']},
         'evidence': research + historical,

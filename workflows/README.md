@@ -10,6 +10,7 @@
 | --- | --- |
 | 理解三个 Agent 的分工 | [总体架构](three-agent-architecture.md)、[定时 MVP](agent-memory-github-actions-mvp.md) |
 | 最近两个月选材、长期综合与简化边界 | [2026-10-30 目标对齐审查](workflow-alignment-2026-10-30.md) |
+| 扩展公开博客与保存原文 | [采集覆盖、原文归档与断网重放](source-coverage-and-archive.md) |
 | 配置并运行一轮研究 | [Research → Insight 轮次](research-cycle.md)、[配置驱动批次](configurable-research-batch.md) |
 | 来源采集、正文阅读与去重 | [真实来源采集](real-source-collection.md)、[论文全文阅读](fulltext-reading.md)、[维护规范](maintenance.md) |
 | 登录自己的会员与控制预算 | [本地会员分析](local-membership-analysis.md)、[共享请求预算](membership-budget.md) |
