@@ -1,0 +1,371 @@
+mode: public_source_reading_check
+checked_at_utc: '2026-10-30T07:24:19.702768+00:00'
+requested_format: pdf
+model_calls: 0
+production_accepted: false
+title: 'From Relevant Memories to Sufficient Evidence: Rethinking Memory Utilization
+  in LLM Agents'
+source_url: https://arxiv.org/abs/2610.22668v1
+attempts:
+- format: pdf
+  url: https://arxiv.org/pdf/2610.22668v1
+  status: success
+  reason: extracted
+evidence:
+  coverage: full_text
+  extraction_coverage: full_text
+  source_url: https://arxiv.org/abs/2610.22668
+  source_version: v1
+  content_hash: 745e110e6795e8866f76ebdf646b5d4a88382223177213c30ecee9a304b191b3
+  evidence_sha256: f96d34607ed23be1a4062c40a1ec21f8495dec42b2a6234b83d309181502139a
+  abstract_content_hash: 484ff4380a0de81648e6616db061e57cb07ef652ebe685d0cfcd4cb168d30598
+  reading_profile: arxiv-fulltext-v1
+  format: pdf
+  document_url: https://arxiv.org/pdf/2610.22668v1
+  sections:
+  - id: S1
+    title: Page 1
+    location: https://arxiv.org/pdf/2610.22668v1#page=1
+    total_chars: 293
+    selected_chars: 293
+  - id: S2
+    title: Abstract
+    location: https://arxiv.org/pdf/2610.22668v1#page=1
+    total_chars: 1415
+    selected_chars: 1415
+  - id: S3
+    title: 1 Introduction
+    location: https://arxiv.org/pdf/2610.22668v1#page=1
+    total_chars: 2438
+    selected_chars: 2438
+  - id: S4
+    title: 1 Introduction (continued)
+    location: https://arxiv.org/pdf/2610.22668v1#page=2
+    total_chars: 1789
+    selected_chars: 1789
+  - id: S5
+    title: 2 Related Work
+    location: https://arxiv.org/pdf/2610.22668v1#page=2
+    total_chars: 2055
+    selected_chars: 2055
+  - id: S6
+    title: 3 Problem Formulation
+    location: https://arxiv.org/pdf/2610.22668v1#page=2
+    total_chars: 617
+    selected_chars: 617
+  - id: S7
+    title: 3 Problem Formulation (continued)
+    location: https://arxiv.org/pdf/2610.22668v1#page=3
+    total_chars: 222
+    selected_chars: 222
+  - id: S8
+    title: 4 Method
+    location: https://arxiv.org/pdf/2610.22668v1#page=3
+    total_chars: 675
+    selected_chars: 675
+  - id: S9
+    title: 4.1 Query-Guided Evidence Discovery
+    location: https://arxiv.org/pdf/2610.22668v1#page=3
+    total_chars: 2459
+    selected_chars: 2459
+  - id: S10
+    title: 4.2 Source-Grounded Evidence Reification
+    location: https://arxiv.org/pdf/2610.22668v1#page=3
+    total_chars: 736
+    selected_chars: 736
+  - id: S11
+    title: 4.2 Source-Grounded Evidence Reification (continued)
+    location: https://arxiv.org/pdf/2610.22668v1#page=4
+    total_chars: 247
+    selected_chars: 247
+  - id: S12
+    title: 1 Query-guidedevidence discovery 2 Source-groundedevidence reiﬁcation 3
+      Suﬃciency-guidedevidence reﬁnement
+    location: https://arxiv.org/pdf/2610.22668v1#page=4
+    total_chars: 530
+    selected_chars: 530
+  - id: S13
+    title: 3 Final evidence set
+    location: https://arxiv.org/pdf/2610.22668v1#page=4
+    total_chars: 34
+    selected_chars: 34
+  - id: S14
+    title: 2 Linked source spans
+    location: https://arxiv.org/pdf/2610.22668v1#page=4
+    total_chars: 40
+    selected_chars: 40
+  - id: S15
+    title: 1 Candidate pool
+    location: https://arxiv.org/pdf/2610.22668v1#page=4
+    total_chars: 2289
+    selected_chars: 2289
+  - id: S16
+    title: 4.3 Sufficiency-Guided Evidence Refinement
+    location: https://arxiv.org/pdf/2610.22668v1#page=4
+    total_chars: 752
+    selected_chars: 752
+  - id: S17
+    title: 4.3 Sufficiency-Guided Evidence Refinement (continued)
+    location: https://arxiv.org/pdf/2610.22668v1#page=5
+    total_chars: 1747
+    selected_chars: 1747
+  - id: S18
+    title: 5 Experiments
+    location: https://arxiv.org/pdf/2610.22668v1#page=5
+    total_chars: 185
+    selected_chars: 185
+  - id: S19
+    title: '5.1 RQ1: Overall Performance'
+    location: https://arxiv.org/pdf/2610.22668v1#page=5
+    total_chars: 1111
+    selected_chars: 1111
+  - id: S20
+    title: '5.2 RQ2: Evidence Coverage and Answer'
+    location: https://arxiv.org/pdf/2610.22668v1#page=5
+    total_chars: 1197
+    selected_chars: 1197
+  - id: S21
+    title: '5.2 RQ2: Evidence Coverage and Answer (continued)'
+    location: https://arxiv.org/pdf/2610.22668v1#page=6
+    total_chars: 2159
+    selected_chars: 2159
+  - id: S22
+    title: '5.3 RQ3: Dissecting Query-Specific Evidence'
+    location: https://arxiv.org/pdf/2610.22668v1#page=6
+    total_chars: 1314
+    selected_chars: 1314
+  - id: S23
+    title: Appendix B.4 provides reconstruction details, sen-
+    location: https://arxiv.org/pdf/2610.22668v1#page=6
+    total_chars: 100
+    selected_chars: 100
+  - id: S24
+    title: '5.4 RQ4: Source Grounding and Evidential'
+    location: https://arxiv.org/pdf/2610.22668v1#page=6
+    total_chars: 386
+    selected_chars: 386
+  - id: S25
+    title: '5.4 RQ4: Source Grounding and Evidential (continued)'
+    location: https://arxiv.org/pdf/2610.22668v1#page=7
+    total_chars: 2522
+    selected_chars: 2522
+  - id: S26
+    title: '5.5 RQ5: Reasoning over Complex and'
+    location: https://arxiv.org/pdf/2610.22668v1#page=7
+    total_chars: 1017
+    selected_chars: 1017
+  - id: S27
+    title: '5.6 RQ6: Evidence Coverage under'
+    location: https://arxiv.org/pdf/2610.22668v1#page=7
+    total_chars: 397
+    selected_chars: 397
+  - id: S28
+    title: '5.6 RQ6: Evidence Coverage under (continued)'
+    location: https://arxiv.org/pdf/2610.22668v1#page=8
+    total_chars: 2557
+    selected_chars: 2557
+  - id: S29
+    title: 6 Conclusion
+    location: https://arxiv.org/pdf/2610.22668v1#page=8
+    total_chars: 640
+    selected_chars: 640
+  - id: S30
+    title: 6 Conclusion (continued)
+    location: https://arxiv.org/pdf/2610.22668v1#page=9
+    total_chars: 469
+    selected_chars: 469
+  - id: S31
+    title: References
+    location: https://arxiv.org/pdf/2610.22668v1#page=9
+    total_chars: 739
+    selected_chars: 739
+  - id: S32
+    title: '2025. Tourrank: Utilizing large language models for'
+    location: https://arxiv.org/pdf/2610.22668v1#page=9
+    total_chars: 3669
+    selected_chars: 3669
+  - id: S33
+    title: '2025. Tourrank: Utilizing large language models for (continued)'
+    location: https://arxiv.org/pdf/2610.22668v1#page=10
+    total_chars: 544
+    selected_chars: 544
+  - id: S34
+    title: 2025. Memory os of ai agent. InProceedings of the
+    location: https://arxiv.org/pdf/2610.22668v1#page=10
+    total_chars: 49
+    selected_chars: 49
+  - id: S35
+    title: 2025 Conference on Empirical Methods in Natural
+    location: https://arxiv.org/pdf/2610.22668v1#page=10
+    total_chars: 1100
+    selected_chars: 1100
+  - id: S36
+    title: '2026. Simplemem: Efficient lifelong memory for'
+    location: https://arxiv.org/pdf/2610.22668v1#page=10
+    total_chars: 439
+    selected_chars: 439
+  - id: S37
+    title: 2024. Evaluating very long-term conversational
+    location: https://arxiv.org/pdf/2610.22668v1#page=10
+    total_chars: 254
+    selected_chars: 254
+  - id: S38
+    title: '2025. Nemori: Self-organizing agent memory in-'
+    location: https://arxiv.org/pdf/2610.22668v1#page=10
+    total_chars: 2524
+    selected_chars: 2524
+  - id: S39
+    title: '2025. Nemori: Self-organizing agent memory in- (continued)'
+    location: https://arxiv.org/pdf/2610.22668v1#page=11
+    total_chars: 2003
+    selected_chars: 2003
+  - id: S40
+    title: '2025. Memagent: Reshaping long-context llm with'
+    location: https://arxiv.org/pdf/2610.22668v1#page=11
+    total_chars: 1303
+    selected_chars: 1303
+  - id: S41
+    title: Appendix
+    location: https://arxiv.org/pdf/2610.22668v1#page=12
+    total_chars: 4815
+    selected_chars: 4815
+  - id: S42
+    title: Appendix (continued)
+    location: https://arxiv.org/pdf/2610.22668v1#page=13
+    total_chars: 4692
+    selected_chars: 4692
+  - id: S43
+    title: Appendix (continued)
+    location: https://arxiv.org/pdf/2610.22668v1#page=14
+    total_chars: 4741
+    selected_chars: 4741
+  - id: S44
+    title: Appendix (continued)
+    location: https://arxiv.org/pdf/2610.22668v1#page=15
+    total_chars: 3666
+    selected_chars: 3666
+  - id: S45
+    title: Appendix (continued)
+    location: https://arxiv.org/pdf/2610.22668v1#page=16
+    total_chars: 4516
+    selected_chars: 4516
+  - id: S46
+    title: Appendix (continued)
+    location: https://arxiv.org/pdf/2610.22668v1#page=17
+    total_chars: 1399
+    selected_chars: 1399
+  - id: S47
+    title: 4.5. Across the two backbones, approximately 3–
+    location: https://arxiv.org/pdf/2610.22668v1#page=17
+    total_chars: 2628
+    selected_chars: 2628
+  - id: S48
+    title: 4.5. Across the two backbones, approximately 3– (continued)
+    location: https://arxiv.org/pdf/2610.22668v1#page=18
+    total_chars: 4101
+    selected_chars: 4101
+  - id: S49
+    title: 4.5. Across the two backbones, approximately 3– (continued)
+    location: https://arxiv.org/pdf/2610.22668v1#page=19
+    total_chars: 3099
+    selected_chars: 3099
+  - id: S50
+    title: 4.5. Across the two backbones, approximately 3– (continued)
+    location: https://arxiv.org/pdf/2610.22668v1#page=20
+    total_chars: 4253
+    selected_chars: 4253
+  - id: S51
+    title: 4.5. Across the two backbones, approximately 3– (continued)
+    location: https://arxiv.org/pdf/2610.22668v1#page=21
+    total_chars: 3436
+    selected_chars: 3436
+  - id: S52
+    title: 4.5. Across the two backbones, approximately 3– (continued)
+    location: https://arxiv.org/pdf/2610.22668v1#page=22
+    total_chars: 1221
+    selected_chars: 1221
+  - id: S53
+    title: 4.5. Questions are sampled across reasoning cat-
+    location: https://arxiv.org/pdf/2610.22668v1#page=22
+    total_chars: 3601
+    selected_chars: 3601
+  - id: S54
+    title: 4.5. Questions are sampled across reasoning cat- (continued)
+    location: https://arxiv.org/pdf/2610.22668v1#page=23
+    total_chars: 3499
+    selected_chars: 3499
+  - id: S55
+    title: 4.5. Questions are sampled across reasoning cat- (continued)
+    location: https://arxiv.org/pdf/2610.22668v1#page=24
+    total_chars: 3997
+    selected_chars: 3997
+  - id: S56
+    title: 4.5. Questions are sampled across reasoning cat- (continued)
+    location: https://arxiv.org/pdf/2610.22668v1#page=25
+    total_chars: 13
+    selected_chars: 13
+  - id: S57
+    title: 1. Find every memory relevant to the
+    location: https://arxiv.org/pdf/2610.22668v1#page=25
+    total_chars: 657
+    selected_chars: 657
+  - id: S58
+    title: 12 March 2031" (keep weekday-relative
+    location: https://arxiv.org/pdf/2610.22668v1#page=25
+    total_chars: 443
+    selected_chars: 443
+  - id: S59
+    title: 6. Do not invent facts. If the memories
+    location: https://arxiv.org/pdf/2610.22668v1#page=25
+    total_chars: 96
+    selected_chars: 96
+  - id: S60
+    title: 7. Then judge whether the cards suffice. If
+    location: https://arxiv.org/pdf/2610.22668v1#page=25
+    total_chars: 2479
+    selected_chars: 2479
+  - id: S61
+    title: 1. Base the answer on the evidence. Prefer
+    location: https://arxiv.org/pdf/2610.22668v1#page=26
+    total_chars: 132
+    selected_chars: 132
+  - id: S62
+    title: 2. Time. Dates shown are session dates (the
+    location: https://arxiv.org/pdf/2610.22668v1#page=26
+    total_chars: 1000
+    selected_chars: 1000
+  - id: S63
+    title: 3. Lists / "what activities", "what books",
+    location: https://arxiv.org/pdf/2610.22668v1#page=26
+    total_chars: 145
+    selected_chars: 145
+  - id: S64
+    title: 4. Questions about likely preferences,
+    location: https://arxiv.org/pdf/2610.22668v1#page=26
+    total_chars: 372
+    selected_chars: 372
+  - id: S65
+    title: 5. Always give the answer first. If the
+    location: https://arxiv.org/pdf/2610.22668v1#page=26
+    total_chars: 225
+    selected_chars: 225
+  - id: S66
+    title: 6. Answer exactly what is asked; do not add
+    location: https://arxiv.org/pdf/2610.22668v1#page=26
+    total_chars: 102
+    selected_chars: 102
+  - id: S67
+    title: 7. The final answer must be short and
+    location: https://arxiv.org/pdf/2610.22668v1#page=26
+    total_chars: 1084
+    selected_chars: 1084
+  total_chars: 105428
+  selected_chars: 105428
+  truncated: false
+  extraction_scope: complete extracted document text including available references
+  limitations:
+  - PDF sections use recognized standalone headings with page locations; unrecognized
+    headings retain page or continued-section labels. Column order, equations, figures,
+    and layout may be imperfect.
+locator_count: 112
+material_chars: 112102

@@ -533,7 +533,9 @@ class MembershipClient:
             raise MembershipError("invalid_inference_input")
         if not 1 <= max_output_chars <= 50000 or not 1 <= timeout_seconds <= 300:
             raise MembershipError("invalid_inference_limits")
-        if len(instructions) + len(input_text) > 60000:
+        # Per-stage YAML budgets still preflight the exact JSON request. This
+        # outer ceiling permits bounded multi-paper full-text Insight inputs.
+        if len(instructions) + len(input_text) > 600000:
             raise MembershipError("input_too_large")
         catalog = self.models() if self._catalog is None else self._catalog
         if model not in {item["slug"] for item in catalog}:

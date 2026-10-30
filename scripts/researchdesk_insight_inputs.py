@@ -105,7 +105,8 @@ def load_config(root, path):
         raise store.OfflineError('模型必须是明确的目录 slug')
     if config['models']['generation'] == config['models']['review']:
         raise store.OfflineError('Insight 生成与独立审阅须为不同的实际模型')
-    ranges = {'max_calls': (2, 4), 'month_max_calls': (2, 1000), 'max_input_chars': (1000, 60000),
+    ranges = {'max_calls': (2, 4), 'month_max_calls': (2, 1000),
+              'max_input_chars': (1000, 600000 if config.get('prompts', {}).get('version') == 'insight-v3' else 60000),
               'max_output_chars': (1000, 12000), 'timeout_seconds': (1, 120), 'max_revisions': (0, 1)}
     research_inputs.fields(config['budget'], ranges, 'Insight 预算')
     for name, (low, high) in ranges.items():
@@ -113,7 +114,7 @@ def load_config(root, path):
     if config['budget']['max_calls'] > config['budget']['month_max_calls']:
         raise store.OfflineError('Insight 请求上限不可超过月度上限')
     research_inputs.fields(config['prompts'], {'version'}, 'Insight 提示词')
-    if config['prompts']['version'] not in {'insight-v1', 'insight-v2'}:
+    if config['prompts']['version'] not in {'insight-v1', 'insight-v2', 'insight-v3'}:
         raise store.OfflineError('未知 Insight 提示词版本')
     if not isinstance(config['research_inputs'], list) or not 1 <= len(config['research_inputs']) <= 4:
         raise store.OfflineError('须明确登记 1–4 个通过审阅的 Research 批次')
@@ -193,8 +194,9 @@ def _checked_research(root, config, entry):
             or manifest.get('budget') != original_config['budget']
             or manifest.get('prompt_version') != original_config['prompts']['version']):
         raise store.OfflineError('Research 回执、配置、研究方向、授权或模型绑定不一致')
+    research_instructions, review_instructions = batch.instructions_for(original_config)
     fingerprint = store.digest({'config': original_config, 'authorization': auth,
-        'research_prompt': batch.RESEARCH_INSTRUCTIONS, 'review_prompt': batch.REVIEW_INSTRUCTIONS})
+        'research_prompt': research_instructions, 'review_prompt': review_instructions})
     if manifest.get('fingerprint') != fingerprint:
         raise store.OfflineError('Research 清单未绑定当前可验证的配置与提示词')
     events = _read_events(root, base)
@@ -242,15 +244,14 @@ def _checked_research(root, config, entry):
 
 def _checkpoint_binding(root, base, manifest, config, candidate, material, revision_count):
     previous_research, previous_review = None, None
-    context = {'name': config['topic_name'], 'scope': config['topic_scope'], 'keywords': config['topic_keywords']}
     proofs = []
     for revision in range(revision_count + 1):
-        common = {'topic': config['topic'], 'research_context': context, 'metadata': candidate['metadata'],
-                  'coverage': candidate['evidence']['coverage'], 'original_material': material}
+        common = batch.original_request(config, candidate, material)
         request = dict(common)
         if revision:
             request.update(previous_research=previous_research, previous_review=previous_review)
-        for role, instructions in (('research', batch.RESEARCH_INSTRUCTIONS), ('review', batch.REVIEW_INSTRUCTIONS)):
+        research_instructions, review_instructions = batch.instructions_for(config)
+        for role, instructions in (('research', research_instructions), ('review', review_instructions)):
             if role == 'review':
                 request = dict(common, candidate=previous_research)
             path = '%s/items/%s/checkpoints/%s-%s.yaml' % (base, candidate['key'], role, revision)
@@ -295,7 +296,8 @@ def _research_evidence(root, config, fetcher, blog_timestamp_revalidations=None)
             # fetch_candidate normally searches a Vault for note identities. An
             # isolated empty root disables that scan; the reviewed ID is kept.
             with tempfile.TemporaryDirectory(prefix='researchdesk-insight-input-') as empty:
-                fresh, material = research_inputs.fetch_candidate(Path(empty), original_config, source, fetcher)
+                fresh, material = (research_inputs.fetch_candidate(Path(empty), original_config, source, fetcher, binding=candidate)
+                                   if source.get('reading') else research_inputs.fetch_candidate(Path(empty), original_config, source, fetcher))
             fields = ('key', 'kind', 'topic', 'metadata', 'evidence', 'identity_keys',
                       'content_hash')
             metadata_valid = all(value.get('metadata_hash') == store.digest({
@@ -351,6 +353,9 @@ def _research_evidence(root, config, fetcher, blog_timestamp_revalidations=None)
                 'research_summary': research['summary'], 'research_claims': research['claims'],
                 'research_limitations': research['limitations'], 'original_material': material,
                 'locators': candidate['evidence']['locators']}
+            if candidate['evidence'].get('reading_profile'):
+                record['reading_scope'] = batch.reading_scope(candidate)
+                record['acquisition_attempts'] = candidate.get('acquisition_attempts', [])
             evidence.append(record)
             provenance.append({'id': identifier, **proof, 'path': record['path'], 'sha256': record['sha256'],
                 'source_id': source_id, 'source_ids': [source_id], 'source_url': source_url,
@@ -504,10 +509,10 @@ def model_payload(bundle, prompt_version='insight-v1'):
     claims and original material, so their rendered text and integrity proofs
     stay in the full bundle instead of being sent a second time to the model.
     """
-    if prompt_version not in {'insight-v1', 'insight-v2'}:
+    if prompt_version not in {'insight-v1', 'insight-v2', 'insight-v3'}:
         raise store.OfflineError('未知 Insight 提示词版本')
     payload = {'topic': bundle['topic'], 'research_context': bundle['research_context'], 'evidence': []}
-    if prompt_version == 'insight-v2':
+    if prompt_version in {'insight-v2', 'insight-v3'}:
         payload['evidence_index'] = {
             record['id']: dict(title=evidence_title(record), **{
                 key: record[key] for key in ('origin', 'coverage', 'source_ids', 'source_urls')})
@@ -516,8 +521,10 @@ def model_payload(bundle, prompt_version='insight-v1'):
         keys = {'id', 'origin', 'path', 'source_ids', 'source_url', 'source_urls', 'coverage', 'historical_status'}
         keys |= ({'metadata', 'research_summary', 'research_claims', 'research_limitations', 'original_material'}
                  if record['origin'] == 'reviewed_research' else {'text'})
+        if prompt_version == 'insight-v3' and record['origin'] == 'reviewed_research':
+            keys |= {'reading_scope', 'locators', 'acquisition_attempts'}
         projected = {key: value for key, value in record.items() if key in keys}
-        if prompt_version == 'insight-v2' and record['origin'] == 'human_baseline':
+        if prompt_version in {'insight-v2', 'insight-v3'} and record['origin'] == 'human_baseline':
             projected['text'], projected['historical_reference_ids'] = scoped_history(record)
         payload['evidence'].append(projected)
     return payload

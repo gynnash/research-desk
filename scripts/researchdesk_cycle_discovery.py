@@ -224,6 +224,9 @@ def discover(root, config, cycle_id, fetcher=None):
                     item['source'] = {'id': '%s-%s' % (adapter, store.digest(keys)[:12]),
                                       'adapter': adapter, 'kind': record['kind'], 'url': research_url,
                                       'evidence_max_chars': values['evidence_max_chars']}
+                    if adapter == 'arxiv' and 'reading' in config:
+                        item['source'].update(reading={'mode': config['reading']['mode']},
+                            evidence_max_chars=config['reading']['paper_max_chars'])
                     eligible.append(item)
         except Exception as exc:
             status.update(status='failed', complete_window=False)

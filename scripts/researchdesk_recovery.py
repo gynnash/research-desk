@@ -36,6 +36,16 @@ def _base(topic, identifier):
     return 'reports/test/%s/cycles/%s' % (topic, identifier)
 
 
+def _prompt_version(config):
+    """Preserve full-text inputs; old recoveries retain their exact v2 upgrade."""
+    version = config.get('prompts', {}).get('version')
+    if version in {'insight-v1', 'insight-v2'}:
+        return 'insight-v2'
+    if version == 'insight-v3':
+        return 'insight-v3'
+    raise store.OfflineError('恢复原始 Insight 提示词版本无效')
+
+
 def _original_files(root, topic, original):
     paths = set()
     folders = ['reports/test/%s/%s/%s' % (topic, stage, original)
@@ -60,12 +70,13 @@ def _original_files(root, topic, original):
 
 
 def _original_documents(root, config_path, original):
-    config = cycle.load_config(root, config_path)
+    current = cycle.load_config(root, config_path)
     recovery_id(original)
-    base = _base(config['topic'], original)
+    base = _base(current['topic'], original)
     manifest = store.checked_yaml(root, base + '/manifest.yaml')
+    config = cycle.load_config(root, config_path, snapshot=manifest.get('config'))
     receipt = store.checked_yaml(root, base + '/receipt.yaml')
-    if (manifest.get('config') != config or manifest.get('cycle_id') != original
+    if (config['topic'] != current['topic'] or manifest.get('config') != config or manifest.get('cycle_id') != original
             or manifest.get('topic') != config['topic'] or manifest.get('production_accepted') is not False
             or receipt.get('mode') != 'research_cycle_test' or receipt.get('backend') != 'chatgpt_plan'
             or receipt.get('topic') != config['topic'] or receipt.get('cycle_id') != original
@@ -100,7 +111,7 @@ def _original_documents(root, config_path, original):
 def make_request(root, config_path, original_cycle_id):
     """Build a reviewable request; caller must explicitly authorize and save it."""
     root = Path(root).resolve()
-    config, _, receipt, _, old_insight = _original_documents(root, config_path, original_cycle_id)
+    config, _, receipt, old_config, old_insight = _original_documents(root, config_path, original_cycle_id)
     original_base = _base(config['topic'], original_cycle_id)
     cap = old_insight.get('effective_month_max_calls')
     if type(cap) is not int or cap < 2:
@@ -114,7 +125,7 @@ def make_request(root, config_path, original_cycle_id):
         'original_reserved_calls': receipt['reserved_calls'],
         'max_calls_per_cycle': config['budget']['max_calls_per_cycle'],
         'max_new_calls': 4, 'max_revisions': 1, 'month_max_calls': cap,
-        'prompt_version': 'insight-v2', 'writing_started': False, 'publish_authorized': False}
+        'prompt_version': _prompt_version(old_config), 'writing_started': False, 'publish_authorized': False}
 
 
 def requested(root, config_path, original_cycle_id):
@@ -132,7 +143,7 @@ def requested(root, config_path, original_cycle_id):
 
 def _new_config(root, topic, original):
     value = copy.deepcopy(store.checked_yaml(root, _base(topic, original) + '/configs/insight.yaml'))
-    value['prompts']['version'] = 'insight-v2'
+    value['prompts']['version'] = _prompt_version(value)
     value['budget']['max_calls'] = 4
     value['budget']['max_revisions'] = 1
     return value
@@ -177,6 +188,9 @@ def _original_compact(root, config, manifest):
                 'metadata': candidate['metadata'], 'research_summary': result['summary'],
                 'research_claims': result['claims'], 'research_limitations': result['limitations'],
                 'locators': candidate['evidence']['locators']})
+            if candidate['evidence'].get('reading_profile'):
+                records[-1].update(reading_scope=research.reading_scope(candidate),
+                                   acquisition_attempts=candidate.get('acquisition_attempts', []))
     historical, historical_provenance = inputs._historical_evidence(root, config)
     if historical_provenance != manifest['provenance']['historical_inputs']:
         raise store.OfflineError('历史证明与原失败轮次不一致')
@@ -242,7 +256,7 @@ def verify_lineage(root, topic, identifier, bundle=None, config=None, auth=None)
         'request_sha256': store.digest((root / request_path).read_bytes()),
         'original_files': request['original_files'], 'original_reserved_calls': old_cycle['reserved_calls'],
         'max_calls_per_cycle': request['max_calls_per_cycle'], 'max_new_calls': 4,
-        'month_max_calls': request['month_max_calls'], 'prompt_version': 'insight-v2',
+        'month_max_calls': request['month_max_calls'], 'prompt_version': _prompt_version(old_config),
         'original_failure_sha256': store.digest((root / old_base / 'receipt.yaml').read_bytes()),
         'original_candidate_sha256': store.digest((root / old_base / ('checkpoints/generation-%s.yaml' % final_revision)).read_bytes()),
         'original_reviewer_sha256': store.digest((root / old_base / ('checkpoints/review-%s.yaml' % final_revision)).read_bytes()),
@@ -312,7 +326,7 @@ def run(root, config_path, original_cycle_id, client=None, fetcher=None, fail_af
             'request_sha256': store.digest((root / request_path).read_bytes()),
             'original_files': request['original_files'], 'original_reserved_calls': original_receipt['reserved_calls'],
             'max_calls_per_cycle': request['max_calls_per_cycle'], 'max_new_calls': 4,
-            'month_max_calls': request['month_max_calls'], 'prompt_version': 'insight-v2',
+            'month_max_calls': request['month_max_calls'], 'prompt_version': _prompt_version(old_config),
             'original_failure_sha256': store.digest((root / old_base / 'receipt.yaml').read_bytes()),
             'original_candidate_sha256': store.digest((root / old_base / ('checkpoints/generation-%s.yaml' % revision)).read_bytes()),
             'original_reviewer_sha256': store.digest((root / old_base / ('checkpoints/review-%s.yaml' % revision)).read_bytes()),

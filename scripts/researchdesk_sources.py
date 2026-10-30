@@ -105,8 +105,22 @@ class SafeFetcher:
         return max(0, delay)
 
     def fetch(self, url):
+        return self._fetch(url, pdf=False)
+
+    def fetch_pdf(self, url):
+        """Fetch an official arXiv PDF in memory; never decode or save it."""
+        checked = validate_url(url)
+        parts = urlsplit(checked)
+        identifier = parts.path.removeprefix('/pdf/').removesuffix('.pdf')
+        if (parts.hostname != 'arxiv.org' or not parts.path.startswith('/pdf/')
+                or parts.query or not ARXIV_ID.fullmatch(identifier)):
+            raise SourceError('PDF fetching requires an official arXiv PDF URL')
+        return self._fetch(checked, pdf=True)
+
+    def _fetch(self, url, pdf=False):
         requested = validate_url(url)
         current, redirects = requested, []
+        max_bytes = 20_000_000 if pdf else self.max_bytes
         for _ in range(6):
             host = urlsplit(current).hostname
             self._check_host(host)
@@ -115,7 +129,8 @@ class SafeFetcher:
                 self._wait_arxiv(host)
                 request = Request(current, headers={
                     'User-Agent': 'ResearchDesk/0.1 (public-source test; no model calls)',
-                    'Accept': 'text/html, application/atom+xml, application/xml;q=0.9',
+                    'Accept': ('application/pdf' if pdf else
+                               'text/html, application/atom+xml, application/xml;q=0.9'),
                     'Accept-Encoding': 'identity'})
                 try:
                     call = self.opener.open if hasattr(self.opener, 'open') else self.opener
@@ -144,6 +159,9 @@ class SafeFetcher:
                     if not location:
                         raise SourceError('Redirect lacks Location')
                     target = validate_url(urljoin(current, location))
+                    if pdf and (urlsplit(target).hostname != 'arxiv.org'
+                                or not urlsplit(target).path.startswith('/pdf/')):
+                        raise SourceError('PDF redirect left the official arXiv PDF origin')
                     redirects.append({'from': current, 'to': target, 'status': status})
                     current = target
                     continue
@@ -154,28 +172,37 @@ class SafeFetcher:
                 if actual != current:
                     raise SourceError('Transport followed an unvalidated redirect')
                 content_type = response.headers.get('Content-Type', '').split(';', 1)[0].strip().lower()
-                if content_type not in {'text/html', 'application/xhtml+xml', 'application/atom+xml',
-                                        'application/xml', 'text/xml'}:
+                allowed_types = ({'application/pdf'} if pdf else
+                                 {'text/html', 'application/xhtml+xml', 'application/atom+xml',
+                                  'application/xml', 'text/xml'})
+                if content_type not in allowed_types:
                     raise SourceError('Unexpected source Content-Type: %s' % content_type)
                 encoding = response.headers.get('Content-Encoding', 'identity').lower()
                 if encoding not in {'', 'identity'}:
                     raise SourceError('Unexpected compressed source response')
                 length = response.headers.get('Content-Length')
-                if length and (not length.isdigit() or int(length) > self.max_bytes):
+                if length and (not length.isdigit() or int(length) > max_bytes):
                     raise SourceError('Source response exceeds byte limit or has invalid length')
-                raw = response.read(self.max_bytes + 1)
-                if len(raw) > self.max_bytes:
+                raw = response.read(max_bytes + 1)
+                if len(raw) > max_bytes:
                     raise SourceError('Source response exceeds byte limit')
                 if not raw:
                     raise SourceError('Empty source response')
+                result = {'url': current, 'requested_url': requested, 'content_type': content_type,
+                          'fetched_at': datetime.now(timezone.utc).isoformat(),
+                          'status': status, 'redirects': redirects,
+                          'sha256': hashlib.sha256(raw).hexdigest()}
+                if pdf:
+                    if not raw.startswith(b'%PDF-'):
+                        raise SourceError('PDF response lacks the PDF file signature')
+                    result['body'] = raw
+                    return result
                 try:
                     text = raw.decode('utf-8-sig')
                 except UnicodeError as exc:
                     raise SourceError('Source response is not valid UTF-8') from exc
-                return {'url': current, 'requested_url': requested, 'content_type': content_type,
-                        'text': text, 'fetched_at': datetime.now(timezone.utc).isoformat(),
-                        'status': status, 'redirects': redirects,
-                        'sha256': hashlib.sha256(raw).hexdigest()}
+                result['text'] = text
+                return result
             finally:
                 response.close()
         raise SourceError('Too many source redirects')

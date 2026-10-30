@@ -32,6 +32,12 @@ FORMAT_REVIEW_INSTRUCTIONS = '''你是独立的格式恢复核对模型。本请
 
 CITATION_SCOPE_INSTRUCTIONS = '''本次引用映射只以顶层 evidence_index 和 evidence[].id 为准，逐项核对标题、source_ids、origin 与 coverage，不可按编号位置猜测来源类型。历史正文中的 historical-H5-R2 等标记只属于该历史文档的旧引用命名空间，不是本次 R2，也不是可输出的 evidence_ids。引用历史内容时使用该文档当前的 H 编号；若要引用另一份来源，必须在本次 evidence_index 中重新核对其身份。历史正文中“本次”“已审阅”等说法描述的是旧轮次，不能覆盖当前 human_baseline 状态。生成和审阅都须检查每个引用是否指向所述来源，不能只检查编号存在。'''
 
+FULLTEXT_SCOPE_INSTRUCTIONS = '''逐项读取 evidence 的 coverage、reading_scope 和 original_material，不能一概声称论文只读摘要。full_text 只表示提供了完整抽取正文文本，仍未独立复现实验，也不能保证图表、公式或实现已被完整解析；excerpt 只允许按实际已读章节与截断边界判断；abstract_only 必须明确全文获取失败后降级或原摘要阅读范围。原始材料的 S 章节与 A 段落定位只属于各自 R 来源，不能跨来源混用。报告 coverage_note 必须如实解释本批不同来源的实际阅读范围，特别保留降级与遗漏。全文阅读本身不构成研究结果的独立验证。只做文本材料可支持的综合，不要求外部实验，不虚构复现。'''
+
+FULLTEXT_GENERATION_INSTRUCTIONS = GENERATION_INSTRUCTIONS.replace(
+    '论文仅摘要、博客仅节选，', '各来源按实际全文、章节节选或摘要范围判断，').replace(
+    '明确摘要/节选及人工历史基线限制', '逐项明确实际全文/章节节选/摘要降级及人工历史基线限制')
+
 
 def instructions_for(config):
     version = config['prompts']['version']
@@ -42,6 +48,9 @@ def instructions_for(config):
     if version == 'insight-v2':
         return (GENERATION_INSTRUCTIONS + '\n' + CITATION_SCOPE_INSTRUCTIONS,
                 REVIEW_INSTRUCTIONS + '\n' + CITATION_SCOPE_INSTRUCTIONS)
+    if version == 'insight-v3':
+        return (FULLTEXT_GENERATION_INSTRUCTIONS + '\n' + CITATION_SCOPE_INSTRUCTIONS + '\n' + FULLTEXT_SCOPE_INSTRUCTIONS,
+                REVIEW_INSTRUCTIONS + '\n' + CITATION_SCOPE_INSTRUCTIONS + '\n' + FULLTEXT_SCOPE_INSTRUCTIONS)
     raise store.OfflineError('未知 Insight 提示词版本')
 
 
@@ -292,6 +301,22 @@ def render_outputs(root, base, config, batch_id, candidate, bundle):
         lines += ['- %s：%s；来源 ID：%s。' % (cite([key], path), e['origin'], '、'.join(e['source_ids']))]
         if e.get('source_url'):
             lines += ['  - [原始来源](%s)；覆盖：%s。' % (e['source_url'], e.get('coverage', 'historical_note'))]
+        if config['prompts']['version'] == 'insight-v3' and e.get('reading_scope'):
+            scope = e['reading_scope']
+            lines += ['  - [本次读取正文](%s)；媒介：%s；字符：%s / %s；截断：%s。' % (
+                scope.get('document_url', e['source_url']), scope.get('format', 'unknown'),
+                scope.get('selected_chars', 0), scope.get('total_chars', 0),
+                '是' if scope.get('truncated') else '否')]
+            for section in scope.get('sections', []):
+                lines += ['  - %s · %s（%s）：%s / %s 字符。' % (
+                    section['id'], section['title'], section['location'], section['selected_chars'], section['total_chars'])]
+            limitations = scope.get('limitations', [])
+            for limitation in limitations if isinstance(limitations, list) else [limitations]:
+                if limitation:
+                    lines += ['  - 抽取限制或降级原因：%s。' % limitation]
+            for attempt in e.get('acquisition_attempts', []):
+                if attempt.get('status') == 'failed':
+                    lines += ['  - 获取失败：%s；原因：%s。' % (attempt.get('format', 'unknown'), attempt.get('reason', 'unknown'))]
     contents[path] = '\n'.join(lines) + '\n'
     insight_ids = ['insight-%s-%s-%s' % (topic, batch_id, i + 1) for i in range(len(candidate['insights']))]
     for i, insight in enumerate(candidate['insights']):

@@ -188,12 +188,17 @@ class LinkedRecovery(unittest.TestCase):
             recovery.make_request(self.root, self.config_path, 'first')
         self.assertEqual(self.client.calls, [])
 
-    def test_changed_bound_config_is_refused_before_inference(self):
-        self.config['budget']['max_input_chars'] += 1
+    def test_live_config_upgrade_does_not_raise_frozen_recovery_limits(self):
+        self.config['budget']['max_input_chars'] = 60000
+        self.config['budget']['max_calls_per_cycle'] = 20
         self.config_path.write_text(yaml.safe_dump(self.config))
-        with self.assertRaises(store.OfflineError):
-            self.run_recovery()
-        self.assertEqual(self.client.calls, [])
+        self.assertEqual(recovery.make_request(self.root, self.config_path, 'first'), self.request)
+        self.assertEqual(self.run_recovery()['status'], 'completed')
+        frozen = inputs.load_config(self.root, self.base + '/configs/insight.yaml')
+        self.assertEqual(frozen['budget']['max_input_chars'], 30000)
+        self.assertEqual(recovery.verify_lineage(self.root, 'custom-topic', self.identifier)['max_calls_per_cycle'], 16)
+        self.assertEqual(len(self.client.calls), 2)
+        self.assert_original_unchanged()
 
     def test_changed_original_checkpoint_even_with_new_sidecar_is_rejected(self):
         relative = 'reports/test/custom-topic/insight-runs/first/checkpoints/review-1.yaml'

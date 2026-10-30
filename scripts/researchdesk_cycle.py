@@ -21,12 +21,35 @@ import researchdesk_cycle_discovery as discovery
 from researchdesk_sources import SafeFetcher
 
 
-def load_config(root, path):
+def load_config(root, path, snapshot=None):
     root = Path(root).resolve()
     path = common.config_path(root, path)
-    config = store.load_yaml(path)
+    relative = path.relative_to(root).as_posix()
+    if snapshot is None:
+        config = store.load_yaml(path)
+        config_sha256 = store.digest(path.read_bytes())
+    else:
+        # Only a caller holding a checked historical cycle manifest may supply
+        # this snapshot. Revalidate its public configuration without replacing
+        # the old budgets/config digest with today's live configuration.
+        import re
+        private = {'_config_path', '_config_sha256', '_topics_sha256'}
+        if (not isinstance(snapshot, dict) or snapshot.get('_config_path') != relative
+                or {key for key in snapshot if key.startswith('_')} != private
+                or any(not isinstance(snapshot.get(key), str) or
+                       not re.fullmatch(r'[0-9a-f]{64}', snapshot[key])
+                       for key in ('_config_sha256', '_topics_sha256'))):
+            raise store.OfflineError('历史轮次配置快照绑定无效')
+        config = {key: value for key, value in snapshot.items() if key not in private}
+        config_sha256 = snapshot['_config_sha256']
     common.fields(config, {'schema_version', 'mode', 'backend', 'topic', 'topics_file', 'window',
-                          'discovery', 'models', 'budget', 'history'}, '研究轮次配置')
+                          'discovery', 'models', 'budget', 'history'} |
+                  ({'reading'} if 'reading' in config else set()), '研究轮次配置')
+    if 'reading' in config:
+        common.fields(config['reading'], {'mode', 'paper_max_chars'}, '论文阅读配置')
+        if config['reading']['mode'] != 'full_text_preferred':
+            raise store.OfflineError('论文阅读模式无效')
+        common.positive(config['reading']['paper_max_chars'], 2000, 200000, 'paper_max_chars')
     if type(config['schema_version']) is not int or config['schema_version'] != 1 or config['mode'] != 'research_cycle_test' or config['backend'] != 'chatgpt_plan':
         raise store.OfflineError('当前研究轮次只支持真实会员的 research_cycle_test')
     if not isinstance(config['topic'], str) or not store.SAFE_ID.fullmatch(config['topic']):
@@ -42,7 +65,7 @@ def load_config(root, path):
     common.positive(config['window']['initial_days'], 1, 365, 'initial_days')
     common.positive(config['window']['overlap_hours'], 0, 168, 'overlap_hours')
     ranges = {'max_calls_per_cycle': (4, 20), 'research_max_calls': (2, 16), 'insight_max_calls': (2, 4),
-              'max_input_chars': (1000, 60000), 'max_output_chars': (1000, 12000),
+              'max_input_chars': (1000, 600000), 'max_output_chars': (1000, 12000),
               'timeout_seconds': (1, 120), 'max_revisions': (0, 1)}
     common.fields(config['budget'], ranges, '轮次预算')
     for key, (low, high) in ranges.items():
@@ -54,8 +77,11 @@ def load_config(root, path):
     common.fields(config['discovery'], {'max_candidates', 'max_documents', 'max_per_source', 'evidence_max_chars', 'sources'}, '资料发现')
     for key, bounds in {'max_candidates': (1,20), 'max_documents': (1,5), 'max_per_source': (1,2), 'evidence_max_chars': (200,10000)}.items():
         common.positive(config['discovery'][key], *bounds, key)
-    config.update(_config_path=path.relative_to(root).as_posix(), _config_sha256=store.digest(path.read_bytes()),
-                  _topics_sha256=store.digest(topic_path.read_bytes()))
+    topics_sha256 = store.digest(topic_path.read_bytes())
+    if snapshot is not None and snapshot['_topics_sha256'] != topics_sha256:
+        raise store.OfflineError('历史轮次的研究方向配置已变化，不能替换旧上下文')
+    config.update(_config_path=relative, _config_sha256=config_sha256,
+                  _topics_sha256=topics_sha256)
     return config
 
 
@@ -86,6 +112,13 @@ def discover_cycle(root, config_path, cycle_id, fetcher=None):
     manifest_path = base + '/manifest.yaml'
     if store.safe_path(root, manifest_path).exists():
         manifest = store.checked_yaml(root, manifest_path)
+        if (manifest.get('topic') != config['topic'] or manifest.get('cycle_id') != cycle_id
+                or manifest.get('config', {}).get('topic') != config['topic']
+                or manifest.get('mode') != 'research_cycle_test'
+                or manifest.get('backend') != 'chatgpt_plan'
+                or manifest.get('production_accepted') is not False):
+            raise store.OfflineError('旧轮次清单的主题、身份或运行模式不匹配')
+        config = load_config(root, config_path, snapshot=manifest['config'])
         if manifest['config'] != config:
             raise store.OfflineError('轮次已绑定配置与研究方向，不能重置')
     else:
@@ -138,6 +171,11 @@ class CycleFetcher:
             self.responses[url] = self.delegate.fetch(url)
         return dict(self.responses[url])
 
+    def fetch_pdf(self, url):
+        if url not in self.responses:
+            self.responses[url] = self.delegate.fetch_pdf(url)
+        return dict(self.responses[url])
+
 
 def plan_candidates(root, config, cycle_id, snapshot, fetcher):
     base = base_path(config, cycle_id)
@@ -157,7 +195,17 @@ def plan_candidates(root, config, cycle_id, snapshot, fetcher):
     selected, skipped, pending, per_source, seen = [], [], [], {}, set()
     child_config = {'topic':config['topic']}
     for item in list(latest.values())[:1000]:
-        source = item['source']
+        source = dict(item['source'])
+        # Pending candidates from an older cycle adopt the new cycle's reading
+        # policy, without mutating their frozen discovery/checkpoint records.
+        if source['adapter'] == 'arxiv':
+            if 'reading' in config:
+                source.update(reading={'mode': config['reading']['mode']},
+                              evidence_max_chars=config['reading']['paper_max_chars'])
+            else:
+                source.pop('reading', None)
+                source['evidence_max_chars'] = config['discovery']['evidence_max_chars']
+        item = dict(item, source=source)
         if len(selected)>=config['discovery']['max_documents'] or per_source.get(source['adapter'],0)>=config['discovery']['max_per_source']:
             pending.append(dict(item,reason='cycle_capacity'))
             continue
@@ -218,7 +266,8 @@ def run(root, config_path, cycle_id, client=None, fetcher=None, fail_after=None)
                     'budget':{'max_documents':len(candidates), 'max_calls_per_item':4,
                         'max_calls_per_batch':min(budget['research_max_calls'],len(candidates)*4), 'month_max_calls':monthly_cap,
                         **{key:budget[key] for key in ('max_input_chars','max_output_chars','timeout_seconds','max_revisions')}},
-                    'prompts':{'version':'research-batch-v1'}, 'sources':[item['source'] for item in candidates]}
+                    'prompts':{'version':'research-batch-v2' if 'reading' in config else 'research-batch-v1'},
+                    'sources':[item['source'] for item in candidates]}
                 research_path = base + '/configs/research.yaml'
                 store.save_yaml(root, research_path, research_cfg)
                 result_path = base + '/research-result.yaml'
@@ -249,7 +298,8 @@ def run(root, config_path, cycle_id, client=None, fetcher=None, fail_after=None)
                         'topics_file':config['topics_file'],'models':{'generation':config['models']['insight'],'review':config['models']['review']},
                         'budget':{'max_calls':budget['insight_max_calls'],'month_max_calls':monthly_cap,
                                   **{key:budget[key] for key in ('max_input_chars','max_output_chars','timeout_seconds','max_revisions')}},
-                        'prompts':{'version':'insight-v2'},'research_inputs':[{'receipt':original_receipt,'config':research_path,'item_keys':keys}],
+                        'prompts':{'version':'insight-v3' if 'reading' in config else 'insight-v2'},
+                        'research_inputs':[{'receipt':original_receipt,'config':research_path,'item_keys':keys}],
                         'historical_inputs':historical}
                     insight_path = base+'/configs/insight.yaml'
                     if store.safe_path(root, insight_path).exists():
@@ -258,7 +308,7 @@ def run(root, config_path, cycle_id, client=None, fetcher=None, fail_after=None)
                         # still rejects changes to any other bound input.
                         previous = store.checked_yaml(root, insight_path)
                         version = previous.get('prompts', {}).get('version')
-                        if version not in {'insight-v1', 'insight-v2'}:
+                        if version not in {'insight-v1', 'insight-v2', 'insight-v3'}:
                             raise store.OfflineError('已有 Insight 配置的提示词版本无效')
                         insight_cfg['prompts']['version'] = version
                     store.save_yaml(root, insight_path, insight_cfg)

@@ -1,5 +1,7 @@
 # 真实来源采集与模拟分析验收
 
+> 本文保留早期模拟采集阶段的验收记录。当前论文获取与实际阅读范围以[全文阅读规范](fulltext-reading.md)为准；新轮次已支持官方 HTML/PDF，不再固定为仅摘要。
+
 当前阶段已接入 arXiv、Letta 和 LangChain 的官方公开来源，只写 `test/<topic>`。模型仍为 `mock-*`，没有会员登录、OAuth、真实模型推理、正式研究资料写入、GitHub workflow 或公众号发布。
 
 采集与模型分开：[来源适配器](../scripts/researchdesk_sources.py)负责 HTTPS、解析与正文散列；[采集入口](../scripts/researchdesk_collect.py)负责方向配置、不可变检查点、跨批比较和交接包；[原模拟运行骨架](../scripts/researchdesk_offline.py)负责模拟分析/审阅、身份、预算和测试输出。依赖仍为 Python 3.9+ 标准库和现有 PyYAML。

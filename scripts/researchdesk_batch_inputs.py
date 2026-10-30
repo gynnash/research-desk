@@ -81,7 +81,7 @@ def load_config(root, path):
     if config['models']['research'] == config['models']['review']:
         raise store.OfflineError('研究与独立审阅必须使用不同模型')
     ranges = {'max_documents': (1, 10), 'max_calls_per_item': (2, 4), 'max_calls_per_batch': (2, 40),
-              'month_max_calls': (2, 1000), 'max_input_chars': (1000, 60000),
+              'month_max_calls': (2, 1000), 'max_input_chars': (1000, 600000),
               'max_output_chars': (1000, 12000), 'timeout_seconds': (1, 120), 'max_revisions': (0, 1)}
     fields(config['budget'], ranges, '预算配置')
     for name, (low, high) in ranges.items():
@@ -91,14 +91,20 @@ def load_config(root, path):
     if config['budget']['max_calls_per_batch'] > config['budget']['month_max_calls']:
         raise store.OfflineError('批次请求上限不可超过月度上限')
     fields(config['prompts'], {'version'}, '提示词配置')
-    if config['prompts']['version'] != 'research-batch-v1':
+    if config['prompts']['version'] not in {'research-batch-v1', 'research-batch-v2'}:
         raise store.OfflineError('未知提示词版本')
     sources = config['sources']
     if not isinstance(sources, list) or not 1 <= len(sources) <= config['budget']['max_documents']:
         raise store.OfflineError('来源数须在 max_documents 范围内')
     ids, urls = set(), set()
     for source in sources:
-        fields(source, {'id', 'adapter', 'kind', 'url', 'evidence_max_chars'}, '来源配置')
+        fields(source, {'id', 'adapter', 'kind', 'url', 'evidence_max_chars'} |
+               ({'reading'} if 'reading' in source else set()), '来源配置')
+        if 'reading' in source:
+            fields(source['reading'], {'mode'}, '全文阅读配置')
+            if (source['reading']['mode'] != 'full_text_preferred' or source['adapter'] != 'arxiv'
+                    or config['prompts']['version'] != 'research-batch-v2'):
+                raise store.OfflineError('全文阅读需要 arXiv 与 research-batch-v2')
         if not isinstance(source['id'], str) or not store.SAFE_ID.fullmatch(source['id']) or source['id'] in ids:
             raise store.OfflineError('来源 ID 无效或重复')
         ids.add(source['id'])
@@ -127,14 +133,68 @@ def load_config(root, path):
                     raise store.OfflineError('一个 arXiv 来源项只选择一个明确 ID；多篇请分别配置')
         elif parts.hostname not in SOURCE_HOSTS[source['adapter']]:
             raise store.OfflineError('博客域名与来源适配器不匹配')
-        positive(source['evidence_max_chars'], 200, 10000, 'evidence_max_chars')
+        positive(source['evidence_max_chars'], 200, 200000 if 'reading' in source else 10000,
+                 'evidence_max_chars')
     config.update(_config_sha256=store.digest(path.read_bytes()), _topics_sha256=store.digest(topics_path.read_bytes()),
                   _config_path=path.relative_to(root).as_posix(), _topics_path=topics_path.relative_to(root).as_posix(),
                   topic_name=selected['name'], topic_scope=selected['scope'], topic_keywords=selected['keywords'])
     return config
 
 
-def fetch_candidate(root, config, source, fetcher):
+def _section_material(sections, cap):
+    """Keep every section in order; long documents receive balanced excerpts.
+
+    All headers and A locators count toward the configured input bound. Full
+    text is claimed only when the complete extracted document fits unchanged.
+    """
+    def project(quota=None):
+        blocks, locators, scope = [], [], []
+        quote_words, quote_chars, selected_chars = 25, 400, 0
+        for section in sections:
+            original = section['text']
+            selected = original if quota is None else original[:quota]
+            selected_chars += len(selected)
+            scope.append({key: section[key] for key in ('id', 'title', 'location')})
+            scope[-1].update(total_chars=len(original), selected_chars=len(selected))
+            blocks.append('[%s] %s (%s)' % (section['id'], section['title'], section['location']))
+            offset = 0
+            while offset < len(selected):
+                end = min(offset + 1400, len(selected))
+                if end < len(selected):
+                    boundary = max(selected.rfind('. ', offset + 700, end),
+                                   selected.rfind('。', offset + 700, end),
+                                   selected.rfind('\n', offset + 700, end))
+                    if boundary > offset:
+                        end = boundary + 1
+                chunk = selected[offset:end]
+                identifier = 'A%s' % (len(locators) + 1)
+                quote = ' '.join(chunk.split()[:quote_words])[:quote_chars]
+                quote_words -= len(quote.split())
+                quote_chars -= len(quote)
+                locators.append({'id': identifier, 'section_id': section['id'],
+                    'location': '%s; chars %s-%s' % (section['location'], offset + 1, end),
+                    'text_sha256': store.digest(chunk.encode()), 'quote': quote})
+                blocks.append('%s: %s' % (identifier, chunk))
+                offset = end
+        return '\n'.join(blocks), locators, scope, selected_chars
+
+    full = project()
+    if len(full[0]) <= cap:
+        return (*full, False)
+    low, high, best = 0, max(len(s['text']) for s in sections), None
+    while low <= high:
+        quota = (low + high) // 2
+        result = project(quota)
+        if len(result[0]) <= cap:
+            best, low = result, quota + 1
+        else:
+            high = quota - 1
+    if best is None or not best[1] or any(s['selected_chars'] == 0 for s in best[2]):
+        raise SourceError('Section headings exceed evidence bound; increase evidence_max_chars')
+    return (*best, True)
+
+
+def fetch_candidate(root, config, source, fetcher, binding=None):
     response = fetcher.fetch(source['url'])
     content_type = response.get('content_type', '').split(';')[0].strip().lower()
     if source['adapter'] == 'arxiv':
@@ -164,10 +224,18 @@ def fetch_candidate(root, config, source, fetcher):
         record = parse_blog_article(response['text'], response['url'], source['adapter'])
     if record['kind'] != source['kind']:
         raise SourceError('Parsed source kind changed')
+    document = None
+    if 'reading' in source:
+        from researchdesk_fulltext import acquire_paper
+        bound_evidence = (binding or {}).get('evidence', {})
+        expected = bound_evidence.get('format') if binding is not None else None
+        if binding is not None and bound_evidence.get('reading_profile') != 'arxiv-fulltext-v1':
+            raise SourceError('Bound paper does not match the full-text reading profile')
+        document = acquire_paper(record, fetcher, expected_format=expected)
     text = record['body_text']
     cap = source['evidence_max_chars']
     coverage = 'abstract_only' if record['kind'] == 'paper' else 'excerpt'
-    if coverage == 'abstract_only' and len(text) > cap:
+    if document is None and coverage == 'abstract_only' and len(text) > cap:
         raise SourceError('Abstract exceeds configured input bound; cannot claim full abstract coverage')
     selected = text[:cap]
     if len(text) > cap:
@@ -207,10 +275,32 @@ def fetch_candidate(root, config, source, fetcher):
                 'source_url': metadata['source_url'], 'source_version': metadata.get('source_version'),
                 'content_hash': record['content_hash'], 'evidence_sha256': store.digest(material.encode()),
                 'locators': locators}
+    if document is not None:
+        abstract_content_hash = record['content_hash']
+        material, locators, sections, selected_chars, truncated = _section_material(
+            document['sections'], cap)
+        if document['format'] == 'abstract' and truncated:
+            raise SourceError('Abstract exceeds evidence bound; cannot claim complete abstract coverage')
+        coverage = ('abstract_only' if document['format'] == 'abstract' else
+                    'excerpt' if truncated or document['coverage'] != 'full_text' else 'full_text')
+        record['content_hash'] = document['text_sha256']
+        evidence.update(coverage=coverage, extraction_coverage=document['coverage'],
+            abstract_content_hash=abstract_content_hash,
+            content_hash=record['content_hash'], evidence_sha256=store.digest(material.encode()),
+            locators=locators, reading_profile='arxiv-fulltext-v1', format=document['format'],
+            document_url=document['source_url'], sections=sections,
+            total_chars=document['total_chars'], selected_chars=selected_chars, truncated=truncated,
+            extraction_scope=document.get('extraction_scope', 'extracted text'),
+            limitations=document.get('limitations', []))
     candidate = {'key': source['id'], 'kind': record['kind'], 'topic': config['topic'], 'metadata': metadata,
                  'evidence': evidence, 'identity_keys': identity_keys, 'source_id': source_id,
                  'existing_source_path': existing_path, 'existing_source_metadata': existing_metadata,
                  'content_hash': record['content_hash'], 'metadata_hash': store.digest({
                      'metadata': metadata, 'upstream_updated_at': record.get('upstream_updated_at')}),
                  'upstream_updated_at': record.get('upstream_updated_at')}
+    if document is not None:
+        # Dynamic HTTP attempts are audit data, not re-created evidence. A
+        # resumed batch keeps its original audit and pins its selected format.
+        candidate['acquisition_attempts'] = ((binding or {}).get('acquisition_attempts', document['attempts'])
+                                             if binding is not None else document['attempts'])
     return candidate, material
