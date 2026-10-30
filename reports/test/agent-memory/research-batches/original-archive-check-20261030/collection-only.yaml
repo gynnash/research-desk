@@ -11,7 +11,7 @@ items:
     path: reports/test/agent-memory/research-batches/original-archive-check-20261030/items/arxiv-original/original.yaml
     sha256: 75cbff46fd7298803e18a937ee3ac79869e57f963e9d8daed2933c56939649d6
     markdown_path: reports/test/agent-memory/research-batches/original-archive-check-20261030/items/arxiv-original/original.md
-    markdown_sha256: a1ea8329899eaea718551afaa745788da0403c60b3b4ac4a92b51670b1bc7e3a
+    markdown_sha256: c9a22c5d1f35a7c38f9ef7b8022688adc51922362677c906c7bb6d79d578921b
   original_chars: 88776
   model_material_chars: 91759
   research_coverage: full_text
@@ -23,7 +23,7 @@ items:
     path: reports/test/agent-memory/research-batches/original-archive-check-20261030/items/meituan-original/original.yaml
     sha256: b4be335a3957de6ef118dd8811978cf49b68fa1f83757ba65c23077bfbf7993b
     markdown_path: reports/test/agent-memory/research-batches/original-archive-check-20261030/items/meituan-original/original.md
-    markdown_sha256: f23151fc54aed0fc1832fd9f165186c515cff24330e05c30306e9c0eb4d0cce5
+    markdown_sha256: 2e3f48cbe311163dae095678fe7a55e9799d9acd27c2a847138a8c0e5ab6a5a9
   original_chars: 13757
   model_material_chars: 6228
   research_coverage: excerpt

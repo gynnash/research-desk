@@ -164,7 +164,8 @@ def render_markdown(snapshot, formal=False):
         ('> 原文抽取归档，用于阅读及重放，内容不代表已核实的研究结论。' if formal else
          '> TEST：原文抽取归档，用于阅读及重放，不代表正式研究结论。'), '',
         '- [打开来源原文](%s)。' % metadata['source_url'],
-        '- 原文归档保存完整可用抽取文本；研究与审阅实际范围为 `%s`，可小于本归档。' % candidate['evidence']['coverage'],
+        '- 原文归档保存完整可用抽取文本；绑定的模型材料范围为 `%s`，可小于本归档。' % candidate['evidence']['coverage'],
+        '- 归档自身不表示已经执行研究或审阅；实际执行与审阅状态以对应研究回执为准。',
         '- 不保存可执行网页、PDF 版式或图片，不保证公式和图表的抽取完整性，未复现实验。']
     if candidate['evidence']['coverage'] == 'abstract_only':
         lines.append('- 当前仅有摘要；没有将摘要归档冒充全文，全文失败原因见取材记录。')
