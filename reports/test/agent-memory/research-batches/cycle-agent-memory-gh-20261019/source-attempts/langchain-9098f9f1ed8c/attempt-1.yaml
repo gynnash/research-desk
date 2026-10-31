@@ -1,7 +1,0 @@
-key: langchain-9098f9f1ed8c
-status: collected
-at: '2026-10-18T17:57:43.950052+00:00'
-candidate_path: reports/test/agent-memory/research-batches/cycle-agent-memory-gh-20261019/items/langchain-9098f9f1ed8c/candidate.yaml
-candidate_sha256: c265d25cc1d313c45dbebc77454f196fa7ca3d618b1998be3498d6324594186b
-content_hash: 87028f98102403d97acf9b08c15672775800b7036277489f71835a9b6cb7bf81
-metadata_hash: fdbe9f86f01065219de46db184e45e693e912aee131965b2e3d50f7201986fd8

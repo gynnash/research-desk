@@ -127,7 +127,7 @@ class InsightLoop(unittest.TestCase):
         self.research_config = copy.deepcopy(self.config)
         self.research_config_path = self.config_path
         self.research_receipt = receipt
-        source = REPOSITORY / 'sources/papers/paper-4eb3be4b-7189-49aa-bafd-f88f77a972f4.md'
+        source = REPOSITORY / 'workflows/test/agent-memory/fixtures/history/paper-4eb3be4b-7189-49aa-bafd-f88f77a972f4.md'
         frontmatter, body = source.read_text().split('---', 2)[1:]
         metadata = yaml.safe_load(frontmatter)
         metadata['topics'] = ['custom-topic']

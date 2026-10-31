@@ -1,8 +1,0 @@
-type: item_finished
-key: letta-memory-blog
-status: test_accepted
-result_path: reports/test/agent-memory/research-batches/configured-research-20261019/items/letta-memory-blog/result.yaml
-result_sha256: bb72882839d36dcc82fd4967b4d0c3113897f246c9db67cacacc2399c89a9fe2
-at: '2026-10-18T16:45:57.617311+00:00'
-output: reports/test/agent-memory/research-batches/configured-research-20261019/items/letta-memory-blog/report.md
-output_sha256: fb84fd764c0a422cb67f0104dfe38a16a4426cb3f4807071bf5d96ad114a2ae5

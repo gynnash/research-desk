@@ -1,7 +1,0 @@
-key: arxiv-54b2c1a25a4c
-status: collected
-at: '2026-10-18T17:49:20.000480+00:00'
-candidate_path: reports/test/agent-memory/research-batches/cycle-agent-memory-20261019/items/arxiv-54b2c1a25a4c/candidate.yaml
-candidate_sha256: c26a445bb0c270ade6873068dba6fa871c20469b0da755a0d7fdd66555da171d
-content_hash: a11351e13b004fe042d543110fe7cd46a3f66d476f5f6643f65b5166e36a7441
-metadata_hash: 5a6389f2a982ede2269ad41b85ed6a3083cc6896f3b70a5bcbf756a41be39d9c

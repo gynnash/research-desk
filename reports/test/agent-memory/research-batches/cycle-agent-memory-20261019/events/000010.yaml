@@ -1,8 +1,0 @@
-type: item_finished
-key: langchain-fb2f55573b1a
-status: test_accepted
-result_path: reports/test/agent-memory/research-batches/cycle-agent-memory-20261019/items/langchain-fb2f55573b1a/result.yaml
-result_sha256: c97a6534472d252382c6d51f8584ffdc18191a10e068b051bd55ab375b95bd39
-at: '2026-10-18T17:49:55.803756+00:00'
-output: reports/test/agent-memory/research-batches/cycle-agent-memory-20261019/items/langchain-fb2f55573b1a/report.md
-output_sha256: fdc8fa7ff4a022571803122c8eec9fa37b466c74fc969c9a0bcd15b972450c54

@@ -1,7 +1,0 @@
-type: call_reserved
-reservation_id: generation-0
-role: generation
-revision: 0
-model_id: gpt-6-luna
-month: 2026-10
-at: '2026-10-22T22:01:55.400004+00:00'

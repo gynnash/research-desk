@@ -1,8 +1,0 @@
-type: item_finished
-key: arxiv-54b2c1a25a4c
-status: test_accepted
-result_path: reports/test/agent-memory/research-batches/cycle-agent-memory-20261019/items/arxiv-54b2c1a25a4c/result.yaml
-result_sha256: b52588880d876fbdbba3d87c6fed4f2a5de5cebc8e91c433fd97a8aef21e0a2d
-at: '2026-10-18T17:49:39.000167+00:00'
-output: reports/test/agent-memory/research-batches/cycle-agent-memory-20261019/items/arxiv-54b2c1a25a4c/report.md
-output_sha256: 6c92dbd34e1aa1be83d01cf1c3cd21f1d558a5e60c2fcac36bf734b8bf5dcb3d

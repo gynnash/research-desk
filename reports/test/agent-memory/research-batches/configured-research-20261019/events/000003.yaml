@@ -1,9 +1,0 @@
-type: call_reserved
-key: amem-paper
-reservation_id: amem-paper:review:0
-role: review
-revision: 0
-model_id: gpt-6.1-sol
-month: 2026-10
-at: '2026-10-18T16:44:54.175050+00:00'
-usage_status: unknown

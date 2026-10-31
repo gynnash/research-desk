@@ -1,9 +1,8 @@
-# Enabled after real GitHub formal admission and Obsidian sync passed.
 schema_version: 1
 enabled: true
 timezone: Asia/Shanghai
-schedule_utc: '0 19 * * 1,4'
-activated_at: '2026-10-19T00:00:00+08:00'
+schedule_utc: 0 19 * * 1,4
+activated_at: '2026-10-31T17:48:01.217832+08:00'
 cycle_config: config/cycles/agent-memory.yaml
 admission_config: config/admission.yaml
 catchup:

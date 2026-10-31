@@ -1,6 +1,0 @@
-files:
-  reports/test/agent-memory/insight-runs/agent-memory-20261030-0300/report.md: 0f6b7f29b032875185e7ea10f7901e91956430be95dafd00b0494096061b0f24
-  insights/test/agent-memory/agent-memory-20261030-0300/insight-1.md: d5f1ca3ad6c0b874b0280e1d4502511e5d733b0c658e942fe87dc4f421121145
-  insights/test/agent-memory/agent-memory-20261030-0300/insight-2.md: 60f38bf8f35e9d6a1f2687cf969654f48433d3fedb89f68f45be7e2409c34002
-  articles/test/agent-memory/agent-memory-20261030-0300/topic-1.md: adc16c313e874719cd9c870fa44abf096048adbecb07dfd352fcb94a85c81e38
-  articles/test/agent-memory/agent-memory-20261030-0300/topic-2.md: 6eb9fb6071e7a7305c11370e482f9b39e551e01ba5b4dbfef01be30e5eb38304

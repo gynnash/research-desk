@@ -1,8 +1,0 @@
-type: call_reserved
-reservation_id: research-0
-role: research
-revision: 0
-model_id: gpt-6-luna
-month: 2026-10
-at: '2026-10-18T16:22:36.561013+00:00'
-usage_status: unknown

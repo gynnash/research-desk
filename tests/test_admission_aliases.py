@@ -25,6 +25,9 @@ FORMAL = 'blog-05c33166-b18e-425e-91e0-36ddd26f21aa'
 ALIAS = 'blog-be47c817-56d3-4fa5-bb9a-bd19be5c68df'
 
 
+@unittest.skipUnless(
+    (ROOT / ('reports/agent-memory/admissions/' + CYCLE + '/plan.yaml')).is_file(),
+    'Historical October 27 production proof was explicitly reset; generic admission tests remain active')
 class October27Aliases(unittest.TestCase):
     def setUp(self):
         temp = tempfile.TemporaryDirectory()

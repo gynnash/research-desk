@@ -64,15 +64,19 @@ class CitationProjection(unittest.TestCase):
             projected = projected.replace(alias, alias.rsplit('-', 1)[1])
         self.assertEqual(projected, record['text'])
 
-    def test_saved_collision_is_namespaced_without_modifying_historical_file(self):
-        path = REPOSITORY / 'reports/agent-memory/cycle-agent-memory-gh-20261019-synthesis.md'
-        original = path.read_bytes()
-        projected, aliases = inputs.scoped_history({'id': 'H5', 'text': original.decode()})
+    def test_saved_collision_is_namespaced_without_modifying_historical_text(self):
+        # Preserve the actual collision pattern as a small independent fixture;
+        # production research may be reset without retiring this regression.
+        original = ('# Historical synthesis\n\n'
+                    'R1 为论文摘要；R2 节选描述文件卸载。\n'
+                    'H1 历史笔记称 Letta 采用记忆块，H2 提供相关材料。\n')
+        record = {'id': 'H5', 'text': original}
+        projected, aliases = inputs.scoped_history(record)
         self.assertIn('historical-H5-R2 节选描述文件卸载', projected)
         self.assertIn('historical-H5-H1 历史笔记称 Letta', projected)
         self.assertEqual(set(aliases), {'historical-H5-R1', 'historical-H5-R2',
                                        'historical-H5-H1', 'historical-H5-H2'})
-        self.assertEqual(path.read_bytes(), original)
+        self.assertEqual(record['text'], original)
 
     def test_nested_and_reference_link_destinations_are_byte_identical(self):
         text = ('[R2](../reports/foo_(bar)/R2.md)\n'

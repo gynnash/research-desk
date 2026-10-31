@@ -1,7 +1,0 @@
-type: call_reserved
-reservation_id: review-0
-role: review
-revision: 0
-model_id: gpt-6.1-sol
-month: 2026-10
-at: '2026-10-20T01:51:28.476991+00:00'

@@ -161,8 +161,10 @@ def monthly_budget(root, config):
     configured = config['budget']['month_max_calls']
     if config['backend'] == 'mock':
         return 0, configured
+    from researchdesk_usage import archived_calls
     workspace_limit = membership_monthly_limit(root)
-    month, total, cap = now()[:7], 0, workspace_limit if workspace_limit is not None else configured
+    month = now()[:7]
+    total, cap = archived_calls(root, month), workspace_limit if workspace_limit is not None else configured
     for _, manifest, events in all_runs(root, include_insight=True, include_writing=True):
         if manifest.get('backend') != 'chatgpt_plan':
             continue
