@@ -17,6 +17,7 @@ import yaml
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import researchdesk_offline as store
 import researchdesk_batch_inputs as inputs
+import researchdesk_retired as retired
 from researchdesk_sources import SafeFetcher
 
 
@@ -119,6 +120,8 @@ def notes_snapshot(root):
 def verify_notes(root, baseline):
     for path, expected in baseline.items():
         target = root / path
+        if not target.is_file() and retired.missing_hash(root, path, expected) is not None:
+            continue
         if target.is_symlink() or not target.is_file() or store.digest(target.read_bytes()) != expected:
             raise store.OfflineError('已有笔记变化，保留人工内容并停止: ' + path)
 

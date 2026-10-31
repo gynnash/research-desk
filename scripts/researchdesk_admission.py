@@ -26,6 +26,7 @@ import researchdesk_offline as store
 import researchdesk_batch as research
 import researchdesk_insight as insight
 import researchdesk_insight_inputs as inputs
+import researchdesk_retired as retired
 
 
 NOTICE = '> AI 自动研究记录，已通过独立模型审阅；阅读范围及证据限制见正文，未复现实验。'
@@ -118,12 +119,24 @@ def _checked(root, relative):
 
 
 def _hashes(root, paths):
-    return {path: store.digest(_location(root, path).read_bytes()) for path in sorted(set(paths))}
+    result = {}
+    for relative in sorted(set(paths)):
+        path = _location(root, relative)
+        if path.is_file():
+            result[relative] = store.digest(path.read_bytes())
+        else:
+            previous = retired.missing_hash(root, relative)
+            if previous is None:
+                raise store.OfflineError('准入所绑定的输入不存在: ' + relative)
+            result[relative] = previous
+    return result
 
 
 def _verify_hashes(root, hashes):
     for relative, expected in hashes.items():
         path = _location(root, relative)
+        if not path.is_file() and retired.missing_hash(root, relative, expected) is not None:
+            continue
         if not path.is_file() or store.digest(path.read_bytes()) != expected:
             raise store.OfflineError('准入所绑定的输入已变化: ' + relative)
 

@@ -16,6 +16,7 @@ import researchdesk_admission as admission
 import researchdesk_batch as shared
 import researchdesk_confirmation as confirmation
 import researchdesk_confirmation_inputs as inputs
+import researchdesk_retired as retired
 
 
 STAGES = ['outline', 'draft', 'candidate']
@@ -64,7 +65,18 @@ def _synced_hashes(root, hashes):
     algorithm = _git(root, 'rev-parse', '--show-object-format').decode().strip()
     if algorithm not in {'sha1', 'sha256'}:
         raise store.OfflineError('不支持此仓库的 Git 对象格式')
-    for relative, expected in sorted(hashes.items()):
+    required, missing = dict(hashes), set()
+    for relative, expected in hashes.items():
+        target = admission._location(root, relative)
+        if not target.is_file() and retired.missing_hash(root, relative, expected) is not None:
+            if any(relative in entries for entries in (index, local, remote)):
+                raise store.OfflineError('退休笔记删除尚未完整同步到 main: ' + relative)
+            missing.add(relative)
+            registry = admission._location(root, retired.CONFIG)
+            required[retired.CONFIG] = store.digest(registry.read_bytes())
+    for relative, expected in sorted(required.items()):
+        if relative in missing:
+            continue
         target = admission._location(root, relative)
         if not target.is_file():
             raise store.OfflineError('写作冻结输入不存在: ' + relative)
