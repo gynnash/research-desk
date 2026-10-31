@@ -270,7 +270,8 @@ class FormalArticleCycle(unittest.TestCase):
         (self.root / 'config/confirmation.yaml').write_text(yaml.safe_dump(config, allow_unicode=True))
         topic_path = next(path for path, kind in kinds.items() if kind == 'topic_proposal')
         topic_id = store.frontmatter(self.root / topic_path)['id']
-        preview = confirmation_inputs.prepare_preview(self.root, confirmation.load_config(self.root), topic_id)
+        preview = confirmation_inputs.prepare_preview(
+            self.root, confirmation.load_config(self.root, 'config/confirmation.yaml'), topic_id)
         self.assertEqual({item['path'] for item in preview['insights']}, {synthesis_path})
         self.assertFalse(preview['writing_started'])
         self.assertEqual(len(client.calls), 4)

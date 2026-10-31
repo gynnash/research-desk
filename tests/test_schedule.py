@@ -28,6 +28,12 @@ class BeijingSchedule(unittest.TestCase):
             target = self.root / relative
             target.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(REPOSITORY / relative, target)
+        # Slot examples deliberately begin on October 20. Keep their activation
+        # baseline independent of resets in the live research workspace.
+        automation = self.root / 'config/automation.yaml'
+        fixture = yaml.safe_load(automation.read_text(encoding='utf-8'))
+        fixture['activated_at'] = '2026-10-19T00:00:00+08:00'
+        automation.write_text(yaml.safe_dump(fixture, allow_unicode=True), encoding='utf-8')
         self.config = schedule.load_config(self.root)
         self.addCleanup(mock.patch.stopall)
         mock.patch.object(socket, 'create_connection', side_effect=AssertionError('Network prohibited')).start()
