@@ -69,10 +69,20 @@ def _enrich(root, record):
     return item
 
 
-def _reading(path, body, origin, title, topic, source_text):
+def _reading(root, path, body, origin, title, topic, source_text):
     metadata = {'title': title, 'kind': 'reading_note', 'topics': [topic]}
-    provenance = json.dumps({'derived_from': origin, 'original_sha256': store.digest(source_text.encode()),
-                             'presentation': 'reviewed_content_reformatted'}, ensure_ascii=False)
+    binding = {'derived_from': origin, 'original_sha256': store.digest(source_text.encode()),
+               'presentation': 'reviewed_content_reformatted'}
+    existing = admission._location(root, path)
+    if existing.is_file() and (store.frontmatter(existing) or {}).get('editorial') is True:
+        text = existing.read_text(encoding='utf-8')
+        match = re.search(r'<!-- researchdesk-reading (\{[^\n]+\}) -->', text)
+        if not match or json.loads(match[1]) != binding:
+            raise store.OfflineError('编辑阅读笔记与原研究绑定不同，保留文件: ' + path)
+        if any((store.frontmatter(existing) or {}).get(key) != value for key, value in metadata.items()):
+            raise store.OfflineError('编辑阅读笔记的身份已变化，保留文件: ' + path)
+        return text
+    provenance = json.dumps(binding, ensure_ascii=False)
     home = link('返回研究首页', posixpath.relpath(HOME, posixpath.dirname(path)))
     return ('---\n' + yaml.safe_dump(metadata, allow_unicode=True, sort_keys=False) + '---\n\n'
             + '<!-- researchdesk-reading ' + provenance + ' -->\n\n' + home + '\n\n' + body)
@@ -112,7 +122,7 @@ def _research_cycles(root, files, warnings):
             path = original
             if legacy:
                 path = 'reports/%s/解读/%s/%s-%s.md' % (topic, cycle_id, _slug(item['title']), source_id[-8:])
-                files[path] = _reading(path, prose.research(item), original, item['title'], topic, effective[original])
+                files[path] = _reading(root, path, prose.research(item), original, item['title'], topic, effective[original])
             entries.append({'title': item['title'], 'metadata': item['metadata'],
                 'kind': '论文' if source_id.startswith('paper-') else '博客',
                 'coverage': SCOPES.get(item['coverage'], '范围见正文'), 'report': path,
@@ -128,7 +138,7 @@ def _research_cycles(root, files, warnings):
         narrative = store.load_yaml(admission._location(root, value['insight_config']))['prompts']['version'] == 'insight-v5'
         if not narrative:
             synthesis = 'insights/%s/综述/%s-%s.md' % (topic, cycle_id, _slug(candidate['report']['title']))
-            files[synthesis] = _reading(synthesis, prose.synthesis(candidate, evidence), original,
+            files[synthesis] = _reading(root, synthesis, prose.synthesis(candidate, evidence), original,
                 candidate['report']['title'], topic, effective[original])
         topics = []
         for index, card in enumerate(candidate['topics']):
@@ -140,7 +150,7 @@ def _research_cycles(root, files, warnings):
                 path = 'articles/%s/选题/%s-%s-%s.md' % (topic, cycle_id, index + 1, _slug(card['title']))
                 body = prose.topic(card, evidence)
                 body += '\n' + link('本轮综合思考', posixpath.relpath(synthesis, posixpath.dirname(path))) + '\n'
-                files[path] = _reading(path, body, original, card['title'], topic, effective[original])
+                files[path] = _reading(root, path, body, original, card['title'], topic, effective[original])
             topics.append({'title': card['title'], 'path': path})
         actual = None
         provenance = value['verification_bundle'].get('provenance', {}).get('research_inputs', [])
@@ -181,7 +191,7 @@ def _writings(root, files, warnings):
                 candidate = store.checked_yaml(root, checkpoint)['candidate']
                 path = 'articles/%s/稿件/%s-%s-%s.md' % (topic, approval, _slug(metadata['title']), label)
                 body = prose.writing(candidate, bundle)
-                files[path] = _reading(path, body, original, metadata['title'] + ' · ' + label, topic, content)
+                files[path] = _reading(root, path, body, original, metadata['title'] + ' · ' + label, topic, content)
             docs[stage] = path
         results.append({'title': bundle['topic_card']['title'], 'topic': topic,
                         'date': _day(approval), 'documents': docs})
@@ -204,10 +214,15 @@ def _library(root, cycles):
                 continue
             key = _identity(metadata)
             if key not in sources:
+                related = [note for note in metadata.get('related_notes', [])
+                           if note.startswith('reports/') and 'test' not in Path(note).parts
+                           and admission._location(root, note).is_file()
+                           and not store.frontmatter(root / note)]
                 sources[key] = {'title': metadata['title'], 'metadata': metadata,
                     'source_url': metadata['source_url'], 'kind': '论文' if metadata['kind'] == 'paper' else '博客',
-                    'report': None, 'coverage': '未关联可核验总结',
-                    'first_seen': str(metadata.get('collected_at', '未记录'))[:10], 'last_seen': '来源卡，暂无关联总结'}
+                    'report': related[0] if related else None, 'coverage': '历史人工整理' if related else '未关联可核验总结',
+                    'first_seen': str(metadata.get('collected_at', '未记录'))[:10],
+                    'last_seen': '历史人工整理' if related else '来源卡，暂无关联总结'}
     archives = []
     for path in sorted((root / 'sources/originals').glob('*/*.md')):
         if path.name == 'README.md':
@@ -251,7 +266,7 @@ def _cycle_section(cycle, level=2):
     return lines + ['']
 
 
-def _home(cycles, writings, sources, archives, warnings):
+def _home(cycles, writings, sources, archives, warnings, manual=None):
     lines = ['# 研究工作台', '',
         '从这里看本轮与历史研究。文章标题打开原文，“方法与总结”打开每篇解读；综合文章包含与历史资料的比较、洞察、趋势线索和待验证问题。', '',
         '已整理 %s 个正式批次，实际研究轮次覆盖 %s 至 %s；不能把配置的历史窗口当成已经积累的时间。' % (
@@ -296,6 +311,10 @@ def _home(cycles, writings, sources, archives, warnings):
             if stage in docs), '']
     if not writings:
         lines += ['尚无正式准入稿件。', '']
+    if manual:
+        lines += ['## 早期人工整理', '', '这些是已有人工研究与稿件，保留原状态，不计作新一轮自动研究。', '']
+        lines += ['- ' + link(item['title'], item['path']) for item in manual]
+        lines.append('')
     return '\n'.join(lines).rstrip() + '\n' + (
         '\n## 待核对记录\n\n' + '\n'.join('- ' + item for item in warnings) + '\n' if warnings else '')
 
@@ -311,7 +330,21 @@ def build(root):
         return {}
     writings = _writings(root, files, warnings)
     sources, archives = _library(root, cycles)
-    managed = START + '\n\n' + _home(cycles, writings, sources, archives, warnings) + '\n' + END
+    manual = {}
+    for item in sources.values():
+        for path in item['metadata'].get('related_notes', []):
+            target = admission._location(root, path)
+            if 'test' in Path(path).parts or not target.is_file() or target.suffix != '.md' or store.frontmatter(target):
+                continue
+            heading = re.search(r'^#\s+(.+)$', target.read_text(encoding='utf-8'), re.M)
+            if heading:
+                stage = next((label for suffix, label in (
+                    ('-release-candidate.md', '候选稿'), ('-draft.md', '初稿'),
+                    ('-outline.md', '大纲')) if path.endswith(suffix)), None)
+                title = heading[1] + (' · ' + stage if stage else '')
+                manual[path] = {'title': title, 'path': path}
+    managed = START + '\n\n' + _home(cycles, writings, sources, archives, warnings,
+                                    list(manual.values())) + '\n' + END
     target = admission._location(root, HOME)
     if target.is_file() and START in target.read_text(encoding='utf-8'):
         previous = target.read_text(encoding='utf-8')

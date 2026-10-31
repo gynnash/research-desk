@@ -15,7 +15,7 @@ class ReadingHome(unittest.TestCase):
     def setUp(self):
         temporary = tempfile.TemporaryDirectory(prefix='researchdesk-reading-home-')
         self.addCleanup(temporary.cleanup)
-        self.root = Path(temporary.name)
+        self.root = Path(temporary.name).resolve()
         self.report = 'reports/agent-memory/解读/2026-10-30/paper.md'
         self.synthesis = 'insights/agent-memory/综述/2026-10-30.md'
         self.topic = 'articles/agent-memory/选题/2026-10-30.md'
@@ -72,6 +72,21 @@ class ReadingHome(unittest.TestCase):
                 reading.build(self.root)
         with mock.patch.object(reading, '_research_cycles', return_value=[]):
             self.assertEqual(reading.refresh(self.root), [])
+
+    def test_editorial_reading_keeps_author_text_but_cannot_rebind_its_source(self):
+        path = 'insights/agent-memory/综述/edited.md'
+        original = reading._reading(self.root, path, '# 原始排版\n', 'reports/original.md',
+                                    '综合思考', 'agent-memory', '固定的原研究。')
+        edited = original.replace('kind: reading_note\n', 'kind: reading_note\neditorial: true\n')
+        edited = edited.replace('# 原始排版', '# 作者整理后的连贯说明')
+        target = self.root / path
+        target.parent.mkdir(parents=True)
+        target.write_text(edited)
+        self.assertEqual(reading._reading(self.root, path, '# 新的机械模板\n', 'reports/original.md',
+                                         '综合思考', 'agent-memory', '固定的原研究。'), edited)
+        with self.assertRaisesRegex(store.OfflineError, '绑定不同'):
+            reading._reading(self.root, path, '# 新的机械模板\n', 'reports/another.md',
+                             '综合思考', 'agent-memory', '固定的原研究。')
 
 
 if __name__ == '__main__':
