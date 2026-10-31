@@ -1,0 +1,147 @@
+schema_version: 1
+mode: research_cycle_test
+backend: chatgpt_plan
+topic: agent-memory
+cycle_id: agent-memory-20261031-fulltext
+status: no_accepted_research
+window_start: '2026-09-01T09:52:28.205064+00:00'
+window_end: '2026-10-31T09:52:28.205064+00:00'
+discovery_complete: false
+source_status:
+- id: arxiv
+  adapter: arxiv
+  entry_url: https://export.arxiv.org/api/query
+  status: truncated
+  discovered: 310
+  inspected: 80
+  eligible: 57
+  selected: 5
+  complete_window: false
+  error_types: []
+  requested_urls:
+  - https://export.arxiv.org/api/query?search_query=%28all%3A%22agent+memory%22+OR+all%3A%22long-term+memory%22+OR+all%3A%22episodic+memory%22+OR+all%3A%22memory+retrieval%22+OR+all%3A%22memory+consolidation%22%29+AND+submittedDate%3A%5B202609010952+TO+202610310952%5D&sortBy=submittedDate&sortOrder=descending&start=0&max_results=20
+  - https://export.arxiv.org/api/query?search_query=%28all%3A%22agent+memory%22+OR+all%3A%22long-term+memory%22+OR+all%3A%22episodic+memory%22+OR+all%3A%22memory+retrieval%22+OR+all%3A%22memory+consolidation%22%29+AND+submittedDate%3A%5B202609010952+TO+202610310952%5D&sortBy=submittedDate&sortOrder=descending&start=20&max_results=20
+  - https://export.arxiv.org/api/query?search_query=%28all%3A%22agent+memory%22+OR+all%3A%22long-term+memory%22+OR+all%3A%22episodic+memory%22+OR+all%3A%22memory+retrieval%22+OR+all%3A%22memory+consolidation%22%29+AND+submittedDate%3A%5B202609010952+TO+202610310952%5D&sortBy=submittedDate&sortOrder=descending&start=40&max_results=20
+  - https://export.arxiv.org/api/query?search_query=%28all%3A%22agent+memory%22+OR+all%3A%22long-term+memory%22+OR+all%3A%22episodic+memory%22+OR+all%3A%22memory+retrieval%22+OR+all%3A%22memory+consolidation%22%29+AND+submittedDate%3A%5B202609010952+TO+202610310952%5D&sortBy=submittedDate&sortOrder=descending&start=60&max_results=20
+  coverage: bounded_published_window
+- id: letta
+  adapter: letta
+  entry_url: https://www.letta.com/blog/
+  status: complete
+  discovered: 48
+  inspected: 48
+  eligible: 0
+  selected: 0
+  complete_window: true
+  error_types: []
+  requested_urls:
+  - https://www.letta.com/sitemap.xml
+  sitemap_pages: 1
+  sitemap_response_hashes:
+    https://www.letta.com/sitemap.xml: 5f55544e67d4e1e156bdcfe6671250f5bc7af7ab7e51aa09c17368c3490972bc
+  sitemap_index_complete: true
+  sitemap_metadata_errors: 0
+  coverage: official_sitemap_bounded_article_inspection
+- id: langchain
+  adapter: langchain
+  entry_url: https://www.langchain.com/blog
+  status: truncated
+  discovered: 548
+  inspected: 80
+  eligible: 4
+  selected: 0
+  complete_window: false
+  error_types:
+  - SourceError
+  requested_urls:
+  - https://www.langchain.com/sitemap.xml
+  sitemap_pages: 1
+  sitemap_response_hashes:
+    https://www.langchain.com/sitemap.xml: 730adf0aaebdcac5934697d4cd3c7bf0bbed443f431e0de64c2d728d5a36dde2
+  sitemap_index_complete: true
+  sitemap_metadata_errors: 0
+  coverage: official_sitemap_bounded_article_inspection
+- id: huggingface-blog
+  adapter: rss
+  entry_url: https://huggingface.co/blog/feed.xml
+  status: truncated
+  discovered: 894
+  inspected: 80
+  eligible: 0
+  selected: 0
+  complete_window: false
+  error_types:
+  - SourceError
+  - SourceError
+  requested_url: https://huggingface.co/blog/feed.xml
+  coverage: publisher_feed_window_unproven
+  feed_response_hash: 9dbae7407a50b90f204bf619710c3d41d4a4bf8d2c28276ec6a2da1b65a81966
+- id: meituan-tech
+  adapter: rss
+  entry_url: https://tech.meituan.com/feed/
+  status: truncated
+  discovered: 10
+  inspected: 10
+  eligible: 0
+  selected: 0
+  complete_window: false
+  error_types: []
+  requested_url: https://tech.meituan.com/feed/
+  coverage: publisher_feed_window_unproven
+  feed_response_hash: d9a7565fdb3d86f95c1759c358bfde22e793540b03c79b63faec94e5fb7b6b83
+- id: ruanyifeng-blog
+  adapter: rss
+  entry_url: https://www.ruanyifeng.com/blog/atom.xml
+  status: truncated
+  discovered: 3
+  inspected: 3
+  eligible: 0
+  selected: 0
+  complete_window: false
+  error_types: []
+  requested_url: https://www.ruanyifeng.com/blog/atom.xml
+  coverage: publisher_feed_window_unproven
+  feed_response_hash: df9b8e01cb50c2622fd456659ec3fead6181e3569962aaace17cdfd7be71925e
+stages:
+  research:
+    status: failed
+    reserved_calls: 11
+reserved_calls: 11
+pending_count: 304
+input_hashes:
+  reports/test/agent-memory/cycles/agent-memory-20261031-fulltext/manifest.yaml: c5b0c2895e5a54b2891d234dc304b66b02397eff564bb9f7760a06a2a95f18c1
+  reports/test/agent-memory/cycles/agent-memory-20261031-fulltext/discovery.yaml: a13cb294be4e082492ef2a484d2cee4f3528827057ed780746395b910ff1bc2e
+  reports/test/agent-memory/cycles/agent-memory-20261031-fulltext/selection.yaml: 54807e1c59812b9da93ec09934c6b135b54926da530a08204d0ddb46bfd093dc
+  reports/test/agent-memory/cycles/agent-memory-20261031-fulltext/history.yaml: 8b5d6fb301d0e4f15572d58d2eebb9cd06b648bdc2ec2d7e9c6a197825764474
+  reports/test/agent-memory/cycles/agent-memory-20261031-fulltext/research-result.yaml: bc0dec506fe1b83e9e99ace9a2dd5e7b4beacc8395b564f24f46db9096da92be
+  reports/test/agent-memory/cycles/agent-memory-20261031-fulltext/configs/research.yaml: 677eb91f98d67ebb9904f22f08e308887f04b6a8fd969f3855d181662f7f6b09
+  reports/test/agent-memory/research-batches/agent-memory-20261031-fulltext/receipt-attempt-1.yaml: bc0dec506fe1b83e9e99ace9a2dd5e7b4beacc8395b564f24f46db9096da92be
+  reports/test/agent-memory/research-batches/agent-memory-20261031-fulltext/items/arxiv-244ddaafb793/candidate.yaml: f992f55c8714fbdb6af7378cade6cbfe84a31308e07dcafbd073281554511c60
+  reports/test/agent-memory/research-batches/agent-memory-20261031-fulltext/items/arxiv-244ddaafb793/candidate.yaml.sha256: 5334c2dd09281da7ecd3e51b800f99fa0c601de072830569ec16b8041f8bfbc5
+  reports/test/agent-memory/research-batches/agent-memory-20261031-fulltext/items/arxiv-244ddaafb793/original.yaml: c3155c797c154f55a98e39fa51155d9ca17a58d45e8c6fbd4df2013e0d932dba
+  reports/test/agent-memory/research-batches/agent-memory-20261031-fulltext/items/arxiv-244ddaafb793/original.yaml.sha256: d49483eb54e9809bbc2da225b6e743a127f5c7787c4b66eba04086ccbf758a7d
+  reports/test/agent-memory/research-batches/agent-memory-20261031-fulltext/items/arxiv-244ddaafb793/original.md: 22cf7d688a57e2a06ed240ebb76b0403d81a6ddfd92c656a1dff8e168d7e2399
+  reports/test/agent-memory/research-batches/agent-memory-20261031-fulltext/items/arxiv-b3ecb03a2b96/candidate.yaml: db85ed1ee75c778abbd653d78536e4ef9d572bc6b94d08d21357cc844287d607
+  reports/test/agent-memory/research-batches/agent-memory-20261031-fulltext/items/arxiv-b3ecb03a2b96/candidate.yaml.sha256: 15764d9ec44b030ba0fe963bff7d8017a13053a2d3009efc34e696a849181a1e
+  reports/test/agent-memory/research-batches/agent-memory-20261031-fulltext/items/arxiv-b3ecb03a2b96/original.yaml: 8392fdc4279c98f45aec65d52010ecf62d940bd18c6d13d5e40c3add5a86724e
+  reports/test/agent-memory/research-batches/agent-memory-20261031-fulltext/items/arxiv-b3ecb03a2b96/original.yaml.sha256: 2c386e1922064ff143238947accc65b850b7d837b2640a40b2baf7c1e13e4d2a
+  reports/test/agent-memory/research-batches/agent-memory-20261031-fulltext/items/arxiv-b3ecb03a2b96/original.md: ffb270a6d2b29753790ee07338ed9a07a35f0ba49dd4b53fe65cb851b57b6325
+  reports/test/agent-memory/research-batches/agent-memory-20261031-fulltext/items/arxiv-310b98d3c9bc/candidate.yaml: 9f3c0ded8ecf1f4021613d0099ea1854329582b3dab2c559bb2767ddd8a4c888
+  reports/test/agent-memory/research-batches/agent-memory-20261031-fulltext/items/arxiv-310b98d3c9bc/candidate.yaml.sha256: 04933e464d266c10759cd9719d8f21e14b82f32e892012eee0d9fa0fe6e6fcbd
+  reports/test/agent-memory/research-batches/agent-memory-20261031-fulltext/items/arxiv-310b98d3c9bc/original.yaml: 00af5588fb55bb478e6bee4e728874e1c12544e0deb05cf6b8759fc8811f3237
+  reports/test/agent-memory/research-batches/agent-memory-20261031-fulltext/items/arxiv-310b98d3c9bc/original.yaml.sha256: bbbc23b2786c281a2d12579859b796afc0214744dd93b583d4c7f7fa229d210d
+  reports/test/agent-memory/research-batches/agent-memory-20261031-fulltext/items/arxiv-310b98d3c9bc/original.md: 009df3d3406cc9c209824c847d73c38985f17a23433a6d456a196fd3fa2ae3f1
+  reports/test/agent-memory/research-batches/agent-memory-20261031-fulltext/items/arxiv-b3f5ce6ae79c/candidate.yaml: daf26e0e7124cbe57d5a6e880df93b0b9e4f126c79e1669d23a9ce9cc5948c38
+  reports/test/agent-memory/research-batches/agent-memory-20261031-fulltext/items/arxiv-b3f5ce6ae79c/candidate.yaml.sha256: 288975ce3a2951607ba65153e9de26e72ad02589baa8e80458d5f9cc9118308e
+  reports/test/agent-memory/research-batches/agent-memory-20261031-fulltext/items/arxiv-b3f5ce6ae79c/original.yaml: 63d077de08cae18bd962a2b14e8e4c91785ed3f9f342f003fc6cf0f6352e3634
+  reports/test/agent-memory/research-batches/agent-memory-20261031-fulltext/items/arxiv-b3f5ce6ae79c/original.yaml.sha256: 78adcfd678258012832692cf07cfdc3e0a42575137a33199b7f110e41cf530ac
+  reports/test/agent-memory/research-batches/agent-memory-20261031-fulltext/items/arxiv-b3f5ce6ae79c/original.md: e63877fadfbddaa1c80e798a181e5da511dd462260861a559d54d7440b4f5a01
+  reports/test/agent-memory/research-batches/agent-memory-20261031-fulltext/items/arxiv-5121411c921e/candidate.yaml: afee4b6862d31ad19ca4fbc044cae7a8b9c26c976af445dc9ea65b3fbdb27527
+  reports/test/agent-memory/research-batches/agent-memory-20261031-fulltext/items/arxiv-5121411c921e/candidate.yaml.sha256: a1347a5e69d0ef3dc94e3e3f0bea0a85c38ebac006d20661aa28ad1a4a3cfa47
+  reports/test/agent-memory/research-batches/agent-memory-20261031-fulltext/items/arxiv-5121411c921e/original.yaml: 11a9432229de2612e4415ca4d6ab2060a6bd7fe995b7e0c901f44cacdb827595
+  reports/test/agent-memory/research-batches/agent-memory-20261031-fulltext/items/arxiv-5121411c921e/original.yaml.sha256: cf036595ae9b0499aa1782711b67cda6ef09fd19091b58937bfba9c7c24e4bfe
+  reports/test/agent-memory/research-batches/agent-memory-20261031-fulltext/items/arxiv-5121411c921e/original.md: e75781525b0afcea491633d887a3918b3126d55d7ec287b247fa38ba91e61329
+output_hashes: {}
+production_accepted: false
+writing_started: false
+publish_authorized: false

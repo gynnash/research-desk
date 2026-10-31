@@ -1,0 +1,764 @@
+candidate:
+  key: arxiv-5121411c921e
+  kind: paper
+  topic: agent-memory
+  metadata:
+    title: 'Combining Long-Term Memory and LLMs Comes at a High Cost: From Prompt
+      Injection to Persistent Compromise'
+    source: arXiv
+    source_url: https://arxiv.org/abs/2610.28810
+    authors:
+    - Correia, Pedro H. Barcha
+    - de Sá, Matheus Azevedo
+    - de Senna, Paulo H. Gomes
+    - Martignago, Giovanni Mandel
+    - Hayashi, Victor Takashi
+    - Miers, Charles Christian
+    - Simplicio Jr, Marcos A.
+    published_at: '2026-10-20'
+    arxiv_id: '2610.28810'
+    source_version: v1
+  evidence:
+    coverage: full_text
+    extraction_coverage: full_text
+    source_url: https://arxiv.org/abs/2610.28810
+    source_version: v1
+    content_hash: ab4c88be6298d25ed74e890b117a7168166775caa7960bac5631fdb05773b21d
+    evidence_sha256: 285aec7332af747c55d7484990a0dbb4a9f676b904fde8b1a18b0550bb52c805
+    locators:
+    - id: A1
+      section_id: S1
+      location: https://arxiv.org/html/2610.28810v1; chars 1-469
+      text_sha256: 099395de7d9b4f252a25ceaedeb786713d1342f97844c8d416ba19bd2c9f0319
+      quote: Pedro H. Barcha Correia*, Matheus Azevedo de Sá†, Paulo H. Gomes de Senna†,
+        Giovanni Mandel Martignago†, Victor Takashi Hayashi*, Charles Christian Miers†,
+        and Marcos A.
+    - id: A2
+      section_id: S2
+      location: https://arxiv.org/html/2610.28810v1#abstract1; chars 1-1218
+      text_sha256: c280c5fcbf01c2921503cceb271daa29c2424ba078163d9512b12be69e1fc7bc
+      quote: ''
+    - id: A3
+      section_id: S2
+      location: https://arxiv.org/html/2610.28810v1#abstract1; chars 1219-1916
+      text_sha256: 746f7a03d2725889d40a6af9ece43777a028f695695a6c3981546f95d74f7d3a
+      quote: ''
+    - id: A4
+      section_id: S3
+      location: https://arxiv.org/html/2610.28810v1; chars 1-101
+      text_sha256: 6da7617b6d52c9b25b446cd8a79552cf29dfcf4d435694c85defb202166e044a
+      quote: ''
+    - id: A5
+      section_id: S4
+      location: https://arxiv.org/html/2610.28810v1#S1; chars 1-1351
+      text_sha256: 6aa56748c31394d102dcabc205c083a2dd54cef5b60d5a0de8ef92e1e2e25245
+      quote: ''
+    - id: A6
+      section_id: S4
+      location: https://arxiv.org/html/2610.28810v1#S1; chars 1352-2610
+      text_sha256: dfd201328665529b6e2b7fdf24e68410f4b65cec49c099b5df89e1ec679eb0af
+      quote: ''
+    - id: A7
+      section_id: S4
+      location: https://arxiv.org/html/2610.28810v1#S1; chars 2611-3946
+      text_sha256: 8c807bff00993cff3ecf0c57df64ff628b0ef06842decc91e95b14b18426b56e
+      quote: ''
+    - id: A8
+      section_id: S4
+      location: https://arxiv.org/html/2610.28810v1#S1; chars 3947-5198
+      text_sha256: 79f8e9c3f1c1d5dc2163bb55eb8575a956544d6898e46d1ca0accc27e7e1930b
+      quote: ''
+    - id: A9
+      section_id: S4
+      location: https://arxiv.org/html/2610.28810v1#S1; chars 5199-6464
+      text_sha256: d30b8d6c6c5c6511b0d91007339baedd8c0c9f5b444eac9cd59734a4845e4599
+      quote: ''
+    - id: A10
+      section_id: S5
+      location: https://arxiv.org/html/2610.28810v1#S2; chars 1-178
+      text_sha256: 0dc55e9c18cd9babaeb9cb28535bde8cf68ff97d86baba535cf4cfb2c4409fb2
+      quote: ''
+    - id: A11
+      section_id: S6
+      location: https://arxiv.org/html/2610.28810v1#S2.SS1; chars 1-1382
+      text_sha256: 9a43e135a1320e057f4956a6296c33f0f1012afba371086dffaf4aa66e03ed3d
+      quote: ''
+    - id: A12
+      section_id: S6
+      location: https://arxiv.org/html/2610.28810v1#S2.SS1; chars 1383-2742
+      text_sha256: 7d507b751879c49b05447d25a8aae1ee3c2f2c5d7a09e3971ee1a27d1ee21ca4
+      quote: ''
+    - id: A13
+      section_id: S6
+      location: https://arxiv.org/html/2610.28810v1#S2.SS1; chars 2743-3803
+      text_sha256: d1b455d2b3f8651fe8f69aa5e1128970b84dc5a31b7d2a8f67047b69ad422e56
+      quote: ''
+    - id: A14
+      section_id: S7
+      location: https://arxiv.org/html/2610.28810v1#S2.SS2; chars 1-1314
+      text_sha256: 93505dd0956b8d4f15e1517db6aba43de783504052988a2caca5b620c4daffe9
+      quote: ''
+    - id: A15
+      section_id: S7
+      location: https://arxiv.org/html/2610.28810v1#S2.SS2; chars 1315-2681
+      text_sha256: 9998eb9c02427b3e8a60f0b07674af181646857270c33939806e5a5e428cc250
+      quote: ''
+    - id: A16
+      section_id: S7
+      location: https://arxiv.org/html/2610.28810v1#S2.SS2; chars 2682-2751
+      text_sha256: e3efde1a71017ca0618bef0cbb902b32b4b736e6053e33c9a1298499a71814d9
+      quote: ''
+    - id: A17
+      section_id: S8
+      location: https://arxiv.org/html/2610.28810v1#S2.SS2.SSS0.Px1; chars 1-496
+      text_sha256: 8823ca8e90c74228c4827602cc1d91bb6e16392c478d0ca07083f697ef0842a3
+      quote: ''
+    - id: A18
+      section_id: S9
+      location: https://arxiv.org/html/2610.28810v1#S2.SS2.SSS0.Px2; chars 1-387
+      text_sha256: 17573b49e22c36a486bc131e9bc565289ab4cdfb5e8c50215ce3a7a41aacd725
+      quote: ''
+    - id: A19
+      section_id: S10
+      location: https://arxiv.org/html/2610.28810v1#S2.SS2.SSS0.Px3; chars 1-495
+      text_sha256: 21c93eebe90838f7c7e008ec7cc7562e259e2d0edc66cbd91ac7a5e5bb8d7837
+      quote: ''
+    - id: A20
+      section_id: S11
+      location: https://arxiv.org/html/2610.28810v1#S2.SS3; chars 1-1345
+      text_sha256: d6c198c872afd41aafdbf68f453efc5dacfb9988bd1ba02cedbc30a4e8bd3133
+      quote: ''
+    - id: A21
+      section_id: S12
+      location: https://arxiv.org/html/2610.28810v1#S3; chars 1-1400
+      text_sha256: e2c90a128067ff9485de0b5cf24fea834fc5597d47488ce0fa2656609e0d4f04
+      quote: ''
+    - id: A22
+      section_id: S12
+      location: https://arxiv.org/html/2610.28810v1#S3; chars 1401-2796
+      text_sha256: 6c5bd79d89f7423037c874d8957802fd1ea5c8784d1e4432f6f5e425b73199e1
+      quote: ''
+    - id: A23
+      section_id: S12
+      location: https://arxiv.org/html/2610.28810v1#S3; chars 2797-4068
+      text_sha256: cb0354fee6a0f4494b16929e239b6ebb315412d5f08311dd5e8ff7d2e7793833
+      quote: ''
+    - id: A24
+      section_id: S13
+      location: https://arxiv.org/html/2610.28810v1#S4; chars 1-486
+      text_sha256: 7b1ac3489521d69838d07f4c4f45aba43fe372881680bdeb698a626ff709df2f
+      quote: ''
+    - id: A25
+      section_id: S14
+      location: https://arxiv.org/html/2610.28810v1#S4.SS1; chars 1-1148
+      text_sha256: 214c264ebceed7a0f7bae830ccec1cc89ac250bcf84a615c5a71a41c64a77270
+      quote: ''
+    - id: A26
+      section_id: S15
+      location: https://arxiv.org/html/2610.28810v1#S4.SS2; chars 1-1251
+      text_sha256: 09550c50ffd785c7dce4b0b03f4ddcd5df43d4644a946946101aa0a4b46bfeff
+      quote: ''
+    - id: A27
+      section_id: S15
+      location: https://arxiv.org/html/2610.28810v1#S4.SS2; chars 1252-1879
+      text_sha256: 76b542172b50ac28be0e40d06158d3555775e1877d1b033519a550e868f706ab
+      quote: ''
+    - id: A28
+      section_id: S16
+      location: https://arxiv.org/html/2610.28810v1#S4.SS3; chars 1-67
+      text_sha256: 13febffd9d350ed692cd88ba0e7f4e576d1f9d6a6e74141cef328c8b13e467c4
+      quote: ''
+    - id: A29
+      section_id: S17
+      location: https://arxiv.org/html/2610.28810v1#S4.SS3.SSS0.Px1; chars 1-488
+      text_sha256: 9f5f4719bb58a1ee730b27e992e6e2f81803563b226ab08a0d5546a9f57e28f2
+      quote: ''
+    - id: A30
+      section_id: S18
+      location: https://arxiv.org/html/2610.28810v1#S4.SS3.SSS0.Px2; chars 1-386
+      text_sha256: c12af2d39c6310db3469ded3b501bd69113ab8a4e82db74070497a6d224baf05
+      quote: ''
+    - id: A31
+      section_id: S19
+      location: https://arxiv.org/html/2610.28810v1#S4.SS3.SSS0.Px3; chars 1-296
+      text_sha256: e1ff43f1a1042efdfccdf40d81e6946e186ab3c7f85a37acc3fda40f26f4b5c3
+      quote: ''
+    - id: A32
+      section_id: S20
+      location: https://arxiv.org/html/2610.28810v1#S4.SS3.SSS0.Px4; chars 1-636
+      text_sha256: 5591e08458d354b1c056fdfa7f6a6ec8a1753f511d082bd39e9db7af122bed65
+      quote: ''
+    - id: A33
+      section_id: S21
+      location: https://arxiv.org/html/2610.28810v1#S4.SS3.SSS0.Px5; chars 1-808
+      text_sha256: b3bc6c9d10ef0e993c1246d69af82d280c39cccd0159ebb0503e9ef41b46f036
+      quote: ''
+    - id: A34
+      section_id: S22
+      location: https://arxiv.org/html/2610.28810v1#S5; chars 1-474
+      text_sha256: 707df7175ccccab1d53dc30457f3f3d95222b91b6e04a8ed1846a20134f1b0c5
+      quote: ''
+    - id: A35
+      section_id: S23
+      location: https://arxiv.org/html/2610.28810v1#S5.SS1; chars 1-1328
+      text_sha256: 369a538a6679c9fb22759d1316158c5eb366b1261d3bfa80d092e0922f20f684
+      quote: ''
+    - id: A36
+      section_id: S23
+      location: https://arxiv.org/html/2610.28810v1#S5.SS1; chars 1329-1888
+      text_sha256: 858dc290e1f9b74feda6d1eaa568de9ccfc793a90dabad05a5271d919b51be60
+      quote: ''
+    - id: A37
+      section_id: S24
+      location: https://arxiv.org/html/2610.28810v1#S5.SS2; chars 1-1380
+      text_sha256: 5db76c4df2c98b3b0ee2d41319eeb8d16aace102e3dfd0d05100f08ab7f6b3f8
+      quote: ''
+    - id: A38
+      section_id: S24
+      location: https://arxiv.org/html/2610.28810v1#S5.SS2; chars 1381-1918
+      text_sha256: bbc7a304b1e5d8b27f2ee2a1c741d6cec8f800c3607880f2bf3a1b2dd948c0cd
+      quote: ''
+    - id: A39
+      section_id: S25
+      location: https://arxiv.org/html/2610.28810v1#S5.SS3; chars 1-1384
+      text_sha256: 96e8babf0b237cb98bd97832c5c7ee6e6065b64854cf09038459d40f3c4ebaba
+      quote: ''
+    - id: A40
+      section_id: S25
+      location: https://arxiv.org/html/2610.28810v1#S5.SS3; chars 1385-2230
+      text_sha256: 824ee879f8622a293f70195fe61653fc1d5dcc43176cc9863096a7a466051365
+      quote: ''
+    - id: A41
+      section_id: S26
+      location: https://arxiv.org/html/2610.28810v1#S5.SS4; chars 1-318
+      text_sha256: ea8864668076ecf37de8f7ff28e0e48f940867fc46f85e383edd9ab583de0f59
+      quote: ''
+    - id: A42
+      section_id: S27
+      location: https://arxiv.org/html/2610.28810v1#S5.SS4.SSS0.Px1; chars 1-1212
+      text_sha256: 4f2442f6b1068da99f119cf6b8a7317cad2d99d52e160d8f84b14a86fb0fac57
+      quote: ''
+    - id: A43
+      section_id: S28
+      location: https://arxiv.org/html/2610.28810v1#S5.SS4.SSS0.Px2; chars 1-675
+      text_sha256: 503c297fe200836622079fe0eb152cf681805347cb12b23bd4b817cc600d2372
+      quote: ''
+    - id: A44
+      section_id: S29
+      location: https://arxiv.org/html/2610.28810v1#S5.SS4.SSS0.Px3; chars 1-318
+      text_sha256: 772465dcb8c818e6e83ec30d702c884a42a4d062865541f2a7fe18d00d20c2cf
+      quote: ''
+    - id: A45
+      section_id: S30
+      location: https://arxiv.org/html/2610.28810v1#S5.SS4.SSS0.Px4; chars 1-545
+      text_sha256: 81b0ccd0e0a2032947c1cb79a7c316c4bc889de7a88f984a0c9ff1668af621d9
+      quote: ''
+    - id: A46
+      section_id: S31
+      location: https://arxiv.org/html/2610.28810v1#S5.SS5; chars 1-1225
+      text_sha256: f9d45bc11313f2dad6776117aeeb82b98cd08afe24b2a9753658b5c36e1f97d6
+      quote: ''
+    - id: A47
+      section_id: S32
+      location: https://arxiv.org/html/2610.28810v1#S5.SS6; chars 1-1330
+      text_sha256: 107d71464c16e9c16ad12ffea873fb24e92df623625a4cd06ba14a71c4220e6f
+      quote: ''
+    - id: A48
+      section_id: S32
+      location: https://arxiv.org/html/2610.28810v1#S5.SS6; chars 1331-2661
+      text_sha256: 484716c4e98420805ac69c709745348db1b5414e826a6dcd94e0db24e1871359
+      quote: ''
+    - id: A49
+      section_id: S32
+      location: https://arxiv.org/html/2610.28810v1#S5.SS6; chars 2662-3945
+      text_sha256: 164c369765cfac343ecbf2e52f642aa870c9709a7ea79a8f8ed68239d9f3b559
+      quote: ''
+    - id: A50
+      section_id: S32
+      location: https://arxiv.org/html/2610.28810v1#S5.SS6; chars 3946-4586
+      text_sha256: 60c6ee0f7fcdd2c1c1c08993815276de52862ebf27ff2563567bfd8f582ba6bf
+      quote: ''
+    - id: A51
+      section_id: S33
+      location: https://arxiv.org/html/2610.28810v1#S5.SS6.SSS0.Px1; chars 1-866
+      text_sha256: c0f68cbe186e17c1371342f6804944503c3cf092c7da98cc88a479d3a6f13c9d
+      quote: ''
+    - id: A52
+      section_id: S34
+      location: https://arxiv.org/html/2610.28810v1#S5.SS6.SSS0.Px2; chars 1-427
+      text_sha256: 7360c3d528c97eb8fa3d124031a75fb2252cae38915f24565b5096e58dc8eb02
+      quote: ''
+    - id: A53
+      section_id: S35
+      location: https://arxiv.org/html/2610.28810v1#S5.SS6.SSS0.Px3; chars 1-263
+      text_sha256: efbe6c5876bf5f87a9a1cdb537939f97edde41f9283b3d29d3113ef287c4469f
+      quote: ''
+    - id: A54
+      section_id: S36
+      location: https://arxiv.org/html/2610.28810v1#S5.SS6.SSS0.Px4; chars 1-200
+      text_sha256: a1598c13c3cc1636e83027a9de2986295f0572918a7590d0b061a43e3dfc3cf2
+      quote: ''
+    - id: A55
+      section_id: S37
+      location: https://arxiv.org/html/2610.28810v1#S5.SS7; chars 1-1286
+      text_sha256: cdc4b7ad62c07acb3206aa45cb399bd2fc9f71439ce5c379927d8b99bf65b058
+      quote: ''
+    - id: A56
+      section_id: S37
+      location: https://arxiv.org/html/2610.28810v1#S5.SS7; chars 1287-2622
+      text_sha256: 09398f18969e4a35060150bc820a1dcdae48af5607a6a3bf87e5f72d3b7a1c1d
+      quote: ''
+    - id: A57
+      section_id: S37
+      location: https://arxiv.org/html/2610.28810v1#S5.SS7; chars 2623-3937
+      text_sha256: bf4bbc6fdfbd2eebaf4d8103a347676a1dc9bc23fab2ac85c244819717d74691
+      quote: ''
+    - id: A58
+      section_id: S38
+      location: https://arxiv.org/html/2610.28810v1#S6; chars 1-561
+      text_sha256: 009feb3505b087b87b77a172b864c87856a00b57620b340aa52cd66071d917af
+      quote: ''
+    - id: A59
+      section_id: S39
+      location: https://arxiv.org/html/2610.28810v1#S6.SS1; chars 1-1324
+      text_sha256: f31315eecf928d4e7247d8655f1a4a0942f17603e65a78ad8cd3c4f487cf423e
+      quote: ''
+    - id: A60
+      section_id: S39
+      location: https://arxiv.org/html/2610.28810v1#S6.SS1; chars 1325-2572
+      text_sha256: 13d4f6839de8a2558c831ccf1303649a3655ef33bab5a5fb75a4bd4212b32fc3
+      quote: ''
+    - id: A61
+      section_id: S39
+      location: https://arxiv.org/html/2610.28810v1#S6.SS1; chars 2573-3959
+      text_sha256: 5cf946c0a5e8e54ac08fc2f6cead12666d1158bbc82a5bcedfd35612b54ceae5
+      quote: ''
+    - id: A62
+      section_id: S39
+      location: https://arxiv.org/html/2610.28810v1#S6.SS1; chars 3960-5098
+      text_sha256: 72a702b33aa02974f79e31263a6c162f2451e129280db7c6e3bb3d8eb51ab46e
+      quote: ''
+    - id: A63
+      section_id: S40
+      location: https://arxiv.org/html/2610.28810v1#S6.SS2; chars 1-1283
+      text_sha256: ee7a07423140000b66ba19cfa51976e9a7950d85a6d3e5e1bbf33f4d143314d0
+      quote: ''
+    - id: A64
+      section_id: S40
+      location: https://arxiv.org/html/2610.28810v1#S6.SS2; chars 1284-2215
+      text_sha256: 888e1e73148b91763be789b5ca224fd55988966ed3e09f4a9d5e27b380013e7a
+      quote: ''
+    - id: A65
+      section_id: S41
+      location: https://arxiv.org/html/2610.28810v1#S6.SS2.SSS0.Px1; chars 1-431
+      text_sha256: 27f69ea4eb0de1a4efadffa6ed0ca9d7a02b02a5ad1a044ee0ad2406968a64dc
+      quote: ''
+    - id: A66
+      section_id: S42
+      location: https://arxiv.org/html/2610.28810v1#S6.SS2.SSS0.Px2; chars 1-478
+      text_sha256: f3485cb54214bde1adecbd090b095a34dbbbef51e7a41175ee53868a216b270f
+      quote: ''
+    - id: A67
+      section_id: S43
+      location: https://arxiv.org/html/2610.28810v1#S6.SS2.SSS0.Px3; chars 1-577
+      text_sha256: 6e10ffd5f2f222610759585512a0338537f6f77431590bbc3420b0f4203366e2
+      quote: ''
+    - id: A68
+      section_id: S44
+      location: https://arxiv.org/html/2610.28810v1#S6.SS2.SSS0.Px4; chars 1-719
+      text_sha256: aaf8130a9dca3f82a54e96d7d6daabeb0cc54ea2662bf995b54d3c77a05a94f2
+      quote: ''
+    - id: A69
+      section_id: S45
+      location: https://arxiv.org/html/2610.28810v1#S6.SS2.SSS0.Px5; chars 1-690
+      text_sha256: 60f8aa70c6c272693feafffce027885a99d2effa3d5533440b99db140dd4a69c
+      quote: ''
+    - id: A70
+      section_id: S46
+      location: https://arxiv.org/html/2610.28810v1#S6.SS2.SSS0.Px6; chars 1-593
+      text_sha256: d335e8ba7b0f42e499e1932f8c599b70953b57d8eabd834cf258aa1ef037b869
+      quote: ''
+    - id: A71
+      section_id: S47
+      location: https://arxiv.org/html/2610.28810v1#S6.SS2.SSS0.Px7; chars 1-303
+      text_sha256: bc8c95f5828dee55672eac5e1746ea1309037b2996f766cff791bbd83b8fcdb9
+      quote: ''
+    - id: A72
+      section_id: S48
+      location: https://arxiv.org/html/2610.28810v1#S6.SS2.SSS0.Px8; chars 1-728
+      text_sha256: ff5e55f505952bac053f1c59eb5c5c09c75db00525a33bb708fe6662b19b5e31
+      quote: ''
+    - id: A73
+      section_id: S49
+      location: https://arxiv.org/html/2610.28810v1#S6.SS3; chars 1-1359
+      text_sha256: b02cf1b34596014c4bdfe7357ed981596a57329a2448a21d8383e607929c0745
+      quote: ''
+    - id: A74
+      section_id: S49
+      location: https://arxiv.org/html/2610.28810v1#S6.SS3; chars 1360-2051
+      text_sha256: b29180bd82fe99f352edc1e1c51472b646dc136457f8b5e67f2a46660f8e9821
+      quote: ''
+    - id: A75
+      section_id: S50
+      location: https://arxiv.org/html/2610.28810v1#S6.SS4; chars 1-1342
+      text_sha256: 47a87907604abba8679b7e4afe6943ffdea5b77963da1d792399eda6aabe3204
+      quote: ''
+    - id: A76
+      section_id: S50
+      location: https://arxiv.org/html/2610.28810v1#S6.SS4; chars 1343-1504
+      text_sha256: 170ca6e09daad1367caffcff2cc3126f4dd7d60438b37ac3536cb19d84eedc1d
+      quote: ''
+    - id: A77
+      section_id: S51
+      location: https://arxiv.org/html/2610.28810v1#S7; chars 1-1279
+      text_sha256: 1334b74bbbb40fccaeec2d9452b3c7cbf9554badc67430af3f4cc4daaa548442
+      quote: ''
+    - id: A78
+      section_id: S51
+      location: https://arxiv.org/html/2610.28810v1#S7; chars 1280-2110
+      text_sha256: 15ee7efecf892f5bb634463db37005fda53b1bff7f990086f9a97e06950669c0
+      quote: ''
+    - id: A79
+      section_id: S52
+      location: https://arxiv.org/html/2610.28810v1#bib; chars 1-1388
+      text_sha256: 0f8fe4be9c0320c7a7fbbba2e64e2f25d36bb3c41a68227ba243d8abb7b4db40
+      quote: ''
+    - id: A80
+      section_id: S52
+      location: https://arxiv.org/html/2610.28810v1#bib; chars 1389-2750
+      text_sha256: c6ba8f4e726612a1acffd95957c43e99b0dc66ddf76009be409a25fb4110faf0
+      quote: ''
+    - id: A81
+      section_id: S52
+      location: https://arxiv.org/html/2610.28810v1#bib; chars 2751-4121
+      text_sha256: c3b0bc4637125d19b035099a07241c8d8709529cf5a98ec4deab15a44e6b28da
+      quote: ''
+    - id: A82
+      section_id: S52
+      location: https://arxiv.org/html/2610.28810v1#bib; chars 4122-5519
+      text_sha256: 3f29c2de59f61e9f58f539a9fd64dec8d938d2c9f9560578cb4247b9741b5eb1
+      quote: ''
+    - id: A83
+      section_id: S52
+      location: https://arxiv.org/html/2610.28810v1#bib; chars 5520-6838
+      text_sha256: 45e2b993fd5e88cb8c948bade4ceb5f89453778619a1103e6a71f136b9b77e47
+      quote: ''
+    - id: A84
+      section_id: S52
+      location: https://arxiv.org/html/2610.28810v1#bib; chars 6839-8196
+      text_sha256: ebbeb7727c66e0f5b77f6ebec9536dcf41afdb1bfe8336e0ae609bfbe93a4305
+      quote: ''
+    - id: A85
+      section_id: S52
+      location: https://arxiv.org/html/2610.28810v1#bib; chars 8197-9548
+      text_sha256: 99c219515ba1449eaf32a0197e45e908ee54aee239f459a1a090dac0d8144fd5
+      quote: ''
+    - id: A86
+      section_id: S52
+      location: https://arxiv.org/html/2610.28810v1#bib; chars 9549-10947
+      text_sha256: 4f4c3f0e5ca8a8505165959d8b2b320b9c138b0876dc1520fa74121cc6e4c608
+      quote: ''
+    - id: A87
+      section_id: S52
+      location: https://arxiv.org/html/2610.28810v1#bib; chars 10948-12322
+      text_sha256: 98664fc1060208940fe5ca37f0ab35f2eb7d3f02e472229042d009be4da9ea63
+      quote: ''
+    - id: A88
+      section_id: S52
+      location: https://arxiv.org/html/2610.28810v1#bib; chars 12323-12583
+      text_sha256: 7bc47e13a9e5d5281c7e27faeeaa7dfd6a2f6de60154bad6dc4e98424ebcdfda
+      quote: ''
+    abstract_content_hash: 65cdcd516c2c9a093740ffe9dc339d56babdcf083104f511691e939193eaa066
+    reading_profile: arxiv-fulltext-v1
+    format: html
+    document_url: https://arxiv.org/html/2610.28810v1
+    sections:
+    - id: S1
+      title: 'Combining Long-Term Memory and LLMs Comes at a High Cost: From Prompt
+        Injection to Persistent Compromise'
+      location: https://arxiv.org/html/2610.28810v1
+      total_chars: 469
+      selected_chars: 469
+    - id: S2
+      title: Abstract
+      location: https://arxiv.org/html/2610.28810v1#abstract1
+      total_chars: 1916
+      selected_chars: 1916
+    - id: S3
+      title: 'Index Terms:'
+      location: https://arxiv.org/html/2610.28810v1
+      total_chars: 101
+      selected_chars: 101
+    - id: S4
+      title: I Introduction
+      location: https://arxiv.org/html/2610.28810v1#S1
+      total_chars: 6464
+      selected_chars: 6464
+    - id: S5
+      title: II Background
+      location: https://arxiv.org/html/2610.28810v1#S2
+      total_chars: 178
+      selected_chars: 178
+    - id: S6
+      title: II-A Prompt injection and jailbreak
+      location: https://arxiv.org/html/2610.28810v1#S2.SS1
+      total_chars: 3803
+      selected_chars: 3803
+    - id: S7
+      title: II-B Memory
+      location: https://arxiv.org/html/2610.28810v1#S2.SS2
+      total_chars: 2751
+      selected_chars: 2751
+    - id: S8
+      title: OpenAI ChatGPT
+      location: https://arxiv.org/html/2610.28810v1#S2.SS2.SSS0.Px1
+      total_chars: 496
+      selected_chars: 496
+    - id: S9
+      title: Anthropic Claude
+      location: https://arxiv.org/html/2610.28810v1#S2.SS2.SSS0.Px2
+      total_chars: 387
+      selected_chars: 387
+    - id: S10
+      title: Google Gemini
+      location: https://arxiv.org/html/2610.28810v1#S2.SS2.SSS0.Px3
+      total_chars: 495
+      selected_chars: 495
+    - id: S11
+      title: II-C Memory injection
+      location: https://arxiv.org/html/2610.28810v1#S2.SS3
+      total_chars: 1345
+      selected_chars: 1345
+    - id: S12
+      title: III Related works
+      location: https://arxiv.org/html/2610.28810v1#S3
+      total_chars: 4068
+      selected_chars: 4068
+    - id: S13
+      title: IV Threat model
+      location: https://arxiv.org/html/2610.28810v1#S4
+      total_chars: 486
+      selected_chars: 486
+    - id: S14
+      title: IV-A Context
+      location: https://arxiv.org/html/2610.28810v1#S4.SS1
+      total_chars: 1148
+      selected_chars: 1148
+    - id: S15
+      title: IV-B Attacker knowledge and goals
+      location: https://arxiv.org/html/2610.28810v1#S4.SS2
+      total_chars: 1879
+      selected_chars: 1879
+    - id: S16
+      title: 'IV-C Attack scenarios: examples'
+      location: https://arxiv.org/html/2610.28810v1#S4.SS3
+      total_chars: 67
+      selected_chars: 67
+    - id: S17
+      title: 1. Shared memory
+      location: https://arxiv.org/html/2610.28810v1#S4.SS3.SSS0.Px1
+      total_chars: 488
+      selected_chars: 488
+    - id: S18
+      title: 2. Local account sharing
+      location: https://arxiv.org/html/2610.28810v1#S4.SS3.SSS0.Px2
+      total_chars: 386
+      selected_chars: 386
+    - id: S19
+      title: 3. Remote account sharing
+      location: https://arxiv.org/html/2610.28810v1#S4.SS3.SSS0.Px3
+      total_chars: 296
+      selected_chars: 296
+    - id: S20
+      title: 4. Indirect prompt injection
+      location: https://arxiv.org/html/2610.28810v1#S4.SS3.SSS0.Px4
+      total_chars: 636
+      selected_chars: 636
+    - id: S21
+      title: 5. Cross-Site Request Forgery (CSRF)
+      location: https://arxiv.org/html/2610.28810v1#S4.SS3.SSS0.Px5
+      total_chars: 808
+      selected_chars: 808
+    - id: S22
+      title: V Experiments and results
+      location: https://arxiv.org/html/2610.28810v1#S5
+      total_chars: 474
+      selected_chars: 474
+    - id: S23
+      title: V-A Methods
+      location: https://arxiv.org/html/2610.28810v1#S5.SS1
+      total_chars: 1888
+      selected_chars: 1888
+    - id: S24
+      title: V-B Misuse enablement
+      location: https://arxiv.org/html/2610.28810v1#S5.SS2
+      total_chars: 1918
+      selected_chars: 1918
+    - id: S25
+      title: V-C Availability breakdown
+      location: https://arxiv.org/html/2610.28810v1#S5.SS3
+      total_chars: 2230
+      selected_chars: 2230
+    - id: S26
+      title: V-D Integrity violation
+      location: https://arxiv.org/html/2610.28810v1#S5.SS4
+      total_chars: 318
+      selected_chars: 318
+    - id: S27
+      title: General disinformation
+      location: https://arxiv.org/html/2610.28810v1#S5.SS4.SSS0.Px1
+      total_chars: 1212
+      selected_chars: 1212
+    - id: S28
+      title: Harmful content
+      location: https://arxiv.org/html/2610.28810v1#S5.SS4.SSS0.Px2
+      total_chars: 675
+      selected_chars: 675
+    - id: S29
+      title: Targeted disinformation
+      location: https://arxiv.org/html/2610.28810v1#S5.SS4.SSS0.Px3
+      total_chars: 318
+      selected_chars: 318
+    - id: S30
+      title: Analysis biasing
+      location: https://arxiv.org/html/2610.28810v1#S5.SS4.SSS0.Px4
+      total_chars: 545
+      selected_chars: 545
+    - id: S31
+      title: V-E Privacy compromise
+      location: https://arxiv.org/html/2610.28810v1#S5.SS5
+      total_chars: 1225
+      selected_chars: 1225
+    - id: S32
+      title: V-F Shared memory (skills and organization instructions)
+      location: https://arxiv.org/html/2610.28810v1#S5.SS6
+      total_chars: 4586
+      selected_chars: 4586
+    - id: S33
+      title: Privacy
+      location: https://arxiv.org/html/2610.28810v1#S5.SS6.SSS0.Px1
+      total_chars: 866
+      selected_chars: 866
+    - id: S34
+      title: Toxic content (integrity)
+      location: https://arxiv.org/html/2610.28810v1#S5.SS6.SSS0.Px2
+      total_chars: 427
+      selected_chars: 427
+    - id: S35
+      title: Disinformation (integrity)
+      location: https://arxiv.org/html/2610.28810v1#S5.SS6.SSS0.Px3
+      total_chars: 263
+      selected_chars: 263
+    - id: S36
+      title: Availability
+      location: https://arxiv.org/html/2610.28810v1#S5.SS6.SSS0.Px4
+      total_chars: 200
+      selected_chars: 200
+    - id: S37
+      title: V-G Shared memory (projects and MCP)
+      location: https://arxiv.org/html/2610.28810v1#S5.SS7
+      total_chars: 3937
+      selected_chars: 3937
+    - id: S38
+      title: VI Discussion
+      location: https://arxiv.org/html/2610.28810v1#S6
+      total_chars: 561
+      selected_chars: 561
+    - id: S39
+      title: VI-A Results analysis
+      location: https://arxiv.org/html/2610.28810v1#S6.SS1
+      total_chars: 5098
+      selected_chars: 5098
+    - id: S40
+      title: VI-B Security principles and mitigations
+      location: https://arxiv.org/html/2610.28810v1#S6.SS2
+      total_chars: 2215
+      selected_chars: 2215
+    - id: S41
+      title: Memory disabled by default
+      location: https://arxiv.org/html/2610.28810v1#S6.SS2.SSS0.Px1
+      total_chars: 431
+      selected_chars: 431
+    - id: S42
+      title: Avoiding memories from untrusted sources
+      location: https://arxiv.org/html/2610.28810v1#S6.SS2.SSS0.Px2
+      total_chars: 478
+      selected_chars: 478
+    - id: S43
+      title: Shared-memory restrictions
+      location: https://arxiv.org/html/2610.28810v1#S6.SS2.SSS0.Px3
+      total_chars: 577
+      selected_chars: 577
+    - id: S44
+      title: Filtering
+      location: https://arxiv.org/html/2610.28810v1#S6.SS2.SSS0.Px4
+      total_chars: 719
+      selected_chars: 719
+    - id: S45
+      title: CSRF protections
+      location: https://arxiv.org/html/2610.28810v1#S6.SS2.SSS0.Px5
+      total_chars: 690
+      selected_chars: 690
+    - id: S46
+      title: Fail-safe mechanism
+      location: https://arxiv.org/html/2610.28810v1#S6.SS2.SSS0.Px6
+      total_chars: 593
+      selected_chars: 593
+    - id: S47
+      title: Open design
+      location: https://arxiv.org/html/2610.28810v1#S6.SS2.SSS0.Px7
+      total_chars: 303
+      selected_chars: 303
+    - id: S48
+      title: Monitoring & response
+      location: https://arxiv.org/html/2610.28810v1#S6.SS2.SSS0.Px8
+      total_chars: 728
+      selected_chars: 728
+    - id: S49
+      title: VI-C Mitigations implemented by the analyzed services
+      location: https://arxiv.org/html/2610.28810v1#S6.SS3
+      total_chars: 2051
+      selected_chars: 2051
+    - id: S50
+      title: VI-D Limitations of the NIST taxonomy
+      location: https://arxiv.org/html/2610.28810v1#S6.SS4
+      total_chars: 1504
+      selected_chars: 1504
+    - id: S51
+      title: VII Conclusion
+      location: https://arxiv.org/html/2610.28810v1#S7
+      total_chars: 2110
+      selected_chars: 2110
+    - id: S52
+      title: References
+      location: https://arxiv.org/html/2610.28810v1#bib
+      total_chars: 12583
+      selected_chars: 12583
+    total_chars: 80390
+    selected_chars: 80390
+    truncated: false
+    extraction_scope: complete extracted document text including available references
+    limitations:
+    - Text extraction does not verify figures, layout, or faithful mathematical rendering.
+  identity_keys:
+  - arxiv:2610.28810
+  - url:https://arxiv.org/abs/2610.28810
+  source_id: paper-5d520b36-b2ad-4d15-93c7-7d4e177f1212
+  existing_source_path: null
+  existing_source_metadata: null
+  content_hash: ab4c88be6298d25ed74e890b117a7168166775caa7960bac5631fdb05773b21d
+  metadata_hash: c04842b9d67a8702d930fd1ba3bf4b63f0489103916eb34e5e6b4f1e74c71c0f
+  upstream_updated_at: '2026-10-20'
+  acquisition_attempts:
+  - format: html
+    url: https://arxiv.org/html/2610.28810v1
+    status: success
+    reason: extracted
+  archive:
+    path: reports/test/agent-memory/research-batches/agent-memory-20261031-fulltext/items/arxiv-5121411c921e/original.yaml
+    sha256: 11a9432229de2612e4415ca4d6ab2060a6bd7fe995b7e0c901f44cacdb827595
+    markdown_path: reports/test/agent-memory/research-batches/agent-memory-20261031-fulltext/items/arxiv-5121411c921e/original.md
+    markdown_sha256: e75781525b0afcea491633d887a3918b3126d55d7ec287b247fa38ba91e61329
+material_sha256: 285aec7332af747c55d7484990a0dbb4a9f676b904fde8b1a18b0550bb52c805
+action: research
+reason: no_completed_real_research

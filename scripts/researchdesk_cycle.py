@@ -89,7 +89,8 @@ def load_config(root, path, snapshot=None):
         common.positive(config['window']['overlap_hours'], 0, 168, 'overlap_hours')
     ranges = {'max_calls_per_cycle': (4, 20), 'research_max_calls': (2, 16), 'insight_max_calls': (2, 4),
               'max_input_chars': (1000, 600000), 'max_output_chars': (1000, 24000),
-              'timeout_seconds': (1, 120), 'max_revisions': (0, 1)}
+              'timeout_seconds': (1, 300 if config.get('reading', {}).get('mode') == 'full_text_required' else 120),
+              'max_revisions': (0, 1)}
     common.fields(config['budget'], ranges, '轮次预算')
     for key, (low, high) in ranges.items():
         common.positive(config['budget'][key], low, high, key)

@@ -84,7 +84,7 @@ def load_config(root, path):
         raise store.OfflineError('研究与独立审阅必须使用不同模型')
     ranges = {'max_documents': (1, 10), 'max_calls_per_item': (2, 4), 'max_calls_per_batch': (2, 40),
               'month_max_calls': (2, 1000), 'max_input_chars': (1000, 600000),
-              'max_output_chars': (1000, 24000), 'timeout_seconds': (1, 120), 'max_revisions': (0, 1)}
+              'max_output_chars': (1000, 24000), 'timeout_seconds': (1, 300 if config.get('prompts', {}).get('version') == 'research-batch-v4' else 120), 'max_revisions': (0, 1)}
     fields(config['budget'], ranges, '预算配置')
     for name, (low, high) in ranges.items():
         positive(config['budget'][name], low, high, name)

@@ -71,7 +71,7 @@ jobs:
     needs: plan
     if: github.ref == 'refs/heads/main' && needs.plan.outputs.cycle_id != ''
     runs-on: [self-hosted, researchdesk]
-    timeout-minutes: 30
+    timeout-minutes: 90
     defaults:
       run:
         # The runner's Application Support path contains spaces.

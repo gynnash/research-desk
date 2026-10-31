@@ -109,6 +109,32 @@ class ResearchDepth(unittest.TestCase):
         self.assertEqual(len(self.client.calls[-1]['payload']['candidate']['claims']), 11)
         self.assertEqual(self.client.calls[-1]['payload']['coverage'], 'full_text')
 
+    def test_natural_fulltext_scope_reaches_independent_review(self):
+        def natural_scope(result):
+            result.clear()
+            result.update(detailed_response())
+            result['limitations'] = ['已阅读提供的完整抽取文本，未独立复现实验。']
+
+        self.client.research_mutator = natural_scope
+        result = self.run_batch('natural-scope')
+        self.assertEqual(result['items'][0]['status'], 'test_accepted')
+        self.assertEqual(result['completed_calls'], 2)
+        self.assertIn('完整抽取文本', self.client.calls[1]['payload']['candidate']['limitations'][0])
+
+    def test_author_native_baseline_names_are_not_internal_references(self):
+        self.fetcher.body += ' Native baselines are named S0, S1 and S2.'
+
+        def native_names(result):
+            result.clear()
+            result.update(detailed_response())
+            result['claims'][1]['text'] += ' 作者将原生基线命名为 S0、S1 与 S2。'
+
+        self.client.research_mutator = native_names
+        result = self.run_batch('native-baselines')
+        self.assertEqual(result['items'][0]['status'], 'test_accepted')
+        self.assertEqual(result['completed_calls'], 2)
+        self.assertIn('S0、S1 与 S2', self.client.calls[1]['payload']['candidate']['claims'][1]['text'])
+
     def test_prose_structure_and_internal_reference_leaks_are_checked(self):
         candidate = {'evidence': {'coverage': 'full_text', 'locators': [{'id': 'A1'}]}}
         valid = detailed_response()
@@ -120,7 +146,7 @@ class ResearchDepth(unittest.TestCase):
         for field in ('summary', 'text'):
             leaked = deepcopy(valid)
             if field == 'summary':
-                leaked[field] += ' 详见 A1。'
+                leaked[field] += ' 详见 [A1]。'
             else:
                 leaked['claims'][0][field] += ' [^source]'
             with self.assertRaises(store.OfflineError):

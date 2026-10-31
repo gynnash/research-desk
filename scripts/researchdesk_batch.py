@@ -578,10 +578,12 @@ def validate_research(candidate, research, version):
         if not 3 <= len(headings) <= 5:
             raise store.OfflineError('深度研究需要3至5节有实质内容的技术解读')
         public_text = '\n'.join([research['summary'], body, *research['limitations']])
-        if re.search(r'(?<![A-Za-z0-9_-])(?:[ARHS][1-9]\d*)(?![A-Za-z0-9_-])|\[\^|https?://', public_text):
+        if re.search(r'\[(?:[ARH][1-9]\d*)(?:\s*[,，、;；]\s*[ARH][1-9]\d*)*\]|\[\^|https?://', public_text):
             raise store.OfflineError('研究正文不能包含内部证据编号、脚注或链接')
     scope_words = {'abstract_only': ('摘要', 'abstract'), 'excerpt': ('节选', 'excerpt'),
                    'full_text': ('全文', 'full text', 'full_text')}[candidate['evidence']['coverage']]
+    if deep:
+        scope_words += ('完整抽取文本', '完整文本', '完整原文', '正文')
     if not any(any(word in text.lower() for word in scope_words) for text in research['limitations']):
         raise store.OfflineError('研究局限必须明确实际阅读范围')
     if candidate['evidence']['coverage'] == 'full_text' and not any(

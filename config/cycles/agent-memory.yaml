@@ -51,16 +51,16 @@ discovery:
       entry_url: https://www.ruanyifeng.com/blog/atom.xml
       allowed_hosts: [www.ruanyifeng.com]
 models:
-  research: gpt-6-luna
-  insight: gpt-6-luna
-  review: gpt-6.1-sol
+  research: gpt-6.1-sol
+  insight: gpt-6.1-sol
+  review: gpt-6-astra
 budget:
   max_calls_per_cycle: 16
   research_max_calls: 12
   insight_max_calls: 4
   max_input_chars: 600000
   max_output_chars: 24000
-  timeout_seconds: 120
+  timeout_seconds: 240
   max_revisions: 1
 history:
   lookback_days: 180
