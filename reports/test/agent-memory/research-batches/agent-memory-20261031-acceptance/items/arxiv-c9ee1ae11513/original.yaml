@@ -1,0 +1,3697 @@
+schema_version: 1
+mode: extracted_original
+source:
+  id: arxiv-c9ee1ae11513
+  adapter: arxiv
+  kind: paper
+  url: https://arxiv.org/abs/2610.29823v1
+  evidence_max_chars: 200000
+  reading:
+    mode: full_text_required
+  archive: true
+candidate:
+  key: arxiv-c9ee1ae11513
+  kind: paper
+  topic: agent-memory
+  metadata:
+    title: 'MemoryTax: The Bitter Lesson of Agent Memory'
+    source: arXiv
+    source_url: https://arxiv.org/abs/2610.29823
+    authors:
+    - Peng, Zedong
+    published_at: '2026-10-21'
+    arxiv_id: '2610.29823'
+    source_version: v1
+  evidence:
+    coverage: full_text
+    extraction_coverage: full_text
+    source_url: https://arxiv.org/abs/2610.29823
+    source_version: v1
+    content_hash: 4cd9464542e8b0dc3c852f09aa24067675355e9d10b7ebf839e8b29bbe3dbeb8
+    evidence_sha256: 0ae6b58d024e425fa11213fd1a19b93685386dbc0a41b999a158bc27a0103887
+    locators:
+    - id: A1
+      section_id: S1
+      location: https://arxiv.org/html/2610.29823v1; chars 1-85
+      text_sha256: e9ff36f3f636f1aaf9df19a91fbd1d1488e11c86abd692afb2ae83fde4501e32
+      quote: 'Zedong Peng Affiliation: Shanghai Jiao Tong University Email: zedongpeng1@gmail.com'
+    - id: A2
+      section_id: S2
+      location: https://arxiv.org/html/2610.29823v1#abstract1; chars 1-1263
+      text_sha256: 45ed639761025acb92b14a6f80f538d130d5c5d7ea04992648170bcbda5faae3
+      quote: Agent memory systems such as Mem0 and Zep decide what to keep before
+        any question arrives;
+    - id: A3
+      section_id: S3
+      location: https://arxiv.org/html/2610.29823v1#S1; chars 1-1340
+      text_sha256: 9da46aba62a3f767a5e9b003dbdd6fd67f2bd07b3630d905c9151d617bf80c81
+      quote: ''
+    - id: A4
+      section_id: S3
+      location: https://arxiv.org/html/2610.29823v1#S1; chars 1341-2126
+      text_sha256: 56f2104fe33e1e4ca322b0df47e323a23158dafa5d55086d860b921f2027b2e5
+      quote: ''
+    - id: A5
+      section_id: S4
+      location: https://arxiv.org/html/2610.29823v1#S2; chars 1-1391
+      text_sha256: c7639bcd0e255c0bad7067bc5e2b76bb9ce107f2c18511272f9c5c235e3bffee
+      quote: ''
+    - id: A6
+      section_id: S4
+      location: https://arxiv.org/html/2610.29823v1#S2; chars 1392-1492
+      text_sha256: fea98849188ad5702cab1a7afdc2a631ce139e1062fdeca6eb792101d7c078c8
+      quote: ''
+    - id: A7
+      section_id: S5
+      location: https://arxiv.org/html/2610.29823v1#S2.SS0.SSS0.Px1; chars 1-334
+      text_sha256: 19942f481f3e5d04cb718f53055ce3c04b2d297079ce841fe905b46bf57b1712
+      quote: ''
+    - id: A8
+      section_id: S6
+      location: https://arxiv.org/html/2610.29823v1#S2.SS0.SSS0.Px2; chars 1-556
+      text_sha256: 5048be710493f780277cdf5928cfb9add7722c2dc49277b336bf05427f243bf9
+      quote: ''
+    - id: A9
+      section_id: S7
+      location: https://arxiv.org/html/2610.29823v1#S3; chars 1-1363
+      text_sha256: 1d885642542f790f02ed5eecd937dd403c950b7b9d3beacc0aec540d53ce1519
+      quote: ''
+    - id: A10
+      section_id: S7
+      location: https://arxiv.org/html/2610.29823v1#S3; chars 1364-2033
+      text_sha256: cb805ea059b04896ed98a67a9ed77ac380f32d705e739395fc1d5d421e0c5e89
+      quote: ''
+    - id: A11
+      section_id: S8
+      location: https://arxiv.org/html/2610.29823v1#S4; chars 1-882
+      text_sha256: 82a1afae26dd95904a7560b6a790675b15c56a3afb11249c216dd3daf0c64d78
+      quote: ''
+    - id: A12
+      section_id: S9
+      location: https://arxiv.org/html/2610.29823v1#S5; chars 1-1222
+      text_sha256: fc64b0f91b6eed50c5d198871bca76497fe8af622e281c043609bc7e016f0135
+      quote: ''
+    - id: A13
+      section_id: S9
+      location: https://arxiv.org/html/2610.29823v1#S5; chars 1223-1727
+      text_sha256: 12e79a6adffb6995ad3d171e3e73fdec78453094f4a39c03534552db33a941aa
+      quote: ''
+    - id: A14
+      section_id: S10
+      location: https://arxiv.org/html/2610.29823v1#S6; chars 1-1365
+      text_sha256: 017d4069dd24e22cfd21ae067411a011eb25bf83946c7ecefdcd563ad7b9a515
+      quote: ''
+    - id: A15
+      section_id: S10
+      location: https://arxiv.org/html/2610.29823v1#S6; chars 1366-1757
+      text_sha256: a012916c8f4264e2e54b8be37a0dff77439292f00b393aa57a4c3f7849026428
+      quote: ''
+    - id: A16
+      section_id: S11
+      location: https://arxiv.org/html/2610.29823v1#bib; chars 1-1342
+      text_sha256: 992d12f9625784fd53b76db4bd9286d784eea09ca443069e76854986294bfa24
+      quote: ''
+    - id: A17
+      section_id: S11
+      location: https://arxiv.org/html/2610.29823v1#bib; chars 1343-2729
+      text_sha256: a2ecb6e5f085d183f8c3d68a9773676e315750f6ff62bc6692fe0176cfefca3a
+      quote: ''
+    - id: A18
+      section_id: S11
+      location: https://arxiv.org/html/2610.29823v1#bib; chars 2730-2887
+      text_sha256: 7e3adf6c7c98e549816a20329dd9c722940c25382ecd1bd9992454ca9bd4ff50
+      quote: ''
+    - id: A19
+      section_id: S12
+      location: https://arxiv.org/html/2610.29823v1#A1; chars 1-1399
+      text_sha256: 46df0fff559b1c6b221c1d03cb0c6d9e35e977621a635973a8ee1deacb8b59f7
+      quote: ''
+    - id: A20
+      section_id: S12
+      location: https://arxiv.org/html/2610.29823v1#A1; chars 1400-2798
+      text_sha256: b0038137921c68a79c5d0b804e42dd8c4f30fd3147538f499491329914982b2a
+      quote: ''
+    - id: A21
+      section_id: S12
+      location: https://arxiv.org/html/2610.29823v1#A1; chars 2799-3093
+      text_sha256: dad2cc6072f630d76cd01b2e525b92a5c23844a20f0add62b724620b5c994faf
+      quote: ''
+    - id: A22
+      section_id: S13
+      location: https://arxiv.org/html/2610.29823v1#A2; chars 1-1082
+      text_sha256: 2ffadb1f43b7a17b2078a808342a8ae7a511c6644aecde9c24569cc4e1d90b8b
+      quote: ''
+    - id: A23
+      section_id: S14
+      location: https://arxiv.org/html/2610.29823v1#A3; chars 1-1293
+      text_sha256: 76295bd64acf000e3340b61cdc24dc59d169e033f5ec603ad5e78b5e0bc9a459
+      quote: ''
+    - id: A24
+      section_id: S14
+      location: https://arxiv.org/html/2610.29823v1#A3; chars 1294-2549
+      text_sha256: 89766b99474eea3ae1cc39cd8d85c6460a7735add4d659a84595d13203419bca
+      quote: ''
+    abstract_content_hash: 6152777770d924654cf924c3af3c7ac1092774eebf0a5f53256d4cb2e12e2a26
+    reading_profile: arxiv-fulltext-v1
+    format: html
+    document_url: https://arxiv.org/html/2610.29823v1
+    sections:
+    - id: S1
+      title: 'MemoryTax: The Bitter Lesson of Agent Memory'
+      location: https://arxiv.org/html/2610.29823v1
+      total_chars: 85
+      selected_chars: 85
+    - id: S2
+      title: Abstract
+      location: https://arxiv.org/html/2610.29823v1#abstract1
+      total_chars: 1263
+      selected_chars: 1263
+    - id: S3
+      title: 1 Introduction
+      location: https://arxiv.org/html/2610.29823v1#S1
+      total_chars: 2126
+      selected_chars: 2126
+    - id: S4
+      title: 2 Setup
+      location: https://arxiv.org/html/2610.29823v1#S2
+      total_chars: 1492
+      selected_chars: 1492
+    - id: S5
+      title: Photos.
+      location: https://arxiv.org/html/2610.29823v1#S2.SS0.SSS0.Px1
+      total_chars: 334
+      selected_chars: 334
+    - id: S6
+      title: Measurement.
+      location: https://arxiv.org/html/2610.29823v1#S2.SS0.SSS0.Px2
+      total_chars: 556
+      selected_chars: 556
+    - id: S7
+      title: 3 Agent memory is a costly patch for a weak model
+      location: https://arxiv.org/html/2610.29823v1#S3
+      total_chars: 2033
+      selected_chars: 2033
+    - id: S8
+      title: 4 Agent memory has a ceiling
+      location: https://arxiv.org/html/2610.29823v1#S4
+      total_chars: 882
+      selected_chars: 882
+    - id: S9
+      title: 5 With Claude Opus 5.5, Pi tops the frontier
+      location: https://arxiv.org/html/2610.29823v1#S5
+      total_chars: 1727
+      selected_chars: 1727
+    - id: S10
+      title: 6 Discussion and limitations
+      location: https://arxiv.org/html/2610.29823v1#S6
+      total_chars: 1757
+      selected_chars: 1757
+    - id: S11
+      title: References
+      location: https://arxiv.org/html/2610.29823v1#bib
+      total_chars: 2887
+      selected_chars: 2887
+    - id: S12
+      title: Appendix A Full results
+      location: https://arxiv.org/html/2610.29823v1#A1
+      total_chars: 3093
+      selected_chars: 3093
+    - id: S13
+      title: Appendix B Protocols
+      location: https://arxiv.org/html/2610.29823v1#A2
+      total_chars: 1082
+      selected_chars: 1082
+    - id: S14
+      title: Appendix C Prompts
+      location: https://arxiv.org/html/2610.29823v1#A3
+      total_chars: 2549
+      selected_chars: 2549
+    total_chars: 21866
+    selected_chars: 21866
+    truncated: false
+    extraction_scope: complete extracted document text including available references
+    limitations:
+    - Text extraction does not verify figures, layout, or faithful mathematical rendering.
+  identity_keys:
+  - arxiv:2610.29823
+  - url:https://arxiv.org/abs/2610.29823
+  source_id: paper-4fe5c214-056e-49c9-b5e1-dfd550ee077f
+  existing_source_path: null
+  existing_source_metadata: null
+  content_hash: 4cd9464542e8b0dc3c852f09aa24067675355e9d10b7ebf839e8b29bbe3dbeb8
+  metadata_hash: 4692800f704da9b63dd58ad02e4057a51b3b712a987419b780a01df6d8d4f477
+  upstream_updated_at: '2026-10-21'
+  acquisition_attempts:
+  - format: html
+    url: https://arxiv.org/html/2610.29823v1
+    status: success
+    reason: extracted
+material: '[S1] MemoryTax: The Bitter Lesson of Agent Memory (https://arxiv.org/html/2610.29823v1)
+
+  A1: Zedong Peng
+
+
+  Affiliation: Shanghai Jiao Tong University
+
+
+  Email: zedongpeng1@gmail.com
+
+  [S2] Abstract (https://arxiv.org/html/2610.29823v1#abstract1)
+
+  A2: Agent memory systems such as Mem0 and Zep decide what to keep before any question
+  arrives; coding agents keep the raw history and let the model search it with its
+  own tools. We ask whether designed memory still helps once the model is strong enough
+  to search for itself. On one LoCoMo conversation (419 turns, 152 questions), we
+  run four memory methods (full context, BM25, Mem0, Zep) and three coding agents
+  (Pi, Codex, Claude Code), each with GPT-4o-mini, GPT-6 Luna and Claude Opus 5.5,
+  and record what every rollout costs. This is a short empirical study, with one conversation
+  and one run per cell. Agent memory is a costly patch for a weak model: Mem0 beats
+  full context only with GPT-4o-mini, and its build alone costs more than a whole
+  full-context rollout. Agent memory also has a ceiling, set by the model that writes
+  it: a stronger reader does not recover what a weaker writer left out. With Claude
+  Opus 5.5, Pi tops the cost–accuracy frontier, scoring 99% for less than half the
+  cost of full context; its one miss is a wrong answer key. Part of that lead comes
+  from photo captions that only the agents could read: on the 88 questions whose evidence
+  has no photo, Pi and full context differ by one answer.
+
+
+  Interactive version: zedongpeng.com/memorytax
+
+  [S3] 1 Introduction (https://arxiv.org/html/2610.29823v1#S1)
+
+  A3: Agent memory systems such as Mem0 and Zep decide what to keep before any question
+  arrives: the model extracts facts or builds a graph from the conversation, and each
+  question sees a few retrieved pieces [1, 2]. Coding agents and recursive language
+  models keep the raw history instead and let the model search it with its own tools
+  [3, 4, 5, 6].
+
+
+  The bitter lesson is that knowledge built into a system helps at first, then plateaus,
+  while general methods that scale with computation win [7]. Agent memory builds in
+  what to keep. Does it still help once the model is strong enough to search for itself?
+
+
+  We run four memory methods (full context, BM25 [8], Mem0 and Zep) and three coding
+  agents (Pi, Codex and Claude Code), each with GPT-4o-mini, GPT-6 Luna and Claude
+  Opus 5.5, on a conversation from LoCoMo [9], and measure what each run costs. We
+  find:
+
+
+  •
+
+
+  Agent memory is a costly patch for a weak model. Mem0 beats full context only with
+  GPT-4o-mini, and its build alone costs more than full context’s whole run (Section
+  3).
+
+
+  •
+
+
+  Agent memory has a ceiling, set by the model that writes it. A stronger reader does
+  not recover what a weaker writer left out (Section 4).
+
+
+  •
+
+
+  With Claude Opus 5.5, Pi tops the cost–accuracy frontier (Figure 1). It answers
+  every question whose answer key is sound, for less than half what full context costs.
+
+  A4:  Where the two read the same text they differ by one answer; the rest of Pi’s
+  lead comes from photo captions that only the agents could read (Section 5).
+
+
+  The study is small: one conversation, one run per cell, and a GPT-4o-mini judge.
+  Section 6 lists what it cannot show. Within those limits, the results suggest that
+  a strong model needs less designed memory and better tools for searching the raw
+  record.
+
+
+  Figure 1: Cost and correct rate per rollout. Each badge is one cell’s whole run:
+  the build, then all 152 questions. Colour is the model, the badge the method’s mark,
+  and a letter in the badge marks a method without one (F full context, B BM25). The
+  stepped line is the highest correct rate reached at or below each cost, and the
+  labelled cells lie on it. Cost is on a log axis.
+
+  [S4] 2 Setup (https://arxiv.org/html/2610.29823v1#S2)
+
+  A5: We run 21 cells, seven methods with three models each, on LoCoMo conv-26 [9]:
+  419 turns in 19 sessions and 152 single-hop, multi-hop, temporal and open-domain
+  questions. LoCoMo’s adversarial questions are left out, as in Mem0’s evaluation
+  [1]. The history fits every model’s context window. Among the ten LoCoMo conversations,
+  conv-26’s per-method accuracies track those of the full set closely. Table 1 lists
+  the methods.
+
+
+  Table 1: Methods: what each stores and what the model sees when it answers.
+
+
+  Method
+
+
+  Stored
+
+
+  Model sees
+
+
+  Full context
+
+
+  raw history
+
+
+  all of it
+
+
+  BM25
+
+
+  raw turns
+
+
+  top-8 turns, \pm 2
+
+
+  Mem0
+
+
+  extracted facts
+
+
+  top-200 facts
+
+
+  Zep
+
+
+  temporal graph
+
+
+  top-20 edges
+
+
+  Pi, Codex, Claude Code
+
+
+  raw history, one JSON file
+
+
+  what its tools read
+
+
+  The memory methods answer one question at a time with Mem0’s 2025 answer template;
+  Mem0 is OSS 2.1.0 and Zep is Graphiti OSS 0.30.2, both with default extraction and
+  retrieval [1, 2]. The agents, Pi 1.1.0, Codex 0.159.2 and Claude Code 2.1.295 [3,
+  4, 5], start a fresh session in a fresh container for each question, with the conversation
+  as one file, their default tools, and the template’s answer rules in the prompt
+  (Appendix C).
+
+
+  The models go from weak to strongest: GPT-4o-mini, GPT-6 Luna, Claude Opus 5.5.
+  The last two run at reasoning effort high, the effort coding agents are usually
+  run at [10]; GPT-4o-mini has no effort setting.
+
+  A6:  In each cell one model writes the store (Mem0, Zep) and answers every question,
+  or drives the agent.
+
+  [S5] Photos. (https://arxiv.org/html/2610.29823v1#S2.SS0.SSS0.Px1)
+
+  A7: Some LoCoMo turns share a photo, and the official file holds a caption of it
+  next to the turn text. The agents get the official file, captions included; the
+  memory methods were given the turn text only. 116 of the 419 turns share a photo,
+  and 64 of the 152 questions have evidence in such a turn. Section 5 measures what
+  this changes.
+
+  [S6] Measurement. (https://arxiv.org/html/2610.29823v1#S2.SS0.SSS0.Px2)
+
+  A8: A rollout is one run over the conversation: the build, then the 152 questions.
+  GPT-4o-mini grades every answer with Mem0’s 2025 judge rubric [1]; empty answers
+  count as wrong. Cost is the list price of every model call, LLM and embedding (text-embedding-3-small),
+  with the judge excluded. A turn is one LLM call: one per question for the memory
+  methods, one per step of an agent’s loop, and Mem0’s and Zep’s calls to build their
+  store. Tokens are those calls’ input and output tokens, cached input included; embeddings
+  are not counted. Each cell runs once.
+
+  [S7] 3 Agent memory is a costly patch for a weak model (https://arxiv.org/html/2610.29823v1#S3)
+
+  A9: With GPT-4o-mini, Mem0 scores highest. It scores 78%, against 74% for both full
+  context and BM25; Zep scores 43%. The agents score 63% (Pi), 28% (Codex) and 29%
+  (Claude Code): Codex opens the conversation file for three questions in four and
+  Claude Code almost never, and otherwise they answer from the question alone.
+
+
+  With the two stronger models, the patch stops helping. With GPT-6 Luna, full context
+  scores 92%, BM25 82%, Mem0 80% and Zep 51%; Zep’s graph holds 128 facts from the
+  19 sessions, against 195 with Claude Opus 5.5. With Claude Opus 5.5, Mem0 and full
+  context both score 95% and Zep 87%, and the agents score highest: Pi 99%, Codex
+  98% and Claude Code 97%, a lead that comes mostly from questions about photos (Section
+  5). Earlier work also finds that plain retrieval keeps up with elaborate memory
+  [11] and that rankings between memory systems change with the model [12].
+
+
+  Figure 2: Cumulative cost–correct curves. Each curve is one rollout: the build,
+  then the questions from cheapest to most expensive (equal costs grouped), adding
+  up cost and correct answers; correct answers are divided by 152, so a wrong answer
+  adds cost only. Colour is the model, the badge the method, and agents are dotted.
+  The cost axis is linear to $2 and logarithmic above. Curves use a nine-point moving
+  average, and the badges mark the unsmoothed totals of Table 2.
+
+  A10:  Strong lines are cells that no other cell beats on both cost and correct answers.
+
+
+  The patch is not free. Mem0’s build alone costs more than full context’s whole rollout
+  with the same model: $0.56 against $0.43 with GPT-4o-mini, $0.45 against $0.29 with
+  GPT-6 Luna and $25.88 against $17.84 with Claude Opus 5.5 (Figure 2). Its questions
+  are cheaper, so the build would pay for itself after 372, 545 and 596 questions
+  on the same history; LoCoMo asks 152. Mem0 and Zep are never on the frontier of
+  Figure 1, which runs through BM25 and full context with GPT-6 Luna and Pi with Claude
+  Opus 5.5. Paying to build memory that a stronger model does not need is a memory
+  tax.
+
+  [S8] 4 Agent memory has a ceiling (https://arxiv.org/html/2610.29823v1#S4)
+
+  A11: The model that writes the store limits every reader. Mem0 and Zep write their
+  store with the same model that later reads it. Retrieval calls no language model,
+  so the reader can be swapped: each model answers from the retrievals of the others’
+  stores (Figure 3, Table 3).
+
+
+  Figure 3: Writer and reader. Each colour is one store, written by that model. The
+  filled badge is the writer reading its own store, and arrows run from it to the
+  other two readers.
+
+
+  A stronger reader does not recover what the writer left out. On Zep’s GPT-4o-mini
+  graph, GPT-4o-mini, GPT-6 Luna and Claude Opus 5.5 score 43%, 43% and 45%; on the
+  graph Claude Opus 5.5 wrote, 66%, 71% and 87%. Mem0 keeps the order with smaller
+  gaps: 78%, 83% and 84% from GPT-4o-mini’s store, 89%, 91% and 95% from Claude Opus
+  5.5’s. This agrees with work where verbatim chunks beat extracted facts on long
+  conversations [13].
+
+  [S9] 5 With Claude Opus 5.5, Pi tops the frontier (https://arxiv.org/html/2610.29823v1#S5)
+
+  A12: Pi with Claude Opus 5.5 is the top of the frontier in Figure 1. No other cell
+  scores higher: Pi scores 99% for $6.95 a rollout, while full context with the same
+  model scores 95% for $17.84. Pi reads about 10,000 input tokens a question, 7,900
+  of them cached, against 28,900 for full context. Codex and Claude Code score 98%
+  and 97% for $25.41 and $28.41; HarnessTax explains why the same model costs so differently
+  across harnesses [10].
+
+
+  Its one miss is LoCoMo’s mistake. The question asks what kind of painting Caroline
+  shared with Melanie on 13 October 2023, and the answer key says an abstract painting
+  with blue streaks. In the conversation it is Melanie who shares that painting; Caroline
+  shares a drawing. Pi says so and is marked wrong: “Caroline shared a drawing, not
+  a painting. … The paintings shared that day (a sunset and an abstract piece) were
+  Melanie’s.” With Claude Opus 5.5, full context, Codex and Claude Code point out
+  the same mistake and are marked wrong too. On the other 151 questions, Pi with Claude
+  Opus 5.5 is always right.
+
+
+  Photo captions account for most of Pi’s lead over full context. With Claude Opus
+  5.5, Pi answers seven questions that full context misses and misses none that it
+  answers.
+
+  A13:  Six of the seven have their evidence in a turn that shares a photo, whose
+  caption Pi could read and full context could not (Section 2); so do all six such
+  questions for Codex and all four for Claude Code. On the 88 questions without photo
+  evidence, Pi scores 100%, and full context, Mem0, Codex and Claude Code 99% each
+  (Table 4). With the same input, then, Pi matches full context for less than half
+  its cost. Whether searching the record answers more than reading all of it, this
+  study does not settle.
+
+  [S10] 6 Discussion and limitations (https://arxiv.org/html/2610.29823v1#S6)
+
+  A14: Our results suggest that agent memory is a costly patch for a weak model and
+  caps what any reader can answer. On this LoCoMo conversation, Mem0 helps GPT-4o-mini
+  but not GPT-6 Luna or Claude Opus 5.5, a stronger reader does not recover what the
+  writer left out, and with Claude Opus 5.5 Pi answers every sound question for less
+  than full context costs.
+
+
+  The findings rest on a small study, and these limits apply:
+
+
+  •
+
+
+  Scale. One conversation of LoCoMo’s ten, and one run per cell. Differences of a
+  few questions may not hold in a second run.
+
+
+  •
+
+
+  Grading. A GPT-4o-mini judge with a lenient rubric, and at least one wrong answer
+  key.
+
+
+  •
+
+
+  Photo captions. The agents could read photo captions that the memory methods were
+  not given (Section 5). This touches comparisons between agents and memory methods,
+  not those among the memory methods.
+
+
+  •
+
+
+  Context length. The history fits in every model’s context window, so full context
+  is always an option. Results may differ on other benchmarks such as LongMemEval
+  [14] and on histories that do not fit.
+
+
+  •
+
+
+  Settings and prices. Mem0 and Zep run with their default extraction and retrieval,
+  and other settings may do better. Costs are list prices and depend on each provider’s
+  caching.
+
+
+  Memory systems and harnesses can also be searched for automatically [15, 16], but
+  what is found is still fixed before the question arrives.
+
+  A15:  More broadly, a strong model may need less designed memory and better tools:
+  exact, semantic and vector search over the raw record, driven by the model itself
+  [3, 4]. Progress may then look less like another memory system and more like ripgrep
+  after grep [17], or zvec-grep after ripgrep [18]. Designed memory may survive as
+  a cost trade-off when many questions share one history (Figure 2).
+
+  [S11] References (https://arxiv.org/html/2610.29823v1#bib)
+
+  A16: [1]
+
+
+  P. Chhikara, D. Khant, S. Aryan, T. Singh, and D. Yadav.
+
+
+  Mem0: Building production-ready AI agents with scalable long-term
+
+
+  memory, 2025.
+
+
+  URL https://arxiv.org/abs/2504.19413.
+
+
+  [2]
+
+
+  P. Rasmussen, P. Paliychuk, T. Beauvais, J. Ryan, and D. Chalef.
+
+
+  Zep: A temporal knowledge graph architecture for agent memory, 2025.
+
+
+  URL https://arxiv.org/abs/2501.13956.
+
+
+  [3]
+
+
+  Pi contributors.
+
+
+  Pi coding agent: Compaction and session persistence.
+
+
+  Software documentation and source, 2026.
+
+
+  URL https://github.com/earendil-works/pi.
+
+
+  [4]
+
+
+  OpenAI.
+
+
+  Codex: An open-source coding agent, 2026.
+
+
+  URL https://github.com/openai/codex.
+
+
+  [5]
+
+
+  Anthropic.
+
+
+  Claude code, 2026.
+
+
+  URL https://github.com/anthropics/claude-code.
+
+
+  [6]
+
+
+  A. L. Zhang, T. Kraska, and O. Khattab.
+
+
+  Recursive language models, 2025a.
+
+
+  URL https://arxiv.org/abs/2512.24601.
+
+
+  [7]
+
+
+  R. S. Sutton.
+
+
+  The bitter lesson.
+
+
+  Essay, 2019.
+
+
+  URL http://www.incompleteideas.net/IncIdeas/BitterLesson.html.
+
+
+  [8]
+
+
+  S. Robertson and H. Zaragoza.
+
+
+  The probabilistic relevance framework: BM25 and beyond.
+
+
+  Foundations and Trends in Information Retrieval, 3(4):333–389, 2009.
+
+
+  doi: 10.1561/1500000019.
+
+
+  [9]
+
+
+  A. Maharana, D.-H. Lee, S. Tulyakov, M. Bansal, F. Barbieri, and Y. Fang.
+
+
+  Evaluating very long-term conversational memory of LLM agents,
+
+
+  2024.
+
+
+  URL https://arxiv.org/abs/2402.17753.
+
+
+  [10]
+
+
+  Arena Team.
+
+
+
+  A17: HarnessTax: How much does the harness matter for coding agents?
+
+
+  Arena blog, 2026.
+
+
+  URL https://arena.ai/blog/coding-agents-harness-tax.
+
+
+  [11]
+
+
+  Y. Wu, W. Chen, Z. Huang, et al.
+
+
+  Back to basics: Let conversational agents remember with just
+
+
+  retrieval and generation, 2026.
+
+
+  URL https://arxiv.org/abs/2604.11628.
+
+
+  [12]
+
+
+  K. Wang.
+
+
+  MemDelta: Controlled baselines and hidden confounds in agent memory
+
+
+  evaluation, 2026.
+
+
+  URL https://arxiv.org/abs/2606.29914.
+
+
+  [13]
+
+
+  T. An.
+
+
+  Fidelity before structure: Verbatim chunks beat lossy artifact
+
+
+  extraction in long-conversation LLM memory, 2026.
+
+
+  URL https://arxiv.org/abs/2601.00821.
+
+
+  [14]
+
+
+  D. Wu, H. Wang, W. Yu, Y. Zhang, K.-W. Chang, and D. Yu.
+
+
+  LongMemEval: Benchmarking chat assistants on long-term interactive
+
+
+  memory, 2024.
+
+
+  URL https://arxiv.org/abs/2410.10813.
+
+
+  [15]
+
+
+  G. Zhang, H. Ren, C. Zhan, et al.
+
+
+  MemEvolve: Meta-evolution of agent memory systems,
+
+
+  2025b.
+
+
+  URL https://arxiv.org/abs/2512.18746.
+
+
+  [16]
+
+
+  Y. Lee, R. Nair, Q. Zhang, K. Lee, O. Khattab, and C. Finn.
+
+
+  Meta-harness: End-to-end optimization of model harnesses, 2026.
+
+
+  URL https://arxiv.org/abs/2603.28052.
+
+
+  [17]
+
+
+  A. Gallant.
+
+
+  ripgrep.
+
+
+  Software, 2016.
+
+
+  URL https://github.com/BurntSushi/ripgrep.
+
+
+  [18]
+
+
+  Zvec Team.
+
+
+  From rg to zg: Local search beyond keywords.
+
+
+  Zvec blog, 2026.
+
+
+  URL https://zvec.org/en/blog/2026-08-28-zvec-grep-open-source/.
+
+
+  [19]
+
+
+  Harbor Framework Team.
+
+
+
+  A18: Harbor: A framework for evaluating and optimizing agents and models
+
+
+  in container environments.
+
+
+  Software, 2026.
+
+
+  URL https://doi.org/10.5281/zenodo.20953922.
+
+  [S12] Appendix A Full results (https://arxiv.org/html/2610.29823v1#A1)
+
+  A19: Table 2 gives every cell’s cost and correct rate, Table 3 the writer–reader
+  grid behind Figure 3, and Table 4 the split by photo evidence. Figure 4 redraws
+  Figure 2 against turns and tokens.
+
+
+  Table 2: Per method and model. Cost is the list price of every model call except
+  the judge: Build is paid once, before any question; Per q. is everything one question
+  costs, retrieval included, averaged over the 152 questions. \circ : nothing is built.
+  Effort: the model’s reasoning effort; GPT-4o-mini has none. Correct: share of answers
+  judged correct, in %, per LoCoMo category (single-hop, multi-hop, temporal, open-domain);
+  the first row gives each category’s size.
+
+
+  Cost ($)
+
+
+  Correct (%)
+
+
+  Method
+
+
+  Model
+
+
+  Effort
+
+
+  Build
+
+
+  Per q.
+
+
+  Single
+
+
+  Multi
+
+
+  Temp.
+
+
+  Open
+
+
+  All
+
+
+  Questions
+
+
+  70
+
+
+  32
+
+
+  37
+
+
+  13
+
+
+  152
+
+
+  Full context
+
+
+  GPT-4o-mini
+
+
+  –
+
+
+  \circ
+
+
+  0.0028
+
+
+  89
+
+
+  75
+
+
+  51
+
+
+  62
+
+
+  74
+
+
+  GPT-6 Luna
+
+
+  high
+
+
+  \circ
+
+
+  0.0019
+
+
+  90
+
+
+  97
+
+
+  95
+
+
+  85
+
+
+  92
+
+
+  Claude Opus 5.5
+
+
+  high
+
+
+  \circ
+
+
+  0.117
+
+
+  93
+
+
+  94
+
+
+  97
+
+
+  100
+
+
+  95
+
+
+  BM25
+
+
+  GPT-4o-mini
+
+
+  –
+
+
+  \circ
+
+
+  0.00028
+
+
+  86
+
+
+  50
+
+
+  73
+
+
+  69
+
+
+  74
+
+
+  GPT-6 Luna
+
+
+  high
+
+
+  \circ
+
+
+  0.00021
+
+
+  89
+
+
+  63
+
+
+  89
+
+
+  69
+
+
+  82
+
+
+  Claude Opus 5.5
+
+
+  high
+
+
+  \circ
+
+
+  0.013
+
+
+  93
+
+
+  81
+
+
+  92
+
+
+  92
+
+
+  90
+
+
+  Mem0
+
+
+  GPT-4o-mini
+
+
+  –
+
+
+  0.559
+
+
+  0.0013
+
+
+  87
+
+
+  75
+
+
+  65
+
+
+  77
+
+
+  78
+
+
+  GPT-6 Luna
+
+
+  high
+
+
+  0.449
+
+
+  0.0011
+
+
+  89
+
+
+  88
+
+
+  57
+
+
+  85
+
+
+  80
+
+
+  Claude Opus 5.5
+
+
+  high
+
+
+  25.876
+
+
+  0.074
+
+
+  93
+
+
+  97
+
+
+  97
+
+
+  100
+
+
+  95
+
+
+  Zep
+
+
+  GPT-4o-mini
+
+
+  –
+
+
+  0.092
+
+
+  0.00012
+
+
+  51
+
+
+  34
+
+
+  30
+
+
+  54
+
+
+  43
+
+
+  GPT-6 Luna
+
+
+  high
+
+
+  0.103
+
+
+  0.00012
+
+
+  54
+
+
+
+  A20: 50
+
+
+  49
+
+
+  46
+
+
+  51
+
+
+  Claude Opus 5.5
+
+
+  high
+
+
+  6.224
+
+
+  0.0077
+
+
+  83
+
+
+  94
+
+
+  89
+
+
+  85
+
+
+  87
+
+
+  Pi
+
+
+  GPT-4o-mini
+
+
+  –
+
+
+  \circ
+
+
+  0.016
+
+
+  74
+
+
+  59
+
+
+  35
+
+
+  85
+
+
+  63
+
+
+  GPT-6 Luna
+
+
+  high
+
+
+  \circ
+
+
+  0.0032
+
+
+  96
+
+
+  81
+
+
+  92
+
+
+  92
+
+
+  91
+
+
+  Claude Opus 5.5
+
+
+  high
+
+
+  \circ
+
+
+  0.046
+
+
+  99
+
+
+  100
+
+
+  100
+
+
+  100
+
+
+  99
+
+
+  Codex
+
+
+  GPT-4o-mini
+
+
+  –
+
+
+  \circ
+
+
+  0.0031
+
+
+  30
+
+
+  22
+
+
+  24
+
+
+  46
+
+
+  28
+
+
+  GPT-6 Luna
+
+
+  high
+
+
+  \circ
+
+
+  0.0050
+
+
+  90
+
+
+  84
+
+
+  89
+
+
+  85
+
+
+  88
+
+
+  Claude Opus 5.5
+
+
+  high
+
+
+  \circ
+
+
+  0.167
+
+
+  99
+
+
+  100
+
+
+  95
+
+
+  100
+
+
+  98
+
+
+  Claude Code
+
+
+  GPT-4o-mini
+
+
+  –
+
+
+  \circ
+
+
+  0.0020
+
+
+  34
+
+
+  22
+
+
+  8
+
+
+  77
+
+
+  29
+
+
+  GPT-6 Luna
+
+
+  high
+
+
+  \circ
+
+
+  0.0082
+
+
+  96
+
+
+  78
+
+
+  95
+
+
+  92
+
+
+  91
+
+
+  Claude Opus 5.5
+
+
+  high
+
+
+  \circ
+
+
+  0.187
+
+
+  99
+
+
+  94
+
+
+  97
+
+
+  100
+
+
+  97
+
+
+  Table 3: Writer and reader. Correct rate (%), the reader answering from the writer’s
+  store and its retrievals. Bold: one model writes and reads (Table 2).
+
+
+  Mem0, read by
+
+
+  Zep, read by
+
+
+  Written by
+
+
+  GPT-4o-mini
+
+
+  GPT-6 Luna
+
+
+  Opus 5.5
+
+
+  GPT-4o-mini
+
+
+  GPT-6 Luna
+
+
+  Opus 5.5
+
+
+  GPT-4o-mini
+
+
+  78
+
+
+  83
+
+
+  84
+
+
+  43
+
+
+  43
+
+
+  45
+
+
+  GPT-6 Luna
+
+
+  74
+
+
+  80
+
+
+  81
+
+
+  52
+
+
+  51
+
+
+  55
+
+
+  Claude Opus 5.5
+
+
+  89
+
+
+  91
+
+
+  95
+
+
+  66
+
+
+  71
+
+
+  87
+
+
+  Table 4: Correct rate (%) on the 64 questions with evidence in a turn that shares
+  a photo, whose caption only the agents could read, and on the other 88.
+
+
+  GPT-4o-mini
+
+
+  GPT-6 Luna
+
+
+  Claude Opus 5.5
+
+
+  Method
+
+
+  Photo (64)
+
+
+  Other (88)
+
+
+  Photo (64)
+
+
+  Other (88)
+
+
+  Photo (64)
+
+
+  Other (88)
+
+
+  Full context
+
+
+  66
+
+
+  81
+
+
+  91
+
+
+  93
+
+
+  89
+
+
+  99
+
+
+  BM25
+
+
+  61
+
+
+  83
+
+
+  78
+
+
+  84
+
+
+  84
+
+
+  94
+
+
+  Mem0
+
+
+  70
+
+
+  84
+
+
+  72
+
+
+  86
+
+
+  91
+
+
+  99
+
+
+  Zep
+
+
+  33
+
+
+  50
+
+
+  53
+
+
+  50
+
+
+  77
+
+
+  94
+
+
+  Pi
+
+
+  53
+
+
+  69
+
+
+  88
+
+
+  94
+
+
+  98
+
+
+  100
+
+
+
+  A21: Codex
+
+
+  22
+
+
+  33
+
+
+  84
+
+
+  91
+
+
+  97
+
+
+  99
+
+
+  Claude Code
+
+
+  17
+
+
+  38
+
+
+  91
+
+
+  92
+
+
+  95
+
+
+  99
+
+
+  Figure 4: The curves of Figure 2 against turns (LLM calls, top) and tokens (bottom),
+  on linear axes, the questions ordered by that amount. Strong lines are cells that
+  no other cell beats on both that amount and correct answers.
+
+  [S13] Appendix B Protocols (https://arxiv.org/html/2610.29823v1#A2)
+
+  A22: Mem0 OSS 2.1.0 writes one chronological turn at a time and retrieves k=200
+  without reranking; dates are prepended to the text. Zep runs Graphiti OSS 0.30.2
+  on Kuzu, one session per episode, with hybrid edge search (top 20). The memory methods’
+  GPT-6 Luna and Claude Opus 5.5 requests set reasoning effort high.
+
+
+  Each agent question is a Harbor 0.24.0 task [19]: a fresh container holding only
+  the conversation, exactly as in the official file, without questions or answers.
+  The agent’s last message is its answer. While the agent runs, the container can
+  reach only the model endpoint. GPT-6 Luna and Claude Opus 5.5 run at reasoning effort
+  high, through a proxy that translates the API where an agent does not speak the
+  model’s own; GPT-4o-mini has no effort setting. Codex and Claude Code have web search
+  off; Pi has none. A question may take 20 minutes, and Pi and Claude Code at most
+  100 turns. With GPT-6 Luna, Codex picks its code mode: one JavaScript tool that
+  calls the shell. A trial that fails or ends without an answer is run again, and
+  only the accepted trial is counted.
+
+  [S14] Appendix C Prompts (https://arxiv.org/html/2610.29823v1#A3)
+
+  A23: Each prompt is copied from the code the runs called; fields in braces are filled
+  per question.
+
+
+  Answer, system message.
+
+
+  ⬇
+
+
+  You are a helpful assistant that can answer questions based on the provided context.If
+  the question involves timing, use the conversation date for reference.Provide the
+  shortest possible answer.Use words directly from the conversation when possible.Avoid
+  using subjects in your answer.
+
+
+  Answer, user message.
+
+
+  ⬇
+
+
+  # Question:
+
+
+  {{QUESTION}}
+
+
+  # Context:
+
+
+  {{CONTEXT}}
+
+
+  # Short answer:
+
+
+  Pi, Codex and Claude Code, user message.
+
+
+  ⬇
+
+
+  Answer a question about the conversation in `conv-26/conv.json`. If the question
+  involves timing, use the conversation date for reference. Provide the shortest possible
+  answer. Use words directly from the conversation when possible. Avoid using subjects
+  in your answer. Your final message is taken as the answer.
+
+
+  Question: {question}
+
+
+  Judge.
+
+
+  ⬇
+
+
+  Your task is to label an answer to a question as ’CORRECT’ or ’WRONG’. You will
+  be given the following data:
+
+
+  (1) a question (posed by one user to another user),
+
+
+  (2) a ’gold’ (ground truth) answer,
+
+
+  (3) a generated answer
+
+
+  which you will score as CORRECT/WRONG.
+
+
+  The point of the question is to ask about something one user should know about the
+  other user based on their prior conversations.
+
+
+
+  A24: The gold answer will usually be a concise and short answer that includes the
+  referenced topic, for example:
+
+
+  Question: Do you remember what I got the last time I went to Hawaii?
+
+
+  Gold answer: A shell necklace
+
+
+  The generated answer might be much longer, but you should be generous with your
+  grading - as long as it touches on the same topic as the gold answer, it should
+  be counted as CORRECT.
+
+
+  For time related questions, the gold answer will be a specific date, month, year,
+  etc. The generated answer might be much longer or use relative time references (like
+  "last Tuesday" or "next month"), but you should be generous with your grading -
+  as long as it refers to the same date or time period as the gold answer, it should
+  be counted as CORRECT. Even if the format differs (e.g., "May 7th" vs "7 May"),
+  consider it CORRECT if it''s the same date.
+
+
+  Now it''s time for the real question:
+
+
+  Question: {question}
+
+
+  Gold answer: {gold_answer}
+
+
+  Generated answer: {generated_answer}
+
+
+  First, provide a short (one sentence) explanation of your reasoning, then finish
+  with CORRECT or WRONG.
+
+
+  Do NOT include both CORRECT and WRONG in your response, or it will break the evaluation
+  script.
+
+
+  Just return the label CORRECT or WRONG in a json format with the key as "label".'
+record:
+  kind: paper
+  metadata:
+    title: 'MemoryTax: The Bitter Lesson of Agent Memory'
+    source: arXiv
+    source_url: https://arxiv.org/abs/2610.29823
+    authors:
+    - Peng, Zedong
+    published_at: '2026-10-21'
+    arxiv_id: '2610.29823'
+    source_version: v1
+  body_text: 'Agent memory systems such as Mem0 and Zep decide what to keep before
+    any question arrives; coding agents keep the raw history and let the model search
+    it with its own tools. We ask whether designed memory still helps once the model
+    is strong enough to search for itself. On one LoCoMo conversation (419 turns,
+    152 questions), we run four memory methods (full context, BM25, Mem0, Zep) and
+    three coding agents (Pi, Codex, Claude Code), each with GPT-4o-mini, GPT-6 Luna
+    and Claude Opus 5.5, and record what every rollout costs. This is a short empirical
+    study, with one conversation and one run per cell. Agent memory is a costly patch
+    for a weak model: Mem0 beats full context only with GPT-4o-mini, and its build
+    alone costs more than a whole full-context rollout. Agent memory also has a ceiling,
+    set by the model that writes it: a stronger reader does not recover what a weaker
+    writer left out. With Claude Opus 5.5, Pi tops the cost-accuracy frontier, scoring
+    99% for less than half the cost of full context; its one miss is a wrong answer
+    key. Part of that lead comes from photo captions that only the agents could read:
+    on the 88 questions whose evidence has no photo, Pi and full context differ by
+    one answer.'
+  coverage: abstract_only
+  upstream_updated_at: '2026-10-21'
+  content_hash: 6152777770d924654cf924c3af3c7ac1092774eebf0a5f53256d4cb2e12e2a26
+  discovery_mode: explicit_seed_fallback
+document:
+  sections:
+  - id: S1
+    title: 'MemoryTax: The Bitter Lesson of Agent Memory'
+    text: 'Zedong Peng
+
+
+      Affiliation: Shanghai Jiao Tong University
+
+
+      Email: zedongpeng1@gmail.com'
+    location: https://arxiv.org/html/2610.29823v1
+  - id: S2
+    title: Abstract
+    text: 'Agent memory systems such as Mem0 and Zep decide what to keep before any
+      question arrives; coding agents keep the raw history and let the model search
+      it with its own tools. We ask whether designed memory still helps once the model
+      is strong enough to search for itself. On one LoCoMo conversation (419 turns,
+      152 questions), we run four memory methods (full context, BM25, Mem0, Zep) and
+      three coding agents (Pi, Codex, Claude Code), each with GPT-4o-mini, GPT-6 Luna
+      and Claude Opus 5.5, and record what every rollout costs. This is a short empirical
+      study, with one conversation and one run per cell. Agent memory is a costly
+      patch for a weak model: Mem0 beats full context only with GPT-4o-mini, and its
+      build alone costs more than a whole full-context rollout. Agent memory also
+      has a ceiling, set by the model that writes it: a stronger reader does not recover
+      what a weaker writer left out. With Claude Opus 5.5, Pi tops the cost–accuracy
+      frontier, scoring 99% for less than half the cost of full context; its one miss
+      is a wrong answer key. Part of that lead comes from photo captions that only
+      the agents could read: on the 88 questions whose evidence has no photo, Pi and
+      full context differ by one answer.
+
+
+      Interactive version: zedongpeng.com/memorytax'
+    location: https://arxiv.org/html/2610.29823v1#abstract1
+  - id: S3
+    title: 1 Introduction
+    text: 'Agent memory systems such as Mem0 and Zep decide what to keep before any
+      question arrives: the model extracts facts or builds a graph from the conversation,
+      and each question sees a few retrieved pieces [1, 2]. Coding agents and recursive
+      language models keep the raw history instead and let the model search it with
+      its own tools [3, 4, 5, 6].
+
+
+      The bitter lesson is that knowledge built into a system helps at first, then
+      plateaus, while general methods that scale with computation win [7]. Agent memory
+      builds in what to keep. Does it still help once the model is strong enough to
+      search for itself?
+
+
+      We run four memory methods (full context, BM25 [8], Mem0 and Zep) and three
+      coding agents (Pi, Codex and Claude Code), each with GPT-4o-mini, GPT-6 Luna
+      and Claude Opus 5.5, on a conversation from LoCoMo [9], and measure what each
+      run costs. We find:
+
+
+      •
+
+
+      Agent memory is a costly patch for a weak model. Mem0 beats full context only
+      with GPT-4o-mini, and its build alone costs more than full context’s whole run
+      (Section 3).
+
+
+      •
+
+
+      Agent memory has a ceiling, set by the model that writes it. A stronger reader
+      does not recover what a weaker writer left out (Section 4).
+
+
+      •
+
+
+      With Claude Opus 5.5, Pi tops the cost–accuracy frontier (Figure 1). It answers
+      every question whose answer key is sound, for less than half what full context
+      costs. Where the two read the same text they differ by one answer; the rest
+      of Pi’s lead comes from photo captions that only the agents could read (Section
+      5).
+
+
+      The study is small: one conversation, one run per cell, and a GPT-4o-mini judge.
+      Section 6 lists what it cannot show. Within those limits, the results suggest
+      that a strong model needs less designed memory and better tools for searching
+      the raw record.
+
+
+      Figure 1: Cost and correct rate per rollout. Each badge is one cell’s whole
+      run: the build, then all 152 questions. Colour is the model, the badge the method’s
+      mark, and a letter in the badge marks a method without one (F full context,
+      B BM25). The stepped line is the highest correct rate reached at or below each
+      cost, and the labelled cells lie on it. Cost is on a log axis.'
+    location: https://arxiv.org/html/2610.29823v1#S1
+  - id: S4
+    title: 2 Setup
+    text: 'We run 21 cells, seven methods with three models each, on LoCoMo conv-26
+      [9]: 419 turns in 19 sessions and 152 single-hop, multi-hop, temporal and open-domain
+      questions. LoCoMo’s adversarial questions are left out, as in Mem0’s evaluation
+      [1]. The history fits every model’s context window. Among the ten LoCoMo conversations,
+      conv-26’s per-method accuracies track those of the full set closely. Table 1
+      lists the methods.
+
+
+      Table 1: Methods: what each stores and what the model sees when it answers.
+
+
+      Method
+
+
+      Stored
+
+
+      Model sees
+
+
+      Full context
+
+
+      raw history
+
+
+      all of it
+
+
+      BM25
+
+
+      raw turns
+
+
+      top-8 turns, \pm 2
+
+
+      Mem0
+
+
+      extracted facts
+
+
+      top-200 facts
+
+
+      Zep
+
+
+      temporal graph
+
+
+      top-20 edges
+
+
+      Pi, Codex, Claude Code
+
+
+      raw history, one JSON file
+
+
+      what its tools read
+
+
+      The memory methods answer one question at a time with Mem0’s 2025 answer template;
+      Mem0 is OSS 2.1.0 and Zep is Graphiti OSS 0.30.2, both with default extraction
+      and retrieval [1, 2]. The agents, Pi 1.1.0, Codex 0.159.2 and Claude Code 2.1.295
+      [3, 4, 5], start a fresh session in a fresh container for each question, with
+      the conversation as one file, their default tools, and the template’s answer
+      rules in the prompt (Appendix C).
+
+
+      The models go from weak to strongest: GPT-4o-mini, GPT-6 Luna, Claude Opus 5.5.
+      The last two run at reasoning effort high, the effort coding agents are usually
+      run at [10]; GPT-4o-mini has no effort setting. In each cell one model writes
+      the store (Mem0, Zep) and answers every question, or drives the agent.'
+    location: https://arxiv.org/html/2610.29823v1#S2
+  - id: S5
+    title: Photos.
+    text: Some LoCoMo turns share a photo, and the official file holds a caption of
+      it next to the turn text. The agents get the official file, captions included;
+      the memory methods were given the turn text only. 116 of the 419 turns share
+      a photo, and 64 of the 152 questions have evidence in such a turn. Section 5
+      measures what this changes.
+    location: https://arxiv.org/html/2610.29823v1#S2.SS0.SSS0.Px1
+  - id: S6
+    title: Measurement.
+    text: 'A rollout is one run over the conversation: the build, then the 152 questions.
+      GPT-4o-mini grades every answer with Mem0’s 2025 judge rubric [1]; empty answers
+      count as wrong. Cost is the list price of every model call, LLM and embedding
+      (text-embedding-3-small), with the judge excluded. A turn is one LLM call: one
+      per question for the memory methods, one per step of an agent’s loop, and Mem0’s
+      and Zep’s calls to build their store. Tokens are those calls’ input and output
+      tokens, cached input included; embeddings are not counted. Each cell runs once.'
+    location: https://arxiv.org/html/2610.29823v1#S2.SS0.SSS0.Px2
+  - id: S7
+    title: 3 Agent memory is a costly patch for a weak model
+    text: 'With GPT-4o-mini, Mem0 scores highest. It scores 78%, against 74% for both
+      full context and BM25; Zep scores 43%. The agents score 63% (Pi), 28% (Codex)
+      and 29% (Claude Code): Codex opens the conversation file for three questions
+      in four and Claude Code almost never, and otherwise they answer from the question
+      alone.
+
+
+      With the two stronger models, the patch stops helping. With GPT-6 Luna, full
+      context scores 92%, BM25 82%, Mem0 80% and Zep 51%; Zep’s graph holds 128 facts
+      from the 19 sessions, against 195 with Claude Opus 5.5. With Claude Opus 5.5,
+      Mem0 and full context both score 95% and Zep 87%, and the agents score highest:
+      Pi 99%, Codex 98% and Claude Code 97%, a lead that comes mostly from questions
+      about photos (Section 5). Earlier work also finds that plain retrieval keeps
+      up with elaborate memory [11] and that rankings between memory systems change
+      with the model [12].
+
+
+      Figure 2: Cumulative cost–correct curves. Each curve is one rollout: the build,
+      then the questions from cheapest to most expensive (equal costs grouped), adding
+      up cost and correct answers; correct answers are divided by 152, so a wrong
+      answer adds cost only. Colour is the model, the badge the method, and agents
+      are dotted. The cost axis is linear to $2 and logarithmic above. Curves use
+      a nine-point moving average, and the badges mark the unsmoothed totals of Table
+      2. Strong lines are cells that no other cell beats on both cost and correct
+      answers.
+
+
+      The patch is not free. Mem0’s build alone costs more than full context’s whole
+      rollout with the same model: $0.56 against $0.43 with GPT-4o-mini, $0.45 against
+      $0.29 with GPT-6 Luna and $25.88 against $17.84 with Claude Opus 5.5 (Figure
+      2). Its questions are cheaper, so the build would pay for itself after 372,
+      545 and 596 questions on the same history; LoCoMo asks 152. Mem0 and Zep are
+      never on the frontier of Figure 1, which runs through BM25 and full context
+      with GPT-6 Luna and Pi with Claude Opus 5.5. Paying to build memory that a stronger
+      model does not need is a memory tax.'
+    location: https://arxiv.org/html/2610.29823v1#S3
+  - id: S8
+    title: 4 Agent memory has a ceiling
+    text: 'The model that writes the store limits every reader. Mem0 and Zep write
+      their store with the same model that later reads it. Retrieval calls no language
+      model, so the reader can be swapped: each model answers from the retrievals
+      of the others’ stores (Figure 3, Table 3).
+
+
+      Figure 3: Writer and reader. Each colour is one store, written by that model.
+      The filled badge is the writer reading its own store, and arrows run from it
+      to the other two readers.
+
+
+      A stronger reader does not recover what the writer left out. On Zep’s GPT-4o-mini
+      graph, GPT-4o-mini, GPT-6 Luna and Claude Opus 5.5 score 43%, 43% and 45%; on
+      the graph Claude Opus 5.5 wrote, 66%, 71% and 87%. Mem0 keeps the order with
+      smaller gaps: 78%, 83% and 84% from GPT-4o-mini’s store, 89%, 91% and 95% from
+      Claude Opus 5.5’s. This agrees with work where verbatim chunks beat extracted
+      facts on long conversations [13].'
+    location: https://arxiv.org/html/2610.29823v1#S4
+  - id: S9
+    title: 5 With Claude Opus 5.5, Pi tops the frontier
+    text: 'Pi with Claude Opus 5.5 is the top of the frontier in Figure 1. No other
+      cell scores higher: Pi scores 99% for $6.95 a rollout, while full context with
+      the same model scores 95% for $17.84. Pi reads about 10,000 input tokens a question,
+      7,900 of them cached, against 28,900 for full context. Codex and Claude Code
+      score 98% and 97% for $25.41 and $28.41; HarnessTax explains why the same model
+      costs so differently across harnesses [10].
+
+
+      Its one miss is LoCoMo’s mistake. The question asks what kind of painting Caroline
+      shared with Melanie on 13 October 2023, and the answer key says an abstract
+      painting with blue streaks. In the conversation it is Melanie who shares that
+      painting; Caroline shares a drawing. Pi says so and is marked wrong: “Caroline
+      shared a drawing, not a painting. … The paintings shared that day (a sunset
+      and an abstract piece) were Melanie’s.” With Claude Opus 5.5, full context,
+      Codex and Claude Code point out the same mistake and are marked wrong too. On
+      the other 151 questions, Pi with Claude Opus 5.5 is always right.
+
+
+      Photo captions account for most of Pi’s lead over full context. With Claude
+      Opus 5.5, Pi answers seven questions that full context misses and misses none
+      that it answers. Six of the seven have their evidence in a turn that shares
+      a photo, whose caption Pi could read and full context could not (Section 2);
+      so do all six such questions for Codex and all four for Claude Code. On the
+      88 questions without photo evidence, Pi scores 100%, and full context, Mem0,
+      Codex and Claude Code 99% each (Table 4). With the same input, then, Pi matches
+      full context for less than half its cost. Whether searching the record answers
+      more than reading all of it, this study does not settle.'
+    location: https://arxiv.org/html/2610.29823v1#S5
+  - id: S10
+    title: 6 Discussion and limitations
+    text: 'Our results suggest that agent memory is a costly patch for a weak model
+      and caps what any reader can answer. On this LoCoMo conversation, Mem0 helps
+      GPT-4o-mini but not GPT-6 Luna or Claude Opus 5.5, a stronger reader does not
+      recover what the writer left out, and with Claude Opus 5.5 Pi answers every
+      sound question for less than full context costs.
+
+
+      The findings rest on a small study, and these limits apply:
+
+
+      •
+
+
+      Scale. One conversation of LoCoMo’s ten, and one run per cell. Differences of
+      a few questions may not hold in a second run.
+
+
+      •
+
+
+      Grading. A GPT-4o-mini judge with a lenient rubric, and at least one wrong answer
+      key.
+
+
+      •
+
+
+      Photo captions. The agents could read photo captions that the memory methods
+      were not given (Section 5). This touches comparisons between agents and memory
+      methods, not those among the memory methods.
+
+
+      •
+
+
+      Context length. The history fits in every model’s context window, so full context
+      is always an option. Results may differ on other benchmarks such as LongMemEval
+      [14] and on histories that do not fit.
+
+
+      •
+
+
+      Settings and prices. Mem0 and Zep run with their default extraction and retrieval,
+      and other settings may do better. Costs are list prices and depend on each provider’s
+      caching.
+
+
+      Memory systems and harnesses can also be searched for automatically [15, 16],
+      but what is found is still fixed before the question arrives. More broadly,
+      a strong model may need less designed memory and better tools: exact, semantic
+      and vector search over the raw record, driven by the model itself [3, 4]. Progress
+      may then look less like another memory system and more like ripgrep after grep
+      [17], or zvec-grep after ripgrep [18]. Designed memory may survive as a cost
+      trade-off when many questions share one history (Figure 2).'
+    location: https://arxiv.org/html/2610.29823v1#S6
+  - id: S11
+    title: References
+    text: '[1]
+
+
+      P. Chhikara, D. Khant, S. Aryan, T. Singh, and D. Yadav.
+
+
+      Mem0: Building production-ready AI agents with scalable long-term
+
+
+      memory, 2025.
+
+
+      URL https://arxiv.org/abs/2504.19413.
+
+
+      [2]
+
+
+      P. Rasmussen, P. Paliychuk, T. Beauvais, J. Ryan, and D. Chalef.
+
+
+      Zep: A temporal knowledge graph architecture for agent memory, 2025.
+
+
+      URL https://arxiv.org/abs/2501.13956.
+
+
+      [3]
+
+
+      Pi contributors.
+
+
+      Pi coding agent: Compaction and session persistence.
+
+
+      Software documentation and source, 2026.
+
+
+      URL https://github.com/earendil-works/pi.
+
+
+      [4]
+
+
+      OpenAI.
+
+
+      Codex: An open-source coding agent, 2026.
+
+
+      URL https://github.com/openai/codex.
+
+
+      [5]
+
+
+      Anthropic.
+
+
+      Claude code, 2026.
+
+
+      URL https://github.com/anthropics/claude-code.
+
+
+      [6]
+
+
+      A. L. Zhang, T. Kraska, and O. Khattab.
+
+
+      Recursive language models, 2025a.
+
+
+      URL https://arxiv.org/abs/2512.24601.
+
+
+      [7]
+
+
+      R. S. Sutton.
+
+
+      The bitter lesson.
+
+
+      Essay, 2019.
+
+
+      URL http://www.incompleteideas.net/IncIdeas/BitterLesson.html.
+
+
+      [8]
+
+
+      S. Robertson and H. Zaragoza.
+
+
+      The probabilistic relevance framework: BM25 and beyond.
+
+
+      Foundations and Trends in Information Retrieval, 3(4):333–389, 2009.
+
+
+      doi: 10.1561/1500000019.
+
+
+      [9]
+
+
+      A. Maharana, D.-H. Lee, S. Tulyakov, M. Bansal, F. Barbieri, and Y. Fang.
+
+
+      Evaluating very long-term conversational memory of LLM agents,
+
+
+      2024.
+
+
+      URL https://arxiv.org/abs/2402.17753.
+
+
+      [10]
+
+
+      Arena Team.
+
+
+      HarnessTax: How much does the harness matter for coding agents?
+
+
+      Arena blog, 2026.
+
+
+      URL https://arena.ai/blog/coding-agents-harness-tax.
+
+
+      [11]
+
+
+      Y. Wu, W. Chen, Z. Huang, et al.
+
+
+      Back to basics: Let conversational agents remember with just
+
+
+      retrieval and generation, 2026.
+
+
+      URL https://arxiv.org/abs/2604.11628.
+
+
+      [12]
+
+
+      K. Wang.
+
+
+      MemDelta: Controlled baselines and hidden confounds in agent memory
+
+
+      evaluation, 2026.
+
+
+      URL https://arxiv.org/abs/2606.29914.
+
+
+      [13]
+
+
+      T. An.
+
+
+      Fidelity before structure: Verbatim chunks beat lossy artifact
+
+
+      extraction in long-conversation LLM memory, 2026.
+
+
+      URL https://arxiv.org/abs/2601.00821.
+
+
+      [14]
+
+
+      D. Wu, H. Wang, W. Yu, Y. Zhang, K.-W. Chang, and D. Yu.
+
+
+      LongMemEval: Benchmarking chat assistants on long-term interactive
+
+
+      memory, 2024.
+
+
+      URL https://arxiv.org/abs/2410.10813.
+
+
+      [15]
+
+
+      G. Zhang, H. Ren, C. Zhan, et al.
+
+
+      MemEvolve: Meta-evolution of agent memory systems,
+
+
+      2025b.
+
+
+      URL https://arxiv.org/abs/2512.18746.
+
+
+      [16]
+
+
+      Y. Lee, R. Nair, Q. Zhang, K. Lee, O. Khattab, and C. Finn.
+
+
+      Meta-harness: End-to-end optimization of model harnesses, 2026.
+
+
+      URL https://arxiv.org/abs/2603.28052.
+
+
+      [17]
+
+
+      A. Gallant.
+
+
+      ripgrep.
+
+
+      Software, 2016.
+
+
+      URL https://github.com/BurntSushi/ripgrep.
+
+
+      [18]
+
+
+      Zvec Team.
+
+
+      From rg to zg: Local search beyond keywords.
+
+
+      Zvec blog, 2026.
+
+
+      URL https://zvec.org/en/blog/2026-08-28-zvec-grep-open-source/.
+
+
+      [19]
+
+
+      Harbor Framework Team.
+
+
+      Harbor: A framework for evaluating and optimizing agents and models
+
+
+      in container environments.
+
+
+      Software, 2026.
+
+
+      URL https://doi.org/10.5281/zenodo.20953922.'
+    location: https://arxiv.org/html/2610.29823v1#bib
+  - id: S12
+    title: Appendix A Full results
+    text: 'Table 2 gives every cell’s cost and correct rate, Table 3 the writer–reader
+      grid behind Figure 3, and Table 4 the split by photo evidence. Figure 4 redraws
+      Figure 2 against turns and tokens.
+
+
+      Table 2: Per method and model. Cost is the list price of every model call except
+      the judge: Build is paid once, before any question; Per q. is everything one
+      question costs, retrieval included, averaged over the 152 questions. \circ :
+      nothing is built. Effort: the model’s reasoning effort; GPT-4o-mini has none.
+      Correct: share of answers judged correct, in %, per LoCoMo category (single-hop,
+      multi-hop, temporal, open-domain); the first row gives each category’s size.
+
+
+      Cost ($)
+
+
+      Correct (%)
+
+
+      Method
+
+
+      Model
+
+
+      Effort
+
+
+      Build
+
+
+      Per q.
+
+
+      Single
+
+
+      Multi
+
+
+      Temp.
+
+
+      Open
+
+
+      All
+
+
+      Questions
+
+
+      70
+
+
+      32
+
+
+      37
+
+
+      13
+
+
+      152
+
+
+      Full context
+
+
+      GPT-4o-mini
+
+
+      –
+
+
+      \circ
+
+
+      0.0028
+
+
+      89
+
+
+      75
+
+
+      51
+
+
+      62
+
+
+      74
+
+
+      GPT-6 Luna
+
+
+      high
+
+
+      \circ
+
+
+      0.0019
+
+
+      90
+
+
+      97
+
+
+      95
+
+
+      85
+
+
+      92
+
+
+      Claude Opus 5.5
+
+
+      high
+
+
+      \circ
+
+
+      0.117
+
+
+      93
+
+
+      94
+
+
+      97
+
+
+      100
+
+
+      95
+
+
+      BM25
+
+
+      GPT-4o-mini
+
+
+      –
+
+
+      \circ
+
+
+      0.00028
+
+
+      86
+
+
+      50
+
+
+      73
+
+
+      69
+
+
+      74
+
+
+      GPT-6 Luna
+
+
+      high
+
+
+      \circ
+
+
+      0.00021
+
+
+      89
+
+
+      63
+
+
+      89
+
+
+      69
+
+
+      82
+
+
+      Claude Opus 5.5
+
+
+      high
+
+
+      \circ
+
+
+      0.013
+
+
+      93
+
+
+      81
+
+
+      92
+
+
+      92
+
+
+      90
+
+
+      Mem0
+
+
+      GPT-4o-mini
+
+
+      –
+
+
+      0.559
+
+
+      0.0013
+
+
+      87
+
+
+      75
+
+
+      65
+
+
+      77
+
+
+      78
+
+
+      GPT-6 Luna
+
+
+      high
+
+
+      0.449
+
+
+      0.0011
+
+
+      89
+
+
+      88
+
+
+      57
+
+
+      85
+
+
+      80
+
+
+      Claude Opus 5.5
+
+
+      high
+
+
+      25.876
+
+
+      0.074
+
+
+      93
+
+
+      97
+
+
+      97
+
+
+      100
+
+
+      95
+
+
+      Zep
+
+
+      GPT-4o-mini
+
+
+      –
+
+
+      0.092
+
+
+      0.00012
+
+
+      51
+
+
+      34
+
+
+      30
+
+
+      54
+
+
+      43
+
+
+      GPT-6 Luna
+
+
+      high
+
+
+      0.103
+
+
+      0.00012
+
+
+      54
+
+
+      50
+
+
+      49
+
+
+      46
+
+
+      51
+
+
+      Claude Opus 5.5
+
+
+      high
+
+
+      6.224
+
+
+      0.0077
+
+
+      83
+
+
+      94
+
+
+      89
+
+
+      85
+
+
+      87
+
+
+      Pi
+
+
+      GPT-4o-mini
+
+
+      –
+
+
+      \circ
+
+
+      0.016
+
+
+      74
+
+
+      59
+
+
+      35
+
+
+      85
+
+
+      63
+
+
+      GPT-6 Luna
+
+
+      high
+
+
+      \circ
+
+
+      0.0032
+
+
+      96
+
+
+      81
+
+
+      92
+
+
+      92
+
+
+      91
+
+
+      Claude Opus 5.5
+
+
+      high
+
+
+      \circ
+
+
+      0.046
+
+
+      99
+
+
+      100
+
+
+      100
+
+
+      100
+
+
+      99
+
+
+      Codex
+
+
+      GPT-4o-mini
+
+
+      –
+
+
+      \circ
+
+
+      0.0031
+
+
+      30
+
+
+      22
+
+
+      24
+
+
+      46
+
+
+      28
+
+
+      GPT-6 Luna
+
+
+      high
+
+
+      \circ
+
+
+      0.0050
+
+
+      90
+
+
+      84
+
+
+      89
+
+
+      85
+
+
+      88
+
+
+      Claude Opus 5.5
+
+
+      high
+
+
+      \circ
+
+
+      0.167
+
+
+      99
+
+
+      100
+
+
+      95
+
+
+      100
+
+
+      98
+
+
+      Claude Code
+
+
+      GPT-4o-mini
+
+
+      –
+
+
+      \circ
+
+
+      0.0020
+
+
+      34
+
+
+      22
+
+
+      8
+
+
+      77
+
+
+      29
+
+
+      GPT-6 Luna
+
+
+      high
+
+
+      \circ
+
+
+      0.0082
+
+
+      96
+
+
+      78
+
+
+      95
+
+
+      92
+
+
+      91
+
+
+      Claude Opus 5.5
+
+
+      high
+
+
+      \circ
+
+
+      0.187
+
+
+      99
+
+
+      94
+
+
+      97
+
+
+      100
+
+
+      97
+
+
+      Table 3: Writer and reader. Correct rate (%), the reader answering from the
+      writer’s store and its retrievals. Bold: one model writes and reads (Table 2).
+
+
+      Mem0, read by
+
+
+      Zep, read by
+
+
+      Written by
+
+
+      GPT-4o-mini
+
+
+      GPT-6 Luna
+
+
+      Opus 5.5
+
+
+      GPT-4o-mini
+
+
+      GPT-6 Luna
+
+
+      Opus 5.5
+
+
+      GPT-4o-mini
+
+
+      78
+
+
+      83
+
+
+      84
+
+
+      43
+
+
+      43
+
+
+      45
+
+
+      GPT-6 Luna
+
+
+      74
+
+
+      80
+
+
+      81
+
+
+      52
+
+
+      51
+
+
+      55
+
+
+      Claude Opus 5.5
+
+
+      89
+
+
+      91
+
+
+      95
+
+
+      66
+
+
+      71
+
+
+      87
+
+
+      Table 4: Correct rate (%) on the 64 questions with evidence in a turn that shares
+      a photo, whose caption only the agents could read, and on the other 88.
+
+
+      GPT-4o-mini
+
+
+      GPT-6 Luna
+
+
+      Claude Opus 5.5
+
+
+      Method
+
+
+      Photo (64)
+
+
+      Other (88)
+
+
+      Photo (64)
+
+
+      Other (88)
+
+
+      Photo (64)
+
+
+      Other (88)
+
+
+      Full context
+
+
+      66
+
+
+      81
+
+
+      91
+
+
+      93
+
+
+      89
+
+
+      99
+
+
+      BM25
+
+
+      61
+
+
+      83
+
+
+      78
+
+
+      84
+
+
+      84
+
+
+      94
+
+
+      Mem0
+
+
+      70
+
+
+      84
+
+
+      72
+
+
+      86
+
+
+      91
+
+
+      99
+
+
+      Zep
+
+
+      33
+
+
+      50
+
+
+      53
+
+
+      50
+
+
+      77
+
+
+      94
+
+
+      Pi
+
+
+      53
+
+
+      69
+
+
+      88
+
+
+      94
+
+
+      98
+
+
+      100
+
+
+      Codex
+
+
+      22
+
+
+      33
+
+
+      84
+
+
+      91
+
+
+      97
+
+
+      99
+
+
+      Claude Code
+
+
+      17
+
+
+      38
+
+
+      91
+
+
+      92
+
+
+      95
+
+
+      99
+
+
+      Figure 4: The curves of Figure 2 against turns (LLM calls, top) and tokens (bottom),
+      on linear axes, the questions ordered by that amount. Strong lines are cells
+      that no other cell beats on both that amount and correct answers.'
+    location: https://arxiv.org/html/2610.29823v1#A1
+  - id: S13
+    title: Appendix B Protocols
+    text: 'Mem0 OSS 2.1.0 writes one chronological turn at a time and retrieves k=200
+      without reranking; dates are prepended to the text. Zep runs Graphiti OSS 0.30.2
+      on Kuzu, one session per episode, with hybrid edge search (top 20). The memory
+      methods’ GPT-6 Luna and Claude Opus 5.5 requests set reasoning effort high.
+
+
+      Each agent question is a Harbor 0.24.0 task [19]: a fresh container holding
+      only the conversation, exactly as in the official file, without questions or
+      answers. The agent’s last message is its answer. While the agent runs, the container
+      can reach only the model endpoint. GPT-6 Luna and Claude Opus 5.5 run at reasoning
+      effort high, through a proxy that translates the API where an agent does not
+      speak the model’s own; GPT-4o-mini has no effort setting. Codex and Claude Code
+      have web search off; Pi has none. A question may take 20 minutes, and Pi and
+      Claude Code at most 100 turns. With GPT-6 Luna, Codex picks its code mode: one
+      JavaScript tool that calls the shell. A trial that fails or ends without an
+      answer is run again, and only the accepted trial is counted.'
+    location: https://arxiv.org/html/2610.29823v1#A2
+  - id: S14
+    title: Appendix C Prompts
+    text: 'Each prompt is copied from the code the runs called; fields in braces are
+      filled per question.
+
+
+      Answer, system message.
+
+
+      ⬇
+
+
+      You are a helpful assistant that can answer questions based on the provided
+      context.If the question involves timing, use the conversation date for reference.Provide
+      the shortest possible answer.Use words directly from the conversation when possible.Avoid
+      using subjects in your answer.
+
+
+      Answer, user message.
+
+
+      ⬇
+
+
+      # Question:
+
+
+      {{QUESTION}}
+
+
+      # Context:
+
+
+      {{CONTEXT}}
+
+
+      # Short answer:
+
+
+      Pi, Codex and Claude Code, user message.
+
+
+      ⬇
+
+
+      Answer a question about the conversation in `conv-26/conv.json`. If the question
+      involves timing, use the conversation date for reference. Provide the shortest
+      possible answer. Use words directly from the conversation when possible. Avoid
+      using subjects in your answer. Your final message is taken as the answer.
+
+
+      Question: {question}
+
+
+      Judge.
+
+
+      ⬇
+
+
+      Your task is to label an answer to a question as ’CORRECT’ or ’WRONG’. You will
+      be given the following data:
+
+
+      (1) a question (posed by one user to another user),
+
+
+      (2) a ’gold’ (ground truth) answer,
+
+
+      (3) a generated answer
+
+
+      which you will score as CORRECT/WRONG.
+
+
+      The point of the question is to ask about something one user should know about
+      the other user based on their prior conversations.
+
+
+      The gold answer will usually be a concise and short answer that includes the
+      referenced topic, for example:
+
+
+      Question: Do you remember what I got the last time I went to Hawaii?
+
+
+      Gold answer: A shell necklace
+
+
+      The generated answer might be much longer, but you should be generous with your
+      grading - as long as it touches on the same topic as the gold answer, it should
+      be counted as CORRECT.
+
+
+      For time related questions, the gold answer will be a specific date, month,
+      year, etc. The generated answer might be much longer or use relative time references
+      (like "last Tuesday" or "next month"), but you should be generous with your
+      grading - as long as it refers to the same date or time period as the gold answer,
+      it should be counted as CORRECT. Even if the format differs (e.g., "May 7th"
+      vs "7 May"), consider it CORRECT if it''s the same date.
+
+
+      Now it''s time for the real question:
+
+
+      Question: {question}
+
+
+      Gold answer: {gold_answer}
+
+
+      Generated answer: {generated_answer}
+
+
+      First, provide a short (one sentence) explanation of your reasoning, then finish
+      with CORRECT or WRONG.
+
+
+      Do NOT include both CORRECT and WRONG in your response, or it will break the
+      evaluation script.
+
+
+      Just return the label CORRECT or WRONG in a json format with the key as "label".'
+    location: https://arxiv.org/html/2610.29823v1#A3
+  format: html
+  coverage: full_text
+  source_url: https://arxiv.org/html/2610.29823v1
+  attempts:
+  - format: html
+    url: https://arxiv.org/html/2610.29823v1
+    status: success
+    reason: extracted
+  text_sha256: 4cd9464542e8b0dc3c852f09aa24067675355e9d10b7ebf839e8b29bbe3dbeb8
+  total_chars: 21866
+  limitations:
+  - Text extraction does not verify figures, layout, or faithful mathematical rendering.
+  extraction_scope: complete extracted document text including available references
+  http:
+    url: https://arxiv.org/html/2610.29823v1
+    requested_url: https://arxiv.org/html/2610.29823v1
+    content_type: text/html
+    fetched_at: '2026-10-31T10:13:09.626656+00:00'
+    sha256: d3576e6f51512f5995304b97cc9eac942507cc97f14529824d92b777910d7b1c
+responses:
+- url: https://arxiv.org/abs/2610.29823v1
+  requested_url: https://arxiv.org/abs/2610.29823v1
+  content_type: text/html
+  fetched_at: '2026-10-31T10:13:06.627872+00:00'
+  status: 200
+  redirects: []
+  sha256: 1461223ff62d00482387ce0bfafdc177b0af8bbae2fd4230ec64df6ca3552489
+- url: https://arxiv.org/html/2610.29823v1
+  requested_url: https://arxiv.org/html/2610.29823v1
+  content_type: text/html
+  fetched_at: '2026-10-31T10:13:09.626656+00:00'
+  status: 200
+  redirects: []
+  sha256: d3576e6f51512f5995304b97cc9eac942507cc97f14529824d92b777910d7b1c
+captured_at: '2026-10-31T10:13:27.317209+00:00'

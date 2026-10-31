@@ -1,0 +1,12 @@
+type: call_completed
+reservation_id: review-0
+role: review
+revision: 0
+model_id: gpt-6-astra
+response_path: reports/test/agent-memory/insight-runs/agent-memory-20261031-acceptance/checkpoints/review-0.yaml
+response_sha256: c2b9917e6ea371540e7d3010d1dd9b53964321b660261b83c9e969605e3fae82
+usage:
+  input_tokens: 76824
+  output_tokens: 390
+  total_tokens: 77214
+at: '2026-10-31T10:19:19.697179+00:00'

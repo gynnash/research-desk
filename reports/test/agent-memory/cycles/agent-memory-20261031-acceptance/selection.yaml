@@ -1,0 +1,301 @@
+candidates:
+- adapter: arxiv
+  source_id: arxiv
+  kind: paper
+  url: https://arxiv.org/abs/2610.29823
+  metadata:
+    title: 'MemoryTax: The Bitter Lesson of Agent Memory'
+    source: arXiv
+    source_url: https://arxiv.org/abs/2610.29823
+    authors:
+    - Zedong Peng
+    published_at: '2026-10-21'
+    arxiv_id: '2610.29823'
+    source_version: v1
+  published_at: '2026-10-21'
+  upstream_updated_at: '2026-10-21T14:46:27Z'
+  content_hash: 6152777770d924654cf924c3af3c7ac1092774eebf0a5f53256d4cb2e12e2a26
+  identity_keys:
+  - arxiv:2610.29823
+  - url:https://arxiv.org/abs/2610.29823
+  discovery_event: published
+  coverage: abstract_only
+  source:
+    id: arxiv-c9ee1ae11513
+    adapter: arxiv
+    kind: paper
+    url: https://arxiv.org/abs/2610.29823v1
+    evidence_max_chars: 200000
+    reading:
+      mode: full_text_required
+    archive: true
+  attention:
+    status: partial
+    community_attention_score: 0.693147
+    observed_at: '2026-10-31T10:11:46.466368+00:00'
+    scope: Observed Hugging Face paper votes/comments and matching Hacker News stories
+      only; not research quality or whole-web popularity.
+    formula: log1p(hf_upvotes) + log1p(hn_points) + 0.5*log1p(hf_comments) + 0.5*log1p(hn_comments);
+      missing metrics omitted
+    providers:
+    - provider: huggingface
+      request_url: https://huggingface.co/api/papers/2610.29823
+      source_url: https://huggingface.co/api/papers/2610.29823
+      observed_at: '2026-10-31T10:11:46.466368+00:00'
+      status: unknown
+      metrics: {}
+      response_sha256: null
+      reason: provider_fetch_or_schema_failed
+      error_type: SourceError
+    - provider: hackernews
+      request_url: https://hn.algolia.com/api/v1/search?query=2610.29823&restrictSearchableAttributes=url&tags=story&hitsPerPage=10&numericFilters=created_at_i%3E%3D1788257496%2Ccreated_at_i%3C1793441496
+      source_url: https://hn.algolia.com/api/v1/search?query=2610.29823&restrictSearchableAttributes=url&tags=story&hitsPerPage=10&numericFilters=created_at_i%3E%3D1788257496%2Ccreated_at_i%3C1793441496
+      observed_at: '2026-10-31T10:12:25.047333+00:00'
+      status: observed
+      metrics:
+        points: 1
+        comments: 0
+        matching_stories: 1
+      response_sha256: cc8e2d91d7b4ca346950e153ed95cb25a52d0d60201f1953fe430c1712f87d18
+      digest_scope: response_body
+      stories:
+      - source_url: https://news.ycombinator.com/item?id=50209933
+        original_url: https://arxiv.org/abs/2610.29823
+        created_at_i: 1792766683
+        points: 1
+        comments: 0
+      search_complete: false
+      inspected_hits: 1
+      reported_hits: 1
+      limitation: At most 10 search hits; only exact original identities and in-window
+        stories count. No matching story is not zero global attention.
+    score_is_observed_lower_bound: true
+- adapter: arxiv
+  source_id: arxiv
+  kind: paper
+  url: https://arxiv.org/abs/2610.29249
+  metadata:
+    title: 'MOSAIC: An Omni-Modal Benchmark for Long-Term Memory and Cross-Modal Reasoning
+      in Conversational Agents'
+    source: arXiv
+    source_url: https://arxiv.org/abs/2610.29249
+    authors:
+    - Hong Ting Tsang
+    - Boyi Zhang
+    - Haoyu Huang
+    - Jiaxin Bai
+    - Yufei Li
+    - Yisen Gao
+    - Zhongwei Xie
+    - Hongyu Luo
+    - Jeff Z. Pan
+    - Yangqiu Song
+    published_at: '2026-10-21'
+    arxiv_id: '2610.29249'
+    source_version: v1
+  published_at: '2026-10-21'
+  upstream_updated_at: '2026-10-21T05:55:20Z'
+  content_hash: e17fc6118cc63f4cd73470eab9b971f3e4233e2c66439b067ffc90cc418b024d
+  identity_keys:
+  - arxiv:2610.29249
+  - url:https://arxiv.org/abs/2610.29249
+  discovery_event: published
+  coverage: abstract_only
+  source:
+    id: arxiv-fba293e24c11
+    adapter: arxiv
+    kind: paper
+    url: https://arxiv.org/abs/2610.29249v1
+    evidence_max_chars: 200000
+    reading:
+      mode: full_text_required
+    archive: true
+  attention:
+    status: partial
+    community_attention_score: 0.693147
+    observed_at: '2026-10-31T10:11:46.466368+00:00'
+    scope: Observed Hugging Face paper votes/comments and matching Hacker News stories
+      only; not research quality or whole-web popularity.
+    formula: log1p(hf_upvotes) + log1p(hn_points) + 0.5*log1p(hf_comments) + 0.5*log1p(hn_comments);
+      missing metrics omitted
+    providers:
+    - provider: huggingface
+      request_url: https://huggingface.co/api/papers/2610.29249
+      source_url: https://huggingface.co/papers/2610.29249
+      observed_at: '2026-10-31T10:12:29.571094+00:00'
+      status: partial
+      metrics:
+        upvotes: 1
+        comments: null
+      response_sha256: 5e8ba7cd1885543c28d9091dcbf2efc7fc69ba5139cc6d94d47a195f2c7b97e4
+      digest_scope: response_body
+      reason: missing_or_invalid_metrics
+    - provider: hackernews
+      request_url: https://hn.algolia.com/api/v1/search?query=2610.29249&restrictSearchableAttributes=url&tags=story&hitsPerPage=10&numericFilters=created_at_i%3E%3D1788257496%2Ccreated_at_i%3C1793441496
+      source_url: https://hn.algolia.com/api/v1/search?query=2610.29249&restrictSearchableAttributes=url&tags=story&hitsPerPage=10&numericFilters=created_at_i%3E%3D1788257496%2Ccreated_at_i%3C1793441496
+      observed_at: '2026-10-31T10:12:30.798197+00:00'
+      status: no_matching_story
+      metrics:
+        points: 0
+        comments: 0
+        matching_stories: 0
+      response_sha256: 9c1ed8cd43f1d1690cb713eaaaeb49003abb05274d4b468e5d0f1167e883ebea
+      digest_scope: response_body
+      stories: []
+      search_complete: false
+      inspected_hits: 0
+      reported_hits: 0
+      limitation: At most 10 search hits; only exact original identities and in-window
+        stories count. No matching story is not zero global attention.
+    score_is_observed_lower_bound: true
+skipped: []
+pending:
+- adapter: arxiv
+  source_id: arxiv
+  kind: paper
+  url: https://arxiv.org/abs/2610.30485
+  metadata:
+    title: Why Bother Me Again? Benchmarking Personal Agent Memory for Interaction
+      Preferences
+    source: arXiv
+    source_url: https://arxiv.org/abs/2610.30485
+    authors:
+    - Jialin Li
+    - Zhenhao Chen
+    - Hanjun Luo
+    - Hanan Salam
+    published_at: '2026-10-21'
+    arxiv_id: '2610.30485'
+    source_version: v1
+  published_at: '2026-10-21'
+  upstream_updated_at: '2026-10-21T22:08:49Z'
+  content_hash: 30e7b3e7c0e688c075498b3ab85f748558283516a071ec220732df468e905e9f
+  identity_keys:
+  - arxiv:2610.30485
+  - url:https://arxiv.org/abs/2610.30485
+  discovery_event: published
+  coverage: abstract_only
+  source:
+    id: arxiv-dfa288d7a540
+    adapter: arxiv
+    kind: paper
+    url: https://arxiv.org/abs/2610.30485v1
+    evidence_max_chars: 200000
+    reading:
+      mode: full_text_required
+    archive: true
+  attention:
+    status: partial
+    community_attention_score: 0.693147
+    observed_at: '2026-10-31T10:11:46.466368+00:00'
+    scope: Observed Hugging Face paper votes/comments and matching Hacker News stories
+      only; not research quality or whole-web popularity.
+    formula: log1p(hf_upvotes) + log1p(hn_points) + 0.5*log1p(hf_comments) + 0.5*log1p(hn_comments);
+      missing metrics omitted
+    providers:
+    - provider: huggingface
+      request_url: https://huggingface.co/api/papers/2610.30485
+      source_url: https://huggingface.co/papers/2610.30485
+      observed_at: '2026-10-31T10:12:19.466644+00:00'
+      status: partial
+      metrics:
+        upvotes: 1
+        comments: null
+      response_sha256: 7b189d1137e8243deafaf0f05aadec57925f28a2a5c5cede06986b0b27ebe5e1
+      digest_scope: response_body
+      reason: missing_or_invalid_metrics
+    - provider: hackernews
+      request_url: https://hn.algolia.com/api/v1/search?query=2610.30485&restrictSearchableAttributes=url&tags=story&hitsPerPage=10&numericFilters=created_at_i%3E%3D1788257496%2Ccreated_at_i%3C1793441496
+      source_url: https://hn.algolia.com/api/v1/search?query=2610.30485&restrictSearchableAttributes=url&tags=story&hitsPerPage=10&numericFilters=created_at_i%3E%3D1788257496%2Ccreated_at_i%3C1793441496
+      observed_at: '2026-10-31T10:12:20.590268+00:00'
+      status: no_matching_story
+      metrics:
+        points: 0
+        comments: 0
+        matching_stories: 0
+      response_sha256: 8b4dbd82425d2abdfa1be285b5b951e0b8d2b22aa4efccbdb917f62dd7090723
+      digest_scope: response_body
+      stories: []
+      search_complete: false
+      inspected_hits: 1
+      reported_hits: 1
+      limitation: At most 10 search hits; only exact original identities and in-window
+        stories count. No matching story is not zero global attention.
+    score_is_observed_lower_bound: true
+  reason: preflight_source_failed
+  error_type: SourceError
+  error_reason: 'Full text required; official HTML/PDF unavailable: html: Source response
+    exceeds byte limit or has invalid length; pdf: Source response exceeds byte limit
+    or has invalid length'
+- adapter: arxiv
+  source_id: arxiv
+  kind: paper
+  url: https://arxiv.org/abs/2610.35066
+  metadata:
+    title: 'MemVLN: Streaming Episodic Memory for Vision-Language Navigation'
+    source: arXiv
+    source_url: https://arxiv.org/abs/2610.35066
+    authors:
+    - Yan Wang
+    - Jiangyong Huang
+    - Siyuan Huang
+    - Baoxiong Jia
+    published_at: '2026-10-26'
+    arxiv_id: '2610.35066'
+    source_version: v2
+  published_at: '2026-10-26'
+  upstream_updated_at: '2026-10-27T03:47:53Z'
+  content_hash: d4a1562f8ea81039251cb810a34c3c1ed2823c2bf33b4b4817344cb29d4227c3
+  identity_keys:
+  - arxiv:2610.35066
+  - url:https://arxiv.org/abs/2610.35066
+  discovery_event: published
+  coverage: abstract_only
+  source:
+    id: arxiv-e7c407e1b5d9
+    adapter: arxiv
+    kind: paper
+    url: https://arxiv.org/abs/2610.35066v2
+    evidence_max_chars: 200000
+    reading:
+      mode: full_text_required
+    archive: true
+  attention:
+    status: partial
+    community_attention_score: 0.693147
+    observed_at: '2026-10-31T10:11:46.466368+00:00'
+    scope: Observed Hugging Face paper votes/comments and matching Hacker News stories
+      only; not research quality or whole-web popularity.
+    formula: log1p(hf_upvotes) + log1p(hn_points) + 0.5*log1p(hf_comments) + 0.5*log1p(hn_comments);
+      missing metrics omitted
+    providers:
+    - provider: huggingface
+      request_url: https://huggingface.co/api/papers/2610.35066
+      source_url: https://huggingface.co/papers/2610.35066
+      observed_at: '2026-10-31T10:12:01.689596+00:00'
+      status: partial
+      metrics:
+        upvotes: 1
+        comments: null
+      response_sha256: 2111547380b030b1385f50a2e1af18b41c27cddccefae99af089bb37d348cc21
+      digest_scope: response_body
+      reason: missing_or_invalid_metrics
+    - provider: hackernews
+      request_url: https://hn.algolia.com/api/v1/search?query=2610.35066&restrictSearchableAttributes=url&tags=story&hitsPerPage=10&numericFilters=created_at_i%3E%3D1788257496%2Ccreated_at_i%3C1793441496
+      source_url: https://hn.algolia.com/api/v1/search?query=2610.35066&restrictSearchableAttributes=url&tags=story&hitsPerPage=10&numericFilters=created_at_i%3E%3D1788257496%2Ccreated_at_i%3C1793441496
+      observed_at: '2026-10-31T10:12:02.504036+00:00'
+      status: no_matching_story
+      metrics:
+        points: 0
+        comments: 0
+        matching_stories: 0
+      response_sha256: 19c8ff6c59cb7e4afcdeb58096b5cd532beb83821f1c278e7f9e6911644891d0
+      digest_scope: response_body
+      stories: []
+      search_complete: false
+      inspected_hits: 0
+      reported_hits: 0
+      limitation: At most 10 search hits; only exact original identities and in-window
+        stories count. No matching story is not zero global attention.
+    score_is_observed_lower_bound: true
+  reason: cycle_capacity

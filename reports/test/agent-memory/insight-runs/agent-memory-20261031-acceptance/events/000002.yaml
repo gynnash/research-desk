@@ -1,0 +1,12 @@
+type: call_completed
+reservation_id: generation-0
+role: generation
+revision: 0
+model_id: gpt-6.1-sol
+response_path: reports/test/agent-memory/insight-runs/agent-memory-20261031-acceptance/checkpoints/generation-0.yaml
+response_sha256: 55c8f3922d03725ba3a43852de9e067bc6a741be5966432dfb20e4f09931cf1b
+usage:
+  input_tokens: 73527
+  output_tokens: 4058
+  total_tokens: 77585
+at: '2026-10-31T10:19:08.544742+00:00'

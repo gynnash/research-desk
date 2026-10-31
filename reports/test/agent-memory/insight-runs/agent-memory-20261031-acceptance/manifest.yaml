@@ -1,0 +1,166 @@
+schema_version: 1
+mode: insight_test
+backend: chatgpt_plan
+topic: agent-memory
+batch_id: agent-memory-20261031-acceptance
+created_at: '2026-10-31T10:17:03.127540+00:00'
+fingerprint: b54e78b6c650a837175b9e87f56a062fb99cd783d77f134348dddf6434a63c58
+input_fingerprint: a80fafcb7fe8373f64fb8b3cd944f199477407eb10717db54643afa18a81bcde
+provenance:
+  research_inputs:
+  - id: R1
+    receipt: reports/test/agent-memory/research-batches/agent-memory-20261031-acceptance/receipt-attempt-1.yaml
+    receipt_sha256: 528a48e6e9adc78f4905a4d3b7451acae8974da2a309fad67a0db5eabecc2ae2
+    manifest: reports/test/agent-memory/research-batches/agent-memory-20261031-acceptance/manifest.yaml
+    manifest_sha256: 8fb72d8236d2c6931073b257add72d201cd57bdc5f7cf48956a77a5b24f80d94
+    config: reports/test/agent-memory/cycles/agent-memory-20261031-acceptance/configs/research.yaml
+    config_sha256: c2c7aa6b6dd903176279243d36a83caef858e9303035fa631b7dceb4e227a0fe
+    topics_sha256: 651cea40a6dbfa2568b324491a102b785230a3c63a7ce03f03252ff3b0cdf18d
+    models: &id002
+      research: gpt-6.1-sol
+      review: gpt-6-astra
+    events: &id003
+    - path: reports/test/agent-memory/research-batches/agent-memory-20261031-acceptance/events/000001.yaml
+      sha256: b768b51bb4fa3d03660deba8942f2a8f7f4d561155cdbde77aee1a35f419e841
+    - path: reports/test/agent-memory/research-batches/agent-memory-20261031-acceptance/events/000002.yaml
+      sha256: 406142c0a48792f3e610ce3d40b27e784f610af00c64ac9aeb71f499bbbd74bb
+    - path: reports/test/agent-memory/research-batches/agent-memory-20261031-acceptance/events/000003.yaml
+      sha256: 94fd0afb18c37bf63a5d280922f62f875a42fc421e53c876440b47242e7775c6
+    - path: reports/test/agent-memory/research-batches/agent-memory-20261031-acceptance/events/000004.yaml
+      sha256: c96b55a6420cc67f2aff4b4ebf06342f16f09d074de16852b5d39a530e33a841
+    - path: reports/test/agent-memory/research-batches/agent-memory-20261031-acceptance/events/000005.yaml
+      sha256: e19dbf8a45e1c5cf86e529fbd8d89725c880b2e6f802f2c32703273fff755291
+    - path: reports/test/agent-memory/research-batches/agent-memory-20261031-acceptance/events/000006.yaml
+      sha256: 13ba73bef1c6d4d692fbf7aaf50d5d6ac598389dba8337fe2fe4ca2952d75d33
+    - path: reports/test/agent-memory/research-batches/agent-memory-20261031-acceptance/events/000007.yaml
+      sha256: c0828dd90848f2d2b9b8453fff2ab64a498ad2a19bdd9ddcef34fe9c2f2fb58e
+    - path: reports/test/agent-memory/research-batches/agent-memory-20261031-acceptance/events/000008.yaml
+      sha256: 13f40803d96776ffa5ab76ed3eba3f5794d0dfe92c785b2262d6e2d196131247
+    - path: reports/test/agent-memory/research-batches/agent-memory-20261031-acceptance/events/000009.yaml
+      sha256: 0e8635d51c245c8429aba51a8d0086d4d0184ae38f76a748d18895ea64a43a4e
+    - path: reports/test/agent-memory/research-batches/agent-memory-20261031-acceptance/events/000010.yaml
+      sha256: ed73a0e35160e86ff4a635d86c80a1203f3d4ea787468551ef70ec4eaa2acd02
+    item_keys: &id004
+    - arxiv-c9ee1ae11513
+    - arxiv-fba293e24c11
+    path: reports/test/agent-memory/research-batches/agent-memory-20261031-acceptance/items/arxiv-c9ee1ae11513/report.md
+    sha256: a58ec6b5d2bbc3825d206ca2a82694d4bb98d1904dc616d2f9872d2e78f9ae12
+    source_id: paper-4fe5c214-056e-49c9-b5e1-dfd550ee077f
+    source_ids:
+    - paper-4fe5c214-056e-49c9-b5e1-dfd550ee077f
+    source_url: https://arxiv.org/abs/2610.29823v1
+    identity_keys: &id001
+    - arxiv:2610.29823
+    - url:https://arxiv.org/abs/2610.29823
+    source_identities:
+    - source_id: paper-4fe5c214-056e-49c9-b5e1-dfd550ee077f
+      identity_keys: *id001
+    coverage: full_text
+    origin: reviewed_research
+    candidate_path: reports/test/agent-memory/research-batches/agent-memory-20261031-acceptance/items/arxiv-c9ee1ae11513/candidate.yaml
+    candidate_sha256: c3344d22d19873893eb8e92cebd96f6819243d967f608f9bcf01db3bcd554766
+    content_sha256: 4cd9464542e8b0dc3c852f09aa24067675355e9d10b7ebf839e8b29bbe3dbeb8
+    metadata_sha256: 4692800f704da9b63dd58ad02e4057a51b3b712a987419b780a01df6d8d4f477
+    evidence_sha256: 0ae6b58d024e425fa11213fd1a19b93685386dbc0a41b999a158bc27a0103887
+    original_material_sha256: 0ae6b58d024e425fa11213fd1a19b93685386dbc0a41b999a158bc27a0103887
+    checkpoints:
+    - role: research
+      revision: 0
+      path: reports/test/agent-memory/research-batches/agent-memory-20261031-acceptance/items/arxiv-c9ee1ae11513/checkpoints/research-0.yaml
+      sha256: 0b3f22cd836ee919677f8eece1abad708db4e49450acb966566eacb905077e15
+    - role: review
+      revision: 0
+      path: reports/test/agent-memory/research-batches/agent-memory-20261031-acceptance/items/arxiv-c9ee1ae11513/checkpoints/review-0.yaml
+      sha256: 5f416a9de7ede0b9fbdf9462d5741f21eff99f4febfabafeaef1e8f917ba6bc6
+  - id: R2
+    receipt: reports/test/agent-memory/research-batches/agent-memory-20261031-acceptance/receipt-attempt-1.yaml
+    receipt_sha256: 528a48e6e9adc78f4905a4d3b7451acae8974da2a309fad67a0db5eabecc2ae2
+    manifest: reports/test/agent-memory/research-batches/agent-memory-20261031-acceptance/manifest.yaml
+    manifest_sha256: 8fb72d8236d2c6931073b257add72d201cd57bdc5f7cf48956a77a5b24f80d94
+    config: reports/test/agent-memory/cycles/agent-memory-20261031-acceptance/configs/research.yaml
+    config_sha256: c2c7aa6b6dd903176279243d36a83caef858e9303035fa631b7dceb4e227a0fe
+    topics_sha256: 651cea40a6dbfa2568b324491a102b785230a3c63a7ce03f03252ff3b0cdf18d
+    models: *id002
+    events: *id003
+    item_keys: *id004
+    path: reports/test/agent-memory/research-batches/agent-memory-20261031-acceptance/items/arxiv-fba293e24c11/report.md
+    sha256: 1621848bca29ae269a47ba518c2e113ec813753f7659eb923ba8e3adb52a0db1
+    source_id: paper-85eab296-b33a-475c-ab8e-44d8b6a705b0
+    source_ids:
+    - paper-85eab296-b33a-475c-ab8e-44d8b6a705b0
+    source_url: https://arxiv.org/abs/2610.29249v1
+    identity_keys: &id005
+    - arxiv:2610.29249
+    - url:https://arxiv.org/abs/2610.29249
+    source_identities:
+    - source_id: paper-85eab296-b33a-475c-ab8e-44d8b6a705b0
+      identity_keys: *id005
+    coverage: full_text
+    origin: reviewed_research
+    candidate_path: reports/test/agent-memory/research-batches/agent-memory-20261031-acceptance/items/arxiv-fba293e24c11/candidate.yaml
+    candidate_sha256: d7597b79e66bdaaff512ef9ba381ddce939360cc06acb8cbdaaf35190b2c9045
+    content_sha256: 5dfedade6d935e42558e396316d499e3310839d6a877de997370e286065422f3
+    metadata_sha256: 336b5351e39871c884dff4e60b0b8aa06e5dfb8489bf35b259fdfd726591af96
+    evidence_sha256: 97f797142033f6b6d1be7115e47289a8764c58282bbbf3c655cbcc9932bbd0b9
+    original_material_sha256: 97f797142033f6b6d1be7115e47289a8764c58282bbbf3c655cbcc9932bbd0b9
+    checkpoints:
+    - role: research
+      revision: 0
+      path: reports/test/agent-memory/research-batches/agent-memory-20261031-acceptance/items/arxiv-fba293e24c11/checkpoints/research-0.yaml
+      sha256: 79e1b1b4c686ce232d8e5de3c573eb60c24a7cbb91180c8cdeb8f11f19f8e87e
+    - role: review
+      revision: 0
+      path: reports/test/agent-memory/research-batches/agent-memory-20261031-acceptance/items/arxiv-fba293e24c11/checkpoints/review-0.yaml
+      sha256: e3a24a332fcacf4884ae06dbbfa0767f40022a3b4cb8b7c7e3954dac40e60e3e
+  historical_inputs: []
+models:
+  generation: gpt-6.1-sol
+  review: gpt-6-astra
+budget:
+  max_calls: 4
+  month_max_calls: 100
+  max_input_chars: 600000
+  max_output_chars: 24000
+  timeout_seconds: 240
+  max_revisions: 1
+authorization:
+  authenticated: true
+  plan_permission: true
+  authorization: official_chatgpt_oauth
+  account_fingerprint: 658c777b3a755463
+catalog:
+- slug: gpt-6.1-sol
+  display_name: GPT-6.1-Sol
+- slug: gpt-6-astra
+  display_name: GPT-6-Astra
+- slug: gpt-6.1-terra
+  display_name: GPT-6.1 Terra
+- slug: gpt-6-sol
+  display_name: GPT-6-Sol
+- slug: gpt-6-luna
+  display_name: GPT-6-Luna
+- slug: gpt-5.6-sol
+  display_name: GPT-5.6-Sol
+- slug: gpt-5.6-terra
+  display_name: GPT-5.6-Terra
+- slug: gpt-5.6-luna
+  display_name: GPT-5.6-Luna
+protected_notes:
+  sources/README.md: b5ba2fdf3700bd096cee3a4634ab63c7ba31b1fd92f68d969609259ccbc31980
+  sources/originals/README.md: c4ff2c50b7571c4701325584a4ebd07514d4bf1a1e4672313eedc8f67005acd6
+  sources/originals/agent-memory/README.md: a970001d571a8775e11aa4ec43686908e8ca1120f3759a073f1eeadfa2704d80
+  reports/README.md: 7ac138807af2a74b015a8937b3b194366e5fb63df04fed76e15bf71f53f68101
+  reports/test/agent-memory/research-batches/agent-memory-20261031-fulltext/items/arxiv-310b98d3c9bc/original.md: 009df3d3406cc9c209824c847d73c38985f17a23433a6d456a196fd3fa2ae3f1
+  reports/test/agent-memory/research-batches/agent-memory-20261031-fulltext/items/arxiv-244ddaafb793/original.md: 22cf7d688a57e2a06ed240ebb76b0403d81a6ddfd92c656a1dff8e168d7e2399
+  reports/test/agent-memory/research-batches/agent-memory-20261031-fulltext/items/arxiv-244ddaafb793/report.md: ecf1c810228695d313d401559313f164b2871cf21fc5770b2b5ffea425bd9761
+  reports/test/agent-memory/research-batches/agent-memory-20261031-fulltext/items/arxiv-5121411c921e/original.md: e75781525b0afcea491633d887a3918b3126d55d7ec287b247fa38ba91e61329
+  reports/test/agent-memory/research-batches/agent-memory-20261031-fulltext/items/arxiv-b3ecb03a2b96/original.md: ffb270a6d2b29753790ee07338ed9a07a35f0ba49dd4b53fe65cb851b57b6325
+  reports/test/agent-memory/research-batches/agent-memory-20261031-fulltext/items/arxiv-b3f5ce6ae79c/original.md: e63877fadfbddaa1c80e798a181e5da511dd462260861a559d54d7440b4f5a01
+  reports/test/agent-memory/research-batches/agent-memory-20261031-acceptance/items/arxiv-fba293e24c11/original.md: b1080f072885940ac8583e307b1ef30b03b570624f3fa27edb1f5b50ae57b7f6
+  reports/test/agent-memory/research-batches/agent-memory-20261031-acceptance/items/arxiv-fba293e24c11/report.md: 1621848bca29ae269a47ba518c2e113ec813753f7659eb923ba8e3adb52a0db1
+  reports/test/agent-memory/research-batches/agent-memory-20261031-acceptance/items/arxiv-c9ee1ae11513/original.md: 8a10635b4989d4d53885a31b072e0989b59fe97932a87dd56432454f649c8af6
+  reports/test/agent-memory/research-batches/agent-memory-20261031-acceptance/items/arxiv-c9ee1ae11513/report.md: a58ec6b5d2bbc3825d206ca2a82694d4bb98d1904dc616d2f9872d2e78f9ae12
+  insights/README.md: 5e8db6961d26a131117160b43566d5070194e6e4df56803bc8e0c5310ad60674
+  insights/agent-memory/我的研究问题.md: 0061ca11f8e76a6976b8e6f7f6d3338acccd9a13707321315cee249e0d6667c5
+  articles/README.md: 81fe781caa0ea1fa898d2689011293cc61c98fb20f206825050559206f388afd
+writing_started: false

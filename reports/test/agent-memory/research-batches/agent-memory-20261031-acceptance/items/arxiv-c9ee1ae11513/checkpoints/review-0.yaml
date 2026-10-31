@@ -1,0 +1,28 @@
+binding: d5173b68375fecf5ae340552d6d2b0840e9a852a4ff2c1aa340bffa5037d9258
+result:
+  text: "{\n  \"decision\": \"pass\",\n  \"coverage_acknowledged\": true,\n  \"issues\"\
+    : [\n    {\n      \"severity\": \"info\",\n      \"location\": \"整体阅读范围与 limitations\"\
+    ,\n      \"reason\": \"已按 reading_scope 核对全部提供的抽取正文 A1–A24，包括实验设置、结果表、协议及提示词附录；材料未截断。候选明确说明未独立复现实验，并保留文本抽取不能核验图形、版式及公式渲染的限制，没有将作者报告写成独立验证结果。全文形成四个有实质内容的技术分节，summary、分节承接和\
+    \ limitations 与证据一致。\",\n      \"suggestion\": \"保留现有阅读范围、未复现声明，以及统一输入未重跑和失败尝试不计费的边界说明。\"\
+    \n    }\n  ],\n  \"checks\": [\n    {\n      \"claim_index\": 0,\n      \"verdict\"\
+    : \"supported\",\n      \"evidence_ids\": [\"A3\", \"A5\", \"A19\"]\n    },\n\
+    \    {\n      \"claim_index\": 1,\n      \"verdict\": \"supported\",\n      \"\
+    evidence_ids\": [\"A5\", \"A6\", \"A22\"]\n    },\n    {\n      \"claim_index\"\
+    : 2,\n      \"verdict\": \"supported\",\n      \"evidence_ids\": [\"A5\", \"A8\"\
+    , \"A22\", \"A23\", \"A24\"]\n    },\n    {\n      \"claim_index\": 3,\n     \
+    \ \"verdict\": \"supported\",\n      \"evidence_ids\": [\"A9\"]\n    },\n    {\n\
+    \      \"claim_index\": 4,\n      \"verdict\": \"supported\",\n      \"evidence_ids\"\
+    : [\"A10\", \"A15\", \"A19\"]\n    },\n    {\n      \"claim_index\": 5,\n    \
+    \  \"verdict\": \"supported\",\n      \"evidence_ids\": [\"A11\", \"A20\"]\n \
+    \   },\n    {\n      \"claim_index\": 6,\n      \"verdict\": \"supported\",\n\
+    \      \"evidence_ids\": [\"A12\"]\n    },\n    {\n      \"claim_index\": 7,\n\
+    \      \"verdict\": \"supported\",\n      \"evidence_ids\": [\"A7\", \"A12\",\
+    \ \"A13\", \"A20\", \"A21\"]\n    },\n    {\n      \"claim_index\": 8,\n     \
+    \ \"verdict\": \"supported\",\n      \"evidence_ids\": [\"A3\", \"A9\", \"A11\"\
+    , \"A12\", \"A15\"]\n    }\n  ]\n}"
+  model: gpt-6-astra
+  response_id: resp_04bec5a6ab471742016ae5bf966a0c87d0a1a74874fd4caafa
+  usage:
+    input_tokens: 12289
+    output_tokens: 625
+    total_tokens: 12914

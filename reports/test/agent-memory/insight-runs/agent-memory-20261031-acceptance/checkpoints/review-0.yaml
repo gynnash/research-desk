@@ -1,0 +1,24 @@
+binding: 8e9807c22468d2ae8772c412906bd778d1fc1df8774fa246da5dac1d15ef118f
+result:
+  text: "{\n  \"decision\": \"pass\",\n  \"coverage_acknowledged\": true,\n  \"topic_gate_confirmed\"\
+    : true,\n  \"issues\": [],\n  \"checks\": [\n    {\n      \"target\": \"report\"\
+    ,\n      \"verdict\": \"supported\",\n      \"evidence_ids\": [\"R1\", \"R2\"\
+    ]\n    },\n    {\n      \"target\": \"report.comparisons.0\",\n      \"verdict\"\
+    : \"supported\",\n      \"evidence_ids\": [\"R1\", \"R2\"]\n    },\n    {\n  \
+    \    \"target\": \"report.comparisons.1\",\n      \"verdict\": \"supported\",\n\
+    \      \"evidence_ids\": [\"R1\", \"R2\"]\n    },\n    {\n      \"target\": \"\
+    report.comparisons.2\",\n      \"verdict\": \"supported\",\n      \"evidence_ids\"\
+    : [\"R1\", \"R2\"]\n    },\n    {\n      \"target\": \"report.comparisons.3\"\
+    ,\n      \"verdict\": \"supported\",\n      \"evidence_ids\": [\"R1\", \"R2\"\
+    ]\n    },\n    {\n      \"target\": \"report.comparisons.4\",\n      \"verdict\"\
+    : \"supported\",\n      \"evidence_ids\": [\"R1\", \"R2\"]\n    },\n    {\n  \
+    \    \"target\": \"insights.0\",\n      \"verdict\": \"supported\",\n      \"\
+    evidence_ids\": [\"R1\", \"R2\"]\n    },\n    {\n      \"target\": \"topics.0\"\
+    ,\n      \"verdict\": \"supported\",\n      \"evidence_ids\": [\"R1\", \"R2\"\
+    ]\n    }\n  ]\n}"
+  model: gpt-6-astra
+  response_id: resp_0b8e0ff40e65b140016ae5c09e3be087d0ba522148e4782e5c
+  usage:
+    input_tokens: 76824
+    output_tokens: 390
+    total_tokens: 77214

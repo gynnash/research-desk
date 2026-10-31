@@ -1,0 +1,7 @@
+type: call_reserved
+reservation_id: generation-0
+role: generation
+revision: 0
+model_id: gpt-6.1-sol
+month: 2026-10
+at: '2026-10-31T10:17:03.221214+00:00'

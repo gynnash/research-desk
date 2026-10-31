@@ -1,0 +1,62 @@
+schema_version: 1
+mode: research_cycle_test
+backend: chatgpt_plan
+topic: agent-memory
+cycle_id: agent-memory-20261031-acceptance
+status: partial
+window_start: '2026-09-01T10:11:35.912847+00:00'
+window_end: '2026-10-31T10:11:35.912847+00:00'
+discovery_complete: false
+source_status:
+- id: arxiv
+  adapter: arxiv
+  entry_url: https://export.arxiv.org/api/query
+  status: truncated
+  discovered: 310
+  inspected: 80
+  eligible: 52
+  selected: 2
+  complete_window: false
+  error_types: []
+  requested_urls:
+  - https://export.arxiv.org/api/query?search_query=%28all%3A%22agent+memory%22+OR+all%3A%22long-term+memory%22+OR+all%3A%22episodic+memory%22+OR+all%3A%22memory+retrieval%22+OR+all%3A%22memory+consolidation%22%29+AND+submittedDate%3A%5B202609011011+TO+202610311011%5D&sortBy=submittedDate&sortOrder=descending&start=0&max_results=20
+  - https://export.arxiv.org/api/query?search_query=%28all%3A%22agent+memory%22+OR+all%3A%22long-term+memory%22+OR+all%3A%22episodic+memory%22+OR+all%3A%22memory+retrieval%22+OR+all%3A%22memory+consolidation%22%29+AND+submittedDate%3A%5B202609011011+TO+202610311011%5D&sortBy=submittedDate&sortOrder=descending&start=20&max_results=20
+  - https://export.arxiv.org/api/query?search_query=%28all%3A%22agent+memory%22+OR+all%3A%22long-term+memory%22+OR+all%3A%22episodic+memory%22+OR+all%3A%22memory+retrieval%22+OR+all%3A%22memory+consolidation%22%29+AND+submittedDate%3A%5B202609011011+TO+202610311011%5D&sortBy=submittedDate&sortOrder=descending&start=40&max_results=20
+  - https://export.arxiv.org/api/query?search_query=%28all%3A%22agent+memory%22+OR+all%3A%22long-term+memory%22+OR+all%3A%22episodic+memory%22+OR+all%3A%22memory+retrieval%22+OR+all%3A%22memory+consolidation%22%29+AND+submittedDate%3A%5B202609011011+TO+202610311011%5D&sortBy=submittedDate&sortOrder=descending&start=60&max_results=20
+  coverage: bounded_published_window
+stages:
+  research:
+    status: test_accepted
+    reserved_calls: 4
+  insight:
+    status: test_accepted
+    reserved_calls: 2
+reserved_calls: 6
+pending_count: 80
+input_hashes:
+  reports/test/agent-memory/cycles/agent-memory-20261031-acceptance/manifest.yaml: 5423a116a2138aa1ea4f85f4d6b330a9c809c1d4566b28448c1e0a807a32b4ef
+  reports/test/agent-memory/cycles/agent-memory-20261031-acceptance/discovery.yaml: e46c8122e7289c0e5c6783d70ab09b5906da8ada403a4c1f70489831de56b315
+  reports/test/agent-memory/cycles/agent-memory-20261031-acceptance/selection.yaml: 0b3e70c077008d23585d072a566fa7756864b613d8ad6f3b8cd42427def5d727
+  reports/test/agent-memory/cycles/agent-memory-20261031-acceptance/history.yaml: 8b5d6fb301d0e4f15572d58d2eebb9cd06b648bdc2ec2d7e9c6a197825764474
+  reports/test/agent-memory/cycles/agent-memory-20261031-acceptance/research-result.yaml: 528a48e6e9adc78f4905a4d3b7451acae8974da2a309fad67a0db5eabecc2ae2
+  reports/test/agent-memory/cycles/agent-memory-20261031-acceptance/configs/research.yaml: c2c7aa6b6dd903176279243d36a83caef858e9303035fa631b7dceb4e227a0fe
+  reports/test/agent-memory/research-batches/agent-memory-20261031-acceptance/receipt-attempt-1.yaml: 528a48e6e9adc78f4905a4d3b7451acae8974da2a309fad67a0db5eabecc2ae2
+  reports/test/agent-memory/research-batches/agent-memory-20261031-acceptance/items/arxiv-c9ee1ae11513/candidate.yaml: c3344d22d19873893eb8e92cebd96f6819243d967f608f9bcf01db3bcd554766
+  reports/test/agent-memory/research-batches/agent-memory-20261031-acceptance/items/arxiv-c9ee1ae11513/candidate.yaml.sha256: c45979de92ec991a35a409a3a1681ac8ff17194ee5cd34652dd1c9895291810d
+  reports/test/agent-memory/research-batches/agent-memory-20261031-acceptance/items/arxiv-c9ee1ae11513/original.yaml: f26a1db4e956761db542c38d74ac92e4ced50aa67dbf1c4e726959ece7a51b22
+  reports/test/agent-memory/research-batches/agent-memory-20261031-acceptance/items/arxiv-c9ee1ae11513/original.yaml.sha256: 6a8d926cabdddd96e95224ce0c94e5dca690db318ead73444752104afa85ac9f
+  reports/test/agent-memory/research-batches/agent-memory-20261031-acceptance/items/arxiv-c9ee1ae11513/original.md: 8a10635b4989d4d53885a31b072e0989b59fe97932a87dd56432454f649c8af6
+  reports/test/agent-memory/research-batches/agent-memory-20261031-acceptance/items/arxiv-fba293e24c11/candidate.yaml: d7597b79e66bdaaff512ef9ba381ddce939360cc06acb8cbdaaf35190b2c9045
+  reports/test/agent-memory/research-batches/agent-memory-20261031-acceptance/items/arxiv-fba293e24c11/candidate.yaml.sha256: f5913f38864ed796df5b9c848474d4fa74d5b10247992610f14b9fb03e28e914
+  reports/test/agent-memory/research-batches/agent-memory-20261031-acceptance/items/arxiv-fba293e24c11/original.yaml: 84f23077200a647eff314c5a6617e10801847659a11eaba45097104cbaa2fc47
+  reports/test/agent-memory/research-batches/agent-memory-20261031-acceptance/items/arxiv-fba293e24c11/original.yaml.sha256: 96f1a11b416e8c2f28c503e6dbd93f4f762d622bdb4d6b479158ffac950c23ad
+  reports/test/agent-memory/research-batches/agent-memory-20261031-acceptance/items/arxiv-fba293e24c11/original.md: b1080f072885940ac8583e307b1ef30b03b570624f3fa27edb1f5b50ae57b7f6
+  reports/test/agent-memory/cycles/agent-memory-20261031-acceptance/configs/insight.yaml: 3f509e0ba3313e2eb19d3c5017958c0948fa207a6d209a3db34cfcc86a3b983a
+  reports/test/agent-memory/cycles/agent-memory-20261031-acceptance/insight-result.yaml: 4e0db5d2ebc1e6d8eb47d214f084a18d02beb4ccf905df82852c1b379287b0d1
+  reports/test/agent-memory/insight-runs/agent-memory-20261031-acceptance/receipt.yaml: 4e0db5d2ebc1e6d8eb47d214f084a18d02beb4ccf905df82852c1b379287b0d1
+output_hashes:
+  reports/test/agent-memory/insight-runs/agent-memory-20261031-acceptance/report.md: 4e5b3107607b1e4fddbdcee6440ca447652b946c2327d416cfdd6ded8b7e0ac1
+  articles/test/agent-memory/agent-memory-20261031-acceptance/topic-1.md: 040aca39489c92c01be609d258e3c8f40a19159a71f71302e8afdfef28d27bf6
+production_accepted: false
+writing_started: false
+publish_authorized: false

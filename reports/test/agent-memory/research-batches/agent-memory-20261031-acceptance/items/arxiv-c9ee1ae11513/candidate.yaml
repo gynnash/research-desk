@@ -1,0 +1,245 @@
+candidate:
+  key: arxiv-c9ee1ae11513
+  kind: paper
+  topic: agent-memory
+  metadata:
+    title: 'MemoryTax: The Bitter Lesson of Agent Memory'
+    source: arXiv
+    source_url: https://arxiv.org/abs/2610.29823
+    authors:
+    - Peng, Zedong
+    published_at: '2026-10-21'
+    arxiv_id: '2610.29823'
+    source_version: v1
+  evidence:
+    coverage: full_text
+    extraction_coverage: full_text
+    source_url: https://arxiv.org/abs/2610.29823
+    source_version: v1
+    content_hash: 4cd9464542e8b0dc3c852f09aa24067675355e9d10b7ebf839e8b29bbe3dbeb8
+    evidence_sha256: 0ae6b58d024e425fa11213fd1a19b93685386dbc0a41b999a158bc27a0103887
+    locators:
+    - id: A1
+      section_id: S1
+      location: https://arxiv.org/html/2610.29823v1; chars 1-85
+      text_sha256: e9ff36f3f636f1aaf9df19a91fbd1d1488e11c86abd692afb2ae83fde4501e32
+      quote: 'Zedong Peng Affiliation: Shanghai Jiao Tong University Email: zedongpeng1@gmail.com'
+    - id: A2
+      section_id: S2
+      location: https://arxiv.org/html/2610.29823v1#abstract1; chars 1-1263
+      text_sha256: 45ed639761025acb92b14a6f80f538d130d5c5d7ea04992648170bcbda5faae3
+      quote: Agent memory systems such as Mem0 and Zep decide what to keep before
+        any question arrives;
+    - id: A3
+      section_id: S3
+      location: https://arxiv.org/html/2610.29823v1#S1; chars 1-1340
+      text_sha256: 9da46aba62a3f767a5e9b003dbdd6fd67f2bd07b3630d905c9151d617bf80c81
+      quote: ''
+    - id: A4
+      section_id: S3
+      location: https://arxiv.org/html/2610.29823v1#S1; chars 1341-2126
+      text_sha256: 56f2104fe33e1e4ca322b0df47e323a23158dafa5d55086d860b921f2027b2e5
+      quote: ''
+    - id: A5
+      section_id: S4
+      location: https://arxiv.org/html/2610.29823v1#S2; chars 1-1391
+      text_sha256: c7639bcd0e255c0bad7067bc5e2b76bb9ce107f2c18511272f9c5c235e3bffee
+      quote: ''
+    - id: A6
+      section_id: S4
+      location: https://arxiv.org/html/2610.29823v1#S2; chars 1392-1492
+      text_sha256: fea98849188ad5702cab1a7afdc2a631ce139e1062fdeca6eb792101d7c078c8
+      quote: ''
+    - id: A7
+      section_id: S5
+      location: https://arxiv.org/html/2610.29823v1#S2.SS0.SSS0.Px1; chars 1-334
+      text_sha256: 19942f481f3e5d04cb718f53055ce3c04b2d297079ce841fe905b46bf57b1712
+      quote: ''
+    - id: A8
+      section_id: S6
+      location: https://arxiv.org/html/2610.29823v1#S2.SS0.SSS0.Px2; chars 1-556
+      text_sha256: 5048be710493f780277cdf5928cfb9add7722c2dc49277b336bf05427f243bf9
+      quote: ''
+    - id: A9
+      section_id: S7
+      location: https://arxiv.org/html/2610.29823v1#S3; chars 1-1363
+      text_sha256: 1d885642542f790f02ed5eecd937dd403c950b7b9d3beacc0aec540d53ce1519
+      quote: ''
+    - id: A10
+      section_id: S7
+      location: https://arxiv.org/html/2610.29823v1#S3; chars 1364-2033
+      text_sha256: cb805ea059b04896ed98a67a9ed77ac380f32d705e739395fc1d5d421e0c5e89
+      quote: ''
+    - id: A11
+      section_id: S8
+      location: https://arxiv.org/html/2610.29823v1#S4; chars 1-882
+      text_sha256: 82a1afae26dd95904a7560b6a790675b15c56a3afb11249c216dd3daf0c64d78
+      quote: ''
+    - id: A12
+      section_id: S9
+      location: https://arxiv.org/html/2610.29823v1#S5; chars 1-1222
+      text_sha256: fc64b0f91b6eed50c5d198871bca76497fe8af622e281c043609bc7e016f0135
+      quote: ''
+    - id: A13
+      section_id: S9
+      location: https://arxiv.org/html/2610.29823v1#S5; chars 1223-1727
+      text_sha256: 12e79a6adffb6995ad3d171e3e73fdec78453094f4a39c03534552db33a941aa
+      quote: ''
+    - id: A14
+      section_id: S10
+      location: https://arxiv.org/html/2610.29823v1#S6; chars 1-1365
+      text_sha256: 017d4069dd24e22cfd21ae067411a011eb25bf83946c7ecefdcd563ad7b9a515
+      quote: ''
+    - id: A15
+      section_id: S10
+      location: https://arxiv.org/html/2610.29823v1#S6; chars 1366-1757
+      text_sha256: a012916c8f4264e2e54b8be37a0dff77439292f00b393aa57a4c3f7849026428
+      quote: ''
+    - id: A16
+      section_id: S11
+      location: https://arxiv.org/html/2610.29823v1#bib; chars 1-1342
+      text_sha256: 992d12f9625784fd53b76db4bd9286d784eea09ca443069e76854986294bfa24
+      quote: ''
+    - id: A17
+      section_id: S11
+      location: https://arxiv.org/html/2610.29823v1#bib; chars 1343-2729
+      text_sha256: a2ecb6e5f085d183f8c3d68a9773676e315750f6ff62bc6692fe0176cfefca3a
+      quote: ''
+    - id: A18
+      section_id: S11
+      location: https://arxiv.org/html/2610.29823v1#bib; chars 2730-2887
+      text_sha256: 7e3adf6c7c98e549816a20329dd9c722940c25382ecd1bd9992454ca9bd4ff50
+      quote: ''
+    - id: A19
+      section_id: S12
+      location: https://arxiv.org/html/2610.29823v1#A1; chars 1-1399
+      text_sha256: 46df0fff559b1c6b221c1d03cb0c6d9e35e977621a635973a8ee1deacb8b59f7
+      quote: ''
+    - id: A20
+      section_id: S12
+      location: https://arxiv.org/html/2610.29823v1#A1; chars 1400-2798
+      text_sha256: b0038137921c68a79c5d0b804e42dd8c4f30fd3147538f499491329914982b2a
+      quote: ''
+    - id: A21
+      section_id: S12
+      location: https://arxiv.org/html/2610.29823v1#A1; chars 2799-3093
+      text_sha256: dad2cc6072f630d76cd01b2e525b92a5c23844a20f0add62b724620b5c994faf
+      quote: ''
+    - id: A22
+      section_id: S13
+      location: https://arxiv.org/html/2610.29823v1#A2; chars 1-1082
+      text_sha256: 2ffadb1f43b7a17b2078a808342a8ae7a511c6644aecde9c24569cc4e1d90b8b
+      quote: ''
+    - id: A23
+      section_id: S14
+      location: https://arxiv.org/html/2610.29823v1#A3; chars 1-1293
+      text_sha256: 76295bd64acf000e3340b61cdc24dc59d169e033f5ec603ad5e78b5e0bc9a459
+      quote: ''
+    - id: A24
+      section_id: S14
+      location: https://arxiv.org/html/2610.29823v1#A3; chars 1294-2549
+      text_sha256: 89766b99474eea3ae1cc39cd8d85c6460a7735add4d659a84595d13203419bca
+      quote: ''
+    abstract_content_hash: 6152777770d924654cf924c3af3c7ac1092774eebf0a5f53256d4cb2e12e2a26
+    reading_profile: arxiv-fulltext-v1
+    format: html
+    document_url: https://arxiv.org/html/2610.29823v1
+    sections:
+    - id: S1
+      title: 'MemoryTax: The Bitter Lesson of Agent Memory'
+      location: https://arxiv.org/html/2610.29823v1
+      total_chars: 85
+      selected_chars: 85
+    - id: S2
+      title: Abstract
+      location: https://arxiv.org/html/2610.29823v1#abstract1
+      total_chars: 1263
+      selected_chars: 1263
+    - id: S3
+      title: 1 Introduction
+      location: https://arxiv.org/html/2610.29823v1#S1
+      total_chars: 2126
+      selected_chars: 2126
+    - id: S4
+      title: 2 Setup
+      location: https://arxiv.org/html/2610.29823v1#S2
+      total_chars: 1492
+      selected_chars: 1492
+    - id: S5
+      title: Photos.
+      location: https://arxiv.org/html/2610.29823v1#S2.SS0.SSS0.Px1
+      total_chars: 334
+      selected_chars: 334
+    - id: S6
+      title: Measurement.
+      location: https://arxiv.org/html/2610.29823v1#S2.SS0.SSS0.Px2
+      total_chars: 556
+      selected_chars: 556
+    - id: S7
+      title: 3 Agent memory is a costly patch for a weak model
+      location: https://arxiv.org/html/2610.29823v1#S3
+      total_chars: 2033
+      selected_chars: 2033
+    - id: S8
+      title: 4 Agent memory has a ceiling
+      location: https://arxiv.org/html/2610.29823v1#S4
+      total_chars: 882
+      selected_chars: 882
+    - id: S9
+      title: 5 With Claude Opus 5.5, Pi tops the frontier
+      location: https://arxiv.org/html/2610.29823v1#S5
+      total_chars: 1727
+      selected_chars: 1727
+    - id: S10
+      title: 6 Discussion and limitations
+      location: https://arxiv.org/html/2610.29823v1#S6
+      total_chars: 1757
+      selected_chars: 1757
+    - id: S11
+      title: References
+      location: https://arxiv.org/html/2610.29823v1#bib
+      total_chars: 2887
+      selected_chars: 2887
+    - id: S12
+      title: Appendix A Full results
+      location: https://arxiv.org/html/2610.29823v1#A1
+      total_chars: 3093
+      selected_chars: 3093
+    - id: S13
+      title: Appendix B Protocols
+      location: https://arxiv.org/html/2610.29823v1#A2
+      total_chars: 1082
+      selected_chars: 1082
+    - id: S14
+      title: Appendix C Prompts
+      location: https://arxiv.org/html/2610.29823v1#A3
+      total_chars: 2549
+      selected_chars: 2549
+    total_chars: 21866
+    selected_chars: 21866
+    truncated: false
+    extraction_scope: complete extracted document text including available references
+    limitations:
+    - Text extraction does not verify figures, layout, or faithful mathematical rendering.
+  identity_keys:
+  - arxiv:2610.29823
+  - url:https://arxiv.org/abs/2610.29823
+  source_id: paper-4fe5c214-056e-49c9-b5e1-dfd550ee077f
+  existing_source_path: null
+  existing_source_metadata: null
+  content_hash: 4cd9464542e8b0dc3c852f09aa24067675355e9d10b7ebf839e8b29bbe3dbeb8
+  metadata_hash: 4692800f704da9b63dd58ad02e4057a51b3b712a987419b780a01df6d8d4f477
+  upstream_updated_at: '2026-10-21'
+  acquisition_attempts:
+  - format: html
+    url: https://arxiv.org/html/2610.29823v1
+    status: success
+    reason: extracted
+  archive:
+    path: reports/test/agent-memory/research-batches/agent-memory-20261031-acceptance/items/arxiv-c9ee1ae11513/original.yaml
+    sha256: f26a1db4e956761db542c38d74ac92e4ced50aa67dbf1c4e726959ece7a51b22
+    markdown_path: reports/test/agent-memory/research-batches/agent-memory-20261031-acceptance/items/arxiv-c9ee1ae11513/original.md
+    markdown_sha256: 8a10635b4989d4d53885a31b072e0989b59fe97932a87dd56432454f649c8af6
+material_sha256: 0ae6b58d024e425fa11213fd1a19b93685386dbc0a41b999a158bc27a0103887
+action: research
+reason: no_completed_real_research

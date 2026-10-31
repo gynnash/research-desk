@@ -1,0 +1,7 @@
+type: call_reserved
+reservation_id: review-0
+role: review
+revision: 0
+model_id: gpt-6-astra
+month: 2026-10
+at: '2026-10-31T10:19:08.605190+00:00'
