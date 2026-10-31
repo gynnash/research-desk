@@ -37,7 +37,7 @@ def _context(value, artifact=False):
     if (not isinstance(value, dict) or set(value) != CONTEXT_FIELDS | ({'files'} if artifact else set())
             or value.get('schema_version') != 1 or value.get('mode') != 'writing_member_job'
             or not isinstance(value.get('topic'), str)
-            or not re.fullmatch(r'[a-z][a-z0-9]*(?:-[a-z0-9]+)*', value['topic'])
+            or not re.fullmatch(r'[a-z][a-z0-9]*(?:[-_][a-z0-9]+)*', value['topic'])
             or not isinstance(value.get('approval_id'), str)
             or not inputs.APPROVAL.fullmatch(value['approval_id'])
             or value.get('batch_id') != 'writing-' + value['approval_id']

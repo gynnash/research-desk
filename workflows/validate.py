@@ -162,8 +162,8 @@ def check(root, include_test=False):
         topics = {}
     for topic_id, topic in topics.items():
         label = f"{topic_path} [{topic_id}]"
-        if not re.fullmatch(r"[a-z][a-z0-9]*(?:-[a-z0-9]+)*", topic_id):
-            fail(label, "主题 ID 需使用小写字母、数字和连字符")
+        if not re.fullmatch(r"[a-z][a-z0-9]*(?:[-_][a-z0-9]+)*", topic_id):
+            fail(label, "主题 ID 需使用小写字母、数字、连字符或下划线")
         if not isinstance(topic, dict):
             fail(label, "主题必须为映射")
             continue

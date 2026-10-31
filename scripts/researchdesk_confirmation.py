@@ -55,7 +55,7 @@ def load_config(root, path=DEFAULT_CONFIG):
         raise store.OfflineError('工作台 ID 无效')
     topics = value['topics']
     if (not isinstance(topics, list) or not topics or any(not isinstance(t, str) or
-            not re.fullmatch(r'[a-z][a-z0-9]*(?:-[a-z0-9]+)*', t) for t in topics)
+            not re.fullmatch(r'[a-z][a-z0-9]*(?:[-_][a-z0-9]+)*', t) for t in topics)
             or len(set(topics)) != len(topics)):
         raise store.OfflineError('确认页面的研究方向无效')
     common.fields(value['server'], {'host', 'port'}, '本地服务')

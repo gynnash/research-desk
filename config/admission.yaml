@@ -1,6 +1,6 @@
 schema_version: 1
 enabled: false
 topics:
-- example-topic
+- agent_memory
 require_independent_review: true
 preserve_existing_files: true

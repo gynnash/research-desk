@@ -19,7 +19,7 @@
 
 ## 只运行采集
 
-先编辑 `config/research_topics.yaml`，配置并启用自己的方向，再修改 `config/cycles/default.yaml` 的主题、来源和限额。自动研究开关可以保持关闭。安装采集依赖：
+`config/research_topics.yaml` 已配置并启用 `agent_memory`，`config/cycles/default.yaml` 默认选用该方向。可以调整关键词，或添加自己的方向与来源；自动研究开关保持关闭。安装采集依赖：
 
 ```sh
 python3 -m venv .venv
@@ -31,10 +31,10 @@ python3 -m venv .venv
 ```sh
 .venv/bin/python -B scripts/researchdesk_cycle.py collect \
   --config config/cycles/default.yaml \
-  --cycle-id example-topic-collect-001
+  --cycle-id agent-memory-manual-001
 ```
 
-此入口要求 `window.mode: rolling`、`reading.mode: full_text_required` 和 `archive: true`。它不验证会员账户，也没有模型调用；采集回执的 `model_calls` 为0，原文状态为待研究。当前仓库的示例方向停用，直接执行会先提示配置方向，保持空框架状态。
+此入口要求 `window.mode: rolling`、`reading.mode: full_text_required` 和 `archive: true`。它不验证会员账户，也没有模型调用；采集回执的 `model_calls` 为0，原文状态为待研究。
 
 不要把 `discover` 当成完整采集：它只发现候选与排名。旧 `researchdesk_collect.py` 保留摘要/节选与模拟分析的兼容流程，新开发使用上面的 `collect` 入口。
 
@@ -44,14 +44,15 @@ python3 -m venv .venv
 
 - `reports/test/<topic>/cycles/<id>/collection.yaml`：采集回执、待研究清单和输入/输出散列。
 - 同目录的 `discovery.yaml`、`selection.yaml`：来源扫描范围、筛选与失败原因。
-- `reports/test/<topic>/research-batches/<id>/items/<source>/original.md`：可读原文。
-- 同目录的 `original.yaml`、`candidate.yaml`：精确重放与下游交接数据。
+- `collection/<topic>/<id>/manifest.yaml`：按方向组织的采集索引，绑定内部采集回执和原文记录。
+- `collection/<topic>/<id>/items/<source>/original.md`：可读原文。
+- 同目录的 `original.yaml`：精确原文重放数据；候选计划继续保存在内部批次目录。
 
-沿用现有原文目录是为了让后续 Research 直接读取同一份固定归档，避免重新下载。采集本身不产生研究结论，也不创建正式入库证明。`collection.yaml` 的 `discovery_status` 保留扫描是否完整；`empty` 只表示这次扫描没有可采集的资料，不代表全网没有新资料。
+原文以 `collection` 为实际存储位置，Research 直接读取同一份固定归档，避免重新下载。运行账本沿用旧位置，旧批次不自动迁移。采集本身不产生研究结论；`collection.yaml` 的 `discovery_status` 保留扫描是否完整，`empty` 只表示这次扫描没有可采集的资料，不代表全网没有新资料。
 
 补跑使用原配置与同一个批次ID。已成功归档的内容离线复用，损坏或人工修改的原文保留并报错。改主题、来源或研究策略时使用新批次；去重仍遵守历史已选规则。
 
-后续需要执行 Research 和 Insight 时，显式运行同一个批次的 `run` 命令，并准备相应账户授权。GitHub Actions 现有 `discover` 操作仍只发现候选，本次没有新增采集调度或页面。
+后续显式运行 [Research 命令](research.md)并使用同一批次 ID、准备自己的账户授权，即可逐篇分析并保存到 `summary/<topic>/`。旧 `cycle run` 是 Research+Insight 全轮次，不作为这一步的入口。GitHub Actions 现有 `discover` 操作仍只发现候选，本次没有新增采集调度或页面。
 
 ## 离线验收
 

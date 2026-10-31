@@ -123,7 +123,7 @@ def _relative(root, value, name):
 
 def _receipt_path(root, value, topic):
     path = _relative(root, value, 'Research 回执')
-    pattern = r'reports/test/%s/research-batches/[a-z0-9][a-z0-9-]{0,100}/receipt-attempt-[1-9][0-9]*\.yaml' % re.escape(topic)
+    pattern = r'reports/test/%s/research-batches/[a-z0-9][a-z0-9_-]{0,100}/receipt-attempt-[1-9][0-9]*\.yaml' % re.escape(topic)
     if not re.fullmatch(pattern, value):
         raise store.OfflineError('Research 回执必须位于同一主题的 research-batches 测试目录')
     return path
@@ -174,7 +174,7 @@ def load_config(root, path):
     if config['mode'] != 'insight_test' or config['backend'] != 'chatgpt_plan':
         raise store.OfflineError('Insight 仅支持显式 chatgpt_plan 的 insight_test 模式')
     topic = config['topic']
-    if not isinstance(topic, str) or not re.fullmatch(r'[a-z][a-z0-9]*(?:-[a-z0-9]+)*', topic) or not store.SAFE_ID.fullmatch(topic):
+    if not isinstance(topic, str) or not re.fullmatch(r'[a-z][a-z0-9]*(?:[-_][a-z0-9]+)*', topic) or not store.SAFE_ID.fullmatch(topic):
         raise store.OfflineError('研究主题必须是稳定的小写 ID')
     if not isinstance(config['topics_file'], str) or Path(config['topics_file']).is_absolute():
         raise store.OfflineError('topics_file 必须是 config 下的相对路径')

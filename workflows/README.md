@@ -1,6 +1,6 @@
 # 运行与维护
 
-本仓库提供 Research、Insight、Writing 三 Agent 框架与配套工具。默认没有研究资料，示例主题停用，自动研究关闭。
+本仓库提供 Research、Insight、Writing 三 Agent 框架与配套工具。当前主题为 `agent_memory`，自动研究关闭。采集原文在 `collection/<主题>/`，逐篇研究总结在 `summary/<主题>/`。
 
 ## 配置与准备
 
@@ -13,17 +13,23 @@
 | 本地月度请求上限 | [membership_budget.yaml](../config/membership_budget.yaml) |
 | 研究准入、选题确认及稿件准入 | [admission.yaml](../config/admission.yaml)、[confirmation-v2.yaml](../config/confirmation-v2.yaml)、[writing_admission.yaml](../config/writing_admission.yaml) |
 
-先把 `example-topic` 换成自己的主题并启用，配置来源、生成模型、不同的审阅模型与预算。研究正式准入默认关闭；需要正式入库时，在 `admission.yaml` 启用并登记自己的主题。按[会员授权](local-membership-analysis.md)和[自托管部署](self-hosted-worker.md)准备自己的执行环境。仅复制配置不会完成账户授权。
+`agent_memory` 的研究范围和关键词已配置，可直接调整或新增其他主题。按[会员授权](local-membership-analysis.md)准备自己的实际模型和独立审阅模型；自动运行与旧正式准入仍保持关闭。仅复制配置不会完成账户授权。
 
 ## 手动检查与研究
 
 只获取原文时使用[独立采集命令](collection.md)：
 
 ```sh
-python3 -B scripts/researchdesk_cycle.py collect --config config/cycles/default.yaml --cycle-id example-topic-collect-001
+python3 -B scripts/researchdesk_cycle.py collect --config config/cycles/default.yaml --cycle-id agent-memory-manual-001
 ```
 
-该入口在本地运行，先配置并启用研究方向，结果为原文和待研究清单，不需要会员授权。
+该入口在本地运行，结果保存到 `collection/<主题>/`，不需要会员授权。随后对同一批次逐篇 Research：
+
+```sh
+python3 -B scripts/researchdesk_research.py --cycle-id agent-memory-manual-001
+```
+
+只有独立审阅通过的详细总结会新增到 `summary/<主题>/`。预算、失败补跑与人工修改保护见[Research 说明](research.md)；该入口不执行 Insight 或 Writing。
 
 知乎来源先按[官方 API 接入说明](zhihu-api.md)验证本人凭证、额度和搜索候选。该独立客户端不运行模型、不自动保存资料；搜索摘要不能直接进入全文研究批次。
 

@@ -51,7 +51,7 @@ def _location(root, relative):
 
 
 def _base(topic, cycle_id):
-    if (not isinstance(topic, str) or not re.fullmatch(r'[a-z][a-z0-9]*(?:-[a-z0-9]+)*', topic)
+    if (not isinstance(topic, str) or not re.fullmatch(r'[a-z][a-z0-9]*(?:[-_][a-z0-9]+)*', topic)
             or not isinstance(cycle_id, str) or not store.SAFE_ID.fullmatch(cycle_id)):
         raise store.OfflineError('准入研究方向或轮次ID无效')
     return 'reports/%s/admissions/%s' % (topic, cycle_id)

@@ -31,7 +31,7 @@ class SimulatedInterruption(RuntimeError):
 
 NOTICE = '> TEST：离线虚构样例，不可作为正式研究证据。'
 REAL_NOTICE = '> TEST：真实来源采集，分析与审阅均为模拟，不可作为正式研究结论。'
-SAFE_ID = re.compile(r'[a-z0-9][a-z0-9-]{0,100}\Z')
+SAFE_ID = re.compile(r'[a-z0-9][a-z0-9_-]{0,100}\Z')
 TERMINAL = {'test_accepted', 'update_proposed', 'rejected', 'blocked', 'duplicate'}
 
 
@@ -59,8 +59,20 @@ def safe_path(root, relative):
     allowed = (len(parts) >= 4 and parts[:3] in
                {('sources', 'papers', 'test'), ('sources', 'blogs', 'test')}) or (
                    len(parts) >= 3 and parts[:2] == ('reports', 'test'))
+    # The normal collection/Research entry points write only these bounded,
+    # create-only public artifacts. Other knowledge directories stay protected.
+    scoped = (len(parts) >= 2 and SAFE_ID.fullmatch(parts[1])
+              and (len(parts) == 2 or SAFE_ID.fullmatch(parts[2])))
+    if scoped and parts[0] == 'collection':
+        allowed = allowed or len(parts) in {2, 3} or (
+            len(parts) == 4 and parts[3] in {'items', 'manifest.yaml', 'manifest.yaml.sha256'}) or (
+            len(parts) in {5, 6} and parts[3] == 'items' and SAFE_ID.fullmatch(parts[4])
+            and (len(parts) == 5 or parts[5] in {'original.yaml', 'original.yaml.sha256', 'original.md'}))
+    if scoped and parts[0] == 'summary':
+        allowed = allowed or len(parts) in {2, 3} or (
+            len(parts) == 4 and bool(re.fullmatch(r'[a-z0-9][a-z0-9_-]{0,100}\.md(?:\.sha256)?', parts[3])))
     if not allowed:
-        raise OfflineError('离线 writer 只允许来源/回执测试目录: %s' % relative)
+        raise OfflineError('writer 仅允许受限运行记录、采集原文与逐篇总结路径: %s' % relative)
     current = root
     for part in parts:
         current = current / part

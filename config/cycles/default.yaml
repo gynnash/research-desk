@@ -1,8 +1,9 @@
-# Configure your topic and account models before enabling automation.
+# Agent Memory is configured for explicit manual collection and Research.
+# Automatic execution remains controlled by config/automation.yaml (disabled).
 schema_version: 1
 mode: research_cycle_test
 backend: chatgpt_plan
-topic: example-topic
+topic: agent_memory
 topics_file: config/research_topics.yaml
 archive: true
 presentation: technical_article

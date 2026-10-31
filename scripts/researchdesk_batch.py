@@ -124,7 +124,7 @@ def global_budget_lock(root):
 
 def notes_snapshot(root):
     result = {}
-    for folder in ('sources', 'reports', 'insights', 'articles'):
+    for folder in ('sources', 'reports', 'insights', 'articles', 'collection', 'summary'):
         for path in (root / folder).rglob('*.md'):
             if path.is_symlink():
                 raise store.OfflineError('已有笔记不可为符号链接')
@@ -526,7 +526,7 @@ def render(manifest, candidate, research, review, revision):
     return '\n'.join(lines) + '\n'
 
 
-def render_article(manifest, candidate, research, review, revision):
+def render_article(manifest, candidate, research, review, revision, test_notice=True):
     """Keep source-grounded prose readable; evidence machinery stays internal."""
     metadata, evidence = candidate['metadata'], candidate['evidence']
     source_url = metadata['source_url']
@@ -538,8 +538,10 @@ def render_article(manifest, candidate, research, review, revision):
     if evidence['coverage'] == 'abstract_only' and evidence.get('reading_profile'):
         scope = '全文未能获取，本次仅阅读摘要，未核验全文或复现实验'
     deep = manifest.get('prompt_version') == 'research-batch-v4'
-    lines = ['# ' + metadata['title'], '', '> TEST：运行中间产物，未正式入库。', '',
-             research['summary'], '']
+    lines = ['# ' + metadata['title'], '']
+    if test_notice:
+        lines += ['> TEST：运行中间产物，未正式入库。', '']
+    lines += [research['summary'], '']
     if not deep:
         lines += ['## 问题、方法与结果', '']
     for claim in research['claims']:

@@ -76,7 +76,7 @@ def allowed(path, topic, cycle, formal_files=None):
 
 
 def check_text(payload, path, formal=False, public_metadata=None):
-    plan = re.fullmatch(r'reports/[a-z0-9-]+/admissions/[a-z0-9-]+/plan\.yaml', path)
+    plan = re.fullmatch(r'reports/[a-z0-9_-]+/admissions/[a-z0-9_-]+/plan\.yaml', path)
     if len(payload) > (12_000_000 if plan else 2_000_000):
         raise JobError('transfer_file_too_large')
     try:
@@ -116,7 +116,7 @@ def _guard_bytes(root, relative, baseline_root=None):
 def _guard_yaml(root, relative, baseline_root=None):
     import researchdesk_offline as store
     payload = _guard_bytes(root, relative, baseline_root)
-    limit = 12_000_000 if re.fullmatch(r'reports/[a-z0-9-]+/admissions/[a-z0-9-]+/plan\.yaml', relative) else 2_000_000
+    limit = 12_000_000 if re.fullmatch(r'reports/[a-z0-9_-]+/admissions/[a-z0-9_-]+/plan\.yaml', relative) else 2_000_000
     if len(payload) > limit:
         raise JobError('transfer_file_too_large')
     marker = _guard_bytes(root, relative + '.sha256', baseline_root)
@@ -148,7 +148,7 @@ def _public_guard_metadata(root, relative, topic, cycle, baseline_root=None):
     import researchdesk_archive as archive
     import researchdesk_admission as admission
     import researchdesk_offline as store
-    original = re.fullmatch(r'(reports/test/[a-z0-9-]+/research-batches/[a-z0-9-]+/items/[a-z0-9-]+/)original\.(?:yaml|md)', relative)
+    original = re.fullmatch(r'(reports/test/[a-z0-9_-]+/research-batches/[a-z0-9_-]+/items/[a-z0-9_-]+/)original\.(?:yaml|md)', relative)
     try:
         if original:
             try:
@@ -176,7 +176,7 @@ def _public_guard_metadata(root, relative, topic, cycle, baseline_root=None):
         for proof in plan['verification_bundle']['provenance']['research_inputs']:
             candidate_path = proof['candidate_path']
             if not re.fullmatch(r'reports/test/' + re.escape(topic)
-                    + r'/research-batches/[a-z0-9-]+/items/[a-z0-9-]+/candidate\.yaml', candidate_path):
+                    + r'/research-batches/[a-z0-9_-]+/items/[a-z0-9_-]+/candidate\.yaml', candidate_path):
                 raise JobError('unverified_original_transfer')
             candidate = _guard_yaml(root, candidate_path, baseline_root)['candidate']
             if 'archive' not in candidate:
@@ -392,7 +392,7 @@ def apply(root, artifact):
     if set(manifest) != {'schema_version', 'topic', 'cycle_id', 'operation', 'base_commit', 'baseline_blobs', 'files'}:
         raise JobError('transfer_manifest_invalid')
     for identity in ('topic', 'cycle_id'):
-        if not re.fullmatch(r'[a-z0-9][a-z0-9-]{0,100}', manifest[identity]):
+        if not re.fullmatch(r'[a-z0-9][a-z0-9_-]{0,100}', manifest[identity]):
             raise JobError('transfer_identity_invalid')
     if len(manifest['files']) > 1000 or manifest['schema_version'] != 1:
         raise JobError('transfer_manifest_invalid')

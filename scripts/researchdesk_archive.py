@@ -65,12 +65,16 @@ def _paths(candidate, base=None):
     if base is None:
         relative = candidate.get('archive', {}).get('path', '')
         parts = Path(relative).parts
-        if (len(parts) != 8 or parts[:4] != ('reports', 'test', topic, 'research-batches')
-                or not store.SAFE_ID.fullmatch(parts[4]) or parts[5:] != ('items', key, 'original.yaml')):
+        legacy = (len(parts) == 8 and parts[:4] == ('reports', 'test', topic, 'research-batches')
+                  and store.SAFE_ID.fullmatch(parts[4]) and parts[5:] == ('items', key, 'original.yaml'))
+        collection = (len(parts) == 6 and parts[:2] == ('collection', topic)
+                      and store.SAFE_ID.fullmatch(parts[2]) and parts[3:] == ('items', key, 'original.yaml'))
+        if not (legacy or collection):
             raise store.OfflineError('原文归档必须绑定同主题同来源的批次目录')
         return relative, str(Path(relative).with_suffix('.md'))
-    expected = 'reports/test/%s/research-batches/' % topic
-    if not isinstance(base, str) or not base.startswith(expected) or not store.SAFE_ID.fullmatch(base[len(expected):]):
+    prefixes = ('reports/test/%s/research-batches/' % topic, 'collection/%s/' % topic)
+    if not isinstance(base, str) or not any(
+            base.startswith(prefix) and store.SAFE_ID.fullmatch(base[len(prefix):]) for prefix in prefixes):
         raise store.OfflineError('原文归档批次路径无效')
     prefix = '%s/items/%s/original' % (base, key)
     return prefix + '.yaml', prefix + '.md'
@@ -229,7 +233,7 @@ def save(root, base, candidate, material, source, capture):
             candidate = deepcopy(prior)
     _validate(snapshot, candidate, source=source)
     payload = yaml.safe_dump(snapshot, allow_unicode=True, sort_keys=False).encode()
-    markdown = render_markdown(snapshot).encode()
+    markdown = render_markdown(snapshot, formal=yaml_path.startswith('collection/')).encode()
     if max(len(payload), len(markdown)) > MAX_BYTES:
         raise store.OfflineError('原文归档超过可传输文件上限')
     # This runs before the first Research/model request can be reserved.
@@ -261,6 +265,7 @@ def load(root, candidate, source=None, config=None):
         raise store.OfflineError('原文归档缺失或内容散列不一致，禁止联网替换')
     snapshot = store.checked_yaml(root, yaml_path)
     material = _validate(snapshot, candidate, source=source, config=config)
-    if reading.read_text(encoding='utf-8') != render_markdown(snapshot):
+    if reading.read_text(encoding='utf-8') != render_markdown(
+            snapshot, formal=yaml_path.startswith('collection/')):
         raise store.OfflineError('原文可读视图不对应已绑定抽取内容')
     return deepcopy(candidate), material, snapshot

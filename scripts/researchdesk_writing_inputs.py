@@ -86,7 +86,7 @@ def load_config(root, path):
         raise store.OfflineError('Writing 目前仅支持显式 mock 的 writing_offline_test')
     topic = config['topic']
     if (not isinstance(topic, str) or not store.SAFE_ID.fullmatch(topic)
-            or not re.fullmatch(r'[a-z][a-z0-9]*(?:-[a-z0-9]+)*', topic)):
+            or not re.fullmatch(r'[a-z][a-z0-9]*(?:[-_][a-z0-9]+)*', topic)):
         raise store.OfflineError('研究主题必须是稳定的小写 ID')
     if (not isinstance(config['topics_file'], str) or Path(config['topics_file']).is_absolute()
             or Path(config['topics_file']).as_posix() != config['topics_file']):

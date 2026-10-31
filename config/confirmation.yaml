@@ -1,7 +1,7 @@
 schema_version: 1
 workbench_id: researchdesk
 topics:
-- example-topic
+- agent_memory
 server:
   host: 127.0.0.1
   port: 8765

@@ -1,6 +1,6 @@
 schema_version: 1
 topics:
-- example-topic
+- agent_memory
 confirmation_config: config/confirmation.yaml
 output_mode: formal_articles
 create_only: true

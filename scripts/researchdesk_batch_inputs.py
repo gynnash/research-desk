@@ -25,7 +25,7 @@ def config_path(root, relative):
             path = path.relative_to(root)
         except ValueError as exc:
             raise store.OfflineError('配置必须位于选定工作台的 config 目录') from exc
-    runtime = bool(re.fullmatch(r'reports/test/[a-z0-9-]+/cycles/[a-z0-9-]+/configs/(?:research|insight)\.yaml', path.as_posix()))
+    runtime = bool(re.fullmatch(r'reports/test/[a-z0-9_-]+/cycles/[a-z0-9_-]+/configs/(?:research|insight)\.yaml', path.as_posix()))
     if (not path.parts or (path.parts[0] != 'config' and not runtime) or '..' in path.parts
             or '\\' in str(path) or path.suffix not in {'.yaml', '.yml'}):
         raise store.OfflineError('配置须位于 config 或受限轮次配置快照，禁止越界路径')
@@ -60,7 +60,7 @@ def load_config(root, path):
     if config['mode'] != 'research_batch_test' or config['backend'] not in {'chatgpt_plan', 'mock'}:
         raise store.OfflineError('仅支持 research_batch_test 与显式会员/模拟后端')
     topic = config['topic']
-    if not isinstance(topic, str) or not store.SAFE_ID.fullmatch(topic) or not re.fullmatch(r'[a-z][a-z0-9]*(?:-[a-z0-9]+)*', topic):
+    if not isinstance(topic, str) or not store.SAFE_ID.fullmatch(topic) or not re.fullmatch(r'[a-z][a-z0-9]*(?:[-_][a-z0-9]+)*', topic):
         raise store.OfflineError('主题必须是稳定的小写 ID')
     if not isinstance(config['topics_file'], str) or Path(config['topics_file']).is_absolute():
         raise store.OfflineError('topics_file 必须是 config 下的相对路径')

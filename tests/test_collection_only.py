@@ -100,6 +100,10 @@ class CollectionOnly(unittest.TestCase):
         self.assertTrue(any('/html/' in url for url in self.fetcher.calls))
         for record in receipt['records']:
             self.assertEqual(record['coverage'], 'full_text')
+            expected = 'collection/custom-topic/first/items/%s/original' % record['key']
+            self.assertEqual(record['original_path'], expected + '.yaml')
+            self.assertEqual(record['original_markdown_path'], expected + '.md')
+            self.assertNotIn('> TEST', (self.root / record['original_markdown_path']).read_text())
             candidate = self.read_candidate(record)
             restored, material, snapshot = archive.load(self.root, candidate)
             self.assertEqual(restored, candidate)
@@ -110,12 +114,20 @@ class CollectionOnly(unittest.TestCase):
                 self.assertIn(self.fetcher.blog_tail, material)
                 self.assertIn(self.fetcher.blog_tail, (self.root / record['original_markdown_path']).read_text())
             self.assertEqual(store.digest(material.encode()), candidate['evidence']['evidence_sha256'])
+        index = store.checked_yaml(self.root, receipt['collection_manifest_path'])
+        self.assertEqual(index['mode'], 'collection_index')
+        self.assertEqual(index['topic'], 'custom-topic')
+        self.assertEqual(index['cycle_id'], 'first')
+        self.assertEqual(index['records'], receipt['records'])
+        self.assertEqual(index['receipt_path'], 'reports/test/custom-topic/cycles/first/collection.yaml')
+        self.assertEqual(index['receipt_sha256'], store.digest((self.root / index['receipt_path']).read_bytes()))
         self.assertFalse((self.root / 'sources/originals').exists())
         batch = self.root / 'reports/test/custom-topic/research-batches/first'
         self.assertFalse((batch / 'manifest.yaml').exists())
         self.assertFalse((batch / 'events').exists())
         self.assertFalse(list(batch.glob('items/*/report.md')))
         self.assertFalse(list(batch.glob('items/*/result.yaml')))
+        self.assertFalse(list(batch.glob('items/*/original.*')))
 
     def test_cached_collection_uses_no_http_and_human_modified_original_is_not_replaced(self):
         first = self.collect()
@@ -137,6 +149,19 @@ class CollectionOnly(unittest.TestCase):
         self.assertEqual(target.read_bytes(), modified)
         self.fetcher.fetch.assert_not_called()
         self.fetcher.fetch_pdf.assert_not_called()
+        self.assert_no_models()
+
+    def test_modified_collection_index_is_preserved_without_network_repair(self):
+        receipt = self.collect()
+        index_path = self.root / receipt['collection_manifest_path']
+        index_path.write_text(index_path.read_text() + '\n# My collection annotation\n')
+        modified = index_path.read_bytes()
+        self.fetcher.calls.clear()
+        self.fetcher.fetch = mock.Mock(side_effect=AssertionError('Collection index must not trigger HTTP'))
+        with self.assertRaises(store.OfflineError):
+            self.collect()
+        self.assertEqual(index_path.read_bytes(), modified)
+        self.fetcher.fetch.assert_not_called()
         self.assert_no_models()
 
     def test_interrupted_collection_resumes_existing_original_and_fetches_only_remaining(self):

@@ -1,10 +1,10 @@
 # ResearchDesk
 
-ResearchDesk 是一套可配置的三 Agent 研究工作台框架：采集公开资料、阅读原文、形成洞察和选题，再由用户确认是否写作。仓库只保留代码、工具、配置模板和虚构离线测试样例，不附带已收集论文、博客或生成稿件。
+ResearchDesk 是一套可配置的三 Agent 研究工作台框架：采集公开资料、阅读原文、形成洞察和选题，再由用户确认是否写作。当前默认研究方向为 `agent_memory`；采集原文放在 [collection/agent_memory](collection/agent_memory/README.md)，逐篇详细总结放在 [summary/agent_memory](summary/agent_memory/README.md)。仓库不预置已收集论文或生成稿件，离线样例均为虚构资料。
 
 | Agent | 职责 | 运行后产物 |
 | --- | --- | --- |
-| Research | 采集、去重，详细解释原文问题、方法、实验和局限 | 原文快照、单篇研究 |
+| Research | 逐篇读取采集原文，详细解释问题、方法、实验和局限，经独立模型审阅 | `summary/<主题>/` 中的详细技术解读 |
 | Insight | 比较本轮与实际存在的历史资料，推导洞察、研究方向和选题 | 综合文章、洞察、待确认选题卡 |
 | Writing | 只处理用户确认过的选题，按配置文风写作 | 大纲、初稿、候选稿 |
 
@@ -19,14 +19,14 @@ ResearchDesk 是一套可配置的三 Agent 研究工作台框架：采集公开
    .venv-membership/bin/python -m pip install -r workflows/requirements-membership.txt
    ```
 
-2. 编辑 [研究方向](config/research_topics.yaml)，将停用的 `example-topic` 替换为自己的主题、问题范围和关键词，再启用该主题。编辑 [运行配置](config/cycles/default.yaml)，设置来源、采集窗口、模型和预算。示例主题不是已配置好的真实研究方向。
+2. 查看 [研究方向](config/research_topics.yaml)：`agent_memory` 已配置并启用。可以调整范围和关键词，或按相同格式增加其他主题；在 [运行配置](config/cycles/default.yaml) 选择主题、来源、采集窗口、模型和预算。启用主题不会自行启动研究。
 3. 按[会员授权说明](workflows/local-membership-analysis.md)完成自己的官方登录，查看账户实际可用模型，选择不同的生成与审阅模型。凭据始终留在仓库之外。
 4. 配置 [运行环境](config/runtime.yaml)，按[执行器说明](workflows/self-hosted-worker.md)准备自己的本地或远程主机，先检查环境与小批运行。
 5. 验证满意后，如需正式入库，在 [admission.yaml](config/admission.yaml) 启用准入并登记自己的主题；如需定时运行，再在 [automation.yaml](config/automation.yaml) 启用定时任务。**默认关闭自动研究**；保留的 workflow 不会因下载或 fork 仓库而自动开始研究。
 
 运行命令、补跑和选题确认见[操作说明](workflows/README.md)。不需要数据库或复杂 Agent 框架。
 
-仅开发或运行采集时，可先完成主题和来源配置，使用[独立采集入口](workflows/collection.md)。它获取完整原文并生成待研究清单，模型调用数为0，不需要会员登录。
+先使用[独立采集入口](workflows/collection.md)把完整原文保存到 `collection/<主题>/`，不需要会员登录；再用 [Research 入口](workflows/research.md)对同一批次逐篇分析，审阅通过后把详细总结保存到 `summary/<主题>/`。此入口不自动执行 Insight 或 Writing。
 
 ## 框架目录
 
@@ -37,8 +37,10 @@ ResearchDesk 是一套可配置的三 Agent 研究工作台框架：采集公开
 | `.github/workflows/` | 离线检查、可选定时执行和结果回存 |
 | `tests/` | 无真实模型调用的离线回归 |
 | `workflows/` | 操作说明、资料 Schema、Markdown 模板及虚构样例 |
+| `collection/<主题>/` | 采集到的论文和博客原文，按批次保存 |
+| `summary/<主题>/` | Research 独立审阅通过的逐篇详细总结 |
 
-首次实际运行时，工具按需要创建四类资料目录：`sources/` 保存原文，`reports/` 保存单篇研究及运行记录，`insights/` 保存综合洞察，`articles/` 保存选题和稿件。资料再按用户配置的研究方向分组。正式准入后可生成 `研究首页.md`，集中浏览文章正文。
+新采集与逐篇研究使用上述两个资料入口。已有三 Agent 全轮次及正式准入保留兼容：`reports/` 保存内部运行记录与原有正式报告，`insights/` 保存洞察，`articles/` 保存选题和稿件；本次不自动运行这些后续阶段或迁移旧资料。Obsidian 打开同一仓库即可看到新目录。
 
 当前框架支持 arXiv、Letta、LangChain、Hugging Face Blog、美团技术团队和阮一峰博客等公开来源适配器；来源和研究范围由 YAML 配置。[知乎官方 API](workflows/zhihu-api.md)提供独立额度查询与搜索候选验证入口，搜索摘要尚未接入全文研究。X、Reddit、Quora 未接入。关注度排序只反映实际扫描和可观测信号。
 

@@ -13,7 +13,7 @@ import researchdesk_admission as admission
 
 
 HASH = re.compile(r'[0-9a-f]{64}\Z')
-TOPIC = re.compile(r'[a-z][a-z0-9]*(?:-[a-z0-9]+)*\Z')
+TOPIC = re.compile(r'[a-z][a-z0-9]*(?:[-_][a-z0-9]+)*\Z')
 
 
 def _path(root, relative, formal=False):

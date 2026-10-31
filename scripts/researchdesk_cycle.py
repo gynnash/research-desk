@@ -326,8 +326,9 @@ def plan_candidates(root, config, cycle_id, snapshot, fetcher):
 def collect_originals(root, config_path, cycle_id, fetcher=None, fail_after=None):
     """Discover and pin complete originals without starting a model stage.
 
-    Candidate plans use Research's existing create-only layout, so an explicit
-    later ``run`` can replay these exact originals instead of fetching again.
+    Originals live in collection/<topic>/<cycle>/, while candidate plans use
+    Research's existing create-only layout so a later Research-only run can
+    replay these exact originals instead of fetching again.
     No Research manifest, response, budget reservation or formal note is made.
     """
     from researchdesk_archive import save as save_archive, load as load_archive
@@ -360,6 +361,7 @@ def collect_originals(root, config_path, cycle_id, fetcher=None, fail_after=None
         selection = (store.checked_yaml(root, base + '/selection.yaml') if previous is not None
                      else plan_candidates(root, config, cycle_id, snapshot, transport))
         batch_base = 'reports/test/%s/research-batches/%s' % (config['topic'], cycle_id)
+        collection_base = 'collection/%s/%s' % (config['topic'], cycle_id)
         records, output_hashes, seen = [], {}, set()
         for item in selection['candidates']:
             source = item['source']
@@ -376,7 +378,7 @@ def collect_originals(root, config_path, cycle_id, fetcher=None, fail_after=None
                 action = research.classify(root, batch_base, candidate, config['backend'], seen)
                 if action['action'] not in {'research', 'update'}:
                     raise store.OfflineError('采集选材的来源身份已变化，保留现场: ' + source['id'])
-                candidate = save_archive(root, batch_base, candidate, material, source, capture)
+                candidate = save_archive(root, collection_base, candidate, material, source, capture)
                 plan = {'candidate': candidate, 'material_sha256': store.digest(material.encode()), **action}
                 store.save_yaml(root, plan_path, plan)
             if (plan.get('action') not in {'research', 'update'}
@@ -410,12 +412,34 @@ def collect_originals(root, config_path, cycle_id, fetcher=None, fail_after=None
             'writing_started': False, 'production_accepted': False, 'publish_authorized': False,
             'input_hashes': {path: store.digest(store.safe_path(root, path).read_bytes()) for path in inputs},
             'output_hashes': output_hashes}
+        # The collection index points to this authoritative receipt, avoiding a
+        # circular index/receipt hash. Old completed batches keep their exact
+        # receipts and layout rather than being silently migrated on replay.
+        if previous is None or 'collection_manifest_path' in previous:
+            receipt['collection_manifest_path'] = collection_base + '/manifest.yaml'
         if previous is not None:
             if previous != receipt:
                 raise store.OfflineError('采集回执与固定原文或选材不一致，保留文件')
+            if 'collection_manifest_path' in previous:
+                _collection_index(root, receipt_path, previous)
             return dict(previous, cached=True)
         store.save_yaml(root, receipt_path, receipt)
+        _collection_index(root, receipt_path, receipt)
         return receipt
+
+
+def _collection_index(root, receipt_path, receipt):
+    """Create a small browseable index bound to the immutable collection receipt."""
+    relative = receipt['collection_manifest_path']
+    expected = 'collection/%s/%s/manifest.yaml' % (receipt['topic'], receipt['cycle_id'])
+    if relative != expected:
+        raise store.OfflineError('采集索引必须位于同主题同轮次目录')
+    index = {'schema_version': 1, 'mode': 'collection_index',
+        'topic': receipt['topic'], 'cycle_id': receipt['cycle_id'],
+        'receipt_path': receipt_path,
+        'receipt_sha256': store.digest(store.safe_path(root, receipt_path).read_bytes()),
+        'records': receipt['records']}
+    store.save_yaml(root, relative, index)
 
 
 def run(root, config_path, cycle_id, client=None, fetcher=None, fail_after=None):
