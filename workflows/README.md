@@ -1,37 +1,89 @@
-# 研究工作流
+# 运行与维护
 
-日常阅读从 [README 的四类资料入口](../README.md)开始。本目录保存运行所需依赖、校验、操作说明与历史验收；当前行为以配置与实际回执为准。
+资料从[项目首页](../README.md)进入：`sources` 保存原文，`reports` 保存单篇总结，`insights` 保存本轮与历史材料的深度思考及趋势总结，`articles` 保存公众号选题和稿件。正文由模型根据实际读取材料生成，来源集中列在篇末；证据绑定、审阅与预算记录供程序复核。
 
-## 当前流程
+Research 采集、去重并分析 → 独立模型审阅 → Insight 综合历史资料并提出选题 → 独立审阅及正式入库 → 用户确认选题 → Writing 生成大纲、初稿和候选稿。不自动发布公众号。
 
-**Research 采集与单篇研究 → 独立审阅 → Insight 历史比较、洞察与选题 → 独立审阅与正式入库 → 用户确认 → Writing 大纲、初稿与候选稿。** 发布公众号另行决定。
+## 配置入口
 
-| 操作或问题 | 说明 |
+| 设置 | 文件 |
 | --- | --- |
-| 理解三个 Agent 的分工 | [总体架构](three-agent-architecture.md)、[定时 MVP](agent-memory-github-actions-mvp.md) |
-| 最近两个月选材、长期综合与简化边界 | [2026-10-30 目标对齐审查](workflow-alignment-2026-10-30.md) |
-| 扩展公开博客与保存原文 | [采集覆盖、原文归档与断网重放](source-coverage-and-archive.md) |
-| 配置并运行一轮研究 | [Research → Insight 轮次](research-cycle.md)、[配置驱动批次](configurable-research-batch.md) |
-| 来源采集、正文阅读与去重 | [真实来源采集](real-source-collection.md)、[论文全文阅读](fulltext-reading.md)、[维护规范](maintenance.md) |
-| 登录自己的会员与控制预算 | [本地会员分析](local-membership-analysis.md)、[共享请求预算](membership-budget.md) |
-| 部署 Mac 或配置远程执行环境 | [自托管执行器](self-hosted-worker.md) |
-| 已审阅研究正式入库 | [正式准入](formal-admission.md) |
-| 研究失败、检查点和补跑 | [轮次运行](research-cycle.md)、[关联 Insight 恢复](linked-insight-recovery.md) |
-| 确认选题或撤回 | [真实选题确认页](topic-confirmation-mvp.md) |
-| 生成与准入三阶段稿件 | [会员 Writing](writing-agent-member.md)、[Writing 正式准入](writing-formal-admission.md) |
-| 检查 Markdown 与来源字段 | [资料 Schema](source-schema.md)、[模板](templates/) |
-| 四类资料、正文与 Obsidian 同步 | [项目说明](../README.md) |
+| 研究方向 | [research_topics.yaml](../config/research_topics.yaml) |
+| 来源、60 天选材窗口、最多 5 份、180 天历史、模型及每轮预算 | [agent-memory.yaml](../config/cycles/agent-memory.yaml) |
+| 周二、周五北京时间 03:00 调度及漏跑补跑 | [automation.yaml](../config/automation.yaml)、[研究 workflow](../.github/workflows/researchdesk-manual.yml) |
+| 本地或远程执行环境 | [runtime.yaml](../config/runtime.yaml)、[远程示例](../config/examples/runtime-remote.yaml) |
+| 会员请求月度上限 | [membership_budget.yaml](../config/membership_budget.yaml)、[预算说明](membership-budget.md) |
+| 正式研究准入、选题确认及稿件准入 | [admission.yaml](../config/admission.yaml)、[confirmation.yaml](../config/confirmation.yaml)、[writing_admission.yaml](../config/writing_admission.yaml) |
 
-研究调度为每周二、周五北京时间 03:00，最终开关见 [automation.yaml](../config/automation.yaml)。个人 Codex 09:00 简报单独读取已有正式结果，不再次启动模型。执行器需要在线；实际成功与失败看工作流和接受回执，不能用历史演练代替。
+当前公开来源为 arXiv、Letta、LangChain、Hugging Face Blog、美团技术团队和阮一峰的网络日志。关注度来自可核实的 Hugging Face / Hacker News 信号；这是候选范围内的排序，不保证全网最热。未接入知乎、X、Reddit 和 Quora。论文优先获取固定版本官方 HTML，缺失时提取 PDF；失败才标为摘要降级。博客实际模型输入范围及完整归档范围分别记录。
 
-## 保留的历史记录
+## 首次部署
 
-以下文档保留实现过程与可复核验收，不需要作为每日操作步骤逐份阅读。
+在仓库根目录准备 Python 3.9+ 环境，依次按[会员授权](local-membership-analysis.md)和[执行器部署](self-hosted-worker.md)完成自己的登录与主机配置。授权、runner 工作目录与运行环境均放在仓库和 Obsidian Vault 外。
 
-- [Research 离线骨架](offline-research.md)、[早期会员分析设计](chatgpt-analysis-handoff.md)。
-- [Insight 测试闭环](insight-agent-test.md)、[引用范围与证据边界](insight-citation-scope.md)。
-- [Writing 离线闭环](writing-agent-offline.md)。
-- [首次正式入库与调度验收](formal-admission-acceptance-2026-10-19.md)、[首次同步检查](sync-check-2026-10-18.md)。
-- [10 月 27 日准入修复调查](admission-investigation-2026-10-27.md)。
+```sh
+python3 -m venv .venv-membership
+.venv-membership/bin/python -m pip install -r workflows/requirements-membership.txt
+.venv-membership/bin/python scripts/researchdesk_runner.py doctor
+```
 
-`test` 中的运行记录仍用于断点恢复、预算与去重；正式接受证明绑定历史输入输出。不要为精简文档而删改这些文件或将历史测试升级为新研究。
+自托管主机只执行自己信任的 `main`。开源用户使用自己的仓库、授权与配置，不共享维护者凭据。GitHub 托管检查只运行离线校验，会员推理在配置的自托管主机运行。
+
+## 研究状态与补跑
+
+以下命令使用已授权的 GitHub CLI。`health` 检查授权与配置模型，不进行推理；`discover` 只采集发现；`run` 执行有预算的 Research → Insight，并按配置准入；`admit` 仅准入已通过结果，不新增推理。
+
+```sh
+gh run list --workflow researchdesk-manual.yml --limit 5
+gh workflow run researchdesk-manual.yml --ref main -f operation=health
+```
+
+失败恢复沿用原 `cycle_id` 和原配置，不换 ID 重置调用预算。计划槽 ID 为 `agent-memory-YYYYMMDD-0300`；将下列占位符替换为待恢复的实际 ID：
+
+```sh
+gh workflow run researchdesk-manual.yml --ref main -f operation=run -f cycle_id='<原 cycle_id>' -f config=config/cycles/agent-memory.yaml
+```
+
+只差正式准入时，将上条命令的 `operation=run` 改为 `operation=admit`。按配置补最近漏跑时间槽使用：
+
+```sh
+gh workflow run researchdesk-manual.yml --ref main -f operation=catchup
+```
+
+已完成响应复用检查点；未知请求保留预留并停止，不能盲目重发。原文、模型、配置或人工笔记变化时不得强行复用。失败现场、调用账本和仍被正式结果引用的证明是运行依赖，不能按历史演练清空。
+
+正式研究以 `reports/<topic>/admissions/<cycle_id>/accepted.yaml` 及配对散列为准。检查同一 `main` 提交中的证明与正文；文件存在或 workflow 单个阶段成功不等于正式入库。个人 Codex 的周二、周五 09:00 简报是独立只读任务，不重新启动研究。
+
+## 确认选题与写作
+
+```sh
+python3 scripts/researchdesk_confirmation.py setup
+python3 scripts/researchdesk_confirmation.py serve --open-browser
+```
+
+在[本地选题页](http://127.0.0.1:8765)核对标题、角度、受众、字数及证据，亲自保存确认；同步完成后，在确认记录中点击“开始 / 继续测试写作”。页面只监听本机环回地址，需保持服务运行。远程部署由用户安全转发端口，不直接公开页面。
+
+Writing 使用 [confirmed Writing workflow](../.github/workflows/researchdesk-writing.yml)。正常三阶段共 6 次请求，每阶段独立模型审阅，通过才继续；最多请求数及一次修订由确认时冻结的配置限制。页面可撤回确认，后续步骤停止，已发请求和稿件保留。仅在笔记上打勾或由模型声称已同意，不能替代用户确认。
+
+已有三稿完整通过时，可用 `max_new_calls=0` 复核与回存，不新增会员请求。正式准入是确定性另存，不重新生成，使用已保存的真实确认 ID：
+
+```sh
+python3 scripts/researchdesk_writing_admission.py run --approval-id '<真实确认 ID>'
+python3 scripts/researchdesk_writing_admission.py verify --topic agent-memory --approval-id '<真实确认 ID>'
+```
+
+正式三稿位于 `articles/<topic>/`，相关确认和准入证明在 `reports/<topic>/`。候选稿入库不授予公众号发布权限。所有阶段只新增文件，已有人工修改产生冲突时停止，不自动覆盖。
+
+## 校验与同步
+
+资料字段和模板见 [Schema](source-schema.md)及[模板目录](templates/)，去重与人工笔记保护见[维护规范](maintenance.md)。提交前执行：
+
+```sh
+python3 workflows/validate.py
+python3 workflows/validate.py --include-test
+git diff --check
+```
+
+代码修改按影响范围运行 `tests/` 对应离线测试，再查看 [ResearchDesk checks](../.github/workflows/researchdesk-checks.yml)。测试样例与真实研究分开，不因样例通过声称已运行真实模型。
+
+GitHub 保存共享 Markdown、代码与可恢复状态；Obsidian 使用同一仓库或既有同步方式阅读这些文件。先保存本地笔记，再正常拉取和推送；冲突保留双方内容，不重置 Vault。Obsidian 配置及手机同步沿用用户已有设置。

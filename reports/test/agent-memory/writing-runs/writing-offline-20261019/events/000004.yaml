@@ -1,9 +1,0 @@
-type: call_completed
-reservation_id: outline-review-0
-stage: outline
-role: review
-revision: 0
-model_id: mock-reviewer
-cost_units: 1
-response_path: reports/test/agent-memory/writing-runs/writing-offline-20261019/checkpoints/outline-review-0.yaml
-response_sha256: acf2fbd4fddbb6d93d850131c192eab42956c597ffca1f5d9e0bae0e8b39f618

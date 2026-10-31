@@ -1,58 +1,35 @@
 # 共享会员请求预算
 
-之前的“每月 10 次”是 ResearchDesk 为小额度测试自行设置的请求次数限制，保存在单篇入口默认值、Research/Insight 测试 YAML 及对应运行清单中。这个数字不表示 ChatGPT 官方会员额度、剩余额度或费用。单篇测试使用 2 次、Research 批次使用 4 次、Insight 批次使用 4 次，历史累计预留为 10 次。
+[membership_budget.yaml](../config/membership_budget.yaml) 设置同一工作台的本地月度请求预留上限，当前为 `month_max_calls: 100`。它是项目的用量控制策略，不代表 ChatGPT 官方会员额度、剩余额度或费用。早期 10 次是历史测试限制，不再作为当前策略。
 
-按用户后续授权，当前统一配置入口为 [`config/membership_budget.yaml`](../config/membership_budget.yaml)：
+Research、Insight 和 Writing 共用真实请求账本及本地锁，成功、失败、终态未知的请求都计入预留；按 UTC 月份累计。更改上限不清零旧请求、不返还失败预留，也不会自动启动任何任务。模型没有调整策略的权限。
 
-```yaml
-schema_version: 1
-backend: chatgpt_plan
-month_max_calls: 100
-```
+集中配置存在且有效时优先使用；缺失时回退到旧入口和历史策略的保守最小值，配置无效则停止。当前配置允许 2–1000 的整数，不含凭据。既有运行清单仍保留启动时的历史策略。
 
-调整上限时已预留 10 次；后续轮次继续累计，实时值以下方账本复核命令为准。修改上限本身不请求模型、不清零历史、不返还失败或未知请求，也不能据此计算会员真实剩余次数。会员真实剩余额度、官方限流和授权状态仍须以实际服务为准；不可核实时保持未知。
+每轮还有更严格的预算：当前 Research → Insight 总上限 16 次，其中 Research 最多 12、Insight 最多 4；正常 5 份研究加审阅需要 10 次，余量不足时不能保证每份都完成修订。Writing 原确认通常最多 12 次，每阶段最多 4 次、一次修订；页面单次派发最多新增 6 次。最终以绑定清单和当前策略共同校验，不可换 ID 绕过。
 
-## 配置优先级与保护边界
+## 只读查看
 
-- 集中配置存在且有效时，`month_max_calls` 是同一工作台真实会员入口的当前共享月度上限，优先于旧运行及已绑定批次配置中的月度值。
-- 集中配置缺失时，保留原来的保守规则：使用当前入口配置与本月历史运行月度上限的最小值。配置无效时停止，不当作缺失继续运行。
-- 单篇、Research、Insight 和 Writing 共用真实请求账本及本地并发锁；按调用预留事件累计，包括成功、失败或终态不明的请求。当前实现按 UTC 月份记账，跨月不会重置已有批次的调用及修订次数。
-- `mock` 和离线虚拟单位预算保持原样，集中配置只作用于 `chatgpt_plan`。单篇/Insight 最多 4 次、历史 Research 测试批次最多 6 次、当前方向轮次 Research 最多 12 次、单项最多 4 次及一次修订的限制继续有效；真实 Writing 最多 12 次、每阶段最多 4 次及一次修订，首次验证或页面按钮每次最多新增 6 次。
-- 调整月度策略只影响后续请求准入；不得修改已绑定的 Research/Insight YAML、旧清单、检查点、回执或验收说明。历史 `10/10` 是当时的策略快照，继续保留。
-- 预算配置由用户或维护者明确调整，模型没有修改权限。文件不含凭据，拒绝重复键、未知字段、无效数值及符号链接；`month_max_calls` 当前允许 2–1000 的整数。
-
-改变本地请求上限不会启用定时任务、自动入库、Writing 或公众号发布，也不会自动发起新一轮研究。
-
-## 只读复核
-
-在仓库根目录执行下列命令，不登录、不请求会员模型、不创建新的研究产物：
+在仓库根目录执行，不登录、不请求模型、不创建研究资料：
 
 ```sh
-.venv-membership/bin/python -B - <<'PY'
+.venv-membership/bin/python -B - <<'CHECK'
 from pathlib import Path
 import sys
 
 sys.path.insert(0, str(Path('scripts').resolve()))
 from researchdesk_batch import monthly_budget
 
-root = Path.cwd()
-reserved, limit = monthly_budget(root, {
+reserved, limit = monthly_budget(Path.cwd(), {
     'backend': 'chatgpt_plan',
     'budget': {'month_max_calls': 10},
 })
 print('本月累计预留请求：', reserved)
 print('当前本地月度上限：', limit)
 print('会员实际剩余额度：未知')
-PY
+CHECK
 ```
 
-第二项当前为 `100`，第一项按实际预留累计。命令中的 `10` 只用于不存在集中策略时的旧入口回退，存在有效集中配置时不会覆盖 `100`。该检查读取并校验既有账本，记录缺失或散列不匹配时应停止，不能以清空历史恢复额度。
+命令中的 `10` 仅为缺少集中策略时的旧入口回退，不覆盖有效集中配置的 `100`。累计值读取真实账本，不在文档硬编码；散列不匹配、记录缺失或存在未知请求时先核查原轮次，不能通过清空历史恢复额度。离线模拟测试不计入真实会员预算。
 
-配置和离线回归可通过下列检查复核；这些测试使用隔离样例，不消耗会员推理额度：
-
-```sh
-.venv-membership/bin/python -m unittest discover -s tests -v
-.venv-membership/bin/python workflows/validate.py
-.venv-membership/bin/python workflows/validate.py --include-test
-git diff --check
-```
+本地锁不能协调其他克隆或其他主机的账户请求，执行统一经过[自托管队列](self-hosted-worker.md)，不要从多份副本并行调用。

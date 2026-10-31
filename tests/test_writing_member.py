@@ -25,6 +25,7 @@ import yaml
 REPOSITORY = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPOSITORY / 'scripts'))
 import researchdesk_batch as shared
+import researchdesk_retired as retired
 import researchdesk_confirmation as confirmation
 import researchdesk_membership as membership
 import researchdesk_offline as store
@@ -123,6 +124,9 @@ class RealMemberWriting(unittest.TestCase):
             if (REPOSITORY / (relative + '.sha256')).is_file():
                 paths.add(relative + '.sha256')
         for relative in sorted(paths):
+            expected = self.plan['input_hashes'].get(relative, self.plan['protected_notes'].get(relative))
+            if not (REPOSITORY / relative).exists() and retired.missing_hash(REPOSITORY, relative, expected):
+                continue
             destination = self.root / relative
             destination.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(REPOSITORY / relative, destination)

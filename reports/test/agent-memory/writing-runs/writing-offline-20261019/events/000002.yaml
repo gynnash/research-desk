@@ -1,9 +1,0 @@
-type: call_completed
-reservation_id: outline-writing-0
-stage: outline
-role: writing
-revision: 0
-model_id: mock-writer
-cost_units: 1
-response_path: reports/test/agent-memory/writing-runs/writing-offline-20261019/checkpoints/outline-writing-0.yaml
-response_sha256: 468a9ac14f70b0a7ee2b6e3a0fa317fbaba9f9e72f22696d79a706d55faab3f2

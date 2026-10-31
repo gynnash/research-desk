@@ -1,9 +1,0 @@
-type: call_completed
-reservation_id: 3ed62829-bab2-4f7a-b388-9c4c4e2c3096
-item_key: rejected-paper
-role: research
-revision: 0
-month: 2026-10
-cost_units: 2
-response_path: reports/test/agent-memory/offline-acceptance-20261018/checkpoints/rejected-paper/research-0.yaml
-response_sha256: e1de5392941df46ffd5e23126c6c1a19d05272ee6a8dd6fbd7d7669fe3f182ba

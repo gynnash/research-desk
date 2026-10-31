@@ -1,8 +1,0 @@
-type: call_reserved
-reservation_id: 50440a12-6d29-4a92-b22b-8f6a593c0d95
-item_key: revised-blog
-role: review
-revision: 0
-model_id: mock-review-v1
-month: 2026-10
-cost_units: 10

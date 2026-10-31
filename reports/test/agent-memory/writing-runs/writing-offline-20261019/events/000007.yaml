@@ -1,7 +1,0 @@
-type: call_reserved
-reservation_id: draft-writing-0
-stage: draft
-role: writing
-revision: 0
-model_id: mock-writer
-cost_units: 1

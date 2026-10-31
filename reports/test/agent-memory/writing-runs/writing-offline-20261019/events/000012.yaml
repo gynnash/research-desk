@@ -1,9 +1,0 @@
-type: call_completed
-reservation_id: draft-writing-1
-stage: draft
-role: writing
-revision: 1
-model_id: mock-writer
-cost_units: 1
-response_path: reports/test/agent-memory/writing-runs/writing-offline-20261019/checkpoints/draft-writing-1.yaml
-response_sha256: 00c6b590b41570259da3e55d9c627fdcc7be7aa71bba26a824d12df711974c24

@@ -1,9 +1,0 @@
-type: call_completed
-reservation_id: 0976726e-ee3e-4d35-9f26-bbc11d241353
-item_key: letta-1
-role: review
-revision: 0
-month: 2026-10
-cost_units: 2
-response_path: reports/test/agent-memory/collect-real-sources-20261018-a1/checkpoints/letta-1/review-0.yaml
-response_sha256: 75c5e0e6b51a09da56da1f83667965f6c9818c4fd9cb0b535bacafaa44701e8c

@@ -1,8 +1,0 @@
-type: call_reserved
-reservation_id: b9035557-0c2d-4ee6-b696-9fc0ce7e33e4
-item_key: revised-blog
-role: research
-revision: 0
-model_id: mock-research-v1
-month: 2026-10
-cost_units: 10

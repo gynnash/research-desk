@@ -1,8 +1,0 @@
-type: call_reserved
-reservation_id: 10b83719-6909-4104-a691-344fee5b3b25
-item_key: letta-1
-role: research
-revision: 0
-model_id: mock-research-v1
-month: 2026-10
-cost_units: 10

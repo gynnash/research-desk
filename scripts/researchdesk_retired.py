@@ -13,8 +13,10 @@ CONFIG = 'config/retired_notes.yaml'
 
 
 def _path(root, relative):
+    if not isinstance(relative, str):
+        raise store.OfflineError('退休笔记必须使用精确仓库相对路径')
     path = Path(relative)
-    if (not isinstance(relative, str) or path.is_absolute()
+    if (path.is_absolute()
             or path.as_posix() != relative or '..' in path.parts
             or any(char in relative for char in '\\*?[]\x00\r\n')):
         raise store.OfflineError('退休笔记必须使用精确仓库相对路径')
@@ -38,10 +40,12 @@ def _parse(payload):
         raise store.OfflineError('退休笔记登记字段无效')
     notes = {}
     for relative, entry in value['notes'].items():
+        if not isinstance(relative, str):
+            raise store.OfflineError('退休笔记必须使用精确仓库相对路径')
         # Validate lexical scope without resolving a caller's filesystem here.
         path = Path(relative)
         parts = path.parts
-        allowed = ((len(parts) >= 3 and parts[:2] in {
+        allowed = (relative == 'sources/test/README.md' or (len(parts) >= 3 and parts[:2] in {
             ('reports', 'test'), ('insights', 'test'), ('articles', 'test')})
             or (len(parts) >= 4 and parts[:3] in {
                 ('sources', 'papers', 'test'), ('sources', 'blogs', 'test')}))

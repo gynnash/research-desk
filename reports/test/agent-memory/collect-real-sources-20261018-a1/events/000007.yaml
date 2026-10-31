@@ -1,9 +1,0 @@
-type: call_completed
-reservation_id: 10b83719-6909-4104-a691-344fee5b3b25
-item_key: letta-1
-role: research
-revision: 0
-month: 2026-10
-cost_units: 2
-response_path: reports/test/agent-memory/collect-real-sources-20261018-a1/checkpoints/letta-1/research-0.yaml
-response_sha256: fe1790d59eda88e24d0f8d3e4e43668e1e890828172aa063d539b4802662e6ea

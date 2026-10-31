@@ -1,6 +1,0 @@
-type: item_finished
-item_key: arxiv-0
-status: test_accepted
-output: sources/papers/test/agent-memory/paper-a5a3171a-9891-4dea-8bfc-cdf0cf15bce0.md
-output_sha256: 357373843b03679cf7a0241fac42bada0cfeeb447c430e2edabb344c29a96126
-revision: 0

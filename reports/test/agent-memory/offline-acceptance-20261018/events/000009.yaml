@@ -1,9 +1,0 @@
-type: call_completed
-reservation_id: 50440a12-6d29-4a92-b22b-8f6a593c0d95
-item_key: revised-blog
-role: review
-revision: 0
-month: 2026-10
-cost_units: 2
-response_path: reports/test/agent-memory/offline-acceptance-20261018/checkpoints/revised-blog/review-0.yaml
-response_sha256: b6c81a764e2e7030b7a146536be2c9d37c8876a1861c5d87993cbb94d8e9a4b9

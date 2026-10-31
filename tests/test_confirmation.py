@@ -61,6 +61,10 @@ class RealTopicConfirmation(unittest.TestCase):
             if (REPOSITORY / (relative + '.sha256')).is_file():
                 paths.add(relative + '.sha256')
         for relative in sorted(paths):
+            retired = importlib.import_module('researchdesk_retired')
+            expected = self.plan['input_hashes'].get(relative, self.plan['protected_notes'].get(relative))
+            if not (REPOSITORY / relative).exists() and retired.missing_hash(REPOSITORY, relative, expected):
+                continue
             destination = self.root / relative
             destination.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(REPOSITORY / relative, destination)

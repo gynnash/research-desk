@@ -1,8 +1,0 @@
-type: call_reserved
-reservation_id: 567f270d-ef0a-4b1e-bb7b-b7c5675fa32c
-item_key: new-paper
-role: research
-revision: 0
-model_id: mock-research-v1
-month: 2026-10
-cost_units: 10

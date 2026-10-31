@@ -1,7 +1,0 @@
-type: call_reserved
-reservation_id: outline-review-0
-stage: outline
-role: review
-revision: 0
-model_id: mock-reviewer
-cost_units: 1

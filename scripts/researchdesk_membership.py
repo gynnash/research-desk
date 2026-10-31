@@ -3,7 +3,7 @@
 
 Credentials belong outside the repository/Obsidian vault. Only ``login`` opens
 the system browser. Model inference has no retries and succeeds only on the
-Responses stream's completed event. See workflows/chatgpt-analysis-handoff.md.
+Responses stream's completed event. See workflows/local-membership-analysis.md.
 """
 import argparse
 import base64

@@ -1,8 +1,0 @@
-type: call_reserved
-reservation_id: 0976726e-ee3e-4d35-9f26-bbc11d241353
-item_key: letta-1
-role: review
-revision: 0
-model_id: mock-review-v1
-month: 2026-10
-cost_units: 10
