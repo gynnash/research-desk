@@ -23,6 +23,7 @@ jobs:
         uses: actions/checkout@v7
         with:
           persist-credentials: false
+          fetch-depth: 0
       - name: Set up Python
         uses: actions/setup-python@v7
         with:
@@ -46,7 +47,9 @@ jobs:
       - name: Check full-text acquisition, reading scope and immutable updates without model calls
         run: python -m unittest discover -s tests -p 'test_fulltext*.py' -v
       - name: Check rolling discovery, attention, historical comparison and readable research
-        run: PYTHONPATH=tests python -m unittest test_rolling_selection test_attention test_history_window test_article_presentation test_source_card -v
+        run: PYTHONPATH=tests python -m unittest test_rolling_selection test_attention test_history_window test_article_presentation test_source_card test_reading_history -v
+      - name: Check the reading home, readable legacy prose and create-only refresh
+        run: PYTHONPATH=tests python -m unittest test_reading test_reading_text test_reading_pipeline -v
       - name: Check publisher feeds, archive coverage and offline original replay
         run: PYTHONPATH=tests python -m unittest test_feeds test_blog_archive_discovery test_archive test_archive_admission test_archive_transfer -v
       - name: Check create-only admission without model calls

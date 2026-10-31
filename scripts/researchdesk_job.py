@@ -426,6 +426,7 @@ def apply(root, artifact):
                     required=manifest['operation'] == 'recover')
     plan, _ = formal_plan(root, manifest['topic'], manifest['cycle_id'])
     production_accepted = False
+    reading_changes = []
     if plan is not None and manifest['operation'] in {'run','admit','recover'}:
         if not admission_enabled(root, manifest['topic']):
             raise JobError('formal_admission_disabled')
@@ -441,21 +442,28 @@ def apply(root, artifact):
                 additions.append((relative,safe(root,relative).read_bytes()))
                 known.add(relative)
         inspect_files(root,[relative for relative,_ in additions],manifest['topic'],manifest['cycle_id'])
+        # Rebuild reader navigation only from locally verified formal results.
+        # These paths are never accepted from the worker artifact whitelist.
+        import researchdesk_reading as reading
+        reading_changes = reading.refresh(root)
+        for relative in reading_changes:
+            check_text(safe(root, relative).read_bytes(), relative, formal=True)
     validate = subprocess.run([sys.executable, 'workflows/validate.py', '--include-test'], cwd=root,
                               capture_output=True, check=False)
     if validate.returncode:
         raise JobError('published_test_schema_invalid_preserve_artifact')
-    if additions:
+    publish_paths = sorted({relative for relative, _ in additions} | set(reading_changes))
+    if publish_paths:
         git(root, 'config', 'user.name', 'github-actions[bot]')
         git(root, 'config', 'user.email', '41898282+github-actions[bot]@users.noreply.github.com')
-        git(root, 'add', '--', *[relative for relative, _ in additions])
+        git(root, 'add', '--', *publish_paths)
         staged = [p.decode() for p in git(root, 'diff', '--cached', '--name-only', '-z').split(b'\0') if p]
-        if sorted(staged) != sorted(relative for relative, _ in additions):
+        if sorted(staged) != publish_paths:
             raise JobError('unexpected_staged_changes')
         git(root, 'commit', '-m', ('Accept reviewed ResearchDesk cycle: ' if production_accepted else
                                  'Save ResearchDesk test checkpoints: ') + manifest['cycle_id'])
         git(root, 'push', 'origin', 'HEAD:refs/heads/main')
-    print(json.dumps({'saved_files': len(additions), 'cycle_id': manifest['cycle_id'],
+    print(json.dumps({'saved_files': len(publish_paths), 'cycle_id': manifest['cycle_id'],
                       'commit': git(root, 'rev-parse', 'HEAD').decode().strip(), 'production_accepted': production_accepted}))
 
 

@@ -319,7 +319,7 @@ def verify(root, topic, approval_id, historical=False):
     return receipt
 
 
-def run(root, approval_id, config_path=DEFAULT_CONFIG, refresh=None, fail_after=None):
+def _run(root, approval_id, config_path=DEFAULT_CONFIG, refresh=None, fail_after=None):
     """Promote only an active synchronized approval, without any model contact."""
     root = Path(root).resolve()
     if fail_after not in {None, 'after_plan', 'after_first_output'}:
@@ -362,6 +362,14 @@ def run(root, approval_id, config_path=DEFAULT_CONFIG, refresh=None, fail_after=
         _read_plan(root, topic, approval_id, historical=False)
         admission._save(root, base + '/accepted.yaml', _receipt(value))
         return dict(verify(root, topic, approval_id), cached=False)
+
+
+def run(root, approval_id, config_path=DEFAULT_CONFIG, refresh=None, fail_after=None):
+    """Admit reviewed Writing, then refresh reader navigation outside its lock."""
+    result = _run(root, approval_id, config_path, refresh, fail_after)
+    import researchdesk_reading as reading
+    reading.refresh(Path(root).resolve())
+    return result
 
 
 def inspect(root, topic, approval_id):

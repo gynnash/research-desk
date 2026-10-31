@@ -557,6 +557,10 @@ def select_history(root, topic, max_documents=6, lookback_days=None, as_of=None)
                 metadata = store.frontmatter(path)
             except (UnicodeError, store.OfflineError):
                 continue
+            # Reader-facing formatting copies share the original evidence;
+            # selecting them again would count the same research twice.
+            if isinstance(metadata, dict) and metadata.get('kind') == 'reading_note':
+                continue
             # Marker-last admission can leave files after an interrupted
             # install. Only admitted AI records may become later history.
             # Human edits of an admitted note remain a new human baseline.

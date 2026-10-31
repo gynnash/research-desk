@@ -80,6 +80,19 @@ python3 scripts/researchdesk_writing_admission.py verify --topic agent-memory --
 
 正式三稿位于 `articles/<topic>/`，相关确认和准入证明在 `reports/<topic>/`。候选稿入库不授予公众号发布权限。所有阶段只新增文件，已有人工修改产生冲突时停止，不自动覆盖。
 
+## 日常阅读入口
+
+[研究首页](../研究首页.md)按最新与历史批次列出具体资料、单篇解读、综合洞察、选题和稿件。旧格式从已审阅结构化结果整理为四类目录内的可读正文；新格式直接链接正式文章。证据编号和散列留在运行记录，原文来源与实际阅读范围仍可核对。
+
+Research 正式回存与 Writing 正式准入后自动刷新首页，TEST 写作不冒充正式稿件。手动维护只需：
+
+```sh
+python3 -B scripts/researchdesk_reading.py
+python3 -B scripts/researchdesk_reading.py --check
+```
+
+首页标记区以外可写个人批注。阅读稿只新增，人工改动不会被刷新覆盖；`reading_note` 不会重复作为 Insight 的历史证据。
+
 ## 校验与同步
 
 资料字段和模板见 [Schema](source-schema.md)及[模板目录](templates/)，去重与人工笔记保护见[维护规范](maintenance.md)。提交前执行：
