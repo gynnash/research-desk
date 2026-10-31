@@ -12,7 +12,7 @@ budget:
   reservation_cost_units: 10
 candidates:
   - key: new-paper
-    topic: agent-memory
+    topic: example-topic
     kind: paper
     metadata:
       title: "[虚构] 分层记忆检索样例"
@@ -54,7 +54,7 @@ candidates:
         issues: []
         usage: {cost_units: 2, input_tokens: 150, output_tokens: 40}
   - key: revised-blog
-    topic: agent-memory
+    topic: example-topic
     kind: blog
     metadata:
       title: "[虚构] 显式记忆块工程笔记"
@@ -121,7 +121,7 @@ candidates:
         issues: []
         usage: {cost_units: 2, input_tokens: 150, output_tokens: 40}
   - key: rejected-paper
-    topic: agent-memory
+    topic: example-topic
     kind: paper
     metadata:
       title: "[虚构] 不足以支持结论的记忆摘要"

@@ -1,9 +1,9 @@
 # TEST：全虚构离线写作样例；不含真实选题批准、外部来源或会员调用。
 schema_version: 1
 origin: offline_fixture
-topic: agent-memory
+topic: example-topic
 topic_card:
-  id: fixture-agent-memory-writing-topic
+  id: fixture-example-writing-topic
   title: '[虚构演练] 为什么保存的记忆仍需检查使用环节'
   angle: 仅用虚构资料解释保存、选取与使用的区别，不声称效果已被验证。
   audience: 用于离线验收的虚构读者。

@@ -54,7 +54,7 @@ class DiscoveryFetcher(fixtures.FixtureFetcher):
         if '/api/query' not in url:
             if url.rstrip('/') == 'https://www.letta.com/blog':
                 return {'url': url, 'content_type': 'text/html', 'text':
-                        (fixtures.REPOSITORY / 'workflows/test/agent-memory/fixtures/collection/blog-list.html').read_text()}
+                        (fixtures.REPOSITORY / 'workflows/test/example-topic/fixtures/collection/blog-list.html').read_text()}
             return super().fetch(url)
         self.api_urls.append(url)
         query = parse_qs(urlsplit(url).query)

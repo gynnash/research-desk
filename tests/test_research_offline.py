@@ -28,11 +28,17 @@ class OfflineResearchAcceptance(unittest.TestCase):
         self.temporary = tempfile.TemporaryDirectory(prefix="researchdesk-offline-")
         self.addCleanup(self.temporary.cleanup)
         self.root = Path(self.temporary.name)
-        for path in ("config", "sources/papers", "sources/blogs", "reports", "insights", "articles", "workflows/test/agent-memory/fixtures"):
+        for path in ("config", "sources/papers", "sources/blogs", "reports", "insights", "articles", "workflows/test/example-topic/fixtures"):
             (self.root / path).mkdir(parents=True, exist_ok=True)
-        shutil.copyfile(REPOSITORY / "config/research_topics.yaml", self.root / "config/research_topics.yaml")
-        self.fixture = yaml.safe_load((REPOSITORY / "workflows/test/agent-memory/fixtures/offline.yaml").read_text(encoding="utf-8"))
-        self.fixture_path = self.root / "workflows/test/agent-memory/fixtures/input.yaml"
+        (self.root / 'config/research_topics.yaml').write_text(yaml.safe_dump({
+            'schema_version': 1, 'topics': {'agent-memory': {
+                'name': 'Fictional test topic', 'enabled': True,
+                'description': 'Synthetic offline framework input.',
+                'scope': ['Synthetic records'], 'keywords': ['fixture', 'memory']}}}))
+        self.fixture = yaml.safe_load((REPOSITORY / "workflows/test/example-topic/fixtures/offline.yaml").read_text(encoding="utf-8"))
+        for candidate in self.fixture['candidates']:
+            candidate['topic'] = 'agent-memory'
+        self.fixture_path = self.root / "workflows/test/example-topic/fixtures/input.yaml"
         self.save_fixture()
 
     def save_fixture(self):
@@ -367,10 +373,10 @@ class OfflineResearchAcceptance(unittest.TestCase):
         self.assertEqual(len(self.sources()), 1)
 
     def test_new_arxiv_version_creates_update_without_touching_human_note(self):
-        path, source_id = self.formal_note(arxiv_id="2310.08560", source_url="https://arxiv.org/abs/2310.08560v2", source_version="v2")
+        path, source_id = self.formal_note(arxiv_id="9912.99999", source_url="https://arxiv.org/abs/9912.99999v2", source_version="v2")
         before = path.read_bytes()
         candidate = self.single()
-        candidate["metadata"].update(arxiv_id=None, doi=None, source_url="https://arxiv.org/pdf/2310.08560v9.pdf", source_version="v9")
+        candidate["metadata"].update(arxiv_id=None, doi=None, source_url="https://arxiv.org/pdf/9912.99999v9.pdf", source_version="v9")
         self.save_fixture()
         result = self.run_batch()
         self.assertEqual(result["counts"]["update_proposed"], 1)
@@ -381,10 +387,10 @@ class OfflineResearchAcceptance(unittest.TestCase):
         self.assertIn(source_id, updates[0].read_text(encoding="utf-8"))
 
     def test_same_update_evidence_is_not_researched_again_in_later_batch(self):
-        path, _ = self.formal_note(arxiv_id="2310.08560", source_url="https://arxiv.org/abs/2310.08560v2", source_version="v2")
+        path, _ = self.formal_note(arxiv_id="9912.99999", source_url="https://arxiv.org/abs/9912.99999v2", source_version="v2")
         before = path.read_bytes()
         candidate = self.single()
-        candidate["metadata"].update(arxiv_id=None, doi=None, source_url="https://arxiv.org/pdf/2310.08560v9.pdf", source_version="v9")
+        candidate["metadata"].update(arxiv_id=None, doi=None, source_url="https://arxiv.org/pdf/9912.99999v9.pdf", source_version="v9")
         self.save_fixture()
         first = self.run_batch()
         self.assertEqual(first["counts"]["update_proposed"], 1)

@@ -104,7 +104,7 @@ class ResearchInsightCycle(unittest.TestCase):
                 {'id': 'arxiv', 'status': 'complete', 'complete_window': True},
                 {'id': 'letta', 'status': 'complete', 'complete_window': True}],
             'production_accepted': False}
-        historical_source = REPOSITORY / 'workflows/test/agent-memory/fixtures/history/paper-4eb3be4b-7189-49aa-bafd-f88f77a972f4.md'
+        historical_source = REPOSITORY / 'workflows/test/example-topic/fixtures/history/paper-00000000-0000-4000-8000-000000000001.md'
         frontmatter, body = historical_source.read_text().split('---', 2)[1:]
         metadata = yaml.safe_load(frontmatter)
         metadata.update(topics=['custom-topic'], related_sources=[], related_notes=[])

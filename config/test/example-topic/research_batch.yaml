@@ -1,0 +1,31 @@
+# Offline framework example; source records and responses are fictional.
+schema_version: 1
+mode: research_batch_test
+backend: mock
+topic: example-topic
+topics_file: config/research_topics.yaml
+models:
+  research: mock-research
+  review: mock-review
+budget:
+  max_documents: 2
+  max_calls_per_item: 4
+  max_calls_per_batch: 6
+  month_max_calls: 10
+  max_input_chars: 20000
+  max_output_chars: 10000
+  timeout_seconds: 120
+  max_revisions: 1
+prompts:
+  version: research-batch-v1
+sources:
+- id: fictional-paper
+  adapter: arxiv
+  kind: paper
+  url: https://export.arxiv.org/api/query?id_list=2610.01234v2
+  evidence_max_chars: 6000
+- id: fictional-blog
+  adapter: letta
+  kind: blog
+  url: https://www.letta.com/blog/fixture-memory
+  evidence_max_chars: 6000

@@ -21,7 +21,7 @@ import yaml
 
 
 REPOSITORY = Path(__file__).resolve().parents[1]
-FIXTURES = REPOSITORY / "workflows/test/agent-memory/fixtures/collection"
+FIXTURES = REPOSITORY / "workflows/test/example-topic/fixtures/collection"
 sys.path.insert(0, str(REPOSITORY / "scripts"))
 import researchdesk_sources as sources  # noqa: E402
 
@@ -290,15 +290,21 @@ class CollectionIntegrationAcceptance(unittest.TestCase):
         self.temporary = tempfile.TemporaryDirectory(prefix="researchdesk-collection-")
         self.addCleanup(self.temporary.cleanup)
         self.root = Path(self.temporary.name)
-        for relative in ("config/test/agent-memory", "sources/papers", "sources/blogs", "reports", "insights", "articles", "workflows"):
+        for relative in ("config/test/example-topic", "sources/papers", "sources/blogs", "reports", "insights", "articles", "workflows"):
             (self.root / relative).mkdir(parents=True, exist_ok=True)
-        for name in ("research_topics.yaml", "legacy_sources.yaml"):
+        for name in ("legacy_sources.yaml",):
             shutil.copyfile(REPOSITORY / "config" / name, self.root / "config" / name)
-        self.config = yaml.safe_load((REPOSITORY / "config/test/agent-memory/collection.yaml").read_text(encoding="utf-8"))
+        (self.root / 'config/research_topics.yaml').write_text(yaml.safe_dump({
+            'schema_version': 1, 'topics': {'agent-memory': {
+                'name': 'Fictional test topic', 'enabled': True,
+                'description': 'Synthetic offline framework input.',
+                'scope': ['Synthetic records'], 'keywords': ['fixture', 'memory']}}}))
+        self.config = yaml.safe_load((REPOSITORY / "config/test/example-topic/collection.yaml").read_text(encoding="utf-8"))
+        self.config['topic'] = 'agent-memory'
         for source in self.config["sources"]:
             source.pop("fallback_urls", None)
             source.pop("seed_urls", None)
-        self.config_path = self.root / "config/test/agent-memory/collection.yaml"
+        self.config_path = self.root / "config/test/example-topic/collection.yaml"
         self.save_config()
         self.fetcher = FixedFetcher(self.config)
 

@@ -89,12 +89,12 @@ class ReadingText(unittest.TestCase):
 
     def test_ranges_are_scoped_types_but_single_references_use_literal_short_titles(self):
         evidence = sources()
-        evidence[0]['display_title'] = 'MemGPT: Towards LLMs as Operating Systems'
-        evidence[1]['display_title'] = 'From Relevant Memories to Sufficient Evidence: Rethinking Memory Utilization'
+        evidence[0]['display_title'] = 'Fixture Alpha: A Fictional Parser Paper'
+        evidence[1]['display_title'] = 'Fixture Beta: Another Fictional Parser Paper'
         evidence[1]['kind'] = 'paper'
         text = reading._clean('R1–R2仅有摘要；H1–H2未复核。R1不同于R2。', evidence)
         self.assertEqual(text, '这些论文仅有摘要；本轮采用的这些历史笔记未复核。'
-                              '《MemGPT》不同于《From Relevant Memories to Sufficient Evidence》。')
+                              '《Fixture Alpha》不同于《Fixture Beta》。')
         for item in evidence[:2]:
             item['kind'] = 'blog'
         self.assertEqual(reading._clean('R1–R2仅有节选。', evidence), '这些博客仅有节选。')
@@ -102,8 +102,8 @@ class ReadingText(unittest.TestCase):
         research = dict(evidence[0], research_summary='作者提出该方法。',
                         research_claims=[], research_limitations=[])
         body = reading.research(research)
-        self.assertTrue(body.startswith('# MemGPT: Towards LLMs as Operating Systems\n'))
-        self.assertIn('[MemGPT: Towards LLMs as Operating Systems]', body)
+        self.assertTrue(body.startswith('# Fixture Alpha: A Fictional Parser Paper\n'))
+        self.assertIn('[Fixture Alpha: A Fictional Parser Paper]', body)
         self.assertEqual(reading._mentioned('R1–R2与H1–H2。', evidence), {'R1', 'R2', 'H1', 'H2'})
 
 

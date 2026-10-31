@@ -24,7 +24,7 @@ class BeijingSchedule(unittest.TestCase):
         self.addCleanup(temporary.cleanup)
         self.root = Path(temporary.name).resolve()
         for relative in ('config/automation.yaml', 'config/admission.yaml',
-                         'config/cycles/agent-memory.yaml', 'config/research_topics.yaml'):
+                         'config/cycles/default.yaml', 'config/research_topics.yaml'):
             target = self.root / relative
             target.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(REPOSITORY / relative, target)
@@ -33,7 +33,17 @@ class BeijingSchedule(unittest.TestCase):
         automation = self.root / 'config/automation.yaml'
         fixture = yaml.safe_load(automation.read_text(encoding='utf-8'))
         fixture['activated_at'] = '2026-10-19T00:00:00+08:00'
+        fixture['enabled'] = True
+        fixture['cycle_config'] = 'config/cycles/default.yaml'
         automation.write_text(yaml.safe_dump(fixture, allow_unicode=True), encoding='utf-8')
+        cycle_path = self.root / 'config/cycles/default.yaml'
+        cycle = yaml.safe_load(cycle_path.read_text())
+        cycle['topic'] = 'agent-memory'
+        cycle_path.write_text(yaml.safe_dump(cycle))
+        (self.root / 'config/research_topics.yaml').write_text(yaml.safe_dump({
+            'schema_version': 1, 'topics': {'agent-memory': {
+                'name': 'Fixture schedule topic', 'enabled': True,
+                'description': 'Synthetic schedule tests.', 'scope': ['fixture'], 'keywords': ['fixture']}}}))
         self.config = schedule.load_config(self.root)
         self.addCleanup(mock.patch.stopall)
         mock.patch.object(socket, 'create_connection', side_effect=AssertionError('Network prohibited')).start()

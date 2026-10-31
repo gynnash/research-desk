@@ -26,7 +26,7 @@ import researchdesk_offline as store
 
 class AbstractFetcher:
     def __init__(self):
-        self.text = (REPOSITORY / 'workflows/test/agent-memory/fixtures/collection/arxiv.xml').read_text()
+        self.text = (REPOSITORY / 'workflows/test/example-topic/fixtures/collection/arxiv.xml').read_text()
         self.calls = []
 
     def fetch(self, url):
@@ -97,15 +97,21 @@ class MembershipResearchAcceptance(unittest.TestCase):
         temporary = tempfile.TemporaryDirectory(prefix='researchdesk-membership-tests-')
         self.addCleanup(temporary.cleanup)
         self.root = Path(temporary.name).resolve()
-        for relative in ('config/test/agent-memory', 'sources/papers', 'sources/blogs',
+        for relative in ('config/test/example-topic', 'sources/papers', 'sources/blogs',
                          'reports/test/agent-memory', 'insights', 'articles', 'workflows'):
             (self.root / relative).mkdir(parents=True, exist_ok=True)
-        for name in ('research_topics.yaml', 'legacy_sources.yaml'):
+        for name in ('legacy_sources.yaml',):
             shutil.copyfile(REPOSITORY / 'config' / name, self.root / 'config' / name)
-        config = yaml.safe_load((REPOSITORY / 'config/test/agent-memory/collection.yaml').read_text())
+        (self.root / 'config/research_topics.yaml').write_text(yaml.safe_dump({
+            'schema_version': 1, 'topics': {'agent-memory': {
+                'name': 'Fictional test topic', 'enabled': True,
+                'description': 'Synthetic offline framework input.',
+                'scope': ['Synthetic records'], 'keywords': ['fixture', 'memory']}}}))
+        config = yaml.safe_load((REPOSITORY / 'config/test/example-topic/collection.yaml').read_text())
+        config['topic'] = 'agent-memory'
         config['sources'] = [source for source in config['sources'] if source['id'] == 'arxiv']
         config['sources'][0].pop('fallback_urls', None)
-        config_path = self.root / 'config/test/agent-memory/collection.yaml'
+        config_path = self.root / 'config/test/example-topic/collection.yaml'
         config_path.write_text(yaml.safe_dump(config, allow_unicode=True))
         self.fetcher = AbstractFetcher()
         self.receipt = collect.collect(self.root, config_path, 'collection-test', fetcher=self.fetcher)['artifacts']['receipt']

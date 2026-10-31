@@ -113,7 +113,7 @@ class UrlHistoryDedup(unittest.TestCase):
                 self.assertEqual(self.classify_with_history(current, prior)['action'], 'update')
 
     def test_formal_and_test_notes_are_found_by_url_and_preserved(self):
-        html = (REPOSITORY / 'workflows/test/agent-memory/fixtures/collection/blog-article.html').read_text()
+        html = (REPOSITORY / 'workflows/test/example-topic/fixtures/collection/blog-article.html').read_text()
         fetcher = mock.Mock()
         fetcher.fetch.return_value = {'url': BLOG, 'text': html, 'content_type': 'text/html'}
         source = {'id': 'blog', 'adapter': 'letta', 'kind': 'blog', 'url': BLOG, 'evidence_max_chars': 6000}

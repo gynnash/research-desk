@@ -68,7 +68,7 @@ class OfflineWritingLoop(unittest.TestCase):
             'schema_version': 1, 'topics': {'custom-topic': {
                 'name': '虚构测试方向', 'enabled': True, 'description': '仅虚构资料的离线写作验收。',
                 'scope': ['可追溯写作'], 'keywords': ['fixture']}}}, allow_unicode=True))
-        source = REPOSITORY / 'workflows/test/agent-memory/fixtures/writing.yaml'
+        source = REPOSITORY / 'workflows/test/example-topic/fixtures/writing.yaml'
         self.fixture = yaml.safe_load(source.read_text())
         self.fixture['topic'] = 'custom-topic'
         self.fixture_path = self.root / 'workflows/test/custom-topic/fixtures/writing.yaml'
@@ -575,7 +575,7 @@ class OfflineWritingLoop(unittest.TestCase):
         self.assertEqual(self.client.calls, [])
 
     def test_fixture_real_url_is_rejected_without_creating_confirmation(self):
-        self.fixture['evidence'][0]['text'] += ' https://arxiv.org/abs/2310.08560'
+        self.fixture['evidence'][0]['text'] += ' https://arxiv.org/abs/9912.99999'
         self.write_fixture()
         with self.assertRaises((store.OfflineError, ValueError)):
             self.confirm()

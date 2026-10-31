@@ -19,7 +19,7 @@ import yaml
 
 
 REPOSITORY = Path(__file__).resolve().parents[1]
-FIXTURES = REPOSITORY / 'workflows/test/agent-memory/fixtures/collection'
+FIXTURES = REPOSITORY / 'workflows/test/example-topic/fixtures/collection'
 sys.path.insert(0, str(REPOSITORY / 'scripts'))
 import researchdesk_batch as batch
 import researchdesk_offline as store

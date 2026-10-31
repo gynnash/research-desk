@@ -117,7 +117,7 @@ class IsolationTests(unittest.TestCase):
         self.check(include_test=True, expected=1)
 
     def test_config_test_yaml_is_still_parsed(self):
-        config = self.root / "config/test/agent-memory/invalid.yaml"
+        config = self.root / "config/test/example-topic/invalid.yaml"
         config.parent.mkdir(parents=True)
         config.write_text("same_key: 1\nsame_key: 2\n", encoding="utf-8")
         self.check(expected=1)
