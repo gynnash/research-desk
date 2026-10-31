@@ -56,7 +56,7 @@ jobs:
       - name: Check confirmed Writing with fake transport and no member usage
         run: python -m unittest discover -s tests -p 'test_writing_member*.py' -v
       - name: Check readable Writing style and historical proof compatibility
-        run: PYTHONPATH=tests python -m unittest test_writing_style test_writing_v2_proofs -v
+        run: PYTHONPATH=tests python -m unittest test_writing_style test_writing_v2_proofs test_writing_original_excerpts -v
       - name: Check process-scoped Git refresh without network or credentials
         run: python -m unittest discover -s tests -p 'test_writing_refresh.py' -v
       - name: Check create-only Writing admission and formal document display

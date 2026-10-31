@@ -120,6 +120,32 @@ class RealTopicConfirmation(unittest.TestCase):
     def error(self):
         return (store.OfflineError, ValueError)
 
+    def test_setup_refreshes_legacy_workspace_before_loading_new_default_config(self):
+        relative = 'config/confirmation-v2.yaml'
+        content = (self.root / relative).read_bytes()
+        self.git('rm', '--', relative)
+        self.git('commit', '-m', 'Isolated legacy confirmation checkout')
+        with tempfile.TemporaryDirectory(prefix='researchdesk-confirmation-upgrade-') as directory:
+            parent = Path(directory).resolve()
+            origin, workspace = parent / 'origin.git', parent / 'workspace'
+            subprocess.run(['git', 'init', '--bare', '--initial-branch=main', str(origin)],
+                           check=True, capture_output=True)
+            self.git('remote', 'add', 'origin', str(origin))
+            self.git('push', '-u', 'origin', 'main')
+            subprocess.run(['git', 'clone', '--quiet', str(origin), str(workspace)],
+                           check=True, capture_output=True)
+            self.assertFalse((workspace / relative).exists())
+            (self.root / relative).write_bytes(content)
+            self.git('add', '--', relative)
+            self.git('commit', '-m', 'Introduce isolated v2 configuration')
+            self.git('push', 'origin', 'main')
+            config = self.confirmation.load_config(self.root)
+            with mock.patch.object(self.confirmation, 'workspace_path', return_value=workspace):
+                self.assertEqual(self.confirmation.setup(self.root, config), workspace)
+            self.assertEqual((workspace / relative).read_bytes(), content)
+            self.assertEqual(self.confirmation.load_config(workspace)['writing']['style_profile'],
+                             'config/writing_style.md')
+
     def test_real_proof_preview_is_read_only_and_retains_evidence_limits(self):
         topics = self.app.list_topics()
         self.assertEqual([topic['id'] for topic in topics], [CARD])
