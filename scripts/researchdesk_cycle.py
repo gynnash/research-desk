@@ -323,6 +323,101 @@ def plan_candidates(root, config, cycle_id, snapshot, fetcher):
     return result
 
 
+def collect_originals(root, config_path, cycle_id, fetcher=None, fail_after=None):
+    """Discover and pin complete originals without starting a model stage.
+
+    Candidate plans use Research's existing create-only layout, so an explicit
+    later ``run`` can replay these exact originals instead of fetching again.
+    No Research manifest, response, budget reservation or formal note is made.
+    """
+    from researchdesk_archive import save as save_archive, load as load_archive
+
+    root = Path(root).resolve()
+    initial = load_config(root, config_path)
+    if (initial.get('archive') is not True
+            or initial.get('reading', {}).get('mode') != 'full_text_required'
+            or initial.get('window', {}).get('mode') != 'rolling'):
+        raise store.OfflineError('独立采集仅支持 rolling、full_text_required 和 archive: true')
+    if fail_after not in {None, 'after_first_original'}:
+        raise store.OfflineError('无效采集中断点')
+    base = base_path(initial, cycle_id)
+    receipt_path = base + '/collection.yaml'
+    transport = CycleFetcher(fetcher, initial['discovery']['sources'])
+    with cycle_lock(root, initial['topic']), store.topic_lock(root, initial['topic']):
+        previous = None
+        if store.safe_path(root, receipt_path).exists():
+            previous = store.checked_yaml(root, receipt_path)
+            # Never let a missing discovery/selection trigger network repair of
+            # an already completed collection. Read and verify all pins first.
+            _cached(root, previous)
+            for name in ('manifest', 'discovery', 'selection'):
+                store.checked_yaml(root, base + '/' + name + '.yaml')
+        config, manifest, snapshot = discover_cycle(root, config_path, cycle_id, fetcher=transport)
+        if (config.get('archive') is not True
+                or config.get('reading', {}).get('mode') != 'full_text_required'
+                or config.get('window', {}).get('mode') != 'rolling'):
+            raise store.OfflineError('旧轮次未绑定完整原文采集策略，不能重新解释')
+        selection = (store.checked_yaml(root, base + '/selection.yaml') if previous is not None
+                     else plan_candidates(root, config, cycle_id, snapshot, transport))
+        batch_base = 'reports/test/%s/research-batches/%s' % (config['topic'], cycle_id)
+        records, output_hashes, seen = [], {}, set()
+        for item in selection['candidates']:
+            source = item['source']
+            plan_path = '%s/items/%s/candidate.yaml' % (batch_base, source['id'])
+            if store.safe_path(root, plan_path).exists():
+                plan = store.checked_yaml(root, plan_path)
+                candidate, material, _ = load_archive(root, plan['candidate'], source=source, config=config)
+            else:
+                if previous is not None:
+                    raise store.OfflineError('已完成采集的候选缺失，禁止联网替换')
+                capture = {}
+                candidate, material = common.fetch_candidate(
+                    root, config, source, transport, capture=capture)
+                action = research.classify(root, batch_base, candidate, config['backend'], seen)
+                if action['action'] not in {'research', 'update'}:
+                    raise store.OfflineError('采集选材的来源身份已变化，保留现场: ' + source['id'])
+                candidate = save_archive(root, batch_base, candidate, material, source, capture)
+                plan = {'candidate': candidate, 'material_sha256': store.digest(material.encode()), **action}
+                store.save_yaml(root, plan_path, plan)
+            if (plan.get('action') not in {'research', 'update'}
+                    or plan.get('material_sha256') != store.digest(material.encode())
+                    or candidate['key'] != source['id'] or candidate['topic'] != config['topic']
+                    or candidate['evidence']['coverage'] != 'full_text'):
+                raise store.OfflineError('已保存候选不对应完整原文采集计划')
+            seen.update(candidate['identity_keys'])
+            binding = candidate['archive']
+            records.append({'key': candidate['key'], 'title': candidate['metadata']['title'],
+                'source_url': candidate['metadata']['source_url'], 'source_id': candidate['source_id'],
+                'candidate_path': plan_path, 'original_path': binding['path'],
+                'original_markdown_path': binding['markdown_path'],
+                'coverage': candidate['evidence']['coverage'], 'content_hash': candidate['content_hash']})
+            for path in (plan_path, plan_path + '.sha256', binding['path'],
+                         binding['path'] + '.sha256', binding['markdown_path']):
+                output_hashes[path] = store.digest(store.safe_path(root, path).read_bytes())
+            interrupted = base + '/collection-interruption.yaml'
+            if (previous is None and fail_after == 'after_first_original' and len(records) == 1
+                    and not store.safe_path(root, interrupted).exists()):
+                store.save_yaml(root, interrupted, {'phase': 'after_first_original',
+                    'candidate_path': plan_path, 'model_calls': 0})
+                raise store.SimulatedInterruption('首篇原文已归档；同 ID 补跑复用已完成采集')
+        research.verify_notes(root, manifest['protected_notes'])
+        inputs = [base + '/' + name + suffix for name in ('manifest', 'discovery', 'selection')
+                  for suffix in ('.yaml', '.yaml.sha256')]
+        receipt = {'schema_version': 1, 'mode': 'collection_only', 'topic': config['topic'],
+            'cycle_id': cycle_id, 'status': 'collected' if records else 'empty',
+            'discovery_status': snapshot.get('status'), 'records': records,
+            'model_calls': 0, 'research_started': False, 'insight_started': False,
+            'writing_started': False, 'production_accepted': False, 'publish_authorized': False,
+            'input_hashes': {path: store.digest(store.safe_path(root, path).read_bytes()) for path in inputs},
+            'output_hashes': output_hashes}
+        if previous is not None:
+            if previous != receipt:
+                raise store.OfflineError('采集回执与固定原文或选材不一致，保留文件')
+            return dict(previous, cached=True)
+        store.save_yaml(root, receipt_path, receipt)
+        return receipt
+
+
 def run(root, config_path, cycle_id, client=None, fetcher=None, fail_after=None):
     root = Path(root).resolve()
     initial = load_config(root, config_path)
@@ -462,16 +557,20 @@ def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--root',type=Path,default=Path(__file__).resolve().parents[1])
     commands=parser.add_subparsers(dest='command',required=True)
-    for name in ('discover','run'):
+    for name in ('discover','collect','run'):
         command=commands.add_parser(name)
         command.add_argument('--config',type=Path,required=True)
         command.add_argument('--cycle-id',required=True)
-        command.add_argument('--profile',type=Path)
-        command.add_argument('--fail-after',choices=['after_research'])
+        if name != 'collect':
+            command.add_argument('--profile',type=Path)
+        command.add_argument('--fail-after',choices=[
+            'after_first_original' if name == 'collect' else 'after_research'])
     args=parser.parse_args()
     try:
         if args.command=='discover':
             result=discover_cycle(args.root,args.config,args.cycle_id)[2]
+        elif args.command=='collect':
+            result=collect_originals(args.root,args.config,args.cycle_id,fail_after=args.fail_after)
         else:
             client=None
             if args.profile:
@@ -483,6 +582,8 @@ def main():
     except Exception as exc:
         print('研究轮次停止：'+type(exc).__name__,file=sys.stderr);return 2
     print(yaml.safe_dump(result,allow_unicode=True,sort_keys=False))
+    if args.command == 'collect':
+        return 0 if result['discovery_status'] != 'failed' else 1
     return 0 if result.get('status') in {'completed','no_new','partial','complete'} else 1
 
 

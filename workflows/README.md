@@ -17,6 +17,14 @@
 
 ## 手动检查与研究
 
+只获取原文时使用[独立采集命令](collection.md)：
+
+```sh
+python3 -B scripts/researchdesk_cycle.py collect --config config/cycles/default.yaml --cycle-id example-topic-collect-001
+```
+
+该入口在本地运行，先配置并启用研究方向，结果为原文和待研究清单，不需要会员授权。
+
 以下命令需要 GitHub CLI 已授权，且自己的 runner 已准备就绪：
 
 ```sh

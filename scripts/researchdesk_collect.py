@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Collect official sources into test-only snapshots; analysis remains fixture mocks."""
+"""Legacy excerpt/mock collector; use researchdesk_cycle.py collect for full originals."""
 
 import argparse
 from datetime import datetime, timezone
