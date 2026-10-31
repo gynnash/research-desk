@@ -209,6 +209,17 @@ def previously_selected(root, topic, cycle_id):
     from researchdesk_identity import source_index
     root = Path(root).resolve()
     used = set()
+    state_path = root / 'config/research_state.yaml'
+    if state_path.exists():
+        if state_path.is_symlink():
+            raise store.OfflineError('历史去重状态不可使用符号链接')
+        state = store.load_yaml(state_path)
+        retained = state.get('selected_identity_keys') if isinstance(state, dict) else None
+        if (not isinstance(state, dict) or type(state.get('schema_version')) is not int
+                or state['schema_version'] != 1 or not isinstance(retained, list)
+                or any(not isinstance(key, str) or not key.strip() for key in retained)):
+            raise store.OfflineError('历史去重状态无效，停止候选选择')
+        used.update(retained)
     for key, values in source_index(root).items():
         if any('test' not in Path(path).parts for path, _ in values.values()):
             used.add(key)
@@ -448,9 +459,11 @@ def discover(root, config, cycle_id, fetcher=None):
                     item['source'] = {'id': '%s-%s' % (source_id[:80], identity),
                                       'adapter': adapter, 'kind': record['kind'], 'url': research_url,
                                       'evidence_max_chars': values['evidence_max_chars']}
-                    if adapter == 'arxiv' and 'reading' in config:
+                    if 'reading' in config and (adapter == 'arxiv'
+                            or config['reading']['mode'] == 'full_text_required'):
                         item['source'].update(reading={'mode': config['reading']['mode']},
-                            evidence_max_chars=config['reading']['paper_max_chars'])
+                            evidence_max_chars=config['reading']['paper_max_chars'] if adapter == 'arxiv'
+                                               else config['reading'].get('blog_max_chars', 200000))
                     if adapter == 'rss':
                         item['source'].update(publisher=source['publisher'],
                                               allowed_hosts=source['allowed_hosts'],

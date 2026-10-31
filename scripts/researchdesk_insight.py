@@ -48,6 +48,15 @@ ARTICLE_GENERATION_INSTRUCTIONS = '''写给实际阅读技术内容的人，正�
 ARTICLE_REVIEW_INSTRUCTIONS = '''同时核验完整叙述，包括 summary、comparisons 的解释和衔接、insights 的推理、选题价值及因果措辞，不能只检查引用存在。可读性不能以丢失范围、把作者主张或历史假设变成事实为代价；正文须自然区分作者报告和我们的推断，缺失证据不能靠修辞补齐。正文不应夹带内部证据编号、逐段引用、脚注或运行信息。report 根检查须覆盖摘要与过渡；所有新扩写都由本次同一独立审阅检查，不新增润色或写作步骤。'''
 
 
+DEEP_GENERATION_INSTRUCTIONS = '''本轮要产出可以直接阅读的深度技术文章，不是资料提纲。沿用已有 JSON 字段和人工选题门禁，不增加模型步骤。summary 用约200至300字给出一个明确研究问题、资料之间的张力和当前回答；comparisons 每段约250至450字，按“问题与设计选择 → 实际机制与实验条件 → 共同点、分歧或冲突 → 对读者的意义”形成3至6段相互承接的论述。不要逐篇复述摘要、堆砌概念或只说‘值得验证’。具体说明记忆怎样写入、组织、检索、更新或影响任务，若论文/博客没有涉及其中某环节就不要补全。比较性能结论时交代任务、基线、指标、模型与预算等原文提供的条件，条件不一致先解释可比性，不能把不同实验的分数排成榜单；作者报告的数字必须忠实于原文，未提供的条件直接说明缺口。
+insights.hypothesis 每条约300至500字，给出“这些材料观察到什么 → 哪些机制可能解释它 → 为什么产生这个判断 → 对系统设计意味着什么”的完整推导，不把已复述的方法换名当洞察。只给1至2条，counterpoints 认真展开一个能改变判断的反例或替代解释，validation 落到可比较任务、控制变量和应观察的现象；合并重复的免责声明，限制集中表达且与具体结论有关。open_questions 给2至4个可深入的研究问题，说明缺什么证据和为什么有区分力，不安排自动任务。选题以一个有证据支撑的读者疑问为中心，说明独特角度与证据缺口，不写文章正文或大纲。
+只根据实际输入形成细节；原始正文与已审阅 Research 结论冲突时，以正文为准并说明差异，不能因为上游通过审阅就沿用错误。正文直接用论文名、方法名、可理解的小标题/过渡指代来源，不写R/H/S/A等内部编号、逐段引用、核验清单或程序字段。来源由程序集中列在文末，证据关联保留在 evidence_ids 内。
+历史为空是允许的初始批次：如实写“这是初始批次，尚无历史积累”，只比较本批至少两个独立原始来源，不虚构H编号、过去三个月/半年变化或已形成趋势。存在历史时须引用真实H材料，说明延续/分歧及其时间范围；没有跨时间证据一律称研究线索或待验证假设，不能用两篇同期材料推出行业演进。report.comparisons 整体覆盖全部R；历史存在时同时覆盖至少一份H。每条insight至少一份R、跨至少两个独立原始来源；仅历史存在时要求同时引用H。没有足够跨来源依据时返回insufficient_evidence。完整技术正文建议3000至4500字，证据不足则缩短，不能凑字；包括JSON字段在内仍须遵守当前输出字符预算。'''
+
+DEEP_REVIEW_INSTRUCTIONS = '''除原有逐项核验外，检查这些文章是否真正解释机制、条件和比较理由，而非只有结论与限制；实验数字是否对应同一任务、指标与设置，不能把跨任务数字制造成性能排序。任何新增细节、衔接和推导都须在同份原文中找到依据，或被清楚写成有依据的推断；上游Research结果不是原文事实的豁免。需要实质补充证据或纠正含义时revise，不为凑字强制加长。
+历史为空时允许初始批次综合，但必须说明尚无历史积累，只用至少两个独立本批来源提出可反驳的研究线索，不能虚构历史、H编号或跨时间趋势；历史存在时沿用历史引用与来源独立性约束。insights必须有完整推导与有意义的替代解释，open_questions须具体，选题仍待用户确认。不要把机械重复限制、内部编号或引用清单当可读正文。'''
+
+
 def instructions_for(config):
     version = config['prompts']['version']
     if version == 'insight-v1':
@@ -71,6 +80,20 @@ def instructions_for(config):
         # bypassed. Frozen v1-v4 instructions retain their exact old wording.
         generation = generation.replace('不写文章、大纲或正文', '不生成公众号文章、大纲或草稿')
         return generation + '\n' + ARTICLE_GENERATION_INSTRUCTIONS, review + '\n' + ARTICLE_REVIEW_INSTRUCTIONS
+    if version == 'insight-v6':
+        generation, review = instructions_for({'prompts': {'version': 'insight-v4'}})
+        generation = generation.replace('输出简洁中文纯 JSON', '输出详实、连贯的中文纯 JSON')
+        generation = generation.replace('本轮历史由明确90–180天窗口抽样',
+                                        '如存在历史，历史由明确90–180天窗口抽样')
+        review = review.replace('本轮历史由明确90–180天窗口抽样',
+                                '如存在历史，历史由明确90–180天窗口抽样')
+        generation = generation.replace('不写文章、大纲或正文', '不生成公众号文章、大纲或草稿')
+        generation = generation.replace('并整体覆盖所有R证据及至少一份H历史',
+                                        '并整体覆盖所有R证据；有H历史时至少覆盖一份H')
+        generation = generation.replace('每条洞察至少引用一份R、一份H，且引用链必须跨至少两个不同原始source_id',
+                                        '每条洞察至少引用一份R，历史存在时同时引用H，且引用链必须跨至少两个不同原始source_id')
+        return (generation + '\n' + DEEP_GENERATION_INSTRUCTIONS,
+                review + '\n' + ARTICLE_REVIEW_INSTRUCTIONS + '\n' + DEEP_REVIEW_INSTRUCTIONS)
     raise store.OfflineError('未知 Insight 提示词版本')
 
 
@@ -163,7 +186,7 @@ def original_source_count(evidence):
     return len(groups)
 
 
-def validate_candidate(candidate, bundle):
+def validate_candidate(candidate, bundle, prompt_version='insight-v1'):
     evidence = {e['id']: e for e in bundle['evidence']}
     if candidate.get('outcome') == 'insufficient_evidence':
         fields(candidate, {'outcome', 'reason'}, '证据不足回执')
@@ -192,7 +215,8 @@ def validate_candidate(candidate, bundle):
     used = set().union(*(set(c['evidence_ids']) for c in report['comparisons']))
     research_ids = {k for k, e in evidence.items() if e['origin'] == 'reviewed_research'}
     historical_ids = set(evidence) - research_ids
-    if not research_ids.issubset(used) or not used & historical_ids:
+    initial_batch = prompt_version == 'insight-v6' and not historical_ids
+    if not research_ids.issubset(used) or (not initial_batch and not used & historical_ids):
         raise store.OfflineError('报告未综合本批研究及历史输入')
     if not isinstance(candidate['insights'], list) or not 1 <= len(candidate['insights']) <= 2:
         raise store.OfflineError('只允许1至2条洞察')
@@ -203,7 +227,8 @@ def validate_candidate(candidate, bundle):
         for key in ('counterpoints', 'limitations', 'validation'):
             strings(insight[key], key)
         refs = references(insight['evidence_ids'], evidence)
-        if not refs & research_ids or not refs & historical_ids or original_source_count([evidence[k] for k in refs]) < 2:
+        if (not refs & research_ids or (not initial_batch and not refs & historical_ids)
+                or original_source_count([evidence[k] for k in refs]) < 2):
             raise store.OfflineError('洞察须结合新研究和历史，且跨至少两个不同原始来源')
     if not isinstance(candidate['topics'], list) or not 1 <= len(candidate['topics']) <= 2:
         raise store.OfflineError('只允许1至2张待确认选题卡')
@@ -292,7 +317,7 @@ def create_output(root, path, content, topic, batch_id):
 
 
 def render_outputs(root, base, config, batch_id, candidate, bundle):
-    if config['prompts']['version'] == 'insight-v5':
+    if config['prompts']['version'] in {'insight-v5', 'insight-v6'}:
         return render_article_outputs(root, base, config, batch_id, candidate, bundle)
     import posixpath
     topic = config['topic']
@@ -385,7 +410,10 @@ def render_outputs(root, base, config, batch_id, candidate, bundle):
 def render_article_outputs(root, base, config, batch_id, candidate, bundle):
     """Narrative research documents with one short, source-level reading note."""
     import posixpath
-    legacy = dict(config, prompts={'version': 'insight-v4'})
+    # v4 assumes a registered history window. Initial v6 batches have none;
+    # the older renderer supplies frontmatter only, not the article body.
+    has_history = any(record['origin'] == 'human_baseline' for record in bundle['evidence'])
+    legacy = dict(config, prompts={'version': 'insight-v4' if has_history else 'insight-v3'})
     outputs, original = render_outputs(root, base, legacy, batch_id, candidate, bundle)
     outputs['insights'] = []  # Deep judgments belong in the same readable report.
     evidence = {record['id']: record for record in bundle['evidence']}
@@ -419,7 +447,12 @@ def render_article_outputs(root, base, config, batch_id, candidate, bundle):
         return '\n'.join(lines).rstrip() + '\n'
 
     report = candidate['report']
-    lines = [report['summary'], '', '## 这些研究的共同点与分歧', '']
+    lines = [report['summary'], '']
+    if (config['prompts']['version'] == 'insight-v6'
+            and not any(item['origin'] == 'human_baseline' for item in bundle['evidence'])):
+        lines += ['这是初始批次，尚无历史积累。以下是本批资料的比较与研究线索，不能据此判断跨时间的行业趋势。', '']
+    lines += ['## 方法为何不同，结论怎样比较' if config['prompts']['version'] == 'insight-v6'
+              else '## 这些研究的共同点与分歧', '']
     for claim in report['comparisons']:
         lines += [claim['text'], '']
     for item in candidate['insights']:
@@ -498,7 +531,7 @@ def room(root, config, events, count, recovery=None):
         raise store.OfflineError('Insight 批次或共享月度请求预算不足')
 
 
-def verify_ledger(root, base, events, manifest, bundle):
+def verify_ledger(root, base, events, manifest, bundle, prompt_version='insight-v1'):
     """Require every completion to match one prior reservation and checkpoint."""
     reserved, completed, failures, normalized, interruptions = {}, set(), set(), set(), 0
     for event in events:
@@ -529,7 +562,7 @@ def verify_ledger(root, base, events, manifest, bundle):
                 raise store.OfflineError('语法归一化事件不属于唯一修订响应')
             raw = store.checked_yaml(root, base + '/checkpoints/generation-1.yaml')['result']['text']
             candidate = normalize_final_object_brace(raw)
-            validate_candidate(candidate, bundle)
+            validate_candidate(candidate, bundle, prompt_version=prompt_version)
             if event.get('raw_sha256') != store.digest(raw.encode()) or event.get('candidate_sha256') != store.digest(candidate):
                 raise store.OfflineError('语法归一化未绑定原始与解析内容')
             normalized.add(1)
@@ -622,7 +655,7 @@ def run(root, config_path, batch_id, client, fetcher=None, fail_after=None):
                 manifest['recovery'] = recovery_binding
             store.save_yaml(root, manifest_path, manifest)
         events = store.read_events(root, base)
-        verify_ledger(root, base, events, manifest, bundle)
+        verify_ledger(root, base, events, manifest, bundle, prompt_version=config['prompts']['version'])
         model_bundle = inputs.model_payload(bundle, config['prompts']['version'])
         candidate, review, revision = None, None, 0
         for revision in range(config['budget']['max_revisions'] + 1):
@@ -640,7 +673,7 @@ def run(root, config_path, batch_id, client, fetcher=None, fail_after=None):
             recovery = {}
             try:
                 candidate = call(root, base, events, client, manifest, config, 'generation', revision, generation_instructions, request)
-                if not validate_candidate(candidate, bundle):
+                if not validate_candidate(candidate, bundle, prompt_version=config['prompts']['version']):
                     break
             except GenerationFormatError as exc:
                 # Repair only a known completed generation. Transport/unknown calls
@@ -661,7 +694,7 @@ def run(root, config_path, batch_id, client, fetcher=None, fail_after=None):
                     if revision != 1 or not any(e['type'] == 'local_validation_failed' and e.get('revision') == 0 for e in events):
                         raise
                     candidate = normalize_final_object_brace(raw)
-                    validate_candidate(candidate, bundle)
+                    validate_candidate(candidate, bundle, prompt_version=config['prompts']['version'])
                     recovery = {'format_recovery': {
                         'operation': 'remove_single_redundant_final_object_brace',
                         'raw_response': raw, 'raw_sha256': store.digest(raw.encode()),
@@ -694,7 +727,7 @@ def run(root, config_path, batch_id, client, fetcher=None, fail_after=None):
             if decision != 'revise':
                 break
         status = 'revise' if isinstance(candidate, str) else ('blocked' if candidate['outcome'] == 'insufficient_evidence' else review['decision'])
-        if not verify_ledger(root, base, events, manifest, bundle):
+        if not verify_ledger(root, base, events, manifest, bundle, prompt_version=config['prompts']['version']):
             raise store.OfflineError('仍有结果未知的请求，停止创建产物')
         if fail_after == 'after_review' and status == 'pass' and not any(e['type'] == 'acceptance_interruption' for e in events):
             store.append_event(root, base, events, {'type': 'acceptance_interruption', 'at': shared.now()})

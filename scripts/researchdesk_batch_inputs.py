@@ -84,7 +84,7 @@ def load_config(root, path):
         raise store.OfflineError('研究与独立审阅必须使用不同模型')
     ranges = {'max_documents': (1, 10), 'max_calls_per_item': (2, 4), 'max_calls_per_batch': (2, 40),
               'month_max_calls': (2, 1000), 'max_input_chars': (1000, 600000),
-              'max_output_chars': (1000, 12000), 'timeout_seconds': (1, 120), 'max_revisions': (0, 1)}
+              'max_output_chars': (1000, 24000), 'timeout_seconds': (1, 120), 'max_revisions': (0, 1)}
     fields(config['budget'], ranges, '预算配置')
     for name, (low, high) in ranges.items():
         positive(config['budget'][name], low, high, name)
@@ -93,7 +93,7 @@ def load_config(root, path):
     if config['budget']['max_calls_per_batch'] > config['budget']['month_max_calls']:
         raise store.OfflineError('批次请求上限不可超过月度上限')
     fields(config['prompts'], {'version'}, '提示词配置')
-    if config['prompts']['version'] not in {'research-batch-v1', 'research-batch-v2', 'research-batch-v3'}:
+    if config['prompts']['version'] not in {'research-batch-v1', 'research-batch-v2', 'research-batch-v3', 'research-batch-v4'}:
         raise store.OfflineError('未知提示词版本')
     sources = config['sources']
     if not isinstance(sources, list) or not 1 <= len(sources) <= config['budget']['max_documents']:
@@ -109,9 +109,13 @@ def load_config(root, path):
             raise store.OfflineError('归档配置仅支持显式 archive: true')
         if 'reading' in source:
             fields(source['reading'], {'mode'}, '全文阅读配置')
-            if (source['reading']['mode'] != 'full_text_preferred' or source['adapter'] != 'arxiv'
-                    or config['prompts']['version'] not in {'research-batch-v2', 'research-batch-v3'}):
-                raise store.OfflineError('全文阅读需要 arXiv 与 research-batch-v2/v3')
+            reading_mode = source['reading']['mode']
+            if (reading_mode not in {'full_text_preferred', 'full_text_required'}
+                    or (reading_mode == 'full_text_preferred' and source['adapter'] != 'arxiv')
+                    or config['prompts']['version'] not in {'research-batch-v2', 'research-batch-v3', 'research-batch-v4'}):
+                raise store.OfflineError('全文阅读需要已支持的正文模式与 research-batch-v2/v3/v4')
+            if reading_mode == 'full_text_required' and source.get('archive') is not True:
+                raise store.OfflineError('必须阅读全文的来源须同时启用原文归档 archive: true')
         if not isinstance(source['id'], str) or not store.SAFE_ID.fullmatch(source['id']) or source['id'] in ids:
             raise store.OfflineError('来源 ID 无效或重复')
         ids.add(source['id'])
@@ -233,6 +237,7 @@ def project_material(record, document, source):
     """Rebuild exact reading evidence from an immutable extracted original."""
     text = record['body_text']
     cap = source['evidence_max_chars']
+    required = source.get('reading', {}).get('mode') == 'full_text_required'
     coverage = 'abstract_only' if record['kind'] == 'paper' else 'excerpt'
     if document is None and coverage == 'abstract_only' and len(text) > cap:
         raise SourceError('Abstract exceeds configured input bound; cannot claim full abstract coverage')
@@ -260,6 +265,23 @@ def project_material(record, document, source):
                 'source_url': metadata['source_url'], 'source_version': metadata.get('source_version'),
                 'content_hash': content_hash, 'evidence_sha256': store.digest(material.encode()),
                 'locators': locators}
+    if required and record['kind'] == 'blog' and document is None:
+        if (record['coverage'] != 'fulltext' or store.digest(text.encode()) != record['content_hash']
+                or len(text) < 800):
+            raise SourceError('Full blog body required; extracted article is incomplete or too short')
+        material, locators, sections, selected_chars, truncated = _section_material([
+            {'id': 'S1', 'title': record['metadata']['title'], 'text': text,
+             'location': record['metadata']['source_url']}], cap)
+        if truncated:
+            raise SourceError('Full blog body exceeds evidence_max_chars; no excerpt accepted')
+        evidence.update(coverage='full_text', extraction_coverage='full_text',
+            evidence_sha256=store.digest(material.encode()), locators=locators,
+            reading_profile='blog-fulltext-v1', format='html',
+            document_url=record['metadata']['source_url'], sections=sections,
+            total_chars=len(text), selected_chars=selected_chars, truncated=False,
+            extraction_scope='complete readable text within the explicit publisher article body',
+            limitations=['Public HTML article text only; embedded images, video, interactive content, '
+                         'external links, and inaccessible content are not verified.'])
     if document is not None:
         abstract_content_hash = record['content_hash']
         material, locators, sections, selected_chars, truncated = _section_material(
@@ -268,6 +290,8 @@ def project_material(record, document, source):
             raise SourceError('Abstract exceeds evidence bound; cannot claim complete abstract coverage')
         coverage = ('abstract_only' if document['format'] == 'abstract' else
                     'excerpt' if truncated or document['coverage'] != 'full_text' else 'full_text')
+        if required and coverage != 'full_text':
+            raise SourceError('Full paper text exceeds evidence_max_chars or extraction is incomplete; no excerpt accepted')
         content_hash = document['text_sha256']
         evidence.update(coverage=coverage, extraction_coverage=document['coverage'],
             abstract_content_hash=abstract_content_hash,
@@ -315,6 +339,8 @@ def fetch_candidate(root, config, source, fetcher, binding=None, capture=None):
         capture.clear()
         capture['responses'] = []
         fetcher = _CaptureFetcher(fetcher, capture['responses'])
+    required = source.get('reading', {}).get('mode') == 'full_text_required'
+    retain_full = source.get('archive') is True or required
     response = fetcher.fetch(source['url'])
     content_type = response.get('content_type', '').split(';')[0].strip().lower()
     if source['adapter'] == 'arxiv':
@@ -344,22 +370,30 @@ def fetch_candidate(root, config, source, fetcher, binding=None, capture=None):
         if source['adapter'] == 'rss':
             from researchdesk_feeds import parse_article
             record = parse_article(response['text'], response['url'], source['publisher'],
-                                   source['allowed_hosts'], retain_full=source.get('archive') is True,
+                                   source['allowed_hosts'], retain_full=retain_full,
                                    feed_metadata=source.get('feed_metadata'))
         else:
             record = (parse_blog_article(response['text'], response['url'], source['adapter'], retain_full=True)
-                      if source.get('archive') is True else
+                      if retain_full else
                       parse_blog_article(response['text'], response['url'], source['adapter']))
     if record['kind'] != source['kind']:
         raise SourceError('Parsed source kind changed')
     document = None
-    if 'reading' in source:
+    if required and record['kind'] == 'blog':
+        # A publisher article boundary is required by the parser. Reject known
+        # access gates instead of calling a publicly visible teaser "full text".
+        if re.search(r'(?:subscribe|sign in|log in) to (?:continue|read (?:the )?(?:full|rest))|'
+                     r'登录后(?:查看|阅读)全文|付费(?:后)?阅读|订阅(?:后)?阅读', record['body_text'], re.I):
+            raise SourceError('Full blog body unavailable: publisher article contains an access gate')
+        if re.search(r'"isAccessibleForFree"\s*:\s*(?:false|"false")', response['text'], re.I):
+            raise SourceError('Full blog body unavailable: publisher declares restricted article access')
+    if 'reading' in source and record['kind'] == 'paper':
         from researchdesk_fulltext import acquire_paper
         bound_evidence = (binding or {}).get('evidence', {})
         expected = bound_evidence.get('format') if binding is not None else None
         if binding is not None and bound_evidence.get('reading_profile') != 'arxiv-fulltext-v1':
             raise SourceError('Bound paper does not match the full-text reading profile')
-        document = acquire_paper(record, fetcher, expected_format=expected)
+        document = acquire_paper(record, fetcher, expected_format=expected, require_full=required)
     evidence, material, content_hash = project_material(record, document, source)
     metadata = record['metadata']
     identity_keys = store.identities(metadata)

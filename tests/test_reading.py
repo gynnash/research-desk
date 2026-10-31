@@ -71,7 +71,8 @@ class ReadingHome(unittest.TestCase):
             with self.assertRaisesRegex(store.OfflineError, '未通过校验'):
                 reading.build(self.root)
         with mock.patch.object(reading, '_research_cycles', return_value=[]):
-            self.assertEqual(reading.refresh(self.root), [])
+            self.assertIn(reading.HOME, reading.refresh(self.root))
+            self.assertIn('暂无新准入的研究', (self.root / reading.HOME).read_text())
 
     def test_editorial_reading_keeps_author_text_but_cannot_rebind_its_source(self):
         path = 'insights/agent-memory/综述/edited.md'

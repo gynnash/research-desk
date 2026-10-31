@@ -62,10 +62,13 @@ def load_config(root, path, snapshot=None):
             raise store.OfflineError('仅支持有可核实信号的社区关注度排序')
         common.positive(config['selection']['max_requests'], 1, 500, 'max_requests')
     if 'reading' in config:
-        common.fields(config['reading'], {'mode', 'paper_max_chars'}, '论文阅读配置')
-        if config['reading']['mode'] != 'full_text_preferred':
+        common.fields(config['reading'], {'mode', 'paper_max_chars'} |
+                      ({'blog_max_chars'} if 'blog_max_chars' in config['reading'] else set()), '原文阅读配置')
+        if config['reading']['mode'] not in {'full_text_preferred', 'full_text_required'}:
             raise store.OfflineError('论文阅读模式无效')
         common.positive(config['reading']['paper_max_chars'], 2000, 200000, 'paper_max_chars')
+        if 'blog_max_chars' in config['reading']:
+            common.positive(config['reading']['blog_max_chars'], 2000, 200000, 'blog_max_chars')
     if type(config['schema_version']) is not int or config['schema_version'] != 1 or config['mode'] != 'research_cycle_test' or config['backend'] != 'chatgpt_plan':
         raise store.OfflineError('当前研究轮次只支持真实会员的 research_cycle_test')
     if not isinstance(config['topic'], str) or not store.SAFE_ID.fullmatch(config['topic']):
@@ -85,7 +88,7 @@ def load_config(root, path, snapshot=None):
         common.positive(config['window']['initial_days'], 1, 365, 'initial_days')
         common.positive(config['window']['overlap_hours'], 0, 168, 'overlap_hours')
     ranges = {'max_calls_per_cycle': (4, 20), 'research_max_calls': (2, 16), 'insight_max_calls': (2, 4),
-              'max_input_chars': (1000, 600000), 'max_output_chars': (1000, 12000),
+              'max_input_chars': (1000, 600000), 'max_output_chars': (1000, 24000),
               'timeout_seconds': (1, 120), 'max_revisions': (0, 1)}
     common.fields(config['budget'], ranges, '轮次预算')
     for key, (low, high) in ranges.items():
@@ -294,6 +297,9 @@ def plan_candidates(root, config, cycle_id, snapshot, fetcher):
             else:
                 source.pop('reading', None)
                 source['evidence_max_chars'] = config['discovery']['evidence_max_chars']
+        elif config.get('reading', {}).get('mode') == 'full_text_required':
+            source.update(reading={'mode': 'full_text_required'},
+                          evidence_max_chars=config['reading'].get('blog_max_chars', 200000))
         item = dict(item, source=source)
         if len(selected)>=config['discovery']['max_documents'] or per_source.get(per_source_key,0)>=config['discovery']['max_per_source']:
             pending.append(dict(item,reason='cycle_capacity'))
@@ -302,7 +308,9 @@ def plan_candidates(root, config, cycle_id, snapshot, fetcher):
             candidate, _ = common.fetch_candidate(root,child_config,source,fetcher)
             action = research.classify(root,'reports/test/%s/research-batches/%s'%(config['topic'],cycle_id),candidate,'chatgpt_plan',seen)
         except Exception as exc:
-            pending.append(dict(item,reason='preflight_source_failed',error_type=type(exc).__name__))
+            from researchdesk_sources import SourceError
+            details = {'error_reason': str(exc)[:600]} if isinstance(exc, SourceError) else {}
+            pending.append(dict(item,reason='preflight_source_failed',error_type=type(exc).__name__, **details))
             continue
         if action['action'] in {'duplicate','blocked'}:
             skipped.append({'source':source,**action})
@@ -344,7 +352,7 @@ def run(root, config_path, cycle_id, client=None, fetcher=None, fail_after=None)
                 historical = discovery.select_history(root, config['topic'], config['history']['max_documents'],
                                                        **history_options)
                 store.save_yaml(root, history_path, {'items':historical})
-            if not historical:
+            if not historical and config.get('reading', {}).get('mode') != 'full_text_required':
                 status = 'awaiting_history'
                 pending += [dict(item, reason='history_unavailable') for item in candidates]
             else:
@@ -359,7 +367,8 @@ def run(root, config_path, cycle_id, client=None, fetcher=None, fail_after=None)
                     'budget':{'max_documents':len(candidates), 'max_calls_per_item':4,
                         'max_calls_per_batch':min(budget['research_max_calls'],len(candidates)*4), 'month_max_calls':monthly_cap,
                         **{key:budget[key] for key in ('max_input_chars','max_output_chars','timeout_seconds','max_revisions')}},
-                    'prompts':{'version':'research-batch-v3' if config.get('presentation') == 'technical_article' else
+                    'prompts':{'version':'research-batch-v4' if config.get('reading', {}).get('mode') == 'full_text_required' else
+                                        'research-batch-v3' if config.get('presentation') == 'technical_article' else
                                         'research-batch-v2' if 'reading' in config else 'research-batch-v1'},
                     'sources':[item['source'] for item in candidates]}
                 research_path = base + '/configs/research.yaml'
@@ -403,7 +412,8 @@ def run(root, config_path, cycle_id, client=None, fetcher=None, fail_after=None)
                         'topics_file':config['topics_file'],'models':{'generation':config['models']['insight'],'review':config['models']['review']},
                         'budget':{'max_calls':budget['insight_max_calls'],'month_max_calls':monthly_cap,
                                   **{key:budget[key] for key in ('max_input_chars','max_output_chars','timeout_seconds','max_revisions')}},
-                        'prompts':{'version':'insight-v5' if config.get('presentation') == 'technical_article' else
+                        'prompts':{'version':'insight-v6' if config.get('reading', {}).get('mode') == 'full_text_required' else
+                                            'insight-v5' if config.get('presentation') == 'technical_article' else
                                             'insight-v4' if 'lookback_days' in config['history'] else
                                             'insight-v3' if 'reading' in config else 'insight-v2'},
                         'research_inputs':[{'receipt':original_receipt,'config':research_path,'item_keys':keys}],
@@ -415,7 +425,7 @@ def run(root, config_path, cycle_id, client=None, fetcher=None, fail_after=None)
                         # still rejects changes to any other bound input.
                         previous = store.checked_yaml(root, insight_path)
                         version = previous.get('prompts', {}).get('version')
-                        if version not in {'insight-v1', 'insight-v2', 'insight-v3', 'insight-v4', 'insight-v5'}:
+                        if version not in {'insight-v1', 'insight-v2', 'insight-v3', 'insight-v4', 'insight-v5', 'insight-v6'}:
                             raise store.OfflineError('已有 Insight 配置的提示词版本无效')
                         insight_cfg['prompts']['version'] = version
                     store.save_yaml(root, insight_path, insight_cfg)

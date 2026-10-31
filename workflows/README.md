@@ -15,7 +15,9 @@ Research 采集、去重并分析 → 独立模型审阅 → Insight 综合历�
 | 会员请求月度上限 | [membership_budget.yaml](../config/membership_budget.yaml)、[预算说明](membership-budget.md) |
 | 正式研究准入、选题确认及稿件准入 | [admission.yaml](../config/admission.yaml)、[confirmation-v2.yaml](../config/confirmation-v2.yaml)、[writing_admission.yaml](../config/writing_admission.yaml) |
 
-当前公开来源为 arXiv、Letta、LangChain、Hugging Face Blog、美团技术团队和阮一峰的网络日志。关注度来自可核实的 Hugging Face / Hacker News 信号；这是候选范围内的排序，不保证全网最热。未接入知乎、X、Reddit 和 Quora。论文优先获取固定版本官方 HTML，缺失时提取 PDF；失败才标为摘要降级。博客实际模型输入范围及完整归档范围分别记录。
+当前公开来源为 arXiv、Letta、LangChain、Hugging Face Blog、美团技术团队和阮一峰的网络日志。关注度来自可核实的 Hugging Face / Hacker News 信号；这是候选范围内的排序，不保证全网最热。未接入知乎、X、Reddit 和 Quora。当前 `full_text_required` 模式要求完整可用正文：论文先获取固定版本官方 HTML，缺失时提取 PDF；博客提取公开页面主文。获取失败、不完整或超出材料预算时跳过，不以摘要降级。正文在模型调用前归档，Research、独立审阅及 Insight 读取对应正文。
+
+Research v4 以分节技术文章解释方法步骤和实际实验比较；Insight v6 展开跨来源比较、洞察推导、反例和可研究问题，来源集中在篇末。清理后的初始批次允许没有历史，须至少两个独立当前来源，不虚构跨时间趋势。`config/research_state.yaml` 保留清理前真实调用计数与已选身份键；清理结果不重置预算或重复选材。周二、周五03:00频率不变，补跑起点从2026-10-31清理后开始。
 
 ## 首次部署
 
@@ -82,7 +84,7 @@ python3 scripts/researchdesk_writing_admission.py verify --topic agent-memory --
 
 ## 日常阅读入口
 
-[研究首页](../研究首页.md)按最新与历史批次列出具体资料、单篇解读、综合洞察、选题和稿件。旧格式从已审阅结构化结果整理为四类目录内的可读正文；新格式直接链接正式文章。证据编号和散列留在运行记录，原文来源与实际阅读范围仍可核对。
+[研究首页](../研究首页.md)按最新与历史批次列出具体资料、单篇解读、综合洞察、选题和稿件，直接链接正式文章。证据编号和散列留在运行记录，原文来源与实际阅读范围仍可核对。2026-10-31以前的结果已按用户要求清理，保留Git历史与个人笔记。
 
 Research 正式回存与 Writing 正式准入后自动刷新首页，TEST 写作不冒充正式稿件。手动维护只需：
 

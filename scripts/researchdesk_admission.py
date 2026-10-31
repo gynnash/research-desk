@@ -172,7 +172,7 @@ def _insight_proof(root, config, bundle, cycle_id, bind_requests, allow_failure=
             or receipt.get('publish_authorized') is not False or receipt.get('approval_required') is not True):
         raise store.OfflineError('Insight 不是当前绑定输入的通过结果')
     events = store.read_events(root, base)
-    if not insight.verify_ledger(root, base, events, manifest, bundle):
+    if not insight.verify_ledger(root, base, events, manifest, bundle, prompt_version=config['prompts']['version']):
         raise store.OfflineError('存在未知真实请求，不得准入')
     completed = [e for e in events if e['type'] == 'call_completed']
     if (receipt.get('reserved_calls') != len(completed) or receipt.get('completed_calls') != len(completed)
@@ -214,7 +214,7 @@ def _insight_proof(root, config, bundle, cycle_id, bind_requests, allow_failure=
             recovery = {'format_recovery': {'operation': 'remove_single_redundant_final_object_brace',
                 'raw_response': raw, 'raw_sha256': store.digest(raw.encode()),
                 'candidate_sha256': store.digest(candidate), 'notice': RECOVERY_NOTICE}}
-        if not insight.validate_candidate(candidate, bundle):
+        if not insight.validate_candidate(candidate, bundle, prompt_version=config['prompts']['version']):
             raise store.OfflineError('证据不足不能准入')
         review_payload = dict(model_payload, candidate=candidate, **recovery) if bind_requests else None
         review = insight.parse_response(read('review', review_instructions, review_payload), 'review')
@@ -457,7 +457,7 @@ def _render(root, topic, cycle_id, config, bundle, candidate, records, source_ma
                        if Path(value[0]).parts[2:3] != ('test',)}
     source_map = dict(source_map or {})
     path_map, sources = {}, {}
-    simple = config['prompts']['version'] == 'insight-v5'
+    simple = config['prompts']['version'] in {'insight-v5', 'insight-v6'}
     synthesis_path = '%s/%s/%s-synthesis.md' % ('insights' if simple else 'reports', topic, cycle_id)
     accepted_path = _base(topic, cycle_id) + '/accepted.yaml'
     for record in records:
@@ -569,7 +569,7 @@ def _render(root, topic, cycle_id, config, bundle, candidate, records, source_ma
                 'published_at': original['metadata'].get('published_at'), 'collected_at': collected,
                 'updated_at': collected, 'topics': [topic], 'status': 'inbox',
                 'related_sources': [], 'related_notes': [target['report'], synthesis_path]}
-            if config['prompts']['version'] in {'insight-v4', 'insight-v5'}:
+            if config['prompts']['version'] in {'insight-v4', 'insight-v5', 'insight-v6'}:
                 files[target['path']] = _source_card(source, original, target['path'], target['report'],
                                                      synthesis_path, accepted_path)
             else:

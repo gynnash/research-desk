@@ -41,7 +41,7 @@ def _prompt_version(config):
     version = config.get('prompts', {}).get('version')
     if version in {'insight-v1', 'insight-v2'}:
         return 'insight-v2'
-    if version in {'insight-v3', 'insight-v4', 'insight-v5'}:
+    if version in {'insight-v3', 'insight-v4', 'insight-v5', 'insight-v6'}:
         return version
     raise store.OfflineError('恢复原始 Insight 提示词版本无效')
 
@@ -279,7 +279,8 @@ def verify_lineage(root, topic, identifier, bundle=None, config=None, auth=None)
             raise store.OfflineError('Insight 检查点缺少恢复关联散列')
         events = store.read_events(root, new_base)
         # Incomplete reservations remain exportable but can never be resent.
-        insight.verify_ledger(root, new_base, events, new_manifest, source_bundle)
+        insight.verify_ledger(root, new_base, events, new_manifest, source_bundle,
+                              prompt_version=current_config['prompts']['version'])
         if (any(event.get('role') == 'format_review' for event in events)
                 or old_cycle['reserved_calls'] + sum(e['type'] == 'call_reserved' for e in events) > request['max_calls_per_cycle']):
             raise store.OfflineError('恢复请求超过原轮次累计预算或允许角色')

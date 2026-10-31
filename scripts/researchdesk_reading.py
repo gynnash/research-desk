@@ -135,7 +135,7 @@ def _research_cycles(root, files, warnings):
             raise store.OfflineError('阅读入口缺少唯一正式综合')
         original = summaries[0]
         synthesis = original
-        narrative = store.load_yaml(admission._location(root, value['insight_config']))['prompts']['version'] == 'insight-v5'
+        narrative = store.load_yaml(admission._location(root, value['insight_config']))['prompts']['version'] in {'insight-v5', 'insight-v6'}
         if not narrative:
             synthesis = 'insights/%s/综述/%s-%s.md' % (topic, cycle_id, _slug(candidate['report']['title']))
             files[synthesis] = _reading(root, synthesis, prose.synthesis(candidate, evidence), original,
@@ -269,8 +269,9 @@ def _cycle_section(cycle, level=2):
 def _home(cycles, writings, sources, archives, warnings, manual=None):
     lines = ['# 研究工作台', '',
         '从这里看本轮与历史研究。文章标题打开原文，“方法与总结”打开每篇解读；综合文章包含与历史资料的比较、洞察、趋势线索和待验证问题。', '',
-        '已整理 %s 个正式批次，实际研究轮次覆盖 %s 至 %s；不能把配置的历史窗口当成已经积累的时间。' % (
-            len(cycles), min(item['date'] for item in cycles), max(item['date'] for item in cycles)), '',
+        ('已整理 %s 个正式批次，实际研究轮次覆盖 %s 至 %s；不能把配置的历史窗口当成已经积累的时间。' % (
+            len(cycles), min(item['date'] for item in cycles), max(item['date'] for item in cycles))
+         if cycles else '旧研究结果已清理，暂无新准入的研究。新批次完成独立审阅后会列在这里。'), '',
         '[最新研究](#最新研究) · [历史批次](#历史批次) · [全部论文与博客](#全部论文与博客) · [公众号选题](#公众号选题) · [已生成文章](#已生成文章)', '',
         '## 最新研究', '']
     if warnings:
@@ -324,10 +325,8 @@ def build(root):
     root = Path(root).resolve()
     files, warnings = {}, []
     cycles = _research_cycles(root, files, warnings)
-    if not cycles:
-        if warnings:
-            raise store.OfflineError('已有准入记录未通过校验，不能把旧首页当作当前结果')
-        return {}
+    if not cycles and warnings:
+        raise store.OfflineError('已有准入记录未通过校验，不能把旧首页当作当前结果')
     writings = _writings(root, files, warnings)
     sources, archives = _library(root, cycles)
     manual = {}

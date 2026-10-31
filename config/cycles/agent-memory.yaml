@@ -6,8 +6,9 @@ topics_file: config/research_topics.yaml
 archive: true
 presentation: technical_article
 reading:
-  mode: full_text_preferred
-  paper_max_chars: 120000
+  mode: full_text_required
+  paper_max_chars: 200000
+  blog_max_chars: 200000
 window:
   mode: rolling
   days: 60
@@ -57,8 +58,8 @@ budget:
   max_calls_per_cycle: 16
   research_max_calls: 12
   insight_max_calls: 4
-  max_input_chars: 500000
-  max_output_chars: 8000
+  max_input_chars: 600000
+  max_output_chars: 24000
   timeout_seconds: 120
   max_revisions: 1
 history:

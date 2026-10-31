@@ -263,7 +263,7 @@ def _pdf_sections(response, url, base, version):
     return sections, 'excerpt' if empty_pages else 'full_text', limitations
 
 
-def acquire_paper(record, fetcher, expected_format=None):
+def acquire_paper(record, fetcher, expected_format=None, require_full=False):
     """Get official HTML, then PDF, otherwise the already parsed abstract.
 
     ``expected_format`` replays a previously bound input. A failed full-text
@@ -272,6 +272,8 @@ def acquire_paper(record, fetcher, expected_format=None):
     """
     if expected_format not in {None, 'html', 'pdf', 'abstract'}:
         raise SourceError('Unknown pinned paper extraction format')
+    if require_full and expected_format == 'abstract':
+        raise SourceError('Full text is required; an abstract-only binding cannot be used')
     base, version = _identity(record)
     abstract_url = 'https://arxiv.org/abs/' + base + version
     attempts = []
@@ -286,6 +288,8 @@ def acquire_paper(record, fetcher, expected_format=None):
             response = fetcher.fetch(url) if fmt == 'html' else fetcher.fetch_pdf(url)
             sections, coverage, limitations = (_html_sections(response, url, base, version) if fmt == 'html'
                                                 else _pdf_sections(response, url, base, version))
+            if require_full and coverage != 'full_text':
+                raise SourceError('Full text is required; one or more PDF pages have no readable text')
             attempts.append({'format': fmt, 'url': url, 'status': 'success', 'reason': 'extracted'})
             result = _result(sections, fmt, coverage, url, attempts, limitations)
             result['http'] = {key: response[key] for key in (
@@ -297,6 +301,9 @@ def acquire_paper(record, fetcher, expected_format=None):
             attempts.append({'format': fmt, 'url': url, 'status': 'failed', 'reason': str(exc)[:240]})
             if expected_format:
                 raise SourceError('Pinned %s extraction failed: %s' % (fmt, str(exc))) from exc
+    if require_full:
+        reasons = '; '.join('%s: %s' % (attempt['format'], attempt['reason']) for attempt in attempts)
+        raise SourceError('Full text required; official HTML/PDF unavailable: ' + reasons)
     abstract = _clean(record.get('body_text', ''))
     if len(abstract) < 30:
         raise SourceError('No usable parsed abstract remains after full-text acquisition failed')
