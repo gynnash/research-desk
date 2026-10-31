@@ -246,7 +246,7 @@ class ResearchInsightCycle(unittest.TestCase):
         # Six real Markdown history inputs exercise JSON serialization overhead.
         original = (self.root / self.history[0]['path']).read_text()
         original_id = yaml.safe_load(original.split('---', 2)[1])['id']
-        for number in range(1, 6):
+        for number in range(2, 7):
             identifier = 'paper-00000000-0000-4000-8000-%012d' % number
             path = self.root / 'sources/papers' / (identifier + '.md')
             path.write_text(original.replace(original_id, identifier))

@@ -27,17 +27,36 @@ class IsolationTests(unittest.TestCase):
         self.temporary = tempfile.TemporaryDirectory(prefix="researchdesk-validator-")
         self.addCleanup(self.temporary.cleanup)
         self.root = Path(self.temporary.name).resolve()
-        for directory in ("config", "sources", "reports", "insights", "articles", "workflows"):
+        for directory in ("config", "workflows"):
             shutil.copytree(REPOSITORY / directory, self.root / directory, ignore=shutil.ignore_patterns("test", "__pycache__"))
+        for directory in ('sources/papers', 'sources/blogs', 'reports', 'insights', 'articles'):
+            (self.root / directory).mkdir(parents=True, exist_ok=True)
+        for directory in ('sources', 'reports', 'insights', 'articles'):
+            (self.root / directory / 'README.md').write_text('# Fictional validation workspace\n')
         for filename in ("README.md", ".gitignore"):
             shutil.copyfile(REPOSITORY / filename, self.root / filename)
-        self.formal_path = next(path for path in (self.root / "sources/papers").rglob("paper-*.md"))
-        self.formal_count = sum(path.read_text(encoding="utf-8").startswith("---\n") for folder in ("papers", "blogs") for path in (self.root / "sources" / folder).rglob("*.md"))
-        self.formal = yaml.safe_load(self.formal_path.read_text(encoding="utf-8").split("---", 2)[1])
+        topics = {'schema_version': 1, 'topics': {topic: {
+            'name': 'Fictional validation topic', 'enabled': True,
+            'description': 'Only synthetic temporary records.',
+            'scope': ['fixture'], 'keywords': ['fixture']}
+            for topic in ('example-topic', 'other-topic')}}
+        (self.root / 'config/research_topics.yaml').write_text(yaml.safe_dump(topics))
+        self.formal = {'schema_version': 1,
+            'id': 'paper-00000000-0000-4000-8000-000000000099',
+            'kind': 'paper', 'title': 'Fictional formal fixture',
+            'source': 'Offline fixture', 'source_url': 'https://example.invalid/formal-fixture',
+            'authors': [], 'published_at': None, 'collected_at': '2026-10-01',
+            'updated_at': '2026-10-01', 'topics': ['example-topic'],
+            'status': 'inbox', 'related_sources': [], 'related_notes': [],
+            'arxiv_id': None, 'doi': None, 'source_version': None}
+        self.formal_path = self.root / 'sources/papers/example-topic' / (self.formal['id'] + '.md')
+        self.formal_path.parent.mkdir(parents=True, exist_ok=True)
+        self.formal_path.write_text('---\n' + yaml.safe_dump(self.formal) + '---\n\n# Fictional formal fixture\n')
+        self.formal_count = 1
         self.data = copy.deepcopy(self.formal)
-        self.data.update({"id": FIRST_ID, "title": "Fictional offline validation source", "source": "Offline fixture", "source_url": "https://example.invalid/researchdesk/fixture", "authors": [], "topics": ["agent-memory"], "status": "inbox", "related_sources": [], "related_notes": [], "arxiv_id": None, "doi": None, "source_version": None})
+        self.data.update({"id": FIRST_ID, "title": "Fictional offline validation source", "source": "Offline fixture", "source_url": "https://example.invalid/researchdesk/fixture", "authors": [], "topics": ["example-topic"], "status": "inbox", "related_sources": [], "related_notes": [], "arxiv_id": None, "doi": None, "source_version": None})
 
-    def write_record(self, data=None, topic="agent-memory", body=BANNER, path=None):
+    def write_record(self, data=None, topic="example-topic", body=BANNER, path=None):
         data = copy.deepcopy(data if data is not None else self.data)
         target = path or self.root / "sources/papers/test" / topic / f"{data['id']}.md"
         target.parent.mkdir(parents=True, exist_ok=True)
@@ -72,7 +91,7 @@ class IsolationTests(unittest.TestCase):
         self.check(expected=1)
 
     def test_filename_test_md_does_not_exempt_a_new_formal_source(self):
-        target = self.root / "sources/papers/agent-memory/test.md"
+        target = self.root / "sources/papers/example-topic/test.md"
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text("invalid formal source\n", encoding="utf-8")
         self.check(expected=1)
@@ -101,7 +120,7 @@ class IsolationTests(unittest.TestCase):
         self.check(include_test=True, expected=1)
 
     def test_formal_source_cannot_reference_test_note(self):
-        note = self.root / "reports/test/agent-memory/fixture.md"
+        note = self.root / "reports/test/example-topic/fixture.md"
         note.parent.mkdir(parents=True)
         note.write_text(BANNER + "\n", encoding="utf-8")
         self.formal["related_notes"] = [note.relative_to(self.root).as_posix()]
@@ -109,7 +128,7 @@ class IsolationTests(unittest.TestCase):
         self.check(expected=1)
 
     def test_test_note_must_match_source_topic(self):
-        note = self.root / "reports/test/agent-rl/fixture.md"
+        note = self.root / "reports/test/other-topic/fixture.md"
         note.parent.mkdir(parents=True)
         note.write_text(BANNER + "\n", encoding="utf-8")
         self.data["related_notes"] = [note.relative_to(self.root).as_posix()]

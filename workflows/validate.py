@@ -136,10 +136,12 @@ def check(root, include_test=False):
         except (ValueError, OSError, RuntimeError):
             return False
 
-    for directory in ("config", "sources", "sources/papers", "sources/blogs", "reports", "insights", "articles", "workflows", "workflows/templates"):
+    # A framework checkout contains no knowledge/output directories. Writers
+    # create them when actual work starts; records are still validated below.
+    for directory in ("config", "workflows", "workflows/templates"):
         if not (root / directory).is_dir():
             fail(directory, "缺少目录")
-    for path in ("README.md", ".gitignore", "sources/README.md", "reports/README.md", "insights/README.md", "articles/README.md", "workflows/README.md", "workflows/source-schema.md", "workflows/maintenance.md", "workflows/requirements.txt", "config/research_topics.yaml", "config/legacy_sources.yaml"):
+    for path in ("README.md", ".gitignore", "workflows/README.md", "workflows/source-schema.md", "workflows/maintenance.md", "workflows/requirements.txt", "config/research_topics.yaml", "config/legacy_sources.yaml"):
         if not (root / path).is_file():
             fail(path, "缺少文件")
 

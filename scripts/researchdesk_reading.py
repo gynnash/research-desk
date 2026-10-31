@@ -327,6 +327,8 @@ def build(root):
     cycles = _research_cycles(root, files, warnings)
     if not cycles and warnings:
         raise store.OfflineError('已有准入记录未通过校验，不能把旧首页当作当前结果')
+    if not cycles and not (root / HOME).exists():
+        return {}
     writings = _writings(root, files, warnings)
     sources, archives = _library(root, cycles)
     manual = {}
@@ -358,9 +360,6 @@ def build(root):
         previous = target.read_text(encoding='utf-8') if target.is_file() else ''
         front = {'title': 'ResearchDesk · 研究工作台', 'kind': 'research_home', 'generated_by': 'researchdesk-reading'}
         files[HOME] = '---\n' + yaml.safe_dump(front, allow_unicode=True, sort_keys=False) + '---\n\n' + managed + '\n\n## 我的研究笔记\n\n'
-        note = 'insights/agent-memory/我的研究问题.md'
-        if (root / note).is_file():
-            files[HOME] += link('我的研究问题与批注', note) + '\n\n'
         files[HOME] += '这一节可自由记录。自动刷新只更新上面的研究清单，保留这里的内容。\n'
         if previous:
             previous_body = previous.split('---', 2)[2].lstrip() if previous.startswith('---\n') else previous

@@ -1,9 +1,9 @@
 schema_version: 1
-enabled: true
+enabled: false
 timezone: Asia/Shanghai
 schedule_utc: 0 19 * * 1,4
 activated_at: '2026-10-31T17:48:01.217832+08:00'
-cycle_config: config/cycles/agent-memory.yaml
+cycle_config: config/cycles/default.yaml
 admission_config: config/admission.yaml
 catchup:
   lookback_days: 14

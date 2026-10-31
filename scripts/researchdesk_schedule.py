@@ -100,7 +100,7 @@ def plan(root, event, requested_cycle_id='', requested_config='', requested_oper
     operation = requested_operation or 'health'
     if operation not in {'health', 'discover', 'run', 'admit'}:
         raise store.OfflineError('未知手动操作')
-    path = requested_config or 'config/cycles/agent-memory.yaml'
+    path = requested_config or 'config/cycles/default.yaml'
     selected = cycle.load_config(root, path)
     cycle_id = requested_cycle_id or '%s-gh-%s' % (selected['topic'], run_id)
     cycle.base_path(selected, cycle_id)

@@ -1,9 +1,0 @@
-type: call_reserved
-key: arxiv-244ddaafb793
-reservation_id: arxiv-244ddaafb793:research:1
-role: research
-revision: 1
-model_id: gpt-6-luna
-month: 2026-10
-at: '2026-10-31T09:59:46.071795+00:00'
-usage_status: unknown

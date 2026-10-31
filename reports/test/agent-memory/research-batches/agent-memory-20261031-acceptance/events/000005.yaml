@@ -1,8 +1,0 @@
-type: item_finished
-key: arxiv-c9ee1ae11513
-status: test_accepted
-result_path: reports/test/agent-memory/research-batches/agent-memory-20261031-acceptance/items/arxiv-c9ee1ae11513/result.yaml
-result_sha256: 0c27f7b440c122122ea951132c93cf461ab7332378c244034350ab07db434f7e
-at: '2026-10-31T10:15:01.243419+00:00'
-output: reports/test/agent-memory/research-batches/agent-memory-20261031-acceptance/items/arxiv-c9ee1ae11513/report.md
-output_sha256: a58ec6b5d2bbc3825d206ca2a82694d4bb98d1904dc616d2f9872d2e78f9ae12

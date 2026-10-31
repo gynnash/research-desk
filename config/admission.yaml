@@ -1,7 +1,6 @@
-# Reviewed Research/Insight may create formal files; existing files never change.
 schema_version: 1
-enabled: true
+enabled: false
 topics:
-  - agent-memory
+- example-topic
 require_independent_review: true
 preserve_existing_files: true

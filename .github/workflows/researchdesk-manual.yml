@@ -19,7 +19,7 @@ on:
       config:
         description: Trusted research cycle YAML in this repository
         type: string
-        default: config/cycles/agent-memory.yaml
+        default: config/cycles/default.yaml
       fail_after:
         description: Optional acceptance interruption; resume with none
         type: choice

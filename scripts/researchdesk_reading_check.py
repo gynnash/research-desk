@@ -35,7 +35,7 @@ def main():
         # identity/history. The checker never creates notes or model receipts.
         import tempfile
         with tempfile.TemporaryDirectory(prefix='researchdesk-reading-check-') as empty:
-            candidate, material = inputs.fetch_candidate(Path(empty), {'topic': 'agent-memory'},
+            candidate, material = inputs.fetch_candidate(Path(empty), {'topic': 'reading-check'},
                 source, SafeFetcher(retries=0), binding=binding)
         evidence = candidate['evidence']
         result = {'mode': 'public_source_reading_check', 'requested_format': args.format,

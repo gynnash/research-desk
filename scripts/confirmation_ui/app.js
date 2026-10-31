@@ -54,7 +54,7 @@
     const names = {human_baseline: '人工历史基线', history: '历史资料', research: '本轮研究', reviewed_research: '本轮已审阅研究'};
     return names[value] || text(value, '来源身份未提供');
   }
-  function topicLabel(value) { return ({'agent-memory': 'Agent Memory', 'agent-rl': 'Agent RL'})[value] || text(value, '研究选题'); }
+  function topicLabel(value) { return text(value, '研究选题'); }
   function coverageLabel(value) {
     const names = {abstract: '仅论文摘要', abstract_only: '仅论文摘要', excerpt: '仅博客节选', excerpt_only: '仅博客节选', full_text: '全文', human_baseline: '人工历史笔记', historical_note: '人工历史笔记'};
     return names[value] || text(value, '阅读范围未提供');

@@ -48,8 +48,9 @@ def evidence_for(root, receipt_path, fetcher):
     receipt = store.checked_yaml(root, receipt_path)
     records = [x for x in receipt.get('records', []) if x.get('kind') == 'paper'
                and x.get('metadata', {}).get('source') == 'arXiv']
-    if len(records) != 1 or receipt.get('topic') != 'agent-memory':
-        raise store.OfflineError('本轮只接受已采集 Agent Memory 批次中的一篇 arXiv 论文')
+    topic = receipt.get('topic')
+    if len(records) != 1 or not isinstance(topic, str) or not store.SAFE_ID.fullmatch(topic):
+        raise store.OfflineError('本轮只接受已采集的同主题单篇 arXiv 论文')
     record = records[0]
     metadata = record['metadata']
     arxiv_id, version = metadata.get('arxiv_id', ''), metadata.get('source_version', '')
@@ -88,7 +89,7 @@ def evidence_for(root, receipt_path, fetcher):
     if len(matches) != 1:
         raise store.OfflineError('来源身份缺失或冲突，不能创建重复资料')
     source_id, (source_path, _) = next(iter(matches.items()))
-    if '/test/agent-memory/' not in source_path:
+    if '/test/%s/' % topic not in source_path:
         raise store.OfflineError('本轮仅分析已采集的测试来源')
     candidate = {'kind': 'paper', 'metadata': metadata, 'evidence': evidence}
     material = '\n'.join('%s: %s' % (locators[i]['id'], sentence) for i, sentence in enumerate(sentences))
@@ -193,10 +194,13 @@ def render(manifest, research, review, revision):
 
 def run(root, receipt_path, batch_id, client, research_model, review_model, fetcher=None, max_calls=4):
     root = Path(root).resolve()
+    topic = store.checked_yaml(root, receipt_path).get('topic')
+    if not isinstance(topic, str) or not store.SAFE_ID.fullmatch(topic):
+        raise store.OfflineError('采集回执缺少有效研究主题')
     topics_path = root / 'config/research_topics.yaml'
     topics = store.load_yaml(topics_path).get('topics', {})
-    if not topics.get('agent-memory', {}).get('enabled'):
-        raise store.OfflineError('Agent Memory 方向未启用')
+    if not topics.get(topic, {}).get('enabled'):
+        raise store.OfflineError('研究方向未启用')
     topics_sha = store.digest(topics_path.read_bytes())
     if not store.SAFE_ID.fullmatch(batch_id) or type(max_calls) is not int or not 2 <= max_calls <= 4:
         raise store.OfflineError('无效批次或请求上限（2–4）')
@@ -212,7 +216,6 @@ def run(root, receipt_path, batch_id, client, research_model, review_model, fetc
     if not {research_model, review_model}.issubset({x['slug'] for x in models}):
         raise store.OfflineError('选定模型不在该会员账户当前可用目录中')
     source_receipt, candidate, material, source_id, source_path = evidence_for(root, receipt_path, fetcher or SafeFetcher(retries=0))
-    topic = 'agent-memory'
     base = 'reports/test/%s/membership/%s' % (topic, batch_id)
     with global_budget_lock(root), store.topic_lock(root, topic):
         manifest_path = base + '/manifest.yaml'
@@ -327,7 +330,7 @@ def run(root, receipt_path, batch_id, client, research_model, review_model, fetc
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--root', type=Path, default=Path(__file__).resolve().parents[1])
-    parser.add_argument('--receipt', type=Path, default=Path('reports/test/agent-memory/collections/real-sources-20261018/receipt-attempt-1.yaml'))
+    parser.add_argument('--receipt', type=Path, required=True)
     parser.add_argument('--profile', type=Path, required=True)
     parser.add_argument('--batch-id', required=True)
     parser.add_argument('--research-model', required=True)

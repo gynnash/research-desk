@@ -398,7 +398,7 @@ def main():
     parser.add_argument('--root', type=Path, default=Path(__file__).resolve().parents[1])
     parser.add_argument('--approval-id', required=True)
     parser.add_argument('--config', default=DEFAULT_CONFIG)
-    parser.add_argument('--topic', default='agent-memory')
+    parser.add_argument('--topic', default='example-topic')
     parser.add_argument('--historical', action='store_true')
     parser.add_argument('--fail-after', choices=['after_plan', 'after_first_output'])
     args = parser.parse_args()

@@ -1,8 +1,8 @@
-# Copy and edit for a NEW batch; do not overwrite a frozen historical config.
+# Replace the topic, account models and placeholder URLs before running.
 schema_version: 1
 mode: research_batch_test
 backend: chatgpt_plan
-topic: my-research
+topic: example-topic
 topics_file: config/examples/research_topics.yaml
 models:
   research: research-model-from-your-account
@@ -12,17 +12,18 @@ budget:
   max_calls_per_item: 4
   max_calls_per_batch: 4
   month_max_calls: 100
-  max_input_chars: 500000
-  max_output_chars: 10000
-  timeout_seconds: 120
+  max_input_chars: 600000
+  max_output_chars: 24000
+  timeout_seconds: 240
   max_revisions: 1
 prompts:
-  version: research-batch-v2
+  version: research-batch-v4
 sources:
-  - id: example-deep-reading
-    adapter: arxiv
-    kind: paper
-    url: https://arxiv.org/abs/2502.12110v1
-    reading:
-      mode: full_text_preferred
-    evidence_max_chars: 120000
+- id: example-deep-reading
+  adapter: arxiv
+  kind: paper
+  url: https://arxiv.org/abs/0000.00000v1
+  reading:
+    mode: full_text_required
+  evidence_max_chars: 200000
+  archive: true

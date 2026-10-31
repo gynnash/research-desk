@@ -1,7 +1,0 @@
-key: arxiv-310b98d3c9bc
-status: collected
-at: '2026-10-31T10:04:18.734147+00:00'
-candidate_path: reports/test/agent-memory/research-batches/agent-memory-20261031-fulltext/items/arxiv-310b98d3c9bc/candidate.yaml
-candidate_sha256: 9f3c0ded8ecf1f4021613d0099ea1854329582b3dab2c559bb2767ddd8a4c888
-content_hash: fb8d0ff5574bb2c9f020fa3d8d20e46e8816afd5e81f6ae3634f743228f7539e
-metadata_hash: 923b24dde1e7a38c238f08b33a3f6f6566133d3ead10f8b49655f7d722f91306

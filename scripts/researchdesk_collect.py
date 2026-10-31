@@ -336,7 +336,7 @@ def collect(root, config_path, batch_id, fetcher=None, fail_after=None):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--root', type=Path, default=Path(__file__).resolve().parents[1])
-    parser.add_argument('--config', type=Path, default=Path('config/test/agent-memory/collection.yaml'))
+    parser.add_argument('--config', type=Path, default=Path('config/test/example-topic/collection.yaml'))
     parser.add_argument('--batch-id', required=True)
     parser.add_argument('--fail-after', choices=['after_collection'])
     args = parser.parse_args()

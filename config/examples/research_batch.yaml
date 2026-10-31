@@ -1,9 +1,8 @@
-# Copy into your workspace config directory, then edit topic, sources and account models.
-# Model placeholders deliberately cannot pass the actual account catalog check.
+# Replace the topic, account models and placeholder URLs before running.
 schema_version: 1
 mode: research_batch_test
 backend: chatgpt_plan
-topic: my-research
+topic: example-topic
 topics_file: config/examples/research_topics.yaml
 models:
   research: research-model-from-your-account
@@ -13,20 +12,26 @@ budget:
   max_calls_per_item: 4
   max_calls_per_batch: 6
   month_max_calls: 10
-  max_input_chars: 20000
-  max_output_chars: 10000
-  timeout_seconds: 120
+  max_input_chars: 600000
+  max_output_chars: 24000
+  timeout_seconds: 240
   max_revisions: 1
 prompts:
-  version: research-batch-v1
+  version: research-batch-v4
 sources:
-  - id: example-paper
-    adapter: arxiv
-    kind: paper
-    url: 'https://export.arxiv.org/api/query?id_list=2502.12110v1'
-    evidence_max_chars: 6000
-  - id: example-blog
-    adapter: letta
-    kind: blog
-    url: https://www.letta.com/blog/why-memory-isnt-a-plugin/
-    evidence_max_chars: 6000
+- id: example-paper
+  adapter: arxiv
+  kind: paper
+  url: https://export.arxiv.org/api/query?id_list=0000.00000v1
+  evidence_max_chars: 200000
+  archive: true
+  reading:
+    mode: full_text_required
+- id: example-blog
+  adapter: letta
+  kind: blog
+  url: https://www.letta.com/blog/replace-with-your-article/
+  evidence_max_chars: 200000
+  archive: true
+  reading:
+    mode: full_text_required

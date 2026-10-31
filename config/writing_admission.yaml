@@ -1,8 +1,6 @@
-# Deterministic admission of existing reviewed Writing results; no model work.
-# Running the explicit command requires the repository owner's authorization.
 schema_version: 1
 topics:
-  - agent-memory
+- example-topic
 confirmation_config: config/confirmation.yaml
 output_mode: formal_articles
 create_only: true

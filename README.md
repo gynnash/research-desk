@@ -1,66 +1,60 @@
 # ResearchDesk
 
-采集论文和博客，让大模型根据原文完成总结，再结合历史资料形成深度思考、趋势线索和公众号选题。选题由用户确认后交给 Writing 写作。资料以 Markdown 保存到 GitHub，沿现有同步链路在 Obsidian 中阅读。
+ResearchDesk 是一套可配置的三 Agent 研究工作台框架：采集公开资料、阅读原文、形成洞察和选题，再由用户确认是否写作。仓库只保留代码、工具、配置模板和虚构离线测试样例，不附带已收集论文、博客或生成稿件。
 
-**从[研究首页](研究首页.md)开始阅读。** 同一个页面列出最新研究、历史批次、全部论文与博客、洞察与趋势线索、公众号选题和已生成文章。链接直接打开具体正文，不需要按 UUID 文件名寻找资料。
+| Agent | 职责 | 运行后产物 |
+| --- | --- | --- |
+| Research | 采集、去重，详细解释原文问题、方法、实验和局限 | 原文快照、单篇研究 |
+| Insight | 比较本轮与实际存在的历史资料，推导洞察、研究方向和选题 | 综合文章、洞察、待确认选题卡 |
+| Writing | 只处理用户确认过的选题，按配置文风写作 | 大纲、初稿、候选稿 |
 
-## 四类资料
+生成与独立审阅使用不同的实际模型，并读取同一绑定材料。没有足够跨时间证据时，只提出研究线索；不把单篇论文或同期材料写成行业趋势。稿件不会自动发布公众号。
 
-| 目录 | 你会看到什么 |
+## 快速开始
+
+1. 准备 Python 3.9+、Git 和 GitHub CLI，安装依赖：
+
+   ```sh
+   python3 -m venv .venv-membership
+   .venv-membership/bin/python -m pip install -r workflows/requirements-membership.txt
+   ```
+
+2. 编辑 [研究方向](config/research_topics.yaml)，将停用的 `example-topic` 替换为自己的主题、问题范围和关键词，再启用该主题。编辑 [运行配置](config/cycles/default.yaml)，设置来源、采集窗口、模型和预算。示例主题不是已配置好的真实研究方向。
+3. 按[会员授权说明](workflows/local-membership-analysis.md)完成自己的官方登录，查看账户实际可用模型，选择不同的生成与审阅模型。凭据始终留在仓库之外。
+4. 配置 [运行环境](config/runtime.yaml)，按[执行器说明](workflows/self-hosted-worker.md)准备自己的本地或远程主机，先检查环境与小批运行。
+5. 验证满意后，如需正式入库，在 [admission.yaml](config/admission.yaml) 启用准入并登记自己的主题；如需定时运行，再在 [automation.yaml](config/automation.yaml) 启用定时任务。**默认关闭自动研究**；保留的 workflow 不会因下载或 fork 仓库而自动开始研究。
+
+运行命令、补跑和选题确认见[操作说明](workflows/README.md)。不需要数据库或复杂 Agent 框架。
+
+## 框架目录
+
+| 目录 | 用途 |
 | --- | --- |
-| [sources](sources/) | 原始论文与博客。新采集的原文保存到 `originals/<方向>/`，`papers/`、`blogs/` 保留来源身份和关联信息 |
-| [reports](reports/) | 每篇论文、博客的方法、思路、结果与局限；旧格式的清爽正文在 `<方向>/解读/<轮次>/` |
-| [insights](insights/) | 本轮与历史资料的比较、洞察、趋势线索和待验证问题；旧批次合并为 `<方向>/综述/` 内的一篇文章 |
-| [articles](articles/) | `<方向>/选题/` 展示写作角度与证据缺口；`<方向>/稿件/` 展示已生成大纲、初稿和候选稿 |
+| `scripts/` | 采集、全文提取、三 Agent 执行、独立审阅、预算、准入、页面与同步工具 |
+| `config/` | 用户配置、通用示例和虚构测试配置 |
+| `.github/workflows/` | 离线检查、可选定时执行和结果回存 |
+| `tests/` | 无真实模型调用的离线回归 |
+| `workflows/` | 操作说明、资料 Schema、Markdown 模板及虚构样例 |
 
-资料按研究方向分组，`agent-memory` 是当前方向。正式正文直接从首页打开。2026-10-31 按用户要求清理了旧研究、演练、选题和生成稿件；旧内容可从 Git 历史恢复，人工笔记保留。精简状态文件继续累计真实调用及已选 URL，不因清理而重置。
+首次实际运行时，工具按需要创建四类资料目录：`sources/` 保存原文，`reports/` 保存单篇研究及运行记录，`insights/` 保存综合洞察，`articles/` 保存选题和稿件。资料再按用户配置的研究方向分组。正式准入后可生成 `研究首页.md`，集中浏览文章正文。
 
-首页显示每批实际研究的论文/博客标题和数量，区分新研究与旧文更新，也列出库内可打开的原文。仅有摘要、正文节选、完整抽取正文和“已采集、待研究”分别标注；归档一份全文不代表旧摘要研究已完成全文分析。
+当前框架支持 arXiv、Letta、LangChain、Hugging Face Blog、美团技术团队和阮一峰博客等公开来源适配器；来源和研究范围由 YAML 配置。知乎、X、Reddit、Quora 未接入。关注度排序只反映实际扫描和可观测信号。
 
-## 内容怎么生成
+## 内容与保护规则
 
-Research v4 只接收完整可用原文，通常用 3–5 节、约 1800–3000 字讲清问题、方法步骤、实验条件、基线与结果，短文按信息量缩短。Insight v6 接收本轮原文、研究结果和实际存在的历史资料，通常用约 3000–4500 字展开观点异同、机制解释、洞察、研究方向和选题。另一模型读取同一材料，既审事实，也检查是否只是复述摘要。字数是写作指导，不是要求凑字。
+默认全文模式优先获取论文官方 HTML，缺失时提取官方 PDF；博客提取公开页面主文。拿不到完整可用正文、遇到访问限制或超出材料预算时跳过，不用摘要冒充全文。图片、视频和公式布局的抽取范围如实说明。
 
-正文应当能直接读懂：连续段落、清楚的技术解释，不显示 R/H/A 编号、逐段脚注、审阅清单或散列。篇末统一列出原文链接和实际阅读范围；作者的结论与我们的推断用自然语言区分。抽取失败、只读摘要、正文截断和重要不确定性不能隐去。
+Research 与 Insight 输出可连续阅读的技术文章，具体解释机制、实验条件、观点异同、推理和局限；来源集中在篇末。证据编号、散列和审阅细节留在运行记录中。选题需要用户确认，Writing 才能启动。
 
-当前配置使用 `presentation: technical_article`。原始材料、证据定位和审阅仍保存在内部执行记录中；改善文字表达不增加模型步骤或调用预算。已有人工批注不覆盖；派生阅读笔记不重复进入历史证据池。
+已有人工修改不会被生成覆盖；恢复任务复用原轮次与已核实响应。真实请求计入[本地预算](workflows/membership-budget.md)，失败和结果未知的请求也保留计数。本地计数不是 ChatGPT 官方剩余额度或费用。
 
-## 自动运行与写作
-
-每周二、周五北京时间 **03:00**，GitHub Actions 调度配置的自托管执行器。当前运行在 Mac，执行器需要开机、联网且会话可用。个人 Codex **09:00** 简报是另行设置的只读汇报，不随仓库自动安装。
-
-每轮从近 **60 天**的候选中，按可核实的社区关注度最多选 **5 份**，按 URL/arXiv 身份排除历史已挑选资料。已接入 arXiv、Letta、LangChain、Hugging Face Blog、美团技术团队和阮一峰博客；知乎、X、Reddit、Quora 尚未接入。关注度只覆盖实际扫描和可观测信号，不代表全网热榜。
-
-当前使用 `full_text_required`：论文先取官方 HTML，缺失时提取官方 PDF；博客取公开页面完整主文。获取失败、明显访问限制、无法提取的 PDF 页面或正文超出材料预算时跳过，继续挑选后备资料，不用摘要或截断正文替代。原文在调用模型前归档，图像、视频及公式布局的抽取局限如实说明。历史按最多 **180 天**窗口选择；清理后的首批明确“尚无历史积累”，只做本批跨来源比较，不声称跨时间趋势。
-
-在[当前 Mac 的选题页](http://127.0.0.1:8765)确认标题、角度、受众和证据后，Writing 才会运行。它生成大纲、初稿和候选稿，独立审阅通过后入库，不自动发布公众号。手机上的 `127.0.0.1` 指向手机自身。
-
-## 除四类资料外，系统还需要什么
-
-四类资料已经足够。自动运行还需要 `.github/`（调度）、`scripts/`（程序）、`config/`（来源、方向、模型与预算），以及必要的依赖、校验和离线测试。这些是运行文件，不是新的资料分类。删除它们会同时取消自动研究能力。
-
-旧结果和旧确认已清理；新的真实运行记录、审阅回执与正式准入证明会随每轮保存，用于当前批次的补跑和复核。`config/research_state.yaml` 保留清理前的真实月度用量和已选身份键，避免额度清零或重复选材。定时频率不变，补跑起点从本次清理后开始。日常只需研究首页，不增加工作台、数据库或插件。首页在正式准入后自动刷新；正文只新增，已有人工修改发生冲突时保留并停止覆盖。首页生成区以外的个人批注也会保留。[人工研究笔记](insights/agent-memory/我的研究问题.md)与 Obsidian 原有配置保持不变。
-
-## 配置与检查
-
-[研究方向](config/research_topics.yaml) · [采集、模型与阶段预算](config/cycles/agent-memory.yaml) · [月度请求上限](config/membership_budget.yaml) · [运行环境](config/runtime.yaml) · [调度](config/automation.yaml)
-
-用户使用自己的官方 ChatGPT 会员授权，凭据留在仓库和 Vault 外；本地预算不是会员官方剩余额度。
+## 检查与可选同步
 
 ```sh
-python3 -m venv .venv
-.venv/bin/python -m pip install -r workflows/requirements-membership.txt
-.venv/bin/python -B workflows/validate.py --include-test
-.venv/bin/python -B scripts/researchdesk_reading.py --check
-PYTHONPATH=tests .venv/bin/python -B -m unittest test_article_presentation
+.venv-membership/bin/python -B workflows/validate.py --include-test
+PYTHONPATH=tests .venv-membership/bin/python -B -m unittest test_research_depth test_insight_depth test_fulltext_required test_usage_archive
 ```
 
-需要手动刷新首页时运行 `python3 -B scripts/researchdesk_reading.py`，只整理现有已准入结果，不采集新内容或调用模型。
+GitHub 用于保存代码、配置和用户后续产生的资料版本。Obsidian 是可选阅读工具：把自己的资料仓库作为 Vault，即可阅读同一套 Markdown；手机同步可自行配置 Obsidian Sync。没有 Obsidian 也能直接在 GitHub 阅读。
 
-## GitHub 与 Obsidian
-
-GitHub 保存资料、代码与版本；Actions 调度执行和回存结果。Mac 通过既有 Git 流程接收文件，Obsidian 阅读同一套 Markdown。另行配置的 Obsidian Sync 可将 Mac 的资料同步到 iPhone，不能代替 Git 拉取。没有 Obsidian 也可以直接在 GitHub 阅读。
-
-在 Obsidian 中打开根目录的 `研究首页.md`，使用阅读视图浏览。如果 Vault 本身就是仓库目录，本地修改会直接出现，不需要再复制一套笔记。
-
-模型凭据、API Key、缓存与 Obsidian 本地配置继续由 `.gitignore` 排除。现有 Git 历史保留，未发布任何公众号内容。
+`.gitignore` 排除凭据、API Key、缓存和 Obsidian 本地配置。部署时使用自己的仓库、授权和运行主机，不复制维护者的登录状态。

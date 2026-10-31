@@ -1,9 +1,0 @@
-type: call_reserved
-key: arxiv-fba293e24c11
-reservation_id: arxiv-fba293e24c11:research:0
-role: research
-revision: 0
-model_id: gpt-6.1-sol
-month: 2026-10
-at: '2026-10-31T10:15:02.073718+00:00'
-usage_status: unknown

@@ -333,11 +333,11 @@ class SavedRecoveryRequest(unittest.TestCase):
         if not (REPOSITORY / relative).is_file():
             self.skipTest('One-time request is not installed in this checkout')
         request = store.load_yaml(REPOSITORY / relative)
-        self.assertEqual(request, recovery.make_request(REPOSITORY, 'config/cycles/agent-memory.yaml', original))
+        self.assertEqual(request, recovery.make_request(REPOSITORY, 'config/cycles/default.yaml', original))
         self.assertEqual(len(request['original_files']), 102)
         self.assertEqual((request['original_reserved_calls'], request['max_new_calls'],
                           request['max_calls_per_cycle'], request['month_max_calls']), (9, 4, 16, 100))
-        self.assertEqual(recovery.requested(REPOSITORY, 'config/cycles/agent-memory.yaml', original), original + '-recovery-1')
+        self.assertEqual(recovery.requested(REPOSITORY, 'config/cycles/default.yaml', original), original + '-recovery-1')
 
 
 if __name__ == '__main__':

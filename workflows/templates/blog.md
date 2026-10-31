@@ -10,7 +10,7 @@ published_at: null # 已知时填写 "YYYY-MM-DD"
 collected_at: "" # 填写首次录入日期 "YYYY-MM-DD"
 updated_at: "" # 填写本次修改日期 "YYYY-MM-DD"
 topics:
-  - agent-memory
+  - example-topic
 status: inbox
 related_sources: []
 related_notes: []

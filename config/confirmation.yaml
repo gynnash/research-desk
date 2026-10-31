@@ -1,12 +1,10 @@
-# The confirmation page has no model client and never starts Writing.
 schema_version: 1
 workbench_id: researchdesk
 topics:
-  - agent-memory
+- example-topic
 server:
   host: 127.0.0.1
   port: 8765
-# null selects a host-local checkout outside this repository and Obsidian.
 workspace: null
 preview_ttl_seconds: 900
 writing:

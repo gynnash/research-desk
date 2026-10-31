@@ -96,7 +96,7 @@ class SourceParserAcceptance(unittest.TestCase):
     def test_visible_author_wins_over_jsonld_organization(self):
         record = sources.parse_blog_article(fixture("blog-article.html"), "https://www.letta.com/blog/fixture-memory?utm_source=test", "letta")
         metadata = record["metadata"]
-        self.assertEqual(metadata["title"], "Fixture Agent Memory")
+        self.assertEqual(metadata["title"], "Fixture Research")
         self.assertEqual(metadata["authors"], ["Fixture Human Author"])
         self.assertEqual(metadata["published_at"], "2026-10-10")
         self.assertEqual(metadata["source_url"].rstrip("/"), "https://www.letta.com/blog/fixture-memory")
