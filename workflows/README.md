@@ -25,6 +25,8 @@ python3 -B scripts/researchdesk_cycle.py collect --config config/cycles/default.
 
 该入口在本地运行，先配置并启用研究方向，结果为原文和待研究清单，不需要会员授权。
 
+知乎来源先按[官方 API 接入说明](zhihu-api.md)验证本人凭证、额度和搜索候选。该独立客户端不运行模型、不自动保存资料；搜索摘要不能直接进入全文研究批次。
+
 以下命令需要 GitHub CLI 已授权，且自己的 runner 已准备就绪：
 
 ```sh

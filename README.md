@@ -40,7 +40,7 @@ ResearchDesk 是一套可配置的三 Agent 研究工作台框架：采集公开
 
 首次实际运行时，工具按需要创建四类资料目录：`sources/` 保存原文，`reports/` 保存单篇研究及运行记录，`insights/` 保存综合洞察，`articles/` 保存选题和稿件。资料再按用户配置的研究方向分组。正式准入后可生成 `研究首页.md`，集中浏览文章正文。
 
-当前框架支持 arXiv、Letta、LangChain、Hugging Face Blog、美团技术团队和阮一峰博客等公开来源适配器；来源和研究范围由 YAML 配置。知乎、X、Reddit、Quora 未接入。关注度排序只反映实际扫描和可观测信号。
+当前框架支持 arXiv、Letta、LangChain、Hugging Face Blog、美团技术团队和阮一峰博客等公开来源适配器；来源和研究范围由 YAML 配置。[知乎官方 API](workflows/zhihu-api.md)提供独立额度查询与搜索候选验证入口，搜索摘要尚未接入全文研究。X、Reddit、Quora 未接入。关注度排序只反映实际扫描和可观测信号。
 
 ## 内容与保护规则
 
