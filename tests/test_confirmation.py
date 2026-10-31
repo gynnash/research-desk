@@ -83,7 +83,7 @@ class RealTopicConfirmation(unittest.TestCase):
             return True
 
         self.publisher = local_publisher
-        self.config = self.confirmation.load_config(self.root)
+        self.config = self.confirmation.load_config(self.root, 'config/confirmation.yaml')
         self.now = [1700000000.0]
         self.app = self.confirmation.ConfirmationStore(
             self.root, self.config, publisher=self.publisher, clock=lambda: self.now[0])
@@ -135,6 +135,66 @@ class RealTopicConfirmation(unittest.TestCase):
         self.assertFalse(preview['publish_authorized'])
         self.assertEqual(self.hashes(), self.original)
         self.assertFalse(self.published)
+
+    def test_v2_freezes_author_notes_style_and_only_reviewed_locator_excerpts(self):
+        config = self.confirmation.load_config(self.root)
+        app = self.confirmation.ConfirmationStore(
+            self.root, config, publisher=self.publisher, clock=lambda: self.now[0])
+        # An unrelated full-text archive must not enlarge the old abstract scope.
+        extra = self.root / 'sources/originals/agent-memory/unreviewed.md'
+        extra.parent.mkdir(parents=True, exist_ok=True)
+        extra.write_text('# 未经过本轮 Research 的正文\n绝不能作为写作原文。\n', encoding='utf-8')
+        preview = app.preview(CARD, {'author_notes': '我在排序项目中需要先约定字段和公式。'})
+        self.assertEqual(preview['style_profile']['version'], 'writing-v2')
+        style = preview['style_profile']
+        self.assertEqual(preview['snapshot']['hashes'][style['path']], style['sha256'])
+        self.assertEqual(preview['choices']['author_notes'], '我在排序项目中需要先约定字段和公式。')
+        research = [item for item in preview['evidence'] if item['origin'] == 'reviewed_research']
+        self.assertTrue(any(item['original_excerpts'] for item in research))
+        self.assertNotIn('绝不能作为写作原文', json.dumps(preview, ensure_ascii=False))
+        for item in preview['evidence']:
+            if item['origin'] == 'human_baseline':
+                self.assertEqual(item['original_excerpts'], [])
+            for excerpt in item['original_excerpts']:
+                self.assertEqual(excerpt['reading_scope'], item['coverage'])
+                self.assertTrue(excerpt['excerpt_only'])
+        confirmed = app.confirm(preview['preview_id'], acknowledged=True)
+        self.assertEqual(confirmed['choices']['author_notes'], preview['author_notes'])
+        self.assertFalse(confirmed['writing_started'])
+        self.assertFalse(confirmed['publish_authorized'])
+
+    def test_v2_style_changes_expire_preview_and_v1_has_no_new_fields(self):
+        legacy = self.preview()
+        self.assertNotIn('style_profile', legacy)
+        self.assertNotIn('author_notes', legacy['choices'])
+        self.assertTrue(all('original_excerpts' not in item for item in legacy['evidence']))
+        config = self.confirmation.load_config(self.root)
+        app = self.confirmation.ConfirmationStore(
+            self.root, config, publisher=self.publisher, clock=lambda: self.now[0])
+        preview = app.preview(CARD, {})
+        self.assertEqual(preview['choices']['author_notes'], '')
+        style = self.root / preview['style_profile']['path']
+        style.write_text(style.read_text(encoding='utf-8') + '\n增加新的表达偏好。\n', encoding='utf-8')
+        with self.assertRaises(self.error()):
+            app.confirm(preview['preview_id'], acknowledged=True)
+        self.assertFalse(self.published)
+
+    def test_v2_author_notes_reject_unknown_types_and_excessive_length(self):
+        config = self.confirmation.load_config(self.root)
+        app = self.confirmation.ConfirmationStore(self.root, config, publisher=self.publisher)
+        for notes in ([], '字' * 5001, '包含\x00控制字符'):
+            with self.assertRaises(self.error()):
+                app.preview(CARD, {'author_notes': notes})
+
+    def test_new_page_keeps_legacy_confirmation_valid_with_its_frozen_config(self):
+        preview = self.preview()
+        old = self.app.confirm(preview['preview_id'], acknowledged=True)
+        config = self.confirmation.load_config(self.root)
+        app = self.confirmation.ConfirmationStore(self.root, config, publisher=self.publisher)
+        current = app.list_confirmations()[0]
+        self.assertEqual(current['id'], old['id'])
+        self.assertNotEqual(current['status'], 'invalidated')
+        self.assertNotIn('author_notes', current['choices'])
 
     def test_changed_evidence_refuses_old_preview_and_keeps_human_edit(self):
         preview = self.preview()

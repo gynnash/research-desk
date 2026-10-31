@@ -288,6 +288,47 @@ class RealMemberWriting(unittest.TestCase):
         self.assert_no_articles()
         self.assert_original_unchanged()
 
+    def test_v2_author_opening_is_frozen_reviewed_and_replayed(self):
+        notes = '我用一组业务输入检查过排序，发现实现与预期的优先级不同。'
+        preview = self.app.preview(CARD, {'target_words': 800, 'author_notes': notes})
+        record = self.app.confirm(preview['preview_id'], acknowledged=True)
+        bundle = self.inputs.prepare_bundle(self.root, record['id'])
+        self.assertEqual(bundle['style_profile']['version'], 'writing-v2')
+        self.assertEqual(bundle['topic_card']['author_notes'], notes)
+        self.assertTrue(any(item.get('original_excerpts') for item in bundle['evidence']))
+        original_infer = self.client.infer
+
+        def infer(model, instructions, input_text, **limits):
+            request = json.loads(input_text)
+            self.assertEqual(request['author_notes'], notes)
+            self.assertIn(bundle['style_profile']['text'], instructions)
+            result = original_infer(model, instructions, input_text, **limits)
+            if 'candidate' not in request:
+                candidate = json.loads(result['text'])
+                candidate['sections'].insert(0, {'heading': '', 'paragraphs': [
+                    {'kind': 'author_experience', 'text': notes, 'evidence_ids': []},
+                    {'kind': 'commentary', 'text': '哪些要求需要在实现前明确？', 'evidence_ids': []}]})
+                result['text'] = json.dumps(candidate, ensure_ascii=False)
+            return result
+
+        self.client.infer = infer
+        result = self.run_writing(record)
+        self.assertEqual(result['status'], 'test_accepted')
+        self.assertEqual(len(self.client.calls), 6)
+        for relative in result['output_hashes']:
+            text = (self.root / relative).read_text()
+            self.assertIn(notes, text)
+            self.assertNotIn('**原作者声称', text)
+            self.assertNotIn('## 导读', text)
+        job = importlib.import_module('researchdesk_writing_job')
+        self.assertEqual(job.verify_result(self.root, bundle)['status'], 'test_accepted')
+        progress = self.app.list_confirmations()[0]['writing']
+        self.assertEqual(progress['status'], 'test_accepted')
+        self.assertEqual(len(progress['documents']), 3)
+        self.assertEqual(self.run_writing(record)['new_model_calls'], 0)
+        self.assertEqual(len(self.client.calls), 6)
+        self.assert_original_unchanged()
+
     def test_one_revision_is_bounded_and_reuses_explicit_review_feedback(self):
         record = self.confirm()
         self.client.decisions[('outline', 0)] = 'revise'

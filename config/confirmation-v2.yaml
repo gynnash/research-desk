@@ -1,0 +1,29 @@
+# The confirmation page has no model client and never starts Writing.
+schema_version: 1
+workbench_id: researchdesk
+topics:
+  - agent-memory
+server:
+  host: 127.0.0.1
+  port: 8765
+# null selects a host-local checkout outside this repository and Obsidian.
+workspace: null
+preview_ttl_seconds: 900
+writing:
+  # Omit style_profile in a separate config to retain the legacy Writing format.
+  style_profile: config/writing_style.md
+  backend: chatgpt_plan
+  models:
+    writing: gpt-6-luna
+    review: gpt-6.1-sol
+  budget:
+    max_calls: 12
+    max_calls_per_stage: 4
+    max_revisions: 1
+    max_input_chars: 60000
+    max_output_chars: 12000
+    timeout_seconds: 120
+  words:
+    min: 800
+    max: 5000
+    default: 2000

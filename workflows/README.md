@@ -13,7 +13,7 @@ Research 采集、去重并分析 → 独立模型审阅 → Insight 综合历�
 | 周二、周五北京时间 03:00 调度及漏跑补跑 | [automation.yaml](../config/automation.yaml)、[研究 workflow](../.github/workflows/researchdesk-manual.yml) |
 | 本地或远程执行环境 | [runtime.yaml](../config/runtime.yaml)、[远程示例](../config/examples/runtime-remote.yaml) |
 | 会员请求月度上限 | [membership_budget.yaml](../config/membership_budget.yaml)、[预算说明](membership-budget.md) |
-| 正式研究准入、选题确认及稿件准入 | [admission.yaml](../config/admission.yaml)、[confirmation.yaml](../config/confirmation.yaml)、[writing_admission.yaml](../config/writing_admission.yaml) |
+| 正式研究准入、选题确认及稿件准入 | [admission.yaml](../config/admission.yaml)、[confirmation-v2.yaml](../config/confirmation-v2.yaml)、[writing_admission.yaml](../config/writing_admission.yaml) |
 
 当前公开来源为 arXiv、Letta、LangChain、Hugging Face Blog、美团技术团队和阮一峰的网络日志。关注度来自可核实的 Hugging Face / Hacker News 信号；这是候选范围内的排序，不保证全网最热。未接入知乎、X、Reddit 和 Quora。论文优先获取固定版本官方 HTML，缺失时提取 PDF；失败才标为摘要降级。博客实际模型输入范围及完整归档范围分别记录。
 
@@ -62,6 +62,10 @@ python3 scripts/researchdesk_confirmation.py serve --open-browser
 ```
 
 在[本地选题页](http://127.0.0.1:8765)核对标题、角度、受众、字数及证据，亲自保存确认；同步完成后，在确认记录中点击“开始 / 继续测试写作”。页面只监听本机环回地址，需保持服务运行。远程部署由用户安全转发端口，不直接公开页面。
+
+新确认默认使用 [Writing v2 配置](../config/confirmation-v2.yaml)与[作者风格](../config/writing_style.md)：围绕具体问题形成判断，章节直接说明问题、方法或取舍，允许删除旁支和重复案例。页面可选填“作者补充”，提供真实经历、个人判断和希望展开的细节；未提供经历时不会自行编造第一人称故事。风格与补充内容随确认冻结，修改后须重新预览确认。
+
+Writer 接收研究结果及其实际审阅范围内的原文节选。大纲选择主线与必要证据，初稿连贯展开，候选稿可删减、合并、重排和调整章节名；独立审阅同时核对事实与表达。新版正文使用简洁来源标注，详细证据关联保留在检查点。旧 [v1 配置](../config/confirmation.yaml)、提示词和稿件继续按原版本核验，不回写旧文章。
 
 Writing 使用 [confirmed Writing workflow](../.github/workflows/researchdesk-writing.yml)。正常三阶段共 6 次请求，每阶段独立模型审阅，通过才继续；最多请求数及一次修订由确认时冻结的配置限制。页面可撤回确认，后续步骤停止，已发请求和稿件保留。仅在笔记上打勾或由模型声称已同意，不能替代用户确认。
 

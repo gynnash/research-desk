@@ -32,11 +32,14 @@ def _frozen(root, approval_id, confirmation_path, manifest):
     original_budget = payload['writing']['budget']
     if {key: manifest['budget'].get(key) for key in original_budget} != original_budget:
         raise store.OfflineError('Writing 结果的预算超出原确认范围')
-    return {'approval_id': approval_id, 'topic': record['topic'], 'topic_card': material['topic_card'],
+    bundle = {'approval_id': approval_id, 'topic': record['topic'], 'topic_card': material['topic_card'],
             'evidence': material['evidence'], 'models': manifest['models'],
             'input_fingerprint': manifest['input_fingerprint'], 'confirmation_path': confirmation_path,
             'material': material, 'coverage_note': payload['coverage_note'],
             'insights': payload['insights'], 'gaps': payload['evidence_gaps']}
+    if 'style_profile' in payload:
+        bundle['style_profile'] = payload['style_profile']
+    return bundle
 
 
 def _inspect_test(root, topic, approval_id, confirmation_path):

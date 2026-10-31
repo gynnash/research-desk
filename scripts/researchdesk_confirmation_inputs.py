@@ -55,6 +55,120 @@ def _config(root, config):
     return config
 
 
+def style_profile(root, writing):
+    """Load a bounded, ordinary Markdown profile; absence retains v1 bytes."""
+    relative = writing.get('style_profile')
+    if relative is None and 'style_profile' not in writing:
+        return None
+    if (not isinstance(relative, str) or Path(relative).parts[:1] != ('config',)
+            or Path(relative).suffix != '.md'):
+        raise store.OfflineError('作者风格必须使用 config 下的 Markdown 文件')
+    target = _path(root, relative)
+    if target.stat().st_size > 50000:
+        raise store.OfflineError('作者风格文件过大')
+    payload = target.read_bytes()
+    profile = {'version': 'writing-v2', 'path': relative,
+               'sha256': store.digest(payload), 'text': payload.decode('utf-8')}
+    from researchdesk_writing_style import validate_profile
+    validate_profile(profile)
+    return profile
+
+
+def frozen_config(root, current, payload):
+    """Historical page approvals keep their explicitly bound configuration."""
+    relative = payload.get('config', {}).get('path')
+    if (not isinstance(relative, str) or Path(relative).parts[:1] != ('config',)
+            or Path(relative).suffix not in {'.yaml', '.yml'}):
+        raise store.OfflineError('历史确认必须绑定 config 下的写作配置')
+    if relative == current['_config_path']:
+        return current
+    from researchdesk_confirmation import load_config
+    frozen = load_config(root, relative)
+    if (frozen['workbench_id'] != current['workbench_id']
+            or payload.get('topic') not in current['topics']
+            or payload.get('topic') not in frozen['topics']):
+        raise store.OfflineError('历史确认配置不属于当前工作台及研究方向')
+    return frozen
+
+
+def _original_excerpts(root, value, item, max_chars=2400):
+    """Select only text already bound to this reviewed Research evidence."""
+    if item['origin'] != 'reviewed_research':
+        return [], '人工历史基线不提供已核验原文，不能升级为原始事实。', {}
+    provenance = value['verification_bundle']['provenance']['research_inputs']
+    matched = [entry for entry in provenance if entry['id'] == item['id']]
+    if len(matched) != 1:
+        raise store.OfflineError('原文节选缺少唯一 Research 绑定')
+    proof = matched[0]
+    candidate_path = proof['candidate_path']
+    candidate_bytes = _path(root, candidate_path).read_bytes()
+    if store.digest(candidate_bytes) != proof['candidate_sha256']:
+        raise store.OfflineError('原文对应 Research 候选已变化')
+    candidate = store.checked_yaml(root, candidate_path)['candidate']
+    if candidate['evidence']['locators'] != item.get('locators', []):
+        raise store.OfflineError('原文定位与已审阅 Research 不同')
+    chunks, bindings, archive_path, archive_sha = {}, {}, None, None
+    if 'archive' in candidate:
+        import researchdesk_archive as archive
+        _, material, snapshot = archive.load(root, candidate)
+        if store.digest(material.encode()) != proof['original_material_sha256']:
+            raise store.OfflineError('归档不是该 Research 实际阅读材料')
+        # The archive may be longer than the reviewed material. Slice only the
+        # exact locator offsets and hashes used by Research, never new sections.
+        sections = {entry['id']: entry for entry in (snapshot.get('document') or {}).get('sections', [])}
+        for locator in item.get('locators', []):
+            section = sections.get(locator.get('section_id'))
+            offsets = re.search(r'; chars ([0-9]+)-([0-9]+)$', locator.get('location', ''))
+            if section and offsets:
+                start, end = map(int, offsets.groups())
+                chunk = section['text'][start - 1:end]
+                if store.digest(chunk.encode()) != locator.get('text_sha256'):
+                    raise store.OfflineError('原文节选与 Research 定位散列不同')
+                chunks[locator['id']] = chunk
+            elif not sections:
+                match = re.search(r'(?:^|\n)' + re.escape(locator['id']) +
+                                  r': (.*?)(?=\nA[0-9]+: |\Z)', material, re.S)
+                if match and store.digest(match.group(1).encode()) == locator.get('text_sha256'):
+                    chunks[locator['id']] = match.group(1)
+        # Legacy sentence material has no section offsets. The immutable quote
+        # remains useful without pretending that it is a complete paragraph.
+        for relative in (candidate['archive']['path'], candidate['archive']['path'] + '.sha256',
+                         candidate['archive']['markdown_path']):
+            bindings[relative] = store.digest(_path(root, relative).read_bytes())
+        formal = archive.relative_path(dict(candidate, source_id=value['source_id_map'].get(candidate['source_id'], candidate['source_id'])))
+        if formal not in value['files']:
+            raise store.OfflineError('原文归档尚未正式准入')
+        expected = admission.effective_files(root, value)[formal]
+        archived = _path(root, formal, formal=True).read_bytes()
+        if archived != expected.encode():
+            raise store.OfflineError('正式原文归档已变化')
+        archive_path, archive_sha = formal, store.digest(archived)
+        bindings[formal] = archive_sha
+    locators = {locator['id']: locator for locator in item.get('locators', [])}
+    preferred = list(dict.fromkeys(identifier for claim in item.get('research_claims', [])
+                                  for identifier in claim.get('evidence_ids', [])))
+    selected, remaining = [], min(2400, max_chars)
+    for identifier in preferred:
+        locator = locators.get(identifier)
+        if locator is None:
+            raise store.OfflineError('Research 论点引用未知原文定位')
+        text = chunks.get(identifier) or locator.get('quote', '')
+        if not text.strip() or remaining <= 0:
+            continue
+        excerpt = text[:remaining]
+        selected.append({'locator_id': identifier, 'location': locator['location'],
+                         'text': excerpt, 'reading_scope': item['coverage'],
+                         'source_url': item.get('source_url') or next(iter(item.get('source_urls') or []), None),
+                         'archive_path': archive_path,
+                         'archive_sha256': archive_sha, 'excerpt_only': True})
+        remaining -= len(excerpt)
+    note = ('仅包含已审阅 Research 论点对应的原文节选，不扩大原阅读范围；不是独立复现实验。' if chunks else
+            '无可重建正文归档，仅保留已审阅定位中的短引用；不等于已读取全文。')
+    if not selected:
+        note = '没有可安全提供的已审阅原文正文；仅使用研究结果并保留原阅读范围。'
+    return selected, note, bindings
+
+
 def _trusted_cycle(root, topic, cycle_id):
     base = admission._base(topic, cycle_id)
     # Refuse the creation branch of admission._plan: previews can only read a
@@ -149,9 +263,9 @@ def _source_paths(root, identifiers):
     return [matches[identifier] for identifier in identifiers]
 
 
-def _evidence(root, value, effective, selected):
+def _evidence(root, value, effective, selected, writing_v2=False):
     available = {item['id']: item for item in value['verification_bundle']['evidence']}
-    result = []
+    result, original_hashes, remaining_chars = [], {}, 8000
     for identifier in selected:
         if identifier not in available:
             raise store.OfflineError('选题引用未知证据')
@@ -188,12 +302,19 @@ def _evidence(root, value, effective, selected):
             'summary': item.get('research_summary') or item.get('historical_status') or '原始历史资料，未经本次独立原文审阅。',
             'claims': item.get('research_claims', []), 'limitations': item.get('research_limitations', []),
             'locators': item.get('locators', [])})
-    return result
+        if writing_v2:
+            excerpts, note, bindings = _original_excerpts(root, value, item, remaining_chars)
+            remaining_chars -= sum(len(excerpt['text']) for excerpt in excerpts)
+            result[-1].update(original_excerpts=excerpts, original_excerpt_note=note)
+            original_hashes.update(bindings)
+    return result, original_hashes
 
 
 def _choices(config, card, choices):
     choices = {} if choices is None else choices
-    if not isinstance(choices, dict) or set(choices) - {'title', 'angle', 'audience', 'target_words'}:
+    enabled = 'style_profile' in config['writing']
+    allowed = {'title', 'angle', 'audience', 'target_words'} | ({'author_notes'} if enabled else set())
+    if not isinstance(choices, dict) or set(choices) - allowed:
         raise store.OfflineError('写作选项只接受标题、角度、受众和目标字数')
     result = {name: _text(choices.get(name, card[name]), '写作' + name, 500 if name == 'title' else 5000)
               for name in ('title', 'angle', 'audience')}
@@ -202,6 +323,12 @@ def _choices(config, card, choices):
     if type(count) is not int or not words['min'] <= count <= words['max']:
         raise store.OfflineError('目标字数超出配置范围')
     result['target_words'] = count
+    if enabled:
+        notes = choices.get('author_notes', '')
+        if (not isinstance(notes, str) or len(notes) > 5000
+                or any(ord(char) < 32 and char not in '\n\t' for char in notes)):
+            raise store.OfflineError('作者补充必须是最多 5000 字的文本')
+        result['author_notes'] = notes.strip()
     return result
 
 
@@ -209,12 +336,14 @@ def prepare_preview(root, config, topic_id, choices=None):
     """Return a JSON-safe immutable candidate; this grants no authorization."""
     root = Path(root).resolve()
     _config(root, config)
+    profile = style_profile(root, config['writing'])
     topic, cycle_id, relative, metadata, value, effective, card = _load_topic(root, config, topic_id)
     selected = _choices(config, card, choices)
-    evidence = _evidence(root, value, effective, card['evidence_ids'])
+    evidence, original_hashes = _evidence(root, value, effective, card['evidence_ids'], profile is not None)
     base = admission._base(topic, cycle_id)
     hashes = dict(value['input_hashes'])
     hashes.update(value['protected_notes'])
+    hashes.update(original_hashes)
     hashes.update(admission.effective_output_hashes(root, value))
     proof_files = [base + '/plan.yaml', base + '/accepted.yaml']
     repair_path = base + '/link-repair.yaml'
@@ -231,6 +360,8 @@ def prepare_preview(root, config, topic_id, choices=None):
         for path in [item['path']] + item['source_paths']:
             hashes[path] = store.digest(_path(root, path, formal=True).read_bytes())
     hashes[config['_config_path']] = config['_config_sha256']
+    if profile is not None:
+        hashes[profile['path']] = profile['sha256']
     generation_base = 'reports/test/%s/insight-runs/%s' % (topic, cycle_id)
     manifest = store.checked_yaml(root, generation_base + '/manifest.yaml')
     insights = [dict(value['candidate']['insights'][number],
@@ -256,6 +387,8 @@ def prepare_preview(root, config, topic_id, choices=None):
         'writing_started': False, 'publish_authorized': False,
         'config': {'path': config['_config_path'], 'sha256': config['_config_sha256']},
         'snapshot': {'hashes': dict(sorted(hashes.items())), 'fingerprint': store.digest(hashes)}}
+    if profile is not None:
+        result['style_profile'] = profile
     result['preview_sha256'] = store.digest(result)
     return result
 

@@ -132,12 +132,20 @@ def _historical_bundle(root, bundle):
                 'writing': fresh['writing'], 'choices': fresh['choices'], 'insights': fresh['insights'],
                 'coverage_note': fresh['coverage_note'], 'questions': fresh['key_questions'],
                 'gaps': fresh['evidence_gaps'], 'config': fresh['config']}
+    if 'style_profile' in fresh:
+        expected['style_profile'] = fresh['style_profile']
+    elif 'style_profile' in bundle:
+        raise store.OfflineError('正式历史稿不能追加未经原页面确认的写作风格')
     if (any(bundle.get(key) != item for key, item in expected.items())
             or bundle.get('backend') != 'chatgpt_plan' or bundle.get('mode') != 'real_writing_input'
             or bundle.get('output_mode') != 'test_only' or bundle.get('publish_authorized') is not False
             or bundle.get('batch_id') != writing.stable_batch_id(bundle['approval_id'])
             or len(set(bundle['models'].values())) != 2):
         raise store.OfflineError('正式历史稿的证据、模型或确认范围已变化')
+    # Resolve the frozen version even for a read-only history check. Unknown
+    # profiles must never fall back to the legacy prompts or rendering.
+    writing.instructions(bundle, 'writing')
+    writing.instructions(bundle, 'review')
     admission._verify_hashes(root, bundle['snapshot']['hashes'])
 
 
@@ -150,7 +158,8 @@ def _test_proof(root, bundle):
     budget = dict(bundle['budget'], month_max_calls=bundle['month_max_calls'])
     fingerprint = store.digest({'input_fingerprint': bundle['input_fingerprint'], 'models': bundle['models'],
         'budget': budget, 'authorization': auth,
-        'writing_prompt': writing.WRITING_INSTRUCTIONS, 'review_prompt': writing.REVIEW_INSTRUCTIONS})
+        'writing_prompt': writing.instructions(bundle, 'writing'),
+        'review_prompt': writing.instructions(bundle, 'review')})
     expected = {'schema_version': 1, 'mode': 'writing_member_test', 'backend': 'chatgpt_plan',
         'topic': bundle['topic'], 'batch_id': bundle['batch_id'], 'approval_id': bundle['approval_id'],
         'fingerprint': fingerprint, 'input_fingerprint': bundle['input_fingerprint'], 'models': bundle['models'],

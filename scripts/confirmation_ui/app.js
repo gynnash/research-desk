@@ -5,7 +5,7 @@
   const state = {session: null, topics: [], confirmations: [], selected: null,
     preview: null, screen: 'topics', busy: false, revokeId: null, topicsAvailable: false, recordsAvailable: false};
   const fields = {title: $('#title'), angle: $('#angle'), audience: $('#audience'),
-    target_words: $('#target-words')};
+    target_words: $('#target-words'), author_notes: $('#author-notes')};
 
   function text(value, fallback = '') {
     if (typeof value === 'string') return value;
@@ -71,6 +71,11 @@
       const content = Array.isArray(item.summary) ? item.summary.map(humanItem).filter(Boolean).join('\n') : text(item.summary, text(item.text));
       body.append(element('p', '', content || '此证据未提供摘要，请保留其阅读范围。'));
       const sourceUrls = list(item.source_urls).filter(value => typeof value === 'string');
+      if (item.original_excerpt_note) body.append(element('p', 'small', item.original_excerpt_note));
+      for (const excerpt of list(item.original_excerpts)) {
+        body.append(element('p', 'ref-note', `原文节选 · ${text(excerpt.locator_id)} · ${text(excerpt.location)}`),
+          element('blockquote', '', text(excerpt.text)));
+      }
       if (sourceUrls.length) body.append(element('p', 'source-path', `原文来源：${sourceUrls.join('\n')}`));
       if (item.path) {
         body.append(element('p', 'source-path', `资料：${text(item.path)}`));
@@ -201,6 +206,7 @@
     fields.title.value = text(topic.title);
     fields.angle.value = text(topic.angle);
     fields.audience.value = text(topic.audience);
+    fields.author_notes.value = text(topic.author_notes);
     fields.target_words.value = String(words.default);
     setText('#evidence-title', topic.title);
     const details = evidenceDetails(topic.evidence);
@@ -215,6 +221,7 @@
     setText('#draft-title', fields.title.value || '填写文章标题');
     setText('#draft-audience', fields.audience.value || '填写目标读者');
     setText('#draft-angle', fields.angle.value || '填写写作角度');
+    setText('#draft-author-notes', fields.author_notes.value || '可补充真实经历、个人判断和希望展开的细节。');
   }
   function configureSession(session) {
     const words = session && session.config && session.config.words;
@@ -224,6 +231,10 @@
       throw new Error('本地工作台配置未就绪，暂时无法保存确认。请检查页面服务配置后刷新。');
     }
     state.session = session;
+    const styled = Boolean(session.config.writing && session.config.writing.style_profile);
+    $('#author-notes-field').hidden = !styled;
+    $('#draft-author-notes-block').hidden = !styled;
+    fields.author_notes.disabled = !styled;
     fields.target_words.min = String(words.min);
     fields.target_words.max = String(words.max);
     setText('#words-hint', `可选 ${words.min.toLocaleString('zh-CN')}–${words.max.toLocaleString('zh-CN')} 字；实际内容以证据范围为限。`);
@@ -299,6 +310,7 @@
     if (!$('#edit-form').reportValidity()) return;
     const choices = {title: fields.title.value.trim(), angle: fields.angle.value.trim(),
       audience: fields.audience.value.trim(), target_words: Number(fields.target_words.value)};
+    if (state.session.config.writing.style_profile) choices.author_notes = fields.author_notes.value.trim();
     if (!choices.title || !choices.angle || !choices.audience) { message('#edit-error', '请填写文章标题、写作角度和目标读者。'); return; }
     state.busy = true;
     state.preview = null;
@@ -314,6 +326,10 @@
       setText('#final-audience', preview.audience);
       setText('#final-words', `约 ${Number(preview.target_words).toLocaleString('zh-CN')} 字`);
       setText('#final-angle', preview.angle);
+      $('#final-author-notes-block').hidden = !preview.style_profile;
+      setText('#final-author-notes', preview.author_notes || '未补充个人经历；Writer 不会编造第一人称故事。');
+      $('#final-style').hidden = !preview.style_profile;
+      setText('#final-style', preview.style_profile ? '作者风格已与本次写作要求一起保存。' : '');
       $('#final-evidence').replaceChildren(...evidenceDetails(preview.evidence, true));
       renderList('#final-gaps', preview.evidence_gaps, '未另列缺口；继续保留各项证据的阅读范围。');
       renderList('#final-questions', preview.key_questions, '以以上写作角度和证据范围为准。');
@@ -396,6 +412,7 @@
       card.append(meta, element('h2', '', text(record.title, '写作确认')));
       const choices = record.choices || record;
       if (choices.angle) card.append(element('p', 'topic-description', choices.angle));
+      if (choices.author_notes) card.append(element('p', 'small', `作者补充：${choices.author_notes}`));
       const details = element('div', 'record-details');
       const progress = record.writing || {};
       details.append(element('span', '', `确认时间：${displayDate(record.created_at)}`),

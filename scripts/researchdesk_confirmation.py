@@ -34,13 +34,16 @@ import researchdesk_admission as admission
 import researchdesk_confirmation_inputs as inputs
 
 
+DEFAULT_CONFIG = 'config/confirmation-v2.yaml'
+
+
 class ConfirmationError(store.OfflineError):
     def __init__(self, code, message, status=409):
         self.code, self.message, self.status = code, message, status
         super().__init__(message)
 
 
-def load_config(root, path='config/confirmation.yaml'):
+def load_config(root, path=DEFAULT_CONFIG):
     root = Path(root).resolve()
     target = common.config_path(root, path)
     value = store.load_yaml(target)
@@ -63,7 +66,10 @@ def load_config(root, path='config/confirmation.yaml'):
     if value['workspace'] is not None and (not isinstance(value['workspace'], str) or not value['workspace'].strip()):
         raise store.OfflineError('workspace 必须为空或主机本地目录')
     writing = value['writing']
-    common.fields(writing, {'backend', 'models', 'budget', 'words'}, '写作范围')
+    common.fields(writing, {'backend', 'models', 'budget', 'words'} |
+                  ({'style_profile'} if 'style_profile' in writing else set()), '写作范围')
+    if 'style_profile' in writing:
+        inputs.style_profile(root, writing)
     if writing['backend'] != 'chatgpt_plan':
         raise store.OfflineError('确认只为未来真实会员写作准备，不接受模拟后端')
     common.fields(writing['models'], {'writing', 'review'}, '写作模型')
@@ -322,7 +328,8 @@ class ConfirmationStore:
             status = 'revoked'
         else:
             try:
-                inputs.validate_preview(self.root, self.config, preview['payload'])
+                frozen_config = inputs.frozen_config(self.root, self.config, preview['payload'])
+                inputs.validate_preview(self.root, frozen_config, preview['payload'])
             except store.OfflineError:
                 status, reason = 'invalidated', '选题、证据或写作配置已变化，需要重新预览确认。'
         files = [base + '/' + name for name in ('preview.yaml', 'preview.yaml.sha256', 'confirmed.yaml', 'confirmed.yaml.sha256')]
@@ -603,7 +610,10 @@ def setup(root, config):
     else:
         target.parent.mkdir(parents=True, exist_ok=True)
         git(root, 'clone', '--single-branch', '--branch', 'main', '--', remote, str(target))
-    GitPublisher(target, load_config(target, config['_config_path'])).refresh()
+    # Existing workspaces may predate this configuration file. Refresh their
+    # clean main checkout before trying to load a newly introduced version.
+    GitPublisher(target, config).refresh()
+    load_config(target, config['_config_path'])
     return target
 
 
@@ -611,7 +621,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('command', choices=['setup', 'serve'])
     parser.add_argument('--root', type=Path, default=Path(__file__).resolve().parents[1])
-    parser.add_argument('--config', default='config/confirmation.yaml')
+    parser.add_argument('--config', default=DEFAULT_CONFIG)
     parser.add_argument('--port', type=int)
     parser.add_argument('--open-browser', action='store_true')
     args = parser.parse_args()
@@ -630,13 +640,13 @@ def main():
         path = Path(tempfile.gettempdir()) / ('researchdesk-confirmation-' + store.digest(str(target).encode())[:24] + '.lock')
         fd = os.open(str(path), os.O_CREAT | os.O_RDWR | os.O_NOFOLLOW, 0o600)
         fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        target_config = load_config(target, args.config)
-        publisher = GitPublisher(target, target_config)
+        publisher = GitPublisher(target, config)
         try:
             publisher.refresh()
         except ConfirmationError:
             if not publisher.pending_files():
                 raise
+        target_config = load_config(target, args.config)
         port = args.port if args.port is not None else target_config['server']['port']
         if not 1024 <= port <= 65535:
             raise store.OfflineError('服务端口必须在 1024–65535')

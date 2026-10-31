@@ -123,7 +123,7 @@ def checkpoint_files(root, value):
     return files
 
 
-def execute(root, state, approval_id, config_path='config/confirmation.yaml', max_new_calls=6, fail_after=None):
+def execute(root, state, approval_id, config_path=inputs.confirmation.DEFAULT_CONFIG, max_new_calls=6, fail_after=None):
     root, state = Path(root).resolve(), Path(state).absolute()
     if (os.environ.get('GITHUB_ACTIONS') == 'true' and
             (os.environ.get('GITHUB_REF') != 'refs/heads/main'
@@ -206,16 +206,13 @@ def _verify_bindings(root, base, events, manifest, bundle):
         if event['type'] != 'call_completed':
             continue
         stage, role, revision = event['stage'], event['role'], event['revision']
-        request = {'stage': stage, 'revision': revision, 'topic': bundle['topic'],
-            'topic_card': bundle['topic_card'], 'evidence': bundle['material']['evidence'],
-            'prior_accepted_stages': dict(accepted), 'confirmation': member._confirmation(bundle),
-            'coverage_note': bundle['coverage_note'], 'insights': bundle['insights'], 'evidence_gaps': bundle['gaps']}
+        request = member.request_for(bundle, stage, revision, accepted)
         if revision:
             request.update(previous_candidate=completed['%s-writing-%s' % (stage, revision - 1)],
                            previous_review=completed['%s-review-%s' % (stage, revision - 1)])
         if role == 'review':
             request['candidate'] = completed['%s-writing-%s' % (stage, revision)]
-        instructions = member.WRITING_INSTRUCTIONS if role == 'writing' else member.REVIEW_INSTRUCTIONS
+        instructions = member.instructions(bundle, role)
         serialized = json.dumps(request, ensure_ascii=False)
         expected = store.digest({'fingerprint': manifest['fingerprint'], 'stage': stage, 'role': role,
             'revision': revision, 'instructions': instructions, 'input': serialized})
@@ -251,7 +248,8 @@ def _verify(root, value):
     budget = dict(bundle['budget'], month_max_calls=bundle['month_max_calls'])
     fingerprint = store.digest({'input_fingerprint': bundle['input_fingerprint'], 'models': bundle['models'],
         'budget': budget, 'authorization': authorization,
-        'writing_prompt': member.WRITING_INSTRUCTIONS, 'review_prompt': member.REVIEW_INSTRUCTIONS})
+        'writing_prompt': member.instructions(bundle, 'writing'),
+        'review_prompt': member.instructions(bundle, 'review')})
     expected = {'schema_version': 1, 'mode': 'writing_member_test', 'backend': 'chatgpt_plan',
         'topic': value['topic'], 'batch_id': value['batch_id'], 'approval_id': value['approval_id'],
         'fingerprint': fingerprint, 'input_fingerprint': bundle['input_fingerprint'], 'models': bundle['models'],
@@ -428,7 +426,7 @@ def main():
     run = commands.add_parser('execute')
     run.add_argument('--state', type=Path, required=True)
     run.add_argument('--approval-id', required=True)
-    run.add_argument('--config', default='config/confirmation.yaml')
+    run.add_argument('--config', default=inputs.confirmation.DEFAULT_CONFIG)
     run.add_argument('--max-new-calls', type=int, default=6)
     run.add_argument('--fail-after', choices=('after_outline', 'after_review', 'after_first_output'))
     pack = commands.add_parser('export')
