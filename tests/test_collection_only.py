@@ -36,6 +36,13 @@ class CollectionFetcher(FulltextFetcher):
         self.blog = self.blog.replace('</article>', '<p>' + long_body + self.blog_tail + '</p></article>')
 
     def fetch(self, url):
+        if 'arxiv.org/abs/' in url:
+            self.calls.append(url)
+            text = (cycle_fixtures.REPOSITORY /
+                    'workflows/test/example-topic/fixtures/collection/arxiv-abstract.html').read_text()
+            return {'url': url, 'requested_url': url, 'content_type': 'text/html',
+                    'status': 200, 'redirects': [], 'text': text,
+                    'sha256': store.digest(text.encode())}
         if url.rstrip('/') == 'https://www.letta.com/blog':
             self.calls.append(url)
             text = (cycle_fixtures.REPOSITORY /
@@ -47,6 +54,9 @@ class CollectionFetcher(FulltextFetcher):
 
 
 class CollectionOnly(unittest.TestCase):
+    fake_research = cycle_fixtures.ResearchInsightCycle.fake_research
+    fake_insight = cycle_fixtures.ResearchInsightCycle.fake_insight
+
     def setUp(self):
         # Existing cycle fixtures create only disposable files and prohibit
         # socket use; their model stubs are replaced by hard failure guards.
@@ -101,7 +111,11 @@ class CollectionOnly(unittest.TestCase):
                 self.assertIn(self.fetcher.blog_tail, (self.root / record['original_markdown_path']).read_text())
             self.assertEqual(store.digest(material.encode()), candidate['evidence']['evidence_sha256'])
         self.assertFalse((self.root / 'sources/originals').exists())
-        self.assertFalse((self.root / 'reports/test/custom-topic/research-batches').exists())
+        batch = self.root / 'reports/test/custom-topic/research-batches/first'
+        self.assertFalse((batch / 'manifest.yaml').exists())
+        self.assertFalse((batch / 'events').exists())
+        self.assertFalse(list(batch.glob('items/*/report.md')))
+        self.assertFalse(list(batch.glob('items/*/result.yaml')))
 
     def test_cached_collection_uses_no_http_and_human_modified_original_is_not_replaced(self):
         first = self.collect()
@@ -128,12 +142,8 @@ class CollectionOnly(unittest.TestCase):
     def test_interrupted_collection_resumes_existing_original_and_fetches_only_remaining(self):
         with self.assertRaises(store.SimulatedInterruption):
             self.collect(fail_after='after_first_original')
-        base = self.root / 'reports/test/custom-topic/cycles/first'
-        plans = sorted(base.glob('originals/*/candidate.yaml'))
-        # The record plans are discoverable without depending on a candidate
-        # UUID or filename chosen by the collection implementation.
-        if not plans:
-            plans = sorted(path for path in base.rglob('candidate.yaml'))
+        base = self.root / 'reports/test/custom-topic/research-batches/first/items'
+        plans = sorted(base.glob('*/candidate.yaml'))
         self.assertEqual(len(plans), 1)
         first = store.checked_yaml(self.root, plans[0].relative_to(self.root))['candidate']
         saved = {relative: (self.root / relative).read_bytes() for relative in

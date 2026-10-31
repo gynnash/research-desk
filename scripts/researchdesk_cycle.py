@@ -18,7 +18,7 @@ import researchdesk_batch_inputs as common
 import researchdesk_batch as research
 import researchdesk_insight as insight
 import researchdesk_cycle_discovery as discovery
-from researchdesk_sources import SafeFetcher
+from researchdesk_sources import SafeFetcher, SourceError
 
 
 def load_config(root, path, snapshot=None):
@@ -580,6 +580,9 @@ def main():
     except store.SimulatedInterruption as exc:
         print(str(exc),file=sys.stderr);return 3
     except Exception as exc:
+        if args.command == 'collect' and isinstance(exc, (store.OfflineError, SourceError)):
+            print('采集停止：' + str(exc)[:600], file=sys.stderr)
+            return 2
         print('研究轮次停止：'+type(exc).__name__,file=sys.stderr);return 2
     print(yaml.safe_dump(result,allow_unicode=True,sort_keys=False))
     if args.command == 'collect':
