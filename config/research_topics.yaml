@@ -11,9 +11,9 @@ topics:
     - 优先原始论文和有实质技术细节的博客；排除无技术内容的产品宣传及仅凭摘要的全文研究。
     keywords:
     - agent memory
-    - long-term memory
-    - episodic memory
+    - long-term agent memory
+    - episodic agent memory
     - memory-augmented agent
-    - conversational memory
+    - conversational agent memory
     - 智能体记忆
-    - 长期记忆
+    - 大模型长期记忆

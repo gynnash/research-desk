@@ -3,7 +3,10 @@
 
 import argparse
 from datetime import date
+import hashlib
+import json
 from pathlib import Path
+import posixpath
 import re
 import sys
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
@@ -63,6 +66,157 @@ def canonical_url(value):
         if not key.lower().startswith("utm_") and key.lower() not in TRACKING_KEYS
     ]
     return urlunsplit((parts.scheme.lower(), host, parts.path or "/", urlencode(query), ""))
+
+
+def check_workspace(root, topics, fail, frontmatter):
+    """Check the two public reading trees against their existing fixed receipts."""
+    identity = re.compile(r'[a-z0-9][a-z0-9_-]{0,100}\Z')
+    digest = lambda payload: hashlib.sha256(payload).hexdigest()
+    originals, summary_count = {}, 0
+
+    def require(condition, message):
+        if not condition:
+            raise ValueError(message)
+
+    def safe(relative):
+        require(isinstance(relative, str), '文件路径必须是字符串')
+        path = Path(relative)
+        require(not path.is_absolute() and '..' not in path.parts and '\\' not in relative
+                and path.as_posix() == relative and path.parts
+                and path.parts[0] in {'collection', 'summary', 'reports'}, '文件路径越界或格式无效')
+        current = root
+        for part in path.parts:
+            current = current / part
+            require(not current.is_symlink(), '文件或上级目录不可为符号链接')
+        require(current.resolve().is_relative_to(root) and current.is_file(), '文件不存在或越界')
+        return current
+
+    def checked(relative):
+        path, marker = safe(relative), safe(relative + '.sha256')
+        require(marker.read_text().strip() == digest(path.read_bytes()), '文件与配对散列不一致')
+        data = yaml.load(path.read_text(encoding='utf-8'), Loader=UniqueKeyLoader)
+        require(isinstance(data, dict), 'YAML 顶层必须是映射')
+        return data
+
+    def verify_hashes(values, required):
+        require(isinstance(values, dict) and required.issubset(values), '回执缺少必须绑定的输入或输出散列')
+        for relative, expected in values.items():
+            require(isinstance(expected, str) and re.fullmatch(r'[0-9a-f]{64}', expected), '文件散列无效')
+            require(digest(safe(relative).read_bytes()) == expected, '回执绑定文件已变化：' + relative)
+
+    for directory in ('collection', 'summary'):
+        tree = root / directory
+        if tree.is_symlink():
+            fail(directory, '资料目录不可为符号链接')
+            continue
+        for path in tree.rglob('*'):
+            if path.is_symlink():
+                fail(path.relative_to(root).as_posix(), '资料文件或目录不可为符号链接')
+
+    collection_tree, summary_tree = root / 'collection', root / 'summary'
+    for path in sorted(collection_tree.rglob('manifest.yaml')) if not collection_tree.is_symlink() else []:
+        relative = path.relative_to(root).as_posix()
+        try:
+            parts = path.relative_to(root).parts
+            require(len(parts) == 4 and parts[1] in topics and identity.fullmatch(parts[2]),
+                    '采集索引必须位于 collection/<已配置主题>/<批次>/manifest.yaml')
+            topic, cycle_id = parts[1:3]
+            index = checked(relative)
+            receipt_path = 'reports/test/%s/cycles/%s/collection.yaml' % (topic, cycle_id)
+            require(type(index.get('schema_version')) is int and index.get('schema_version') == 1 and index.get('mode') == 'collection_index'
+                    and index.get('topic') == topic and index.get('cycle_id') == cycle_id
+                    and index.get('receipt_path') == receipt_path, '采集索引身份或回执路径无效')
+            receipt = checked(receipt_path)
+            require(index.get('receipt_sha256') == digest(safe(receipt_path).read_bytes()), '采集索引绑定的回执已变化')
+            records = receipt.get('records')
+            require(receipt.get('mode') == 'collection_only' and receipt.get('topic') == topic
+                    and receipt.get('cycle_id') == cycle_id and receipt.get('collection_manifest_path') == relative
+                    and isinstance(records, list) and records == index.get('records')
+                    and receipt.get('status') == ('collected' if records else 'empty'), '采集索引与完成回执不一致')
+            base = 'reports/test/%s/cycles/%s/' % (topic, cycle_id)
+            verify_hashes(receipt.get('input_hashes'), {
+                base + name + suffix for name in ('manifest', 'discovery', 'selection')
+                for suffix in ('.yaml', '.yaml.sha256')})
+            verify_hashes(receipt.get('output_hashes'), set())
+            for record in records:
+                require(isinstance(record, dict) and isinstance(record.get('key'), str)
+                        and identity.fullmatch(record['key']), '采集来源标识无效')
+                key = record['key']
+                original = 'collection/%s/%s/items/%s/original' % (topic, cycle_id, key)
+                plan = 'reports/test/%s/research-batches/%s/items/%s/candidate.yaml' % (topic, cycle_id, key)
+                require(record.get('original_path') == original + '.yaml'
+                        and record.get('original_markdown_path') == original + '.md'
+                        and record.get('candidate_path') == plan and record.get('coverage') == 'full_text'
+                        and (topic, cycle_id, key) not in originals, '采集来源路径、范围或身份不一致')
+                require({plan, plan + '.sha256', original + '.yaml', original + '.yaml.sha256',
+                         original + '.md'}.issubset(receipt['output_hashes']), '采集原文或候选缺少输出散列绑定')
+                snapshot, candidate_plan = checked(original + '.yaml'), checked(plan)
+                candidate = candidate_plan.get('candidate', {})
+                require(isinstance(candidate, dict) and candidate.get('topic') == topic and candidate.get('key') == key
+                        and candidate.get('content_hash') == record.get('content_hash')
+                        and candidate.get('source_id') == record.get('source_id')
+                        and candidate.get('evidence', {}).get('coverage') == 'full_text', '原文候选身份或全文范围无效')
+                binding = candidate.get('archive', {})
+                require(binding.get('path') == original + '.yaml' and binding.get('markdown_path') == original + '.md'
+                        and binding.get('sha256') == digest(safe(original + '.yaml').read_bytes())
+                        and binding.get('markdown_sha256') == digest(safe(original + '.md').read_bytes()), '原文归档绑定散列不一致')
+                require(snapshot.get('candidate') == {name: value for name, value in candidate.items() if name != 'archive'},
+                        '归档内容不对应已绑定候选')
+                originals[topic, cycle_id, key] = record
+        except (ValueError, OSError, UnicodeError, yaml.YAMLError, TypeError, KeyError, AttributeError) as exc:
+            fail(relative, str(exc))
+
+    known = {record['original_markdown_path'] for record in originals.values()}
+    known.update(record['original_path'] for record in originals.values())
+    collection_files = (sorted(collection_tree.rglob('*.md')) + sorted(collection_tree.rglob('original.yaml'))
+                        if not collection_tree.is_symlink() else [])
+    for path in collection_files:
+        relative = path.relative_to(root).as_posix()
+        if path.name != 'README.md' and relative not in known:
+            fail(relative, '原文未被已完成采集索引引用')
+
+    for path in sorted(summary_tree.rglob('*.md')) if not summary_tree.is_symlink() else []:
+        if path.name == 'README.md':
+            continue
+        relative = path.relative_to(root).as_posix()
+        summary_count += 1
+        try:
+            parts = path.relative_to(root).parts
+            require(len(parts) == 4 and parts[1] in topics and identity.fullmatch(parts[2])
+                    and identity.fullmatch(path.stem), '总结必须位于 summary/<已配置主题>/<批次>/<来源>.md')
+            topic, cycle_id, key = parts[1], parts[2], path.stem
+            text = safe(relative).read_text(encoding='utf-8')
+            data = frontmatter(text, relative)
+            require(type(data.get('schema_version')) is int and data.get('schema_version') == 1 and data.get('kind') == 'research_summary'
+                    and data.get('topic') == topic and data.get('cycle_id') == cycle_id
+                    and data.get('coverage') == 'full_text' and data.get('review_status') == 'passed',
+                    '总结类型、主题、全文范围或审阅状态无效')
+            models = {role: data.get(role + '_model') for role in ('research', 'review')}
+            require(all(isinstance(value, str) and value.strip() for value in models.values())
+                    and models['research'] != models['review'], '研究与独立审阅必须使用不同模型')
+            canonical_url(data.get('source_url', ''))
+            record = originals.get((topic, cycle_id, key))
+            require(record is not None and data.get('source_id') == record['source_id']
+                    and data.get('collection_original') == record['original_markdown_path'], '总结未关联同主题同批次的采集原文')
+            safe(data['collection_original'])
+            link = posixpath.relpath(data['collection_original'], posixpath.dirname(relative))
+            require('](%s)' % link in text, '总结缺少可点击的已采集原文链接')
+            prefix = 'reports/test/%s/research-batches/%s/items/%s/' % (topic, cycle_id, key)
+            binding = checked(prefix + 'summary.yaml')
+            require(binding.get('path') == relative and binding.get('sha256') == digest(path.read_bytes())
+                    and binding.get('source_id') == data['source_id']
+                    and binding.get('research_result_path') == prefix + 'result.yaml', '总结输出绑定无效或内容已变化')
+            result = checked(prefix + 'result.yaml')
+            require(binding.get('research_result_sha256') == digest(safe(prefix + 'result.yaml').read_bytes())
+                    and result.get('key') == key and result.get('source_id') == data['source_id']
+                    and result.get('status') == 'test_accepted' and result.get('coverage') == 'full_text'
+                    and result.get('models') == models and result.get('revision_count') in (0, 1), '总结缺少对应的审阅通过结果证明')
+            review = checked(prefix + 'checkpoints/review-%s.yaml' % result['revision_count'])
+            review_body = json.loads(review.get('result', {}).get('text', ''))
+            require(isinstance(review_body, dict) and review_body.get('decision') == 'pass', '独立审阅检查点没有通过')
+        except (ValueError, OSError, UnicodeError, yaml.YAMLError, TypeError, KeyError, AttributeError) as exc:
+            fail(relative, str(exc))
+    return len(originals), summary_count
 
 
 def check(root, include_test=False):
@@ -370,6 +524,8 @@ def check(root, include_test=False):
             elif note_is_test and (len(note_parts) < 4 or note_parts[2] != Path(path).parts[3]):
                 fail(path, "测试 related_notes 必须保存在同一主题的 <reports|insights|articles>/test/<topic>/ 下")
 
+    collection_count, summary_count = check_workspace(root, topics, fail, frontmatter)
+
     for warning in warnings:
         print(f"WARN {warning}")
     for error in errors:
@@ -378,7 +534,7 @@ def check(root, include_test=False):
         print(f"检查失败：{len(errors)} 个问题。", file=sys.stderr)
         return 1
     test_label = f"{test_count} 条测试资料" if include_test else "测试资料未检查（使用 --include-test 纳入）"
-    print(f"检查通过：{len(topics)} 个主题，{len(records) - test_count} 条正式资料，{test_label}，{len(warnings)} 条旧资料豁免。")
+    print(f"检查通过：{len(topics)} 个主题，{len(records) - test_count} 条正式资料，{test_label}，{collection_count} 篇采集原文，{summary_count} 篇逐篇总结，{len(warnings)} 条旧资料豁免。")
     return 0
 
 
