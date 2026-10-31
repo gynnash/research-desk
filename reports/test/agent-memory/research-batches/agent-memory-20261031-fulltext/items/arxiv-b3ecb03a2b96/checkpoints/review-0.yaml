@@ -1,0 +1,41 @@
+binding: 785c5bdd48966efef07951046d590f61c3fe6e4b86ac569fb66981d310035eda
+result:
+  text: "{\n  \"decision\": \"revise\",\n  \"coverage_acknowledged\": true,\n  \"\
+    issues\": [\n    {\n      \"severity\": \"info\",\n      \"location\": \"reading_scope；limitations[2]\"\
+    ,\n      \"reason\": \"已核对所提供的S1—S50、A1—A86抽取正文及附录。reading_scope标明83,784字符全部提供、未截断；这只确认抽取文本范围，不代表图像内容核验或实验复现。候选已正确声明未独立复现实验，全文主要实验结果也明确归于作者报告。\"\
+    ,\n      \"suggestion\": \"保留当前阅读范围与未复现实验的说明，不将其升级为图表内容已核验或实验结果已独立验证。\"\n    },\n\
+    \    {\n      \"severity\": \"error\",\n      \"location\": \"claims[9]：敏感性试验与成本测量\"\
+    ,\n      \"reason\": \"所列准确率、时间和token数值与A33—A34一致，但遗漏这些实验使用Qwen3-8B这一关键比较条件。前文连续讨论235B、GLM及32B结果，此处只给队列规模，读者容易把这些测量接到前述主实验设置上。原文还说明敏感性实验采用适配后的四种方法配置，改变top-k时固定4096-token摄入目标，改变摄入目标时固定k=5；现文缺少这两个控制条件。成本的累计延迟也不宜仅靠末尾限制说明与并行墙钟时间区分。\"\
+    ,\n      \"suggestion\": \"明确这是独立的Qwen3-8B实验，使用每域8人、共32人和954项探测；简述top-k与摄入块实验各自的固定条件。将成本写为同一32人队列的逐用户累计延迟，token仅含LLM输入输出、不含嵌入，且不构成与主实验匹配的准确率—成本比较。\"\
+    \n    },\n    {\n      \"severity\": \"warning\",\n      \"location\": \"claims[5]；共享回答协议的说明\"\
+    ,\n      \"reason\": \"文章正确强调方法预算不同、比较的是完整流水线，但没有解释原文已有的关键输入截断规则。A75、A78说明主设置有40,000-token输入上限，先为请求、选项和模板开销预留预算，再按方法提供的顺序保留记忆前缀，请求和选项不截断。该规则直接影响回答器实际能看到哪些记忆，也是理解所谓共享回答器和有效上下文预算的重要条件。\"\
+    ,\n      \"suggestion\": \"在协议段补充输入上限及记忆超预算时保留前缀的规则，并区别Full Memory的历史压缩与最终选择器的输入截断；无需展开全部重试和解析细节。\"\
+    \n    },\n    {\n      \"severity\": \"warning\",\n      \"location\": \"claims[6]—claims[9]；limitations[1]\"\
+    ,\n      \"reason\": \"完整技术解读覆盖了主结果、预言诊断、证据指标和成本，却跳过正文第4.4节已有的模型规模实验结果，仅在limitations中留下“不是纯规模消融”的声明。这样保留了限制，却没有交代该限制对应的实际观察，遗漏了论文用来检验更大模型设置是否解决困难的一项关键比较。\"\
+    ,\n      \"suggestion\": \"在现有实验分析节内增加简短比较：例如A-MEM从4B的29.41%至235B的33.06%，LightMem在14B为28.14%、32B降至25.04%、235B为27.01%。同时明确记忆阶段模型、回答模型及读取协议都存在变化，只能作描述性比较，不能推出参数规模的因果效应。\"\
+    \n    }\n  ],\n  \"checks\": [\n    {\n      \"claim_index\": 0,\n      \"verdict\"\
+    : \"supported\",\n      \"evidence_ids\": [\"A7\", \"A8\", \"A13\", \"A48\", \"\
+    A50\"]\n    },\n    {\n      \"claim_index\": 1,\n      \"verdict\": \"supported\"\
+    ,\n      \"evidence_ids\": [\"A13\", \"A14\", \"A50\"]\n    },\n    {\n      \"\
+    claim_index\": 2,\n      \"verdict\": \"supported\",\n      \"evidence_ids\":\
+    \ [\"A15\", \"A16\", \"A46\", \"A50\", \"A53\", \"A55\", \"A58\"]\n    },\n  \
+    \  {\n      \"claim_index\": 3,\n      \"verdict\": \"supported\",\n      \"evidence_ids\"\
+    : [\"A15\", \"A16\", \"A17\", \"A50\", \"A51\", \"A53\", \"A54\"]\n    },\n  \
+    \  {\n      \"claim_index\": 4,\n      \"verdict\": \"supported\",\n      \"evidence_ids\"\
+    : [\"A20\", \"A21\", \"A59\", \"A60\", \"A61\", \"A63\", \"A64\", \"A65\", \"\
+    A67\"]\n    },\n    {\n      \"claim_index\": 5,\n      \"verdict\": \"supported\"\
+    ,\n      \"evidence_ids\": [\"A18\", \"A22\", \"A23\", \"A24\", \"A28\", \"A68\"\
+    ]\n    },\n    {\n      \"claim_index\": 6,\n      \"verdict\": \"supported\"\
+    ,\n      \"evidence_ids\": [\"A25\", \"A26\", \"A27\", \"A31\"]\n    },\n    {\n\
+    \      \"claim_index\": 7,\n      \"verdict\": \"supported\",\n      \"evidence_ids\"\
+    : [\"A24\", \"A28\", \"A29\", \"A30\"]\n    },\n    {\n      \"claim_index\":\
+    \ 8,\n      \"verdict\": \"supported\",\n      \"evidence_ids\": [\"A30\", \"\
+    A31\", \"A83\", \"A84\", \"A85\"]\n    },\n    {\n      \"claim_index\": 9,\n\
+    \      \"verdict\": \"unsupported\",\n      \"evidence_ids\": [\"A33\", \"A34\"\
+    , \"A35\"]\n    }\n  ]\n}"
+  model: gpt-6.1-sol
+  response_id: resp_0eed903c8255c2f8016ae5bcb7e68887d0839c03c488d1405f
+  usage:
+    input_tokens: 35675
+    output_tokens: 1587
+    total_tokens: 37262

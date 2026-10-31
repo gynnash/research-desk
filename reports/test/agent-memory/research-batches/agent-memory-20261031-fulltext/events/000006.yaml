@@ -1,0 +1,14 @@
+type: call_completed
+key: arxiv-244ddaafb793
+reservation_id: arxiv-244ddaafb793:research:1
+role: research
+revision: 1
+model_id: gpt-6-luna
+at: '2026-10-31T10:00:46.649732+00:00'
+response_path: reports/test/agent-memory/research-batches/agent-memory-20261031-fulltext/items/arxiv-244ddaafb793/checkpoints/research-1.yaml
+response_sha256: 5b3b321270968e6bf9b41286868e3abdb40b549e2b46dbb41fc651b80011e788
+usage:
+  input_tokens: 48850
+  output_tokens: 3186
+  total_tokens: 52036
+usage_status: reported

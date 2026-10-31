@@ -1,0 +1,60 @@
+schema_version: 1
+mode: research_batch_test
+backend: chatgpt_plan
+topic: agent-memory
+topics_file: config/research_topics.yaml
+models:
+  research: gpt-6-luna
+  review: gpt-6.1-sol
+budget:
+  max_documents: 5
+  max_calls_per_item: 4
+  max_calls_per_batch: 12
+  month_max_calls: 100
+  max_input_chars: 600000
+  max_output_chars: 24000
+  timeout_seconds: 120
+  max_revisions: 1
+prompts:
+  version: research-batch-v4
+sources:
+- id: arxiv-244ddaafb793
+  adapter: arxiv
+  kind: paper
+  url: https://arxiv.org/abs/2610.34073v1
+  evidence_max_chars: 200000
+  reading:
+    mode: full_text_required
+  archive: true
+- id: arxiv-b3ecb03a2b96
+  adapter: arxiv
+  kind: paper
+  url: https://arxiv.org/abs/2610.24520v2
+  evidence_max_chars: 200000
+  reading:
+    mode: full_text_required
+  archive: true
+- id: arxiv-310b98d3c9bc
+  adapter: arxiv
+  kind: paper
+  url: https://arxiv.org/abs/2610.29357v1
+  evidence_max_chars: 200000
+  reading:
+    mode: full_text_required
+  archive: true
+- id: arxiv-b3f5ce6ae79c
+  adapter: arxiv
+  kind: paper
+  url: https://arxiv.org/abs/2610.21405v1
+  evidence_max_chars: 200000
+  reading:
+    mode: full_text_required
+  archive: true
+- id: arxiv-5121411c921e
+  adapter: arxiv
+  kind: paper
+  url: https://arxiv.org/abs/2610.28810v1
+  evidence_max_chars: 200000
+  reading:
+    mode: full_text_required
+  archive: true

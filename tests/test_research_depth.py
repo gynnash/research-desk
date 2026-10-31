@@ -87,6 +87,28 @@ class ResearchDepth(unittest.TestCase):
         self.assertNotEqual(result['items'][0]['status'], 'test_accepted')
         self.assertEqual(self.client.calls, [])
 
+    def test_eleven_paragraph_revision_still_reaches_independent_review(self):
+        self.client.review_decisions = ['revise', 'pass']
+
+        def expanded_revision(result):
+            result.clear()
+            result.update(detailed_response())
+            if 'previous_review' in self.client.calls[-1]['payload']:
+                # A revision may split existing explanations into shorter,
+                # checkable paragraphs while retaining the same section count.
+                for claim in result['claims'][:5]:
+                    extra = deepcopy(claim)
+                    extra['text'] = extra['text'].split('\n\n')[-1]
+                    result['claims'].append(extra)
+
+        self.client.research_mutator = expanded_revision
+        result = self.run_batch('expanded-revision')
+        self.assertEqual(result['items'][0]['status'], 'test_accepted')
+        self.assertEqual(result['items'][0]['revision_count'], 1)
+        self.assertEqual(result['completed_calls'], 4)
+        self.assertEqual(len(self.client.calls[-1]['payload']['candidate']['claims']), 11)
+        self.assertEqual(self.client.calls[-1]['payload']['coverage'], 'full_text')
+
     def test_prose_structure_and_internal_reference_leaks_are_checked(self):
         candidate = {'evidence': {'coverage': 'full_text', 'locators': [{'id': 'A1'}]}}
         valid = detailed_response()

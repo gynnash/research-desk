@@ -1,0 +1,17 @@
+key: arxiv-244ddaafb793
+status: revise
+source_id: paper-5aa22c9d-b23a-4cce-85fd-728576376064
+coverage: full_text
+revision_count: 1
+models:
+  research: gpt-6-luna
+  review: gpt-6.1-sol
+actual_models:
+- gpt-6-luna
+- gpt-6.1-sol
+reserved_calls: 4
+completed_calls: 4
+report_path: reports/test/agent-memory/research-batches/agent-memory-20261031-fulltext/items/arxiv-244ddaafb793/report.md
+report_sha256: ecf1c810228695d313d401559313f164b2871cf21fc5770b2b5ffea425bd9761
+finished_at: '2026-10-31T10:01:34.866405+00:00'
+production_accepted: false

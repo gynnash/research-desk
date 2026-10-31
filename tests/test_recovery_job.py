@@ -211,6 +211,24 @@ class RecoveryJobTransfer(unittest.TestCase):
         self.assertEqual(summary['admission'], 'no_accepted_bundle')
         self.assertEqual(self.process.call_count, 1)
 
+    def test_partial_research_uses_strict_admission_command_but_unknown_status_does_not(self):
+        self.enabled.return_value = True
+        self.receipt(research='partial')
+        result, summary = self.execute()
+        self.assertEqual(result, 0)
+        self.assertEqual(summary['admission'], 'accepted')
+        self.assertIn('admit', self.process.call_args_list[1].args[0])
+        for research_status in ('failed', 'unknown'):
+            with self.subTest(research_status=research_status):
+                self.process.reset_mock()
+                self.state = self.root.parent / ('state-' + research_status)
+                receipt = {'stages': {'research': {'status': research_status},
+                                      'insight': {'status': 'test_accepted'}}}
+                with mock.patch.object(store, 'checked_yaml', return_value=receipt):
+                    _, summary = self.execute()
+                self.assertEqual(summary['admission'], 'no_accepted_bundle')
+                self.assertEqual(self.process.call_count, 1)
+
     def test_failed_recovery_preserves_recovery_context_without_admission(self):
         self.process.return_value.returncode = 1
         self.enabled.return_value = True

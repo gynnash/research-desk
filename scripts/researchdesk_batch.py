@@ -567,7 +567,7 @@ def validate_research(candidate, research, version):
     """Validate v4 presentation without changing historical response contracts."""
     store.validate_research(candidate, research)
     deep = version == 'research-batch-v4'
-    low, high = (6, 10) if deep else (3, 5)
+    low, high = (6, 20) if deep else (3, 5)
     if not low <= len(research['claims']) <= high:
         raise store.OfflineError('研究必须包含%s至%s个可核查段落' % (low, high))
     if deep:

@@ -329,7 +329,12 @@ def execute(root, state, config_path, cycle_id, operation, fail_after=None):
     if result.returncode == 0 and operation in {'run', 'recover'} and admission_enabled(root, config['topic']):
         import researchdesk_offline as store
         receipt = store.checked_yaml(root, cycle.base_path(config,cycle_id)+'/receipt.yaml')
-        if all(receipt.get('stages',{}).get(stage,{}).get('status')=='test_accepted' for stage in ('research','insight')):
+        stages = receipt.get('stages', {})
+        # The Insight proof pins only independently accepted Research item_keys.
+        # A partial batch may therefore promote that subset; the existing admit
+        # command still verifies every selected item and its complete ledger.
+        if (stages.get('insight', {}).get('status') == 'test_accepted'
+                and stages.get('research', {}).get('status') in {'test_accepted', 'partial'}):
             result = subprocess.run([str(python),str(root/'scripts/researchdesk_job.py'),'--root',str(root),
                                      'admit','--config',config_path,'--cycle-id',cycle_id],
                                     cwd=root,capture_output=True,text=True,check=False)
