@@ -99,7 +99,7 @@ class Workbench(unittest.TestCase):
 
     def test_all_topic_ids_are_validated_before_initialization_writes(self):
         template = yaml.safe_load((workbench.REPOSITORY / workbench.TEMPLATE).read_text())
-        template['research_topics']['topics']['../escape'] = {
+        template.setdefault('research_topics', {}).setdefault('topics', {})['../escape'] = {
             'name': 'Invalid direction', 'enabled': False,
             'description': 'Even an inactive direction cannot escape the workbench.',
             'scope': ['Fixture'], 'keywords': ['fixture']}
@@ -115,8 +115,9 @@ class Workbench(unittest.TestCase):
         workbench.initialize(self.root)
         local = self.document(workbench.LOCAL_CONFIG)
         local['workbench_id'] = 'my-personal-workbench'
-        local['membership_budget']['month_max_calls'] = 50
-        local['research']['discovery']['max_documents'] = 3
+        local.setdefault('membership_budget', {})['month_max_calls'] = 50
+        local.setdefault('research', {}).setdefault('discovery', {})['max_documents'] = 3
+        local.setdefault('models', {})['review'] = 'fixture-independent-review'
         local['writing_style'] = '# Personal style\n\nExplain practical mechanisms clearly.\n'
         self.write_document(workbench.LOCAL_CONFIG, local)
         before = self.snapshot()
@@ -130,12 +131,18 @@ class Workbench(unittest.TestCase):
         self.assertEqual(self.document('config/confirmation.yaml')['workbench_id'], 'my-personal-workbench')
         self.assertEqual(self.document('config/local/codex-insight.yaml')['runtime']['workbench_id'],
                          'my-personal-workbench')
+        self.assertEqual(self.document('config/cycles/default.yaml')['models']['review'],
+                         'fixture-independent-review')
+        self.assertEqual(self.document('config/local/codex-insight.yaml')['models']['review'],
+                         'fixture-independent-review')
+        self.assertEqual(self.document('config/confirmation-v2.yaml')['writing']['models']['review'],
+                         'fixture-independent-review')
         self.assertEqual((self.root / 'config/writing_style.md').read_text(), local['writing_style'])
         self.assertEqual(workbench.apply(self.root, check_only=True)['status'], 'valid')
 
     def test_existing_settings_require_adoption_and_preserve_original_bytes_and_usage(self):
         template = yaml.safe_load((workbench.REPOSITORY / workbench.TEMPLATE).read_text())
-        expected = workbench.render(template)
+        expected = workbench.render(workbench.load_effective(self.root, overrides=template))
         for relative, payload in expected.items():
             if relative == workbench.GENERATED_FILES['insight']:
                 continue
@@ -176,7 +183,7 @@ class Workbench(unittest.TestCase):
         changed['month_max_calls'] = 80
         self.write_document('config/membership_budget.yaml', changed)
         local = self.document(workbench.LOCAL_CONFIG)
-        local['research']['discovery']['max_documents'] = 3
+        local.setdefault('research', {}).setdefault('discovery', {})['max_documents'] = 3
         self.write_document(workbench.LOCAL_CONFIG, local)
         before = self.snapshot()
         with self.assertRaises(store.OfflineError):

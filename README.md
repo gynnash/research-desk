@@ -19,15 +19,15 @@ ResearchDesk 是一套可配置的三 Agent 研究工作台框架：采集公开
    .venv-membership/bin/python -m pip install -r workflows/requirements-membership.txt
    ```
 
-2. 从[统一模板](config/workbench.example.yaml)初始化自己的工作台：
+2. 从[用户配置模板](config/workbench.example.yaml)初始化自己的工作台：
 
    ```sh
    .venv-membership/bin/python -B scripts/researchdesk_workbench.py init
    ```
 
-   这会把模板复制到被 Git 忽略的 `config/local/workbench.yaml`，并生成旧入口需要的兼容配置。已有工作台改用 `init --adopt-existing`，导入原设置，保留资料、去重状态和实际用量。
+   这会把短模板复制到被 Git 忽略的 `config/local/workbench.yaml`，与公共[系统默认](config/system.yaml)合并，生成旧入口需要的兼容配置。已有旧兼容配置用 `init --adopt-existing` 导入；已有上一版完整本地 YAML 用 `migrate` 备份并压缩为差异配置。两者都保留资料、去重状态和实际用量。
 
-3. 只编辑本地 `config/local/workbench.yaml`：`research_topics` 配研究方向，`research` 配来源、模型和逐篇研究，`insight` 配 Codex 洞察，`confirmation.writing` 配写作，`runtime` 配运行环境，`membership_budget` 配本地请求上限。默认主题为 `agent_memory`。修改后应用并检查：
+3. 只编辑本地 `config/local/workbench.yaml`，写需要覆盖的设置即可。常用的 `topic`、`models.generation`、`models.review`、`models.writing` 会联动相应阶段，默认主题为 `agent_memory`。需要调整来源或某一阶段时，按 `config/system.yaml` 的相同路径写局部覆盖；显式阶段设置优先于快捷项。修改后应用并检查：
 
    ```sh
    .venv-membership/bin/python -B scripts/researchdesk_workbench.py apply
@@ -36,6 +36,8 @@ ResearchDesk 是一套可配置的三 Agent 研究工作台框架：采集公开
 
 4. 按[会员授权说明](workflows/local-membership-analysis.md)完成自己的官方登录，核实账户可用模型，再选择不同的生成与审阅模型。模板里的模型名只是示例；凭据继续留在仓库之外，不写入配置 YAML。
 5. 按[初始化说明](workflows/workbench-init.md)和[执行器说明](workflows/self-hosted-worker.md)准备自己的运行主机。**模板默认关闭自动研究和正式研究准入**；初始化不登录、不调用模型、不安装 runner、不启用定时任务，也不修改 Git。GitHub 上保留模板和框架，个人配置由各自机器本地管理。
+
+系统默认维护内置来源、SDK 和较少调整的参数；用户配置只保留本人差异。来源按 `id` 合并，可添加 RSS，或用 `enabled: false` 禁用某个默认来源。具体例子与合并规则见[配置说明](workflows/workbench-init.md)。
 
 运行命令、补跑和选题确认见[操作说明](workflows/README.md)。不需要数据库或复杂 Agent 框架。
 
@@ -48,7 +50,7 @@ ResearchDesk 是一套可配置的三 Agent 研究工作台框架：采集公开
 | 目录                   | 用途                                    |
 | -------------------- | ------------------------------------- |
 | `scripts/`           | 采集、全文提取、三 Agent 执行、独立审阅、预算、准入、页面与同步工具 |
-| `config/`            | 统一配置模板、通用示例和虚构测试配置；本地副本及生成配置不提交 |
+| `config/`            | 系统默认、短用户模板、通用示例和虚构测试配置；本地覆盖及生成配置不提交 |
 | `.github/workflows/` | 离线检查、可选定时执行和结果回存                      |
 | `tests/`             | 无真实模型调用的离线回归                          |
 | `workflows/`         | 操作说明、资料 Schema、Markdown 模板及虚构样例       |

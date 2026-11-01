@@ -34,7 +34,7 @@ jobs:
         run: |
           python scripts/researchdesk_workbench.py init
           python scripts/researchdesk_workbench.py check
-          PYTHONPATH=tests python -m unittest test_workbench -v
+          PYTHONPATH=tests python -m unittest test_workbench test_layered_config -v
       - name: Validate knowledge base and test isolation
         run: python workflows/validate.py --include-test
       - name: Check explicitly retired historical notes

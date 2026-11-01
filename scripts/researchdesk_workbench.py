@@ -18,8 +18,10 @@ import researchdesk_offline as store
 
 REPOSITORY = Path(__file__).resolve().parents[1]
 TEMPLATE = 'config/workbench.example.yaml'
+SYSTEM_CONFIG = 'config/system.yaml'
 LOCAL_CONFIG = 'config/local/workbench.yaml'
 MANIFEST = 'config/local/generated.json'
+MIGRATION_BACKUP = 'config/local/workbench.before-layers.yaml'
 GENERATED_FILES = {
     'research_topics': 'config/research_topics.yaml',
     'research': 'config/cycles/default.yaml',
@@ -33,6 +35,7 @@ GENERATED_FILES = {
     'writing_style': 'config/writing_style.md',
 }
 STATE = 'config/research_state.yaml'
+SOURCES_PATH = ('research', 'discovery', 'sources')
 
 
 def generated_config_paths():
@@ -80,10 +83,122 @@ def _yaml(value):
     return yaml.safe_dump(value, allow_unicode=True, sort_keys=False).encode('utf-8')
 
 
+def _sources(values):
+    if not isinstance(values, list):
+        raise store.OfflineError('sources 必须是列表')
+    result = {}
+    for source in values:
+        if (not isinstance(source, dict) or not isinstance(source.get('id'), str)
+                or not re.fullmatch(r'[a-zA-Z0-9_-]{1,80}', source['id'])
+                or source['id'] in result):
+            raise store.OfflineError('来源须有有效且不重复的 id')
+        if 'enabled' in source and type(source['enabled']) is not bool:
+            raise store.OfflineError('来源 enabled 必须为布尔值')
+        result[source['id']] = deepcopy(source)
+    return result
+
+
+def merge_config(system, user, path=()):
+    """Deep mappings, ID-keyed sources; other values/lists are user choices."""
+    if path == SOURCES_PATH:
+        entries = _sources(system)
+        for identity, source in _sources(user).items():
+            base = entries.get(identity, {})
+            if 'adapter' in source and source['adapter'] != base.get('adapter', source['adapter']):
+                entries[identity] = source
+            else:
+                entries[identity] = merge_config(base, source, path + (identity,))
+        return list(entries.values())
+    if isinstance(system, dict) and isinstance(user, dict):
+        result = deepcopy(system)
+        for key, value in user.items():
+            if key in system:
+                result[key] = merge_config(system[key], value, path + (key,))
+            elif path + (key,) == SOURCES_PATH:
+                result[key] = list(_sources(value).values())
+            else:
+                result[key] = deepcopy(value)
+        return result
+    return deepcopy(user)
+
+
+def _defaults(root):
+    path = _path(root, SYSTEM_CONFIG)
+    return _read(path if path.is_file() else REPOSITORY / SYSTEM_CONFIG)
+
+
+def _legacy_complete(value):
+    return set(value) == {'schema_version', 'workbench_id'} | set(GENERATED_FILES)
+
+
+def _expand_shortcuts(user):
+    user = deepcopy(user)
+    shortcuts = {}
+    if 'topic' in user:
+        topic = user.pop('topic')
+        if not isinstance(topic, str) or not re.fullmatch(r'[a-z][a-z0-9]*(?:[-_][a-z0-9]+)*', topic):
+            raise store.OfflineError('topic 必须是有效研究方向 ID')
+        shortcuts = {'research': {'topic': topic}, 'insight': {'topic': topic},
+                     'confirmation': {'topics': [topic]}, 'admission': {'topics': [topic]},
+                     'writing_admission': {'topics': [topic]}}
+    if 'models' in user:
+        models = user.pop('models')
+        if (not isinstance(models, dict) or set(models) - {'generation', 'review', 'writing'}
+                or any(not isinstance(value, str) or not value.strip() for value in models.values())):
+            raise store.OfflineError('模型快捷配置仅支持 generation、review、writing')
+        roles = {'generation': [('research', 'research'), ('research', 'insight'), ('insight', 'generation')],
+                 'review': [('research', 'review'), ('insight', 'review'), ('confirmation', 'review')],
+                 'writing': [('confirmation', 'writing')]}
+        for name, model in models.items():
+            for section, role in roles[name]:
+                destination = shortcuts.setdefault(section, {})
+                if section == 'confirmation':
+                    destination = destination.setdefault('writing', {})
+                destination.setdefault('models', {})[role] = model
+    # Explicit stage-specific settings are more specific than shortcuts.
+    return merge_config(shortcuts, user)
+
+
+def load_effective(root, overrides=None):
+    root = Path(root).resolve()
+    user = _read(_path(root, LOCAL_CONFIG)) if overrides is None else overrides
+    if not isinstance(user, dict):
+        raise store.OfflineError('用户配置须为 YAML 映射')
+    if 'schema_version' in user and (type(user['schema_version']) is not int or user['schema_version'] != 1):
+        raise store.OfflineError('用户配置仅支持 schema_version: 1')
+    defaults = _defaults(root)
+    # Validate source IDs in both layers, including an unmodified defaults list.
+    _sources(defaults['research']['discovery']['sources'])
+    result = merge_config(defaults, _expand_shortcuts(user))
+    if _legacy_complete(user):
+        # Previous releases stored an entire source list. It was an explicit
+        # selection, so newly inherited defaults must not revive removed IDs.
+        result['research']['discovery']['sources'] = list(
+            _sources(user['research']['discovery']['sources']).values())
+    return result
+
+
+def _difference(system, effective, path=()):
+    if path == SOURCES_PATH:
+        base, selected = _sources(system), _sources(effective)
+        result = []
+        for identity, source in selected.items():
+            if identity not in base or source.get('adapter') != base[identity].get('adapter'):
+                result.append(source)
+            elif source != base[identity]:
+                result.append(dict(_difference(base[identity], source, path + (identity,)), id=identity))
+        result.extend({'id': identity, 'enabled': False} for identity in base if identity not in selected)
+        return result
+    if isinstance(system, dict) and isinstance(effective, dict):
+        return {key: _difference(system[key], value, path + (key,)) if key in system else deepcopy(value)
+                for key, value in effective.items() if key not in system or system[key] != value}
+    return deepcopy(effective)
+
+
 def render(value):
     required = {'schema_version', 'workbench_id'} | set(GENERATED_FILES)
     if set(value) != required or type(value['schema_version']) is not int or value['schema_version'] != 1:
-        raise store.OfflineError('统一配置字段无效，请参照 workbench.example.yaml')
+        raise store.OfflineError('配置字段无效，请参照 config/system.yaml 和用户模板')
     identity = value['workbench_id']
     if not isinstance(identity, str) or not re.fullmatch(r'[a-zA-Z0-9_-]{1,80}', identity):
         raise store.OfflineError('workbench_id 必须是稳定的字母、数字、下划线或连字符')
@@ -92,6 +207,10 @@ def render(value):
     documents = {name: deepcopy(value[name]) for name in GENERATED_FILES if name != 'writing_style'}
     if any(not isinstance(document, dict) for document in documents.values()):
         raise store.OfflineError('各配置部分须为 YAML 映射')
+    documents['research']['discovery']['sources'] = [
+        {key: field for key, field in source.items() if key != 'enabled'}
+        for source in _sources(documents['research']['discovery']['sources']).values()
+        if source.get('enabled', True)]
     topics = documents['research_topics'].get('topics')
     if (not isinstance(topics, dict) or not topics or any(
             not isinstance(topic, str) or not re.fullmatch(r'[a-z][a-z0-9]*(?:[-_][a-z0-9]+)*', topic)
@@ -155,7 +274,7 @@ def _managed(root):
 
 def apply(root, check_only=False):
     root = Path(root).resolve()
-    output = render(_read(_path(root, LOCAL_CONFIG)))
+    output = render(load_effective(root))
     managed = _managed(root)
     # Preflight every destination before writing any of them. Direct edits to
     # compatibility files are never silently overwritten, even during repair.
@@ -182,6 +301,7 @@ def apply(root, check_only=False):
         _write(_path(root, MANIFEST), json.dumps(
             {relative: _hash(_path(root, relative).read_bytes()) for relative in output}, indent=2).encode())
     return {'status': 'valid' if check_only else 'configured', 'config': LOCAL_CONFIG,
+            'system_config': SYSTEM_CONFIG,
             'generated_files': len(output), 'model_calls': 0}
 
 
@@ -192,11 +312,11 @@ def initialize(root, adopt_existing=False):
         if adopt_existing:
             raise store.OfflineError('本地统一配置已存在，不覆盖；请编辑该文件后 apply')
         result = apply(root)
-        _initialize_storage(root, _read(local))
+        _initialize_storage(root, load_effective(root))
         return result
     template = root / TEMPLATE
     template = template if template.is_file() else REPOSITORY / TEMPLATE
-    value = _read(template)
+    value = load_effective(root, _read(template))
     existing = {name: _path(root, relative) for name, relative in GENERATED_FILES.items()
                 if _path(root, relative).exists()}
     if existing and not adopt_existing:
@@ -220,7 +340,16 @@ def initialize(root, adopt_existing=False):
         if not equal:
             raise store.OfflineError('现有配置与统一入口不一致，需先人工合并，未写入: ' + relative)
         output[relative] = path.read_bytes()
-    _write(local, _yaml(value) if adopt_existing else template.read_bytes())
+    if adopt_existing:
+        patch = _difference(_defaults(root), value)
+        patch['schema_version'] = 1
+        patch['workbench_id'] = value['workbench_id']
+        if render(load_effective(root, patch)) != render(value):
+            # Preserve unusual legacy source order that an ID merge cannot express.
+            patch = value
+        _write(local, _yaml(patch))
+    else:
+        _write(local, template.read_bytes())
     # Preserve byte-for-byte legacy configurations while recording ownership.
     for relative, payload in output.items():
         path = _path(root, relative)
@@ -231,6 +360,30 @@ def initialize(root, adopt_existing=False):
     _initialize_storage(root, value)
     return {'status': 'adopted' if adopt_existing else 'initialized', 'config': LOCAL_CONFIG,
             'existing_usage_preserved': True, 'model_calls': 0}
+
+
+def migrate(root):
+    """Compact an old complete file without changing any active inputs/state."""
+    root = Path(root).resolve()
+    local = _path(root, LOCAL_CONFIG)
+    user = _read(local)
+    apply(root, check_only=True)
+    if not _legacy_complete(user):
+        return {'status': 'already_layered', 'config': LOCAL_CONFIG, 'model_calls': 0}
+    effective = load_effective(root, user)
+    patch = _difference(_defaults(root), effective)
+    patch['schema_version'] = 1
+    patch['workbench_id'] = effective['workbench_id']
+    if render(load_effective(root, patch)) != render(effective):
+        raise store.OfflineError('旧来源顺序无法无损压缩，保留原配置，可继续使用')
+    backup = _path(root, MIGRATION_BACKUP)
+    payload = local.read_bytes()
+    if backup.exists() and backup.read_bytes() != payload:
+        raise store.OfflineError('已存在不同的迁移备份，保留所有文件')
+    if not backup.exists():
+        _write(backup, payload)
+    _write(local, _yaml(patch))
+    return {'status': 'migrated', 'config': LOCAL_CONFIG, 'backup': MIGRATION_BACKUP, 'model_calls': 0}
 
 
 def _initialize_storage(root, value):
@@ -250,10 +403,15 @@ def main(argv=None):
     commands.add_parser('init').add_argument('--adopt-existing', action='store_true')
     commands.add_parser('apply')
     commands.add_parser('check')
+    commands.add_parser('migrate')
     args = parser.parse_args(argv)
     try:
-        result = (initialize(args.root, args.adopt_existing) if args.operation == 'init'
-                  else apply(args.root, check_only=args.operation == 'check'))
+        if args.operation == 'init':
+            result = initialize(args.root, args.adopt_existing)
+        elif args.operation == 'migrate':
+            result = migrate(args.root)
+        else:
+            result = apply(args.root, check_only=args.operation == 'check')
     except (store.OfflineError, OSError, ValueError, KeyError, TypeError) as exc:
         print('工作台配置停止：' + str(exc), file=sys.stderr)
         return 2

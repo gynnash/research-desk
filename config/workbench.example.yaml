@@ -1,198 +1,37 @@
-# Copy to config/local/workbench.yaml, or run: python scripts/researchdesk_workbench.py init
-# No credentials or usage history belong in this template. Model names are examples: check your account.
-# Edit only the local copy; apply generates ignored files for existing entry points.
+# Copy with: python3 scripts/researchdesk_workbench.py init
+# Edit config/local/workbench.yaml, then apply. Personal settings stay out of Git.
+# Omitted fields inherit config/system.yaml; model names are examples only.
 schema_version: 1
 workbench_id: my-researchdesk
-research_topics:
-  schema_version: 1
-  topics:
-    agent_memory:
-      name: Agent Memory
-      enabled: true
-      description: 研究 AI Agent 如何形成、检索、更新和使用记忆，解释具体机制、实验结果、工程取舍与适用边界。
-      scope:
-      - 长期与短期记忆、情景与语义记忆、跨会话状态及个性化。
-      - 记忆写入、压缩、检索、更新、遗忘与冲突处理，以及这些机制与上下文管理和 RAG 的区别与联系。
-      - 基于原文分析方法、实现、实验设置、评测指标、基线和失败案例，区分作者结论与我们的推断。
-      - 优先原始论文和有实质技术细节的博客；排除无技术内容的产品宣传及仅凭摘要的全文研究。
-      keywords:
-      - agent memory
-      - long-term agent memory
-      - episodic agent memory
-      - memory-augmented agent
-      - conversational agent memory
-      - 智能体记忆
-      - 大模型长期记忆
-research:
-  schema_version: 1
-  mode: research_cycle_test
-  backend: chatgpt_plan
-  topic: agent_memory
-  topics_file: config/research_topics.yaml
-  archive: true
-  presentation: technical_article
-  reading:
-    mode: full_text_required
-    paper_max_chars: 200000
-    blog_max_chars: 200000
-  window:
-    mode: rolling
-    days: 60
-  selection:
-    mode: community_attention
-    min_score: 0.1
-    max_requests: 240
-  discovery:
-    max_candidates: 80
-    max_documents: 5
-    max_per_source: 5
-    evidence_max_chars: 6000
-    sources:
-    - id: arxiv
-      adapter: arxiv
-      entry_url: https://export.arxiv.org/api/query
-    - id: letta
-      adapter: letta
-      entry_url: https://www.letta.com/blog/
-      sitemap_url: https://www.letta.com/sitemap.xml
-      sitemap_max_pages: 5
-    - id: langchain
-      adapter: langchain
-      entry_url: https://www.langchain.com/blog
-      sitemap_url: https://www.langchain.com/sitemap.xml
-      sitemap_max_pages: 5
-    - id: huggingface-blog
-      adapter: rss
-      publisher: Hugging Face Blog
-      entry_url: https://huggingface.co/blog/feed.xml
-      allowed_hosts:
-      - huggingface.co
-    - id: meituan-tech
-      adapter: rss
-      publisher: 美团技术团队
-      entry_url: https://tech.meituan.com/feed/
-      allowed_hosts:
-      - tech.meituan.com
-    - id: ruanyifeng-blog
-      adapter: rss
-      publisher: 阮一峰的网络日志
-      entry_url: https://www.ruanyifeng.com/blog/atom.xml
-      allowed_hosts:
-      - www.ruanyifeng.com
-  models:
-    research: gpt-6.1-sol
-    insight: gpt-6.1-sol
-    review: gpt-6-astra
-  budget:
-    max_calls_per_cycle: 16
-    research_max_calls: 12
-    insight_max_calls: 4
-    max_input_chars: 600000
-    max_output_chars: 24000
-    timeout_seconds: 240
-    max_revisions: 1
-  history:
-    lookback_days: 180
-    max_documents: 30
-insight:
-  schema_version: 1
-  mode: codex_insight_test
-  backend: codex
-  topic: agent_memory
-  topics_file: config/research_topics.yaml
-  models:
-    generation: gpt-6.1-sol
-    review: gpt-6-astra
-  codex:
-    driver: python_sdk
-    sdk_version: 0.163.0
-    runtime: bundled
-    auth_source: researchdesk_siwc
-    max_requests_per_task: 3
-    timeout_seconds: 240
-  review_policy: accuracy_only
-  history:
-    lookback_days: 180
-  generation:
-    target_words:
-    - 3000
-    - 4500
-    min_insights: 1
-  limits:
-    max_agent_turns: 4
-    max_revisions: 1
-  runtime:
-    state_directory: ~/Library/Application Support/ResearchDesk/runs
-membership_budget:
-  schema_version: 1
-  backend: chatgpt_plan
-  month_max_calls: 100
-runtime:
-  schema_version: 1
-  environment: local
-  runner:
-    directory: ~/Library/Application Support/ResearchDesk/actions-runner
-    labels:
-    - researchdesk
-    name: researchdesk-local
-  membership:
-    profile: null
-  python:
-    venv: ~/Library/Application Support/ResearchDesk/runtime-venv
-automation:
-  schema_version: 1
-  enabled: false
-  timezone: Asia/Shanghai
-  schedule_utc: 0 19 * * 1,4
-  activated_at: '2000-01-01T00:00:00+00:00'
-  cycle_config: config/cycles/default.yaml
-  admission_config: config/admission.yaml
-  catchup:
-    lookback_days: 14
-    max_slots_per_run: 1
-confirmation:
-  schema_version: 1
-  topics:
-  - agent_memory
-  server:
-    host: 127.0.0.1
-    port: 8765
-  workspace: null
-  preview_ttl_seconds: 900
-  writing:
-    style_profile: config/writing_style.md
-    backend: chatgpt_plan
-    models:
-      writing: gpt-6-luna
-      review: gpt-6.1-sol
-    budget:
-      max_calls: 12
-      max_calls_per_stage: 4
-      max_revisions: 1
-      max_input_chars: 60000
-      max_output_chars: 12000
-      timeout_seconds: 120
-    words:
-      min: 800
-      max: 5000
-      default: 2000
-admission:
-  schema_version: 1
-  enabled: false
-  topics:
-  - agent_memory
-  require_independent_review: true
-  preserve_existing_files: true
-writing_admission:
-  schema_version: 1
-  topics:
-  - agent_memory
-  confirmation_config: config/confirmation.yaml
-  output_mode: formal_articles
-  create_only: true
-  preserve_test: true
-  new_model_calls: 0
-  publish_authorized: false
-writing_style: '以具体问题和技术细节展开，使用自然简洁的中文。章节名表达实质内容，避免空泛口号。区分作者结论与推断，引用集中在篇末，不编造经历、数据或行业趋势。
 
-  '
+# Select an existing research_topics.topics ID; this links all three stages.
+topic: agent_memory
+models:
+  generation: gpt-6.1-sol
+  review: gpt-6-astra
+  writing: gpt-6-luna
+
+research:
+  window:
+    days: 60
+  discovery:
+    max_documents: 5
+    # Sources merge by ID with the built-ins. [] keeps them all.
+    sources: []
+    # sources:
+    #   - id: letta
+    #     enabled: false
+    #   - id: my-blog
+    #     adapter: rss
+    #     publisher: My technical blog
+    #     entry_url: https://example.org/feed.xml
+    #     allowed_hosts: [example.org]
+
+membership_budget:
+  month_max_calls: 100
+
+# Advanced overrides use the same paths as config/system.yaml.
+# Example: confirmation.writing.models.review overrides models.review for Writing.
+# runtime:
+#   membership:
+#     profile: ~/path/to/your/own/ResearchDesk-profile

@@ -309,7 +309,7 @@ def check(root, include_test=False):
     if topic_path in configs:
         config = configs[topic_path]
     else:
-        topic_path = "config/workbench.example.yaml"
+        topic_path = "config/system.yaml"
         config = configs.get(topic_path, {}).get('research_topics', {})
     fields(config, {"schema_version", "topics"}, set(), topic_path)
     topics = config.get("topics")
