@@ -408,7 +408,7 @@ def start(root):
     from researchdesk_membership import MembershipClient
 
     root = Path(root).resolve()
-    apply(root)
+    initialize(root)
     if platform.system() != 'Darwin':
         raise store.OfflineError('one_command_start_requires_macos_for_codex')
     config = runner.load_config(root)
@@ -445,18 +445,24 @@ def start(root):
     result = runner.setup(root, config, pre_start=sdk_preflight)
     if result['runner'].get('registered') is not True or result['runner'].get('service') != 'running':
         raise runner.RunnerError('runner_service_not_ready')
-    # A fresh fork must not queue unattended jobs before an execution host is
-    # ready. The sole remote deployment value is this non-sensitive boolean;
-    # neither local configuration nor credential/path data leaves this host.
-    runner._run(['gh', 'variable', 'set', 'RESEARCHDESK_DEPLOYED', '--repo', repository,
-                 '--body', 'true'], root, 'github_deployment_gate_activation_failed')
     # The first successful deployment begins the catch-up horizon. A shared
     # template's historic activated_at must not spend calls on pre-install slots.
+    # Persist it before opening the remote gate, including a cron/start race.
     started = _path(root, 'config/local/deployment-started-at.json')
-    if not started.exists():
+    created_start = not started.exists()
+    if created_start:
         descriptor = os.open(started, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
         with os.fdopen(descriptor, 'w', encoding='utf-8') as handle:
             json.dump({'started_at': datetime.now(timezone.utc).isoformat()}, handle)
+    # The sole remote value is this non-sensitive boolean; neither personal
+    # configuration nor credential/path data leaves the execution host.
+    try:
+        runner._run(['gh', 'variable', 'set', 'RESEARCHDESK_DEPLOYED', '--repo', repository,
+                     '--body', 'true'], root, 'github_deployment_gate_activation_failed')
+    except Exception:
+        if created_start:
+            started.unlink()
+        raise
     return {'status': 'started', 'runner': result['runner'],
             'config': LOCAL_CONFIG, 'system_config': SYSTEM_CONFIG,
             'research_enabled': effective['automation']['enabled'],
@@ -474,7 +480,7 @@ def main(argv=None):
     commands.add_parser('apply')
     commands.add_parser('check')
     commands.add_parser('migrate')
-    commands.add_parser('start')
+    commands.add_parser('start', help='应用配置、校验授权并注册启动执行器；保留用户研究开关')
     args = parser.parse_args(argv)
     try:
         if args.operation == 'init':

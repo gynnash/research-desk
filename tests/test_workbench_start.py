@@ -138,6 +138,8 @@ class OneCommandStart(unittest.TestCase):
         def fail_gate(command, *args, **kwargs):
             if 'RESEARCHDESK_DEPLOYED' in command:
                 self.assertIn(['service-start'], self.calls)
+                self.assertTrue((self.root / 'config/local/deployment-started-at.json').is_file(),
+                                'activation floor must exist before a scheduled job can be dispatched')
                 raise runner.RunnerError('github_deployment_gate_activation_failed')
             return self.process(command, *args, **kwargs)
         self.run_process.side_effect = fail_gate

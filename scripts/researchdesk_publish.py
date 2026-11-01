@@ -41,6 +41,8 @@ def _hash(payload):
 
 
 def _safe(root, relative):
+    if root.is_symlink():
+        raise PublishError('transfer_symlink_forbidden')
     path = Path(relative)
     if (not isinstance(relative, str) or not path.parts or path.is_absolute()
             or path.as_posix() != relative or '..' in path.parts or '\\' in relative
@@ -128,7 +130,7 @@ def _copy_public_topic(source, destination, topic, cycle):
     roots = [(folder, topic) for folder in ('collection', 'summary', 'insights', 'articles', 'reports')]
     roots += [(folder, 'test', topic) for folder in ('insights', 'articles', 'reports')]
     for parts in roots:
-        base = source.joinpath(*parts)
+        base = _safe(source, '/'.join(parts))
         if not base.exists():
             continue
         if base.is_symlink():
@@ -286,9 +288,10 @@ def _verify_insight(root, context, topic, cycle):
     output_hashes = receipt.get('output_hashes')
     if not isinstance(hashes, dict) or not isinstance(output_hashes, dict) or set(receipt.get('outputs', [])) != set(output_hashes):
         raise PublishError('insight_binding_missing')
-    for relative, expected in {**hashes, **output_hashes}.items():
-        if not isinstance(expected, str) or not SHA.fullmatch(expected) or _hash(_read(root, relative)) != expected:
-            raise PublishError('insight_bound_content_changed: ' + relative)
+    for bindings in (hashes, output_hashes):
+        for relative, expected in bindings.items():
+            if not isinstance(expected, str) or not SHA.fullmatch(expected) or _hash(_read(root, relative)) != expected:
+                raise PublishError('insight_bound_content_changed: ' + relative)
     current, history = [], []
     for relative in sorted(hashes):
         if relative.startswith('summary/' + topic + '/') and relative.endswith('.md'):
@@ -384,7 +387,7 @@ def export(root, destination, topic, cycle_id, base_commit):
             continue
         if (prefix[0] in {'insights', 'articles'} or 'codex-insight' in prefix) and not insight_complete:
             continue
-        base = root.joinpath(*prefix)
+        base = _safe(root, '/'.join(prefix))
         if base.is_symlink():
             raise PublishError('transfer_symlink_forbidden')
         for path in sorted(base.rglob('*')) if base.is_dir() else []:
@@ -488,7 +491,7 @@ def main(argv=None):
     try:
         result = (export(args.root, args.destination, args.topic, args.cycle_id, args.base_commit)
                   if args.command == 'export' else apply(args.root, args.artifact, args.push))
-    except (store.OfflineError, OSError, ValueError, KeyError, TypeError) as exc:
+    except (store.OfflineError, OSError, ValueError, KeyError, TypeError, AttributeError, yaml.YAMLError) as exc:
         print(json.dumps({'error': str(exc) if isinstance(exc, PublishError) else 'publish_validation_failed'}))
         return 1
     print(json.dumps(result))
