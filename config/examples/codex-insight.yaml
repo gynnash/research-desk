@@ -1,0 +1,28 @@
+# Explicit opt-in Insight entry; default cycles and schedules are unchanged.
+# Live execution remains blocked until SDK isolation and request accounting
+# satisfy the existing membership limits. Offline tests never use credentials.
+schema_version: 1
+mode: codex_insight_test
+backend: codex
+topic: agent_memory
+topics_file: config/research_topics.yaml
+models:
+  generation: gpt-6.1-sol
+  review: gpt-6-astra
+codex:
+  driver: python_sdk
+  sdk_version: '0.163.0'
+  runtime: bundled
+  auth_source: researchdesk_siwc
+review_policy: accuracy_only
+history:
+  lookback_days: 180
+generation:
+  target_words: [3000, 4500]  # Writing guidance only; never a rejection rule.
+  min_insights: 1           # A goal; insufficient evidence may yield no_insight.
+limits:
+  max_agent_turns: 4        # Explicit turns, NOT a replacement for model calls.
+  max_revisions: 1
+runtime:
+  workbench_id: researchdesk
+  state_directory: '~/Library/Application Support/ResearchDesk/runs'

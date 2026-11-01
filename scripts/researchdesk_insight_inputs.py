@@ -672,3 +672,192 @@ def prepare_bundle(root, config, fetcher=None, blog_timestamp_revalidations=None
         raise store.OfflineError('显式登记输入超过字符预算；停止而不截断原文或隐瞒覆盖范围')
     bundle['input_fingerprint'] = store.digest(bundle)
     return bundle
+
+
+def _codex_checked(root, relative, hashes):
+    """Read existing immutable proof, without applying old presentation rules."""
+    value = store.checked_yaml(root, relative)
+    for name in (relative, relative + '.sha256'):
+        hashes[name] = store.digest(_relative(root, name, '输入证明').read_bytes())
+    return value
+
+
+def _codex_summary(root, relative, topic, hashes):
+    """Follow summary -> result -> independent review -> pinned original.
+
+    A frontmatter `passed` flag is never an admission receipt. Old prose is
+    not regraded against claim counts, headings, or today's topic preferences.
+    """
+    from researchdesk_archive import load as load_archive
+
+    path = _relative(root, relative, '逐篇总结')
+    parts = Path(relative).parts
+    if (len(parts) != 4 or parts[:2] != ('summary', topic)
+            or not store.SAFE_ID.fullmatch(parts[2])
+            or path.suffix != '.md' or not store.SAFE_ID.fullmatch(path.stem)):
+        raise store.OfflineError('总结必须属于同一主题的明确轮次')
+    cycle_id, key = parts[2], path.stem
+    base = 'reports/test/%s/research-batches/%s' % (topic, cycle_id)
+    prefix = base + '/items/' + key
+    binding = _codex_checked(root, prefix + '/summary.yaml', hashes)
+    payload = path.read_bytes()
+    result_path = prefix + '/result.yaml'
+    if (binding.get('path') != relative or binding.get('sha256') != store.digest(payload)
+            or binding.get('research_result_path') != result_path):
+        raise store.OfflineError('总结散列或研究结果绑定无效: ' + relative)
+    hashes[relative] = store.digest(payload)
+    result = _codex_checked(root, result_path, hashes)
+    if (binding.get('research_result_sha256') != hashes[result_path]
+            or result.get('key') != key or result.get('status') != 'test_accepted'):
+        raise store.OfflineError('总结未绑定已审阅通过的研究: ' + relative)
+    manifest = _codex_checked(root, base + '/manifest.yaml', hashes)
+    models = manifest.get('models', {})
+    if (manifest.get('topic') != topic or manifest.get('batch_id') != cycle_id
+            or not models.get('research') or not models.get('review')
+            or models['research'] == models['review']):
+        raise store.OfflineError('研究与独立审阅的主题或模型绑定无效')
+    # This is a historical hash, not a demand that today's topic YAML remain
+    # byte-identical forever. Topic preferences can change after a valid run.
+    if not isinstance(manifest.get('topics_sha256'), str) or not HASH.fullmatch(manifest['topics_sha256']):
+        raise store.OfflineError('研究缺少历史主题配置散列')
+    config_path = 'reports/test/%s/cycles/%s/configs/research.yaml' % (topic, cycle_id)
+    prior_config = _codex_checked(root, config_path, hashes)
+    if (hashes[config_path] != manifest.get('config_sha256')
+            or prior_config.get('topic') != topic or prior_config.get('models') != models):
+        raise store.OfflineError('研究配置与已保存清单不一致')
+    events = _read_events(root, base)
+    for index in range(1, len(events) + 1):
+        _codex_checked(root, '%s/events/%06d.yaml' % (base, index), hashes)
+    relevant = [event for event in events if event.get('key') == key]
+    finished = [event for event in relevant if event.get('type') == 'item_finished']
+    if (len(finished) != 1 or finished[0].get('status') != 'test_accepted'
+            or finished[0].get('result_path') != result_path
+            or finished[0].get('result_sha256') != hashes[result_path]):
+        raise store.OfflineError('研究缺少与结果配对的通过事件')
+    revision = result.get('revision_count')
+    if type(revision) is not int or revision not in (0, 1):
+        raise store.OfflineError('研究修订记录无效')
+    expected = {(role, number) for number in range(revision + 1) for role in ('research', 'review')}
+    completed = [event for event in relevant if event.get('type') == 'call_completed']
+    reserved = [event for event in relevant if event.get('type') == 'call_reserved']
+    reservations = {event.get('reservation_id'): event for event in reserved}
+    if (len(completed) != len(expected) or len(reserved) != len(expected)
+            or len(reservations) != len(reserved)
+            or {(event.get('role'), event.get('revision')) for event in completed} != expected):
+        raise store.OfflineError('研究与独立审阅未成对完成')
+    for event in completed:
+        reservation = reservations.get(event.get('reservation_id'), {})
+        role, number = event['role'], event['revision']
+        checkpoint_path = '%s/checkpoints/%s-%s.yaml' % (prefix, role, number)
+        checkpoint = _codex_checked(root, checkpoint_path, hashes)
+        response = checkpoint.get('result', {})
+        if (event.get('response_path') != checkpoint_path
+                or event.get('response_sha256') != hashes[checkpoint_path]
+                or any(event.get(field) != reservation.get(field) for field in ('key', 'role', 'revision', 'model_id'))
+                or event.get('model_id') != models[role] or response.get('model') != models[role]
+                or not isinstance(checkpoint.get('binding'), str) or not HASH.fullmatch(checkpoint['binding'])):
+            raise store.OfflineError('研究响应未与对应模型和请求配对')
+        if role == 'review':
+            review = batch.parse_result(response.get('text'))
+            if (review.get('decision') != ('pass' if number == revision else 'revise')
+                    or any(issue.get('severity') in {'blocking', 'critical', 'error'}
+                           for issue in review.get('issues', [])) and number == revision):
+                raise store.OfflineError('独立审阅未通过或仍有实质错误')
+    plan = _codex_checked(root, prefix + '/candidate.yaml', hashes)
+    candidate = plan.get('candidate', {})
+    metadata = candidate.get('metadata', {})
+    source_id = candidate.get('source_id')
+    if (candidate.get('topic') != topic or candidate.get('key') != key
+            or source_id != binding.get('source_id') or source_id != result.get('source_id')
+            or not isinstance(source_id, str) or not SOURCE_ID.fullmatch(source_id)
+            or candidate.get('identity_keys') != store.identities(metadata)):
+        raise store.OfflineError('总结、研究和原文来源身份不一致')
+    _, material, _ = load_archive(root, candidate)
+    original_base = 'collection/%s/%s/items/%s/original' % (topic, cycle_id, key)
+    archive = candidate['archive']
+    if (archive['path'] != original_base + '.yaml' or archive['markdown_path'] != original_base + '.md'
+            or candidate.get('evidence', {}).get('coverage') != 'full_text'
+            or plan.get('material_sha256') != store.digest(material.encode())):
+        raise store.OfflineError('总结未绑定同轮次完整采集原文')
+    _codex_checked(root, archive['path'], hashes)
+    original_path = _relative(root, archive['markdown_path'], '采集原文')
+    hashes[archive['markdown_path']] = store.digest(original_path.read_bytes())
+    if result.get('report_path'):
+        report = _relative(root, result['report_path'], '研究报告')
+        if not result['report_path'].startswith(prefix + '/') or store.digest(report.read_bytes()) != result.get('report_sha256'):
+            raise store.OfflineError('已审阅研究报告的散列无效')
+        hashes[result['report_path']] = store.digest(report.read_bytes())
+    url = metadata['source_url']
+    if metadata.get('arxiv_id') and metadata.get('source_version'):
+        url = 'https://arxiv.org/abs/' + metadata['arxiv_id'] + metadata['source_version']
+    return {'title': metadata.get('title') or key, 'url': url, 'source_id': source_id,
+            'summary_path': relative, 'original_path': archive['markdown_path'],
+            'summary_text': payload.decode('utf-8'), 'original_text': original_path.read_text(encoding='utf-8'),
+            'published_at': _date(metadata.get('published_at')),
+            'research_date': _date(result.get('finished_at')) or _date(manifest.get('created_at')),
+            'coverage': candidate['evidence']['coverage'], '_identities': set(store.identities(metadata)) | {'source:' + source_id}}
+
+
+def prepare_codex_bundle(root, topic, cycle_id, as_of=None, lookback_days=180):
+    """Prepare verified local originals/summaries, with no input or count cap.
+
+    The caller freezes these exact bytes outside the vault. This function does
+    not fetch, instantiate a model/client, write files, or modify old inputs.
+    """
+    from datetime import timedelta
+
+    root = Path(root).resolve()
+    if any(not isinstance(value, str) or not store.SAFE_ID.fullmatch(value) for value in (topic, cycle_id)):
+        raise store.OfflineError('主题与轮次须为稳定的路径 ID')
+    if type(lookback_days) is not int or lookback_days < 1:
+        raise store.OfflineError('历史回看天数必须为正整数')
+    end = _date(as_of) if as_of is not None else date.today().isoformat()
+    if end is None:
+        raise store.OfflineError('as_of 必须是明确日期')
+    start = (date.fromisoformat(end) - timedelta(days=lookback_days)).isoformat()
+    topics_path = _relative(root, 'config/research_topics.yaml', '研究方向配置')
+    topics = store.load_yaml(topics_path).get('topics', {})
+    if not isinstance(topics.get(topic), dict) or topics[topic].get('enabled') is False:
+        raise store.OfflineError('研究方向不存在或已停用')
+    hashes = {'config/research_topics.yaml': store.digest(topics_path.read_bytes())}
+    current, historical, omitted = [], [], []
+    directory = root / 'summary' / topic
+    for path in sorted(directory.glob('*/*.md')):
+        if path.name == 'README.md':
+            continue
+        relative = path.relative_to(root).as_posix()
+        is_current = path.parent.name == cycle_id
+        proof = {}
+        try:
+            item = _codex_summary(root, relative, topic, proof)
+        except (store.OfflineError, OSError, UnicodeError, KeyError, TypeError) as exc:
+            if is_current:
+                raise store.OfflineError('当前批次输入未通过验证: %s: %s' % (relative, exc)) from exc
+            omitted.append(relative + '（无法核实已审阅绑定）')
+            continue
+        if is_current or (item['research_date'] and start <= item['research_date'] <= end):
+            item['_hashes'] = proof
+            (current if is_current else historical).append(item)
+    historical.sort(key=lambda item: (item['research_date'], item['summary_path']), reverse=True)
+    sources, seen = [], set()
+    counts = {'current': 0, 'history': 0}
+    for role, items in (('current', current), ('history', historical)):
+        for item in items:
+            identities = item.pop('_identities')
+            if seen & identities:
+                seen.update(identities)
+                continue
+            seen.update(identities)
+            hashes.update(item.pop('_hashes'))
+            counts[role] += 1
+            item.update(id=('R' if role == 'current' else 'H') + str(counts[role]), role=role)
+            sources.append(item)
+    note = ('历史研究日期范围 %s 至 %s；纳入 %s 份去重历史与 %s 份本批资料。'
+            '按已保存的研究日期选择，同主题资料不因固定篇数或字符预算截断。' %
+            (start, end, counts['history'], counts['current']))
+    if not counts['history']:
+        note += '当前没有可核实的相关历史，不能据此声称跨时间趋势。'
+    if omitted:
+        note += '跳过未能验证的历史：' + '；'.join(omitted) + '。'
+    return {'topic': topic, 'cycle_id': cycle_id, 'sources': sources,
+            'input_hashes': hashes, 'history_note': note}
