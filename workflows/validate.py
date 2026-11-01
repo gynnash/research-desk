@@ -267,6 +267,28 @@ def check_insight_admissions(root, topics, fail, frontmatter):
     return len(admitted)
 
 
+def check_writing_admissions(root, topics, fail):
+    """Verify saved new-format drafts without granting fresh execution rights."""
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
+    import researchdesk_writing_admission as admission
+
+    count = 0
+    for path in sorted((root / 'reports').glob('*/writing-admissions/*/accepted.yaml')):
+        relative = path.relative_to(root).as_posix()
+        try:
+            data = yaml.load(path.read_text(encoding='utf-8'), Loader=UniqueKeyLoader)
+            if not isinstance(data, dict) or data.get('mode') != 'frozen_writing_admission':
+                continue
+            topic = path.parts[-4]
+            if topic not in topics:
+                raise ValueError('正式稿件属于未配置的研究方向')
+            admission.verify(root, topic, data.get('approval_id'), historical=True)
+            count += 1
+        except (OSError, UnicodeError, ValueError, KeyError, TypeError, yaml.YAMLError) as exc:
+            fail(relative, str(exc))
+    return count
+
+
 def check(root, include_test=False):
     root = Path(root).resolve()
     errors, warnings = [], []
@@ -578,6 +600,7 @@ def check(root, include_test=False):
 
     collection_count, summary_count = check_workspace(root, topics, fail, frontmatter)
     insight_count = check_insight_admissions(root, topics, fail, frontmatter)
+    writing_count = check_writing_admissions(root, topics, fail)
 
     for warning in warnings:
         print(f"WARN {warning}")
@@ -587,7 +610,7 @@ def check(root, include_test=False):
         print(f"检查失败：{len(errors)} 个问题。", file=sys.stderr)
         return 1
     test_label = f"{test_count} 条测试资料" if include_test else "测试资料未检查（使用 --include-test 纳入）"
-    print(f"检查通过：{len(topics)} 个主题，{len(records) - test_count} 条正式资料，{test_label}，{collection_count} 篇采集原文，{summary_count} 篇逐篇总结，{insight_count} 轮正式洞察，{len(warnings)} 条旧资料豁免。")
+    print(f"检查通过：{len(topics)} 个主题，{len(records) - test_count} 条正式资料，{test_label}，{collection_count} 篇采集原文，{summary_count} 篇逐篇总结，{insight_count} 轮正式洞察，{writing_count} 批正式稿件，{len(warnings)} 条旧资料豁免。")
     return 0
 
 

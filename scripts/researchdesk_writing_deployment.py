@@ -8,13 +8,10 @@ from __future__ import annotations
 import json
 import os
 from pathlib import Path
-import re
 import subprocess
 import tempfile
 
 import researchdesk_admission as admission
-import researchdesk_batch as shared
-import researchdesk_confirmation as confirmation
 import researchdesk_confirmation_inputs as previews
 import researchdesk_deployment as deployment
 import researchdesk_offline as store
@@ -201,7 +198,7 @@ def apply(root, artifact, push=True):
             raise job.JobError('writing_existing_note_conflict_preserve_both')
         payloads[path] = data
     with tempfile.TemporaryDirectory(prefix='researchdesk-writing-verify-') as directory:
-        overlay = Path(directory) / 'workbench'
+        overlay = (Path(directory) / 'workbench').resolve()
         subprocess.run(['git', 'clone', '--quiet', '--no-hardlinks', '--', str(root), str(overlay)],
                        check=True, capture_output=True, timeout=60)
         for path, data in payloads.items():
@@ -219,6 +216,9 @@ def apply(root, artifact, push=True):
             accepted = formal.admit_frozen(overlay, bundle)
             for path in accepted['files']:
                 payloads[path] = admission._location(overlay, path).read_bytes()
+        # Inspect all targets and ancestor types before any persistent write.
+        from researchdesk_writing_admission import _preflight
+        _preflight(root, payloads)
         additions = []
         for path, data in payloads.items():
             target = admission._location(root, path)

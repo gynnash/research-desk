@@ -102,10 +102,10 @@ def _proof_paths(root, bundle):
     return paths
 
 
-def _historical_bundle(root, bundle):
+def _historical_bundle(root, bundle, historical=True):
     """Recheck original evidence and page proof without granting active rights."""
     if bundle.get('preview', {}).get('payload', {}).get('admission_mode') == 'codex_insight_admission':
-        inputs.verify_frozen_bundle(root, bundle)
+        inputs.verify_frozen_bundle(root, bundle, historical=historical)
         return
     value = dict(bundle)
     fingerprint = value.pop('input_fingerprint', None)
@@ -152,9 +152,9 @@ def _historical_bundle(root, bundle):
     admission._verify_hashes(root, bundle['snapshot']['hashes'])
 
 
-def _test_proof(root, bundle):
+def _test_proof(root, bundle, historical=False):
     """Replay local completed responses and independent reviews; no provider."""
-    _historical_bundle(root, bundle)
+    _historical_bundle(root, bundle, historical=historical)
     base = 'reports/test/%s/writing-runs/%s' % (bundle['topic'], bundle['batch_id'])
     manifest = store.checked_yaml(root, base + '/manifest.yaml')
     auth = manifest.get('authorization', {})
@@ -311,9 +311,9 @@ def _read_plan(root, topic, approval_id, historical):
     return value
 
 
-def _frozen_plan(root, bundle):
-    inputs.verify_frozen_bundle(root, bundle)
-    originals = _test_proof(root, bundle)
+def _frozen_plan(root, bundle, historical=False):
+    inputs.verify_frozen_bundle(root, bundle, historical=historical)
+    originals = _test_proof(root, bundle, historical=historical)
     topic, batch = bundle['topic'], bundle['batch_id']
     files = dict(_promote(root, 'articles/test/%s/%s/%s.md' % (topic, batch, stage),
                          originals['articles/test/%s/%s/%s.md' % (topic, batch, stage)],
@@ -338,7 +338,7 @@ def _frozen_receipt(value):
             'publish_authorized': False, 'new_model_calls': 0}
 
 
-def admit_frozen(root, bundle):
+def admit_frozen(root, bundle, fail_after=None):
     """Mechanically admit reviewed new-format Writing; no config or model use."""
     root = Path(root).resolve()
     value = _frozen_plan(root, bundle)
@@ -350,16 +350,23 @@ def admit_frozen(root, bundle):
         payloads[relative] = _dump(data)
         payloads[relative + '.sha256'] = (store.digest(payloads[relative]) + '\n').encode()
     _preflight(root, payloads)
-    for relative, data in payloads.items():
+    ordered = [path, path + '.sha256'] + list(value['files']) + [base + '/accepted.yaml', base + '/accepted.yaml.sha256']
+    first_output = next(iter(value['files']))
+    for relative in ordered:
+        data = payloads[relative]
         target = admission._location(root, relative)
         if not target.exists():
             target.parent.mkdir(parents=True, exist_ok=True)
             with target.open('xb') as handle:
                 handle.write(data)
+        if fail_after == 'after_plan' and relative == path + '.sha256':
+            raise store.SimulatedInterruption('正式 Writing 计划已保存，可零调用补跑')
+        if fail_after == 'after_first_output' and relative == first_output:
+            raise store.SimulatedInterruption('首个正式 Writing 稿已新增，可零调用补跑')
     return dict(receipt, files=sorted(payloads))
 
 
-def _verify_frozen(root, topic, approval_id):
+def _verify_frozen(root, topic, approval_id, historical=False):
     base = _base(topic, approval_id)
     value = admission._checked(root, base + '/plan.yaml')
     if value.get('schema_version') != 2 or value.get('mode') != 'frozen_writing_admission_plan':
@@ -367,7 +374,7 @@ def _verify_frozen(root, topic, approval_id):
     bundle = store.checked_yaml(root, value['bundle_path'])
     if bundle.get('topic') != topic or bundle.get('approval_id') != approval_id:
         raise store.OfflineError('正式冻结稿不属于原页面确认')
-    expected = _frozen_plan(root, bundle)
+    expected = _frozen_plan(root, bundle, historical=historical)
     receipt = admission._checked(root, base + '/accepted.yaml')
     if value != expected or receipt != _frozen_receipt(value):
         raise store.OfflineError('正式稿件与原确认、审阅或准入散列不一致')
@@ -381,7 +388,7 @@ def verify(root, topic, approval_id, historical=False):
     receipt_path = _base(topic, approval_id) + '/accepted.yaml'
     marker = admission._checked(root, receipt_path)
     if marker.get('mode') == 'frozen_writing_admission':
-        return _verify_frozen(root, topic, approval_id)
+        return _verify_frozen(root, topic, approval_id, historical=historical)
     value = _read_plan(root, topic, approval_id, historical)
     receipt = admission._checked(root, _base(topic, approval_id) + '/accepted.yaml')
     if receipt != _receipt(value):
@@ -401,6 +408,15 @@ def _run(root, approval_id, config_path=DEFAULT_CONFIG, refresh=None, fail_after
         policy = _config(root, config_path)
         bundle = inputs.prepare_bundle(root, approval_id, policy['value']['confirmation_config'])
         topic = bundle['topic']
+        if bundle.get('preview', {}).get('payload', {}).get('admission_mode') == 'codex_insight_admission':
+            if topic not in policy['value']['topics']:
+                raise store.OfflineError('研究方向未启用正式 Writing 准入')
+            result = job.verify_result(root, bundle)
+            if result.get('status') != 'test_accepted' or result.get('unknown_requests') is not False:
+                raise store.OfflineError('真实 Writing 三阶段没有全部独立审阅通过')
+            input_path = 'reports/test/%s/writing-runs/%s/input.yaml' % (topic, bundle['batch_id'])
+            store.save_yaml(root, input_path, bundle)
+            return admit_frozen(root, bundle, fail_after=fail_after)
         base = _base(topic, approval_id)
         plan = admission._location(root, base + '/plan.yaml')
         if plan.exists():

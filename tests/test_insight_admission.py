@@ -122,6 +122,16 @@ class InsightAdmission(unittest.TestCase):
         self.assertFalse((self.root / 'reports/agent_memory').exists())
         self.assert_no_new_calls()
 
+    def test_parent_file_conflict_is_checked_before_any_formal_write(self):
+        target = self.root / 'articles/agent_memory'
+        target.write_text('人工保存的同名文件，不可覆盖。\n')
+        with self.assertRaisesRegex(store.OfflineError, '父目录已有人工文件'):
+            admission.admit(self.root, 'agent_memory', 'first')
+        self.assertEqual(target.read_text(), '人工保存的同名文件，不可覆盖。\n')
+        self.assertFalse((self.root / 'insights/agent_memory').exists())
+        self.assertFalse((self.root / 'reports/agent_memory').exists())
+        self.assert_no_new_calls()
+
     def test_simulation_cannot_be_admitted_even_when_all_hashes_match(self):
         receipt = self.sdk_receipt()
         receipt['simulation'] = True

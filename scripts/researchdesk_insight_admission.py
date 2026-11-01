@@ -264,6 +264,11 @@ def admit(root, topic, cycle_id):
     # Check the entire set before writing anything, including marker conflicts.
     for relative, text in outputs.items():
         target = legacy._location(root, relative)
+        for parent in target.parents:
+            if parent == root:
+                break
+            if parent.exists() and not parent.is_dir():
+                raise store.OfflineError('正式输出父目录已有人工文件，保留内容: ' + relative)
         if target.exists() and (not target.is_file() or target.read_bytes() != text.encode()):
             raise store.OfflineError('正式输出位置已有人工修改，保留内容: ' + relative)
     for relative, text in outputs.items():

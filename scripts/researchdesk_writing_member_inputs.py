@@ -111,7 +111,7 @@ def _synced_hashes(root, hashes):
             if (mode not in {'100644', '100755'} or remote.get(relative) != (mode, blob, 'blob')
                     or (staged is not None and (staged[2] != '0' or
                         local.get(relative) != (staged[0], staged[1], 'blob')))):
-                raise store.OfflineError('写作冻结输入与远端 main 不一致: ' + relative)
+                raise store.OfflineError('写作冻结输入尚未完整同步到 main（持久工作台与远端不一致）: ' + relative)
         elif (staged is None or staged[0] not in {'100644', '100755'}
                 or staged[1] != blob or staged[2] != '0'
                 or local.get(relative) != (staged[0], blob, 'blob')
@@ -157,9 +157,12 @@ def _revocations(root, base):
         raise store.OfflineError('origin/main 已收到撤回，不能继续或重用旧写作结果')
 
 
-def _record(root, config, approval_id, public=False):
+def _record(root, config, approval_id, public=False, historical=False):
+    if historical and not public:
+        raise store.OfflineError('历史只读核验不能授予活跃写作权限')
     topic, base = _base(root, config, approval_id)
-    _revocations(root, base)
+    if not historical:
+        _revocations(root, base)
     record_path, preview_path = base + '/confirmed.yaml', base + '/preview.yaml'
     record = admission._checked(root, record_path)
     preview = admission._checked(root, preview_path)
@@ -198,18 +201,21 @@ def _record(root, config, approval_id, public=False):
         raise store.OfflineError('原确认不允许这项真实、仅 test 的三阶段写作')
     if not isinstance(preview['base_commit'], str) or not COMMIT.fullmatch(preview['base_commit']):
         raise store.OfflineError('页面确认没有绑定有效 main 基线')
-    _git(root, 'merge-base', '--is-ancestor', preview['base_commit'], 'refs/remotes/origin/main')
+    if not historical:
+        _git(root, 'merge-base', '--is-ancestor', preview['base_commit'], 'refs/remotes/origin/main')
     # This invokes the actual cached formal admission verifier. A YAML digest
     # alone cannot turn a fixture or an unreviewed topic into real evidence.
     fresh = inputs.validate_public_preview(root, payload) if public else inputs.validate_preview(root, config, payload)
     hashes = dict(fresh['snapshot']['hashes'])
     for relative in (record_path, record_path + '.sha256', preview_path, preview_path + '.sha256'):
         hashes[relative] = store.digest(admission._location(root, relative).read_bytes())
-    _synced_hashes(root, {path: sha for path, sha in hashes.items()
-                          if not public or Path(path).parts[:1] != ('config',)})
+    if not historical:
+        _synced_hashes(root, {path: sha for path, sha in hashes.items()
+                              if not public or Path(path).parts[:1] != ('config',)})
     # Recheck after the proof and Git reads, so cancellation observed during a
     # lengthy proof validation also prevents material being returned.
-    _revocations(root, base)
+    if not historical:
+        _revocations(root, base)
     return topic, base, record, preview, fresh, hashes
 
 
@@ -298,7 +304,7 @@ def _bundle_value(topic, base, record, preview, payload, hashes, material, month
     return result
 
 
-def verify_frozen_bundle(root, bundle):
+def verify_frozen_bundle(root, bundle, historical=False):
     """Publisher-only proof check; local YAML is neither exported nor invented.
 
     The page-confirmed payload is the authority for its frozen Writing options.
@@ -309,7 +315,8 @@ def verify_frozen_bundle(root, bundle):
     fingerprint = checked.pop('input_fingerprint', None)
     if store.digest(checked) != fingerprint:
         raise store.OfflineError('冻结 Writing 证明已变化')
-    _main(root)
+    if not historical:
+        _main(root)
     original = bundle.get('preview', {}).get('payload', {})
     if original.get('admission_mode') != 'codex_insight_admission':
         # Old accepted topics retain their original, local-config verifier.
@@ -317,7 +324,7 @@ def verify_frozen_bundle(root, bundle):
     config = {'workbench_id': original['workbench_id'], 'topics': [original['topic']],
               'writing': original['writing'], '_config_path': original['config']['path'],
               '_config_sha256': original['config']['sha256']}
-    topic, base, record, preview, payload, hashes = _record(root, config, bundle['approval_id'], public=True)
+    topic, base, record, preview, payload, hashes = _record(root, config, bundle['approval_id'], public=True, historical=historical)
     from researchdesk_workbench import generated_config_paths
     extra = {'config/research_topics.yaml', 'config/membership_budget.yaml'}
     actual = bundle.get('snapshot', {}).get('hashes', {})

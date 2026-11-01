@@ -102,6 +102,18 @@ class InsightPublication(unittest.TestCase):
         self.assertFalse((self.publisher / 'reports/agent_memory').exists())
         self.assert_no_new_calls()
 
+    def test_parent_note_blocks_transfer_before_any_other_files_are_written(self):
+        self.prepare()
+        self.export()
+        parent = self.publisher / 'articles/agent_memory'
+        parent.parent.mkdir(parents=True)
+        parent.write_text('# Existing handwritten note, not a directory.\n')
+        before = self.snapshot(self.publisher)
+        with self.assertRaisesRegex(publish.PublishError, 'parent_conflict'):
+            publish.apply(self.publisher, self.artifact)
+        self.assertEqual(self.snapshot(self.publisher), before)
+        self.assert_no_new_calls()
+
 
 if __name__ == '__main__':
     unittest.main()

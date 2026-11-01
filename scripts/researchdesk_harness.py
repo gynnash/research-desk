@@ -3,7 +3,8 @@
 
 The official runtime owns its agent/tool loop. This module owns only business
 phases. No collector, scheduler, Git writer or Writing launch lives here.
-Live Codex remains disabled until the adapter's runtime protections are ready.
+Live execution requires the adapter's runtime protections and explicit opt-in;
+formal admission is a separate, zero-model host operation.
 """
 from __future__ import annotations
 

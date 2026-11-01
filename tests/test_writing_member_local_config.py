@@ -22,6 +22,7 @@ class PrivateWritingConfiguration(unittest.TestCase):
         self.digest = self.write(self.config, 'schema_version: 1\nmonth_max_calls: 100\n')
         self.confirmation = 'reports/example/writing-approvals/approval-one/confirmed.yaml'
         self.confirmation_hash = self.write(self.confirmation, 'decision: confirmed\n')
+        self.is_ancestor = True
 
     def write(self, relative, text):
         path = self.root / relative
@@ -37,6 +38,10 @@ class PrivateWritingConfiguration(unittest.TestCase):
         blob = hashlib.sha1(b'blob ' + str(len(payload)).encode() + b'\0' + payload).hexdigest()
         if arguments == ('rev-parse', '--show-object-format'):
             return b'sha1\n'
+        if arguments == ('merge-base', '--is-ancestor', 'HEAD', 'refs/remotes/origin/main'):
+            if not self.is_ancestor:
+                raise store.OfflineError('持久工作台与远端历史分叉')
+            return b''
         if arguments == ('ls-files', '--stage', '-z'):
             return ('100644 ' + blob + ' 0\t' + self.confirmation + '\0').encode()
         if arguments[0] == 'ls-tree':
@@ -66,6 +71,13 @@ class PrivateWritingConfiguration(unittest.TestCase):
         with mock.patch.object(inputs, '_git', side_effect=self.git):
             with self.assertRaisesRegex(store.OfflineError, '尚未完整同步到 main'):
                 inputs._synced_hashes(self.root, {relative: digest})
+
+    def test_diverged_workbench_cannot_authorize_even_matching_confirmation_bytes(self):
+        self.remote_confirmed = True
+        self.is_ancestor = False
+        with mock.patch.object(inputs, '_git', side_effect=self.git):
+            with self.assertRaisesRegex(store.OfflineError, '历史分叉'):
+                inputs._synced_hashes(self.root, {self.confirmation: self.confirmation_hash})
 
 
 if __name__ == '__main__':

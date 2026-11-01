@@ -474,7 +474,12 @@ def apply(root, artifact, push=False):
         if _hash(payload) != expected:
             raise PublishError('transfer_content_changed')
         destination = _safe(root, relative)
-        if destination.exists() and destination.read_bytes() != payload:
+        for parent in destination.parents:
+            if parent == root:
+                break
+            if parent.exists() and not parent.is_dir():
+                raise PublishError('existing_parent_conflict_preserve_both: ' + relative)
+        if destination.exists() and (not destination.is_file() or destination.read_bytes() != payload):
             raise PublishError('existing_content_conflict_preserve_both: ' + relative)
         files[relative] = payload
     # Validate all bindings and conflicts before creating any repository files.

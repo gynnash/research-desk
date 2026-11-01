@@ -108,33 +108,41 @@ class WritingSDKBridge(unittest.TestCase):
     def test_hosted_save_without_private_yaml_admits_create_only_formal_writing(self):
         import researchdesk_writing_deployment as deployed
         import researchdesk_writing_admission as formal
-        _, approval = self.approve()
+        manager, approval = self.approve()
         bundle = inputs.prepare_bundle(self.root, approval)
-        result = writing.run(self.root, approval, client=self.client, refresh=lambda: True, max_new_calls=6)
-        self.assertEqual(result['status'], 'test_accepted')
-        store.save_yaml(self.root, deployed._input_path(bundle['topic'], bundle['batch_id']), bundle)
         directory = tempfile.TemporaryDirectory(prefix='researchdesk-writing-transfer-')
         self.addCleanup(directory.cleanup)
         artifact, publisher = Path(directory.name) / 'artifact', Path(directory.name) / 'publisher'
-        artifact.mkdir()
-        files = {}
-        for relative in deployed._files(self.root, bundle):
-            data = (self.root / relative).read_bytes()
-            target = artifact / 'payload' / relative
-            target.parent.mkdir(parents=True, exist_ok=True)
-            target.write_bytes(data)
-            files[relative] = store.digest(data)
-        value = {'schema_version': 2, 'mode': deployed.MODE, 'topic': bundle['topic'],
-                 'approval_id': approval, 'batch_id': bundle['batch_id'],
-                 'base_commit': self.git('rev-parse', 'HEAD'),
-                 'input_fingerprint': bundle['input_fingerprint'],
-                 'input_hashes': {p: sha for p, sha in bundle['snapshot']['hashes'].items()
-                                  if Path(p).parts[:1] != ('config',)}, 'files': files}
-        (artifact / 'manifest.json').write_text(json.dumps(value))
+        self.git('remote', 'add', 'origin', 'https://github.com/example/researchdesk-fixture.git')
+        environment = {'GITHUB_ACTIONS': 'true', 'GITHUB_REF': 'refs/heads/main',
+                       'GITHUB_EVENT_NAME': 'workflow_dispatch',
+                       'GITHUB_REPOSITORY': 'example/researchdesk-fixture',
+                       'RESEARCHDESK_WORKBENCH_ROOT': str(self.root)}
+        with patch.object(deployed.deployment, 'sync_system'), patch.object(deployed.workbench, 'apply'), \
+             patch.object(deployed.workbench, 'load_effective', return_value={'confirmation': {'topics': ['agent_memory']}}), \
+             patch.object(deployed.runtime, 'load_config', return_value={'_venv': Path(sys.prefix)}), \
+             patch.object(deployed.writing, 'refresh_origin', return_value=True):
+            result = deployed.dispatch(self.root, self.git('rev-parse', 'HEAD'), approval, artifact,
+                environment=environment, writer=lambda root, chosen, max_new_calls: writing.run(
+                    root, chosen, client=self.client, refresh=lambda: True, max_new_calls=max_new_calls))
+        self.assertEqual(result['status'], 'test_accepted')
+        self.assertEqual(len(self.client.calls), 6)
         subprocess.run(['git', 'clone', '--quiet', '--no-hardlinks', str(self.root), str(publisher)],
                        check=True, capture_output=True)
         self.assertFalse((publisher / 'config/confirmation-v2.yaml').exists())
         self.assertFalse((publisher / 'config/local/workbench.yaml').exists())
+        # A regular file at an untracked output ancestor blocks the entire save.
+        blocker = publisher / ('articles/test/%s/%s' % (bundle['topic'], bundle['batch_id']))
+        blocker.parent.mkdir(parents=True, exist_ok=True)
+        blocker.write_text('Personal file at a generated directory path.')
+        before = {p.relative_to(publisher): p.read_bytes() for p in publisher.rglob('*')
+                  if p.is_file() and '.git' not in p.relative_to(publisher).parts}
+        with self.assertRaises(store.OfflineError):
+            deployed.apply(publisher, artifact, push=False)
+        after = {p.relative_to(publisher): p.read_bytes() for p in publisher.rglob('*')
+                 if p.is_file() and '.git' not in p.relative_to(publisher).parts}
+        self.assertEqual(before, after)
+        blocker.unlink()
         saved = deployed.apply(publisher, artifact, push=False)
         self.assertTrue(saved['production_accepted'])
         self.assertEqual(len(self.client.calls), 6)
@@ -148,6 +156,45 @@ class WritingSDKBridge(unittest.TestCase):
         with self.assertRaises(Exception):
             deployed.apply(publisher, artifact, push=False)
         self.assertIn('Human edits are preserved.', target.read_text())
+        # Historical reading is independent of current execution rights and Git
+        # checkout state, while active execution still rejects the revocation.
+        manager.revoke(approval, 'Fictional withdrawal after admission')
+        with self.assertRaises(store.OfflineError):
+            writing.run(self.root, approval, client=self.client, refresh=lambda: True, max_new_calls=6)
+        self.assertEqual(len(self.client.calls), 6)
+        # Restore only this test's deliberate edit before checking old accepted bytes.
+        source = self.root / ('articles/test/%s/%s/candidate.md' % (bundle['topic'], bundle['batch_id']))
+        original = formal._promote(publisher, source.relative_to(self.root).as_posix(),
+            source.read_text(), bundle['topic'], bundle['batch_id'], 'candidate')[1]
+        target.write_text(original)
+        revocations = Path(bundle['confirmation_path']).parent / 'revocations'
+        for path in (self.root / revocations).rglob('*'):
+            if path.is_file():
+                destination = publisher / path.relative_to(self.root)
+                destination.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copyfile(path, destination)
+        with self.assertRaises(store.OfflineError):
+            inputs.verify_frozen_bundle(publisher, bundle)
+        subprocess.run(['git', '-C', str(publisher), 'checkout', '--detach'], check=True, capture_output=True)
+        subprocess.run(['git', '-C', str(publisher), 'update-ref', '-d', 'refs/remotes/origin/main'],
+                       check=True, capture_output=True)
+        self.assertEqual(formal.verify(publisher, bundle['topic'], approval, historical=True)['status'], 'accepted')
+        self.assertEqual(formal.inspect(publisher, bundle['topic'], approval)['status'], 'accepted')
+
+    def test_manual_formal_entry_routes_current_approved_bundle(self):
+        import researchdesk_writing_admission as formal
+        _, approval = self.approve()
+        bundle = inputs.prepare_bundle(self.root, approval)
+        policy = copy.deepcopy(yaml.safe_load((ROOT / 'config/system.yaml').read_text())['writing_admission'])
+        policy['confirmation_config'] = 'config/confirmation-v2.yaml'
+        (self.root / 'config/writing_admission.yaml').write_text(yaml.safe_dump(policy))
+        with patch.object(formal.job, 'verify_result', return_value={'status': 'test_accepted', 'unknown_requests': False}), \
+             patch.object(formal, 'admit_frozen', return_value={'status': 'accepted'}) as route:
+            self.assertEqual(formal._run(self.root, approval)['status'], 'accepted')
+        route.assert_called_once_with(self.root, bundle, fail_after=None)
+        self.assertTrue((self.root / ('reports/test/%s/writing-runs/%s/input.yaml' %
+                                    (bundle['topic'], bundle['batch_id']))).is_file())
+        self.assertEqual(self.client.calls, [])
 
     def test_unconfirmed_topic_cannot_start_writing(self):
         with self.assertRaises(store.OfflineError):
