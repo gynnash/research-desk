@@ -58,7 +58,24 @@ def _git_entries(payload, index=False):
 
 
 def _synced_hashes(root, hashes):
-    """Compare complete frozen inputs with index/main/remote in bounded reads."""
+    """Bind private configuration locally; sync confirmations and evidence."""
+    # New workbenches keep their editable configuration and generated legacy
+    # compatibility files out of Git. Their content is still frozen in the
+    # writing fingerprint and must match at every resume/admission check.
+    # Do not exempt arbitrary config paths, research snapshots or approvals.
+    local_paths = set()
+    if (Path(root) / 'config/local/workbench.yaml').exists():
+        from researchdesk_workbench import LOCAL_CONFIG, generated_config_paths
+        admission._location(root, LOCAL_CONFIG)
+        local_paths = set(generated_config_paths()) | {LOCAL_CONFIG}
+    for relative in hashes.keys() & local_paths:
+        target = admission._location(root, relative)
+        if not target.is_file() or store.digest(target.read_bytes()) != hashes[relative]:
+            raise store.OfflineError('写作冻结本地配置已变化: ' + relative)
+    hashes = {relative: expected for relative, expected in hashes.items()
+              if relative not in local_paths}
+    if not hashes:
+        return
     index = _git_entries(_git(root, 'ls-files', '--stage', '-z'), index=True)
     local = _git_entries(_git(root, 'ls-tree', '-r', '-z', '--full-tree', 'refs/heads/main'))
     remote = _git_entries(_git(root, 'ls-tree', '-r', '-z', '--full-tree', 'refs/remotes/origin/main'))

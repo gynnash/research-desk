@@ -209,7 +209,7 @@ prepared → input_frozen → generation_reserved → generation_running
 
 ## 8. 会员用量与现有 100 次上限
 
-现有 [membership_budget.yaml](../config/membership_budget.yaml) 的 `month_max_calls: 100` 统计真实会员推理请求预留，失败或结果未知也占用。一个 Codex turn 内可能有多次模型请求，不能把它解释成 100 个 Agent 任务。
+本地统一配置 `config/local/workbench.yaml` 的 `membership_budget.month_max_calls` 统计真实会员推理请求预留，模板为 100 次；`apply` 生成兼容文件 `config/membership_budget.yaml`。失败或结果未知也占用。一个 Codex turn 内可能有多次模型请求，不能把它解释成 100 个 Agent 任务。
 
 新账本需分开记录：
 
@@ -229,7 +229,14 @@ prepared → input_frozen → generation_reserved → generation_running
 
 ## 9. YAML 配置与成果目录
 
-主题仍由 [research_topics.yaml](../config/research_topics.yaml) 管理。新入口使用独立的 [codex-insight.yaml](../config/examples/codex-insight.yaml)，默认批次不变。以下为原总体配置草案，具体可执行字段以该示例为准；旧 cycle loader 不接受 `backend: codex`：
+主题在本地统一配置的 `research_topics` 部分管理，Codex 设置放在 `insight` 部分。先按[初始化说明](workbench-init.md)建立本人配置，修改后执行 `apply`，新入口显式读取生成的 `config/local/codex-insight.yaml`：
+
+```sh
+python3 -B scripts/researchdesk_harness.py preflight --config config/local/codex-insight.yaml
+python3 -B scripts/researchdesk_harness.py insight --config config/local/codex-insight.yaml --cycle-id '<已完成逐篇研究的批次>'
+```
+
+`preflight` 不推理，`insight` 会执行真实任务。公开[示例](../config/examples/codex-insight.yaml)供参考，默认旧批次不变。以下为原总体配置草案，具体可执行字段以统一模板和示例为准；旧 cycle loader 不接受 `backend: codex`：
 
 ```yaml
 backend: codex
@@ -265,7 +272,7 @@ articles/<topic>/<cycle>/topic-N.md
 
 首个闭环只导出到 `insights/test/<topic>/<cycle>/`、`articles/test/<topic>/<cycle>/`，脱敏证明沿用 `reports/test/<topic>/` 内部记录。正式路径仅是后续准入目标。当前不搬迁、删除或重写旧记录，也不新增研究成果。
 
-GitHub Actions 仍负责触发和结果回存；用户授权与 Codex 在自己的 Mac 或远程 self-hosted runner 上运行。Git 凭据不进入模型工具环境，回存使用允许路径清单。GitHub 与 Obsidian 共享 Markdown；runtime 会话、凭据和原始事件不进入 Vault。
+GitHub Actions 保留触发和结果回存框架；授权与 Codex 使用用户自己的执行主机。个人配置不进入 Git；hosted plan 缺少本地调度配置时跳过，不能只开启 Mac 的本地开关就声称远程调度可用。受信任配置交付尚需另行部署，本次不实现或启用。Git 凭据不进入模型工具环境，回存使用允许路径清单。GitHub 与 Obsidian 共享 Markdown；runtime 会话、凭据和原始事件不进入 Vault。
 
 ## 10. 实施顺序与验收
 
@@ -298,4 +305,4 @@ GitHub Actions 仍负责触发和结果回存；用户授权与 Codex 在自己�
 | 导出恢复与笔记 | 审阅完成后中断只补导出；人工修改与原文保持不变 |
 | 用量与导出 | task/turn/真实请求与 usage 不混用；正文与来源保存正确，长输入不触发旧字符截断；不做文风或结构评分 |
 
-第一、二步已完成；真实 SDK 的本地文件读取与独立模型审阅也已小额验收，回执见 [codex-sdk-live-20261101-02](../reports/test/agent_memory/codex-sdk-smoke/codex-sdk-live-20261101-02/accepted.yaml)。该验收不包含真实论文，不代替第三步的研究内容验收；Research/Writing 迁移与定时启用尚未进行。现有无模型 CI 已覆盖适配器、网关、历史输入及业务闭环。
+第一、二步已完成；真实 SDK 的本地文件读取与独立模型审阅也已小额验收。本人的验收回执保存在本地 `reports/test/<主题>/codex-sdk-smoke/<批次>/`，请求账本保存在本地 `reports/test/<主题>/codex-requests/<批次>/`，不提交 GitHub。这类验收不包含真实论文，不代替第三步的研究内容验收；Research/Writing 迁移与定时启用尚未进行。现有无模型 CI 已覆盖适配器、网关、历史输入及业务闭环。

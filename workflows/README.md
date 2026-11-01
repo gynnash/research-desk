@@ -4,14 +4,17 @@
 
 ## 配置与准备
 
-| 设置 | 文件 |
+先按[工作台初始化说明](workbench-init.md)执行 `python3 -B scripts/researchdesk_workbench.py init`；已有配置用 `init --adopt-existing`。以后只编辑本地 `config/local/workbench.yaml`，再执行 `apply` 和 `check`。下表中的兼容文件由工具生成，不另行编辑，也不提交 GitHub。
+
+| 设置 | 统一 YAML 部分 → 生成文件 |
 | --- | --- |
-| 研究方向、范围与关键词 | [research_topics.yaml](../config/research_topics.yaml) |
-| 来源、窗口、模型、全文策略与阶段预算 | [default.yaml](../config/cycles/default.yaml) |
-| 定时开关与补跑范围 | [automation.yaml](../config/automation.yaml) |
-| 本地或远程环境 | [runtime.yaml](../config/runtime.yaml)、[远程示例](../config/examples/runtime-remote.yaml) |
-| 本地月度请求上限 | [membership_budget.yaml](../config/membership_budget.yaml) |
-| 研究准入、选题确认及稿件准入 | [admission.yaml](../config/admission.yaml)、[confirmation-v2.yaml](../config/confirmation-v2.yaml)、[writing_admission.yaml](../config/writing_admission.yaml) |
+| 研究方向、范围与关键词 | `research_topics` → `config/research_topics.yaml` |
+| 来源、窗口、模型、全文策略与阶段预算 | `research` → `config/cycles/default.yaml` |
+| Codex Insight | `insight` → `config/local/codex-insight.yaml` |
+| 定时开关与补跑范围 | `automation` → `config/automation.yaml` |
+| 本地或远程环境 | `runtime` → `config/runtime.yaml`；[远程字段示例](../config/examples/runtime-remote.yaml) |
+| 本地月度请求上限 | `membership_budget` → `config/membership_budget.yaml` |
+| 研究准入、选题确认及稿件准入 | `admission`、`confirmation`、`writing_admission` → 对应兼容 YAML |
 
 `agent_memory` 的研究范围和关键词已配置，可直接调整或新增其他主题。按[会员授权](local-membership-analysis.md)准备自己的实际模型和独立审阅模型；自动运行与旧正式准入仍保持关闭。仅复制配置不会完成账户授权。
 
@@ -20,27 +23,27 @@
 以下命令只做元数据预检或临时目录内的虚构离线验收，不登录、不调用模型，也不需要安装 Codex SDK：
 
 ```sh
-python3 -B scripts/researchdesk_harness.py preflight
+python3 -B scripts/researchdesk_harness.py preflight --config config/local/codex-insight.yaml
 python3 -B scripts/researchdesk_harness.py offline-demo
 PYTHONPATH=tests python3 -B -m unittest test_codex_adapter test_codex_inputs test_codex_harness -v
 ```
 
 `offline-demo` 验证生成、三条洞察、独立审阅、审阅后中断恢复和幂等导出；临时 Vault 退出后删除。完整验收另覆盖一次准确性修订、纯文风意见不拒收、未知请求不重发、人工笔记保护与历史去重。虚构响应只能验证流程，不能证明真实模型的研究准确性。
 
-新入口配置为 [codex-insight.yaml](../config/examples/codex-insight.yaml)。`insight --cycle-id <已完成逐篇研究的批次>` 会读取 `summary/<主题>/<批次>/` 及其原文与通过回执；没有本批资料时返回 `empty`，未安装 SDK 或不支持当前隔离平台时返回 `blocked`，不会偷偷改用模拟或 API Key。通过的结果只新增到 `insights/test/<主题>/<批次>/report.md`、`articles/test/<主题>/<批次>/topic-N.md`，候选、准确性审阅和回执在 `reports/test/<主题>/codex-insight/<批次>/`。这些新选题尚未接入确认页面或 Writing。
+新入口读取本人生成的 `config/local/codex-insight.yaml`，公开字段可参考[示例](../config/examples/codex-insight.yaml)。`insight --config config/local/codex-insight.yaml --cycle-id <已完成逐篇研究的批次>` 会读取 `summary/<主题>/<批次>/` 及其原文与通过回执；没有本批资料时返回 `empty`，未安装 SDK 或不支持当前隔离平台时返回 `blocked`，不会偷偷改用模拟或 API Key。通过的结果只新增到 `insights/test/<主题>/<批次>/report.md`、`articles/test/<主题>/<批次>/topic-N.md`，候选、准确性审阅和回执在 `reports/test/<主题>/codex-insight/<批次>/`。这些新选题尚未接入确认页面或 Writing。
 
 新旧入口分开：旧 Research/Insight/Writing 的历史提示词和校验仍保持兼容。真实 SDK 目前只验收 macOS；其他平台明确阻塞，旧后端的本地/远程能力保留。安装与显式运行方式如下，需要 Python 3.10+ 及本人已有的[官方会员授权](local-membership-analysis.md)：
 
 ```sh
 python3.12 -m venv "$HOME/Library/Application Support/ResearchDesk/codex-venv"
 "$HOME/Library/Application Support/ResearchDesk/codex-venv/bin/python" -m pip install -r workflows/requirements-codex.txt
-"$HOME/Library/Application Support/ResearchDesk/codex-venv/bin/python" -B scripts/researchdesk_harness.py preflight
-"$HOME/Library/Application Support/ResearchDesk/codex-venv/bin/python" -B scripts/researchdesk_harness.py insight --cycle-id '<已完成逐篇研究的批次>'
+"$HOME/Library/Application Support/ResearchDesk/codex-venv/bin/python" -B scripts/researchdesk_harness.py preflight --config config/local/codex-insight.yaml
+"$HOME/Library/Application Support/ResearchDesk/codex-venv/bin/python" -B scripts/researchdesk_harness.py insight --config config/local/codex-insight.yaml --cycle-id '<已完成逐篇研究的批次>'
 ```
 
 `preflight` 不推理，`live_ready` 只表示本机运行条件齐备，不代表账号模型资格已验证。`sdk-smoke --cycle-id <稳定验收ID>` 会执行两项真实模型任务，读取小型本地验收文件并由另一模型核对；它不是论文研究。每任务默认最多 3 次上游请求，首次运行会消耗会员额度，恢复或查询不得创建新 turn。
 
-已完成的真实 SDK 验收回执为 [codex-sdk-live-20261101-02](../reports/test/agent_memory/codex-sdk-smoke/codex-sdk-live-20261101-02/accepted.yaml)：生成和独立审阅共 4 次请求。此前未通过的验收另保留 5 次，本轮累计预留 9 次；查询原线程已验证新增请求为 0。请求逐次预留在 `reports/test/<主题>/codex-requests/<批次>/`，与旧后端共用月度 100 次上限；未知和失败不释放。真实 OAuth 留在父进程，SDK 只接触本机短期 capability，文件工具只读固定输入，禁用工具网络与无关技能。
+本人真实 SDK 验收回执保存在本地 `reports/test/<主题>/codex-sdk-smoke/<批次>/`，请求逐次预留在 `reports/test/<主题>/codex-requests/<批次>/`；两者均不提交 GitHub，新工作台不继承维护者用量。实际请求与旧后端共用本地月度上限（模板为 100 次），未知和失败不释放。真实 OAuth 留在父进程，SDK 只接触本机短期 capability，文件工具只读固定输入，禁用工具网络与无关技能。
 
 ## 手动检查与研究
 
@@ -60,7 +63,7 @@ python3 -B scripts/researchdesk_research.py --cycle-id agent-memory-manual-001
 
 知乎来源先按[官方 API 接入说明](zhihu-api.md)验证本人凭证、额度和搜索候选。该独立客户端不运行模型、不自动保存资料；搜索摘要不能直接进入全文研究批次。
 
-以下命令需要 GitHub CLI 已授权，且自己的 runner 已准备就绪：
+`gh run list` 可查看已有运行。下面的 `health`、`run` 与后文 `catchup` 是部署示例：需要自己的 runner、授权，以及向 hosted plan 和执行主机交付受信任配置的机制。个人配置不随 Git 同步，本次不实现该交付；未部署前不要把这些命令视为已经可用的远程入口。
 
 ```sh
 gh run list --workflow researchdesk-manual.yml --limit 5
@@ -79,7 +82,7 @@ gh workflow run researchdesk-manual.yml --ref main -f operation=run -f cycle_id=
 
 ## 定时与恢复
 
-[automation.yaml](../config/automation.yaml) 默认 `enabled: false`。用户完成配置和手动验证后可自行启用；workflow 保留的时间为每周二、周五北京时间 03:00。配置与 workflow 的调度值须保持一致。
+本地统一 YAML 的 `automation.enabled` 默认 `false`；workflow 保留每周二、周五北京时间 03:00 的时间槽。hosted plan 缺少本地调度配置时跳过研究；只把本人 Mac 上的开关改为 `true` 不会把配置送到 GitHub，也不会完成调度部署。后续需先配置受信任的配置交付并手动验证，再决定启用；配置与 workflow 调度值须一致。
 
 失败时复用原 `cycle_id`、配置、检查点和请求账本，不换 ID 重置预算。只差准入时使用 `operation=admit`；按配置补漏使用：
 
@@ -98,7 +101,7 @@ python3 scripts/researchdesk_confirmation.py serve --open-browser
 
 在本机 `http://127.0.0.1:8765` 核对选题、角度、读者、篇幅和证据后，亲自保存确认。同步完成后才可在页面启动 Writing。远程部署通过自己的安全端口转发访问，不直接公开页面。
 
-Writing 生成大纲、初稿和候选稿，每阶段独立审阅。文风来自 [writing_style.md](../config/writing_style.md)，用户可在确认时补充真实经历与判断。未提供的个人经历不会自行编造。
+Writing 生成大纲、初稿和候选稿，每阶段独立审阅。文风在本地统一 YAML 的 `writing_style` 配置，工具生成 `config/writing_style.md`；用户可在确认时补充真实经历与判断。未提供的个人经历不会自行编造。
 
 已有三阶段结果通过后，可使用已保存的确认 ID 正式准入，不重新生成：
 

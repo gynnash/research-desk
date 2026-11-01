@@ -1,5 +1,24 @@
 /.obsidian
 
+# One editable local workbench; generated compatibility files are local too.
+/config/local/
+/config/research_topics.yaml
+/config/cycles/default.yaml
+/config/runtime.yaml
+/config/automation.yaml
+/config/membership_budget.yaml
+/config/research_state.yaml
+/config/confirmation.yaml
+/config/confirmation-v2.yaml
+/config/admission.yaml
+/config/writing_admission.yaml
+/config/writing_style.md
+
+# Personal SDK request accounting and live smoke receipts stay on this machine.
+# Keep these files locally: they are still used for budget accounting.
+/reports/test/*/codex-requests/
+/reports/test/*/codex-sdk-smoke/
+
 # Secrets and local credentials (keep shareable placeholders).
 .env
 .env.*

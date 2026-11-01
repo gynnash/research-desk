@@ -30,6 +30,11 @@ jobs:
           python-version: '3.12'
       - name: Install validation dependencies
         run: python -m pip install -r workflows/requirements-membership.txt
+      - name: Initialize a clean local workbench from the public template
+        run: |
+          python scripts/researchdesk_workbench.py init
+          python scripts/researchdesk_workbench.py check
+          PYTHONPATH=tests python -m unittest test_workbench -v
       - name: Validate knowledge base and test isolation
         run: python workflows/validate.py --include-test
       - name: Check explicitly retired historical notes

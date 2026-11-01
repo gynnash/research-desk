@@ -4,7 +4,7 @@ GitHub Actions 负责派发、离线校验和结果回存；会员推理在用�
 
 ## 本地或远程部署
 
-先完成[会员授权](local-membership-analysis.md)，再编辑 [runtime.yaml](../config/runtime.yaml) 的路径、runner 标签与会员 profile。远程主机可参考[配置示例](../config/examples/runtime-remote.yaml)，自行在该主机登录，不复制其他主机令牌。
+先按[初始化说明](workbench-init.md)建立本地 `config/local/workbench.yaml`，完成[会员授权](local-membership-analysis.md)，在统一 YAML 的 `runtime` 部分配置路径、runner 标签与会员 profile，再执行 `python3 -B scripts/researchdesk_workbench.py apply`。`config/runtime.yaml` 是生成的本地兼容文件，不另行编辑。远程主机可参考[字段示例](../config/examples/runtime-remote.yaml)，自行在该主机初始化与登录，不复制其他主机令牌。
 
 ```sh
 .venv-membership/bin/python scripts/researchdesk_runner.py doctor
@@ -15,6 +15,8 @@ GitHub Actions 负责派发、离线校验和结果回存；会员推理在用�
 
 配置代理时，setup 可将显式代理变量保存在仓库外 runner 环境中；修改后需重启服务。执行器状态以自己的 GitHub runner 页面为准。
 
+以下 `health` 命令仅是已部署环境示例。除了 runner 与授权，还需要向 hosted plan 和执行主机交付受信任配置；本地个人 YAML 不通过 Git 同步，本次不新增该交付机制。
+
 ```sh
 gh workflow run researchdesk-manual.yml --ref main -f operation=health -f config=config/cycles/default.yaml
 ```
@@ -23,7 +25,7 @@ gh workflow run researchdesk-manual.yml --ref main -f operation=health -f config
 
 ## 可选调度
 
-[automation.yaml](../config/automation.yaml) 默认停用自动研究。[研究 workflow](../.github/workflows/researchdesk-manual.yml) 保留每周二、周五北京时间 03:00 的时间槽，用户完成配置和手动验证后才自行启用。
+统一 YAML 的 `automation.enabled` 默认停用自动研究。[研究 workflow](../.github/workflows/researchdesk-manual.yml) 保留每周二、周五北京时间 03:00 的时间槽。hosted plan 缺少本地调度配置时会跳过；仅修改当前 Mac 的开关不会完成 GitHub 调度部署。需先准备受信任配置交付、核实执行主机配置和手动验证，再决定是否启用。本次初始化不部署或启用定时任务。
 
 周期 ID 使用 `<topic>-YYYYMMDD-0300`，迟到与补跑复用相同 ID、固定输入、检查点和请求账本。补跑范围由 YAML 配置；已准入、无新资料或终结决定不重复研究。已完成但保存失败时恢复保存或准入，不另起轮次重做。
 

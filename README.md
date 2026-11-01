@@ -12,17 +12,30 @@ ResearchDesk 是一套可配置的三 Agent 研究工作台框架：采集公开
 
 ## 快速开始
 
-1. 准备 Python 3.9+、Git 和 GitHub CLI，安装依赖：
+1. 准备 Python（推荐 3.12）、Git 和 GitHub CLI，安装依赖：
 
    ```sh
    python3 -m venv .venv-membership
    .venv-membership/bin/python -m pip install -r workflows/requirements-membership.txt
    ```
 
-2. 查看 [研究方向](config/research_topics.yaml)：`agent_memory` 已配置并启用。可以调整范围和关键词，或按相同格式增加其他主题；在 [运行配置](config/cycles/default.yaml) 选择主题、来源、采集窗口、模型和预算。启用主题不会自行启动研究。
-3. 按[会员授权说明](workflows/local-membership-analysis.md)完成自己的官方登录，查看账户实际可用模型，选择不同的生成与审阅模型。凭据始终留在仓库之外。
-4. 配置 [运行环境](config/runtime.yaml)，按[执行器说明](workflows/self-hosted-worker.md)准备自己的本地或远程主机，先检查环境与小批运行。
-5. 验证满意后，如需正式入库，在 [admission.yaml](config/admission.yaml) 启用准入并登记自己的主题；如需定时运行，再在 [automation.yaml](config/automation.yaml) 启用定时任务。**默认关闭自动研究**；保留的 workflow 不会因下载或 fork 仓库而自动开始研究。
+2. 从[统一模板](config/workbench.example.yaml)初始化自己的工作台：
+
+   ```sh
+   .venv-membership/bin/python -B scripts/researchdesk_workbench.py init
+   ```
+
+   这会把模板复制到被 Git 忽略的 `config/local/workbench.yaml`，并生成旧入口需要的兼容配置。已有工作台改用 `init --adopt-existing`，导入原设置，保留资料、去重状态和实际用量。
+
+3. 只编辑本地 `config/local/workbench.yaml`：`research_topics` 配研究方向，`research` 配来源、模型和逐篇研究，`insight` 配 Codex 洞察，`confirmation.writing` 配写作，`runtime` 配运行环境，`membership_budget` 配本地请求上限。默认主题为 `agent_memory`。修改后应用并检查：
+
+   ```sh
+   .venv-membership/bin/python -B scripts/researchdesk_workbench.py apply
+   .venv-membership/bin/python -B scripts/researchdesk_workbench.py check
+   ```
+
+4. 按[会员授权说明](workflows/local-membership-analysis.md)完成自己的官方登录，核实账户可用模型，再选择不同的生成与审阅模型。模板里的模型名只是示例；凭据继续留在仓库之外，不写入配置 YAML。
+5. 按[初始化说明](workflows/workbench-init.md)和[执行器说明](workflows/self-hosted-worker.md)准备自己的运行主机。**模板默认关闭自动研究和正式研究准入**；初始化不登录、不调用模型、不安装 runner、不启用定时任务，也不修改 Git。GitHub 上保留模板和框架，个人配置由各自机器本地管理。
 
 运行命令、补跑和选题确认见[操作说明](workflows/README.md)。不需要数据库或复杂 Agent 框架。
 
@@ -35,7 +48,7 @@ ResearchDesk 是一套可配置的三 Agent 研究工作台框架：采集公开
 | 目录                   | 用途                                    |
 | -------------------- | ------------------------------------- |
 | `scripts/`           | 采集、全文提取、三 Agent 执行、独立审阅、预算、准入、页面与同步工具 |
-| `config/`            | 用户配置、通用示例和虚构测试配置                      |
+| `config/`            | 统一配置模板、通用示例和虚构测试配置；本地副本及生成配置不提交 |
 | `.github/workflows/` | 离线检查、可选定时执行和结果回存                      |
 | `tests/`             | 无真实模型调用的离线回归                          |
 | `workflows/`         | 操作说明、资料 Schema、Markdown 模板及虚构样例       |
@@ -57,10 +70,11 @@ Research 与 Insight 输出可连续阅读的技术文章，具体解释机制�
 ## 检查与可选同步
 
 ```sh
+.venv-membership/bin/python -B scripts/researchdesk_workbench.py check
 .venv-membership/bin/python -B workflows/validate.py --include-test
 PYTHONPATH=tests .venv-membership/bin/python -B -m unittest test_research_depth test_insight_depth test_fulltext_required test_usage_archive
 ```
 
-GitHub 用于保存代码、配置和用户后续产生的资料版本。Obsidian 是可选阅读工具：把自己的资料仓库作为 Vault，即可阅读同一套 Markdown；手机同步可自行配置 Obsidian Sync。没有 Obsidian 也能直接在 GitHub 阅读。
+GitHub 用于保存代码、公共配置模板和用户后续产生的资料版本。个人设置、用量归档及真实 SDK 请求账本只留在本机；新用户不会继承维护者的用量或测试回执。Obsidian 是可选阅读工具：把自己的资料仓库作为 Vault，即可阅读同一套 Markdown；手机同步可自行配置 Obsidian Sync。没有 Obsidian 也能直接在 GitHub 阅读。
 
-`.gitignore` 排除凭据、API Key、缓存和 Obsidian 本地配置。部署时使用自己的仓库、授权和运行主机，不复制维护者的登录状态。
+`.gitignore` 排除本地工作台配置、凭据、API Key、缓存和 Obsidian 本地配置。已有本机文件保留，旧 Git 历史不改写；`.gitignore` 不控制 Obsidian Sync 的同步范围。配置映射、迁移和可复现检查见[工作台初始化](workflows/workbench-init.md)。

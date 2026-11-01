@@ -295,7 +295,7 @@ def check(root, include_test=False):
     for directory in ("config", "workflows", "workflows/templates"):
         if not (root / directory).is_dir():
             fail(directory, "缺少目录")
-    for path in ("README.md", ".gitignore", "workflows/README.md", "workflows/source-schema.md", "workflows/maintenance.md", "workflows/requirements.txt", "config/research_topics.yaml", "config/legacy_sources.yaml"):
+    for path in ("README.md", ".gitignore", "workflows/README.md", "workflows/source-schema.md", "workflows/maintenance.md", "workflows/requirements.txt", "config/legacy_sources.yaml"):
         if not (root / path).is_file():
             fail(path, "缺少文件")
 
@@ -306,7 +306,11 @@ def check(root, include_test=False):
             configs[relative] = load_yaml(read(relative), relative)
 
     topic_path = "config/research_topics.yaml"
-    config = configs.get(topic_path, {})
+    if topic_path in configs:
+        config = configs[topic_path]
+    else:
+        topic_path = "config/workbench.example.yaml"
+        config = configs.get(topic_path, {}).get('research_topics', {})
     fields(config, {"schema_version", "topics"}, set(), topic_path)
     topics = config.get("topics")
     if type(config.get("schema_version")) is not int or config.get("schema_version") != 1:

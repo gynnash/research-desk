@@ -1,9 +1,0 @@
-schema_version: 1
-topics:
-- agent_memory
-confirmation_config: config/confirmation.yaml
-output_mode: formal_articles
-create_only: true
-preserve_test: true
-new_model_calls: 0
-publish_authorized: false

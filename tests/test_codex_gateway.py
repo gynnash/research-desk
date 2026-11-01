@@ -16,6 +16,7 @@ import yaml
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
 import researchdesk_batch as shared
 import researchdesk_codex_gateway as gateway
+import researchdesk_membership as membership
 import researchdesk_offline as store
 
 
@@ -131,6 +132,35 @@ class CodexGateway(unittest.TestCase):
         metadata = store.checked_yaml(self.root, observations[0].relative_to(self.root))
         self.assertEqual(metadata['usage']['total_tokens'], 15)
         self.assertNotIn('output', metadata)
+
+    def test_lazy_client_uses_configured_profile_and_legacy_default_without_reading_credentials(self):
+        configured = self.root.parent / (self.root.name + '-private-profile')
+        runtime = {'schema_version': 1, 'environment': 'local',
+            'runner': {'directory': str(self.root.parent / 'fixture-runner'),
+                       'labels': ['researchdesk'], 'name': 'fixture'},
+            'membership': {'profile': str(configured)},
+            'python': {'venv': str(self.root.parent / 'fixture-runtime-venv')}}
+        path = self.root / 'config/runtime.yaml'
+        for settings, expected in ((None, membership.DEFAULT_PROFILE),
+                                   (runtime, configured)):
+            with self.subTest(profile=expected), mock.patch.object(
+                    membership, 'MembershipClient', return_value=self.client) as client:
+                if settings is not None:
+                    path.write_text(yaml.safe_dump(settings))
+                with gateway.MembershipGateway(self.root, 'agent_memory', 'fixture-cycle',
+                        'fixture-task', ['fixture-model']) as bridge:
+                    self.assertEqual(self.request(bridge)[0], 200)
+                client.assert_called_once_with(expected, self.root)
+        self.assertFalse(configured.exists(), 'profile selection must not copy or create credentials')
+
+    def test_invalid_explicit_profile_does_not_fall_back_to_another_account(self):
+        path = self.root / 'config/runtime.yaml'
+        path.write_text(yaml.safe_dump({'schema_version': 1, 'membership': {'profile': 'relative'}}))
+        with mock.patch.object(membership, 'MembershipClient') as client:
+            with gateway.MembershipGateway(self.root, 'agent_memory', 'fixture-cycle',
+                    'fixture-task', ['fixture-model']) as bridge:
+                self.assertEqual(self.request(bridge)[0], 502)
+            client.assert_not_called()
 
     def test_route_auth_model_storage_streaming_and_encoding_checks_do_not_spend(self):
         with self.make_gateway() as bridge:

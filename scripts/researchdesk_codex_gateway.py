@@ -161,7 +161,14 @@ class MembershipGateway:
             raise store.OfflineError('Codex 网关已停止')
         if self.client is None:
             from researchdesk_membership import MembershipClient, DEFAULT_PROFILE
-            self.client = MembershipClient(DEFAULT_PROFILE, self.root)
+            profile = DEFAULT_PROFILE
+            runtime_path = self.root / 'config/runtime.yaml'
+            if runtime_path.exists() or runtime_path.is_symlink():
+                from researchdesk_runner import load_config
+                # Honor the same local account selection as the legacy worker.
+                # Invalid explicit settings must fail, never use another account.
+                profile = load_config(self.root)['_profile']
+            self.client = MembershipClient(profile, self.root)
         return self.client.forward_responses(payload, headers=headers)
 
     def _handler_class(self):

@@ -90,6 +90,12 @@ def due_slot(root, config, now=None):
 
 def plan(root, event, requested_cycle_id='', requested_config='', requested_operation='', now=None, run_id='manual'):
     root = Path(root).resolve()
+    # A fresh/public checkout contains no operator settings. Never infer an
+    # enabled schedule from an example or silently provision a hosted runner.
+    if not (root / 'config/automation.yaml').exists():
+        if event == 'schedule' or requested_operation == 'catchup':
+            return {'cycle_id': '', 'cycle_config': '', 'operation': 'run', 'slot_utc': ''}
+        raise store.OfflineError('请先在执行主机初始化本地工作台；云端手动研究暂未配置')
     if event == 'schedule' or requested_operation == 'catchup':
         config = load_config(root)
         if config['enabled'] is not True:
