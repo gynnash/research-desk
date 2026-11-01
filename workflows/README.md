@@ -15,7 +15,21 @@
 
 `agent_memory` 的研究范围和关键词已配置，可直接调整或新增其他主题。按[会员授权](local-membership-analysis.md)准备自己的实际模型和独立审阅模型；自动运行与旧正式准入仍保持关闭。仅复制配置不会完成账户授权。
 
-[Codex 后端与 Harness 技术方案](codex-backend.md)说明如何复用官方 Agent 工具循环，接入现有会员授权、固定资料、准确性审阅与失败恢复。内容只因实质性准确性问题要求修订，文风和结构不作为拒收门槛。该方案待实施，当前运行后端保持不变。
+[Codex 后端与 Harness 技术方案](codex-backend.md)已完成 SDK 发行核实、适配器协议与 Insight 离线闭环。新路径内容只做准确性审阅，文风和结构由生成提示词引导。当前默认运行后端保持不变；真实 Codex 的授权环境、权限与请求预算尚未接通，具体见 [SDK 能力核实](codex-sdk-capabilities.md)。
+
+以下命令只做元数据预检或临时目录内的虚构离线验收，不登录、不调用模型，也不需要安装 Codex SDK：
+
+```sh
+python3 -B scripts/researchdesk_harness.py preflight
+python3 -B scripts/researchdesk_harness.py offline-demo
+PYTHONPATH=tests python3 -B -m unittest test_codex_adapter test_codex_inputs test_codex_harness -v
+```
+
+`offline-demo` 验证生成、三条洞察、独立审阅、审阅后中断恢复和幂等导出；临时 Vault 退出后删除。完整验收另覆盖一次准确性修订、纯文风意见不拒收、未知请求不重发、人工笔记保护与历史去重。虚构响应只能验证流程，不能证明真实模型的研究准确性。
+
+新入口配置为 [codex-insight.yaml](../config/examples/codex-insight.yaml)。`insight --cycle-id <已完成逐篇研究的批次>` 会读取 `summary/<主题>/<批次>/` 及其原文与通过回执；没有本批资料时返回 `empty`，有资料但真实运行条件未满足时返回 `blocked`，不会偷偷改用模拟或 API Key。未来通过的结果只新增到 `insights/test/<主题>/<批次>/report.md`、`articles/test/<主题>/<批次>/topic-N.md`，候选、准确性审阅和回执在 `reports/test/<主题>/codex-insight/<批次>/`。这些新选题尚未接入确认页面或 Writing。
+
+新旧入口分开：旧 Research/Insight/Writing 的历史提示词和校验仍保持兼容；尚未切换为新后端。需要核查官方运行包时，在 Python 3.10+ 的独立环境安装 [requirements-codex.txt](requirements-codex.txt)，安装本身不会解锁真实执行。
 
 ## 手动检查与研究
 

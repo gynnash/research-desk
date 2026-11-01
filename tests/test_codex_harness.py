@@ -38,12 +38,13 @@ def candidate(count=3):
 class RecordingBackend:
     name = 'codex_mock'
 
-    def __init__(self, scripts=None, inspected=None):
+    def __init__(self, scripts=None, inspected=None, observed=None):
         self.scripts = scripts or {
             'generation': candidate(),
             'review': {'decision': 'pass'},
         }
         self.inspected = inspected or {}
+        self.observed = observed or {}
         self.calls = []
         self.tasks = {}
         self.handles = {}
@@ -62,7 +63,7 @@ class RecordingBackend:
             turn_id=handle['turn_id'],
             final_response=(json.dumps(response, ensure_ascii=False)
                             if response is not None else None),
-            requested_model=task.model, observed_model=None,
+            requested_model=task.model, observed_model=self.observed.get(task.phase),
             usage=None, model_request_count=None,
             failure_class='connection_lost' if status == 'blocked_unknown' else None,
         )
@@ -163,6 +164,11 @@ class CodexHarnessAcceptance(unittest.TestCase):
         result = self.run_harness(backend)
         self.assertEqual(result['status'], 'complete')
         self.assertEqual(backend.calls, [('start', 'generation'), ('start', 'review')])
+        self.assertEqual(result['task_count'], 2)
+        self.assertEqual(result['turn_count'], 2)
+        self.assertIsNone(result['model_request_count'])
+        receipt = yaml.safe_load((self.root / result['receipt_path']).read_text(encoding='utf-8'))
+        self.assertIsNone(receipt['model_request_count'])
         tasks = {task.phase: task for task in backend.tasks.values()}
         self.assertNotEqual(tasks['generation'].model, tasks['review'].model)
         outputs = list((self.root / 'insights').rglob('*.md'))
@@ -190,7 +196,10 @@ class CodexHarnessAcceptance(unittest.TestCase):
     def test_completed_generation_is_reused_after_interruption(self):
         backend = RecordingBackend()
         self.run_harness(backend, fail_after='generation')
-        self.assertEqual(self.run_harness(backend)['status'], 'complete')
+        # The next day/new history must not change an already frozen task.
+        with patch.object(harness, 'prepare_codex_bundle',
+                          side_effect=AssertionError('Resume must use its frozen corpus')):
+            self.assertEqual(self.run_harness(backend)['status'], 'complete')
         self.assertEqual(backend.calls.count(('start', 'generation')), 1)
 
     def test_export_retry_reuses_review(self):
@@ -226,6 +235,8 @@ class CodexHarnessAcceptance(unittest.TestCase):
             ('start', 'generation'), ('start', 'review'),
             ('continue_turn', 'revision'), ('start', 'review_revision'),
         ])
+        self.assertEqual(self.run_harness(backend)['status'], 'complete')
+        self.assertEqual(len(backend.calls), 4)
 
     def test_style_only_feedback_does_not_reject_or_rewrite(self):
         backend = RecordingBackend(scripts={
@@ -236,6 +247,12 @@ class CodexHarnessAcceptance(unittest.TestCase):
         })
         self.assertEqual(self.run_harness(backend)['status'], 'complete')
         self.assertEqual(backend.calls, [('start', 'generation'), ('start', 'review')])
+
+    def test_observed_same_model_cannot_claim_independent_model_review(self):
+        backend = RecordingBackend(observed={'generation': 'same-runtime-model',
+                                             'review': 'same-runtime-model'})
+        self.assertNotIn(self.run_harness(backend)['status'], {'complete', 'no_insight'})
+        self.assertFalse(list((self.root / 'insights').rglob('*.md')))
 
     def test_no_supported_insight_is_a_normal_outcome(self):
         backend = RecordingBackend(scripts={
