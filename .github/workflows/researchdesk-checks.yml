@@ -46,7 +46,7 @@ jobs:
       - name: Check research cycle with fixed inputs
         run: python -m unittest discover -s tests -p 'test_cycle.py' -v
       - name: Check collection, per-source summaries and Zhihu API without network or models
-        run: PYTHONPATH=tests python -m unittest test_collection_only test_research_entry test_workspace_validation test_zhihu -v
+        run: PYTHONPATH=tests python -m unittest test_sources test_collection_only test_research_entry test_workspace_validation test_zhihu -v
       - name: Check detailed Research and retained real usage without model calls
         run: PYTHONPATH=tests python -m unittest test_research_depth test_usage_archive -v
       - name: Check Insight citation scopes and independent review without model calls

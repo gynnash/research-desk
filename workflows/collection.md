@@ -36,7 +36,7 @@ python3 -m venv .venv
 
 此入口要求 `window.mode: rolling`、`reading.mode: full_text_required` 和 `archive: true`。它不验证会员账户，也没有模型调用；采集回执的 `model_calls` 为0，原文状态为待研究。
 
-不要把 `discover` 当成完整采集：它只发现候选与排名。旧 `researchdesk_collect.py` 保留摘要/节选与模拟分析的兼容流程，新开发使用上面的 `collect` 入口。
+`discover` 只发现候选与排名；获取完整原文使用上面的 `collect` 入口。
 
 ## 输出与交接
 
@@ -52,12 +52,12 @@ python3 -m venv .venv
 
 补跑使用原配置与同一个批次ID。已成功归档的内容离线复用，损坏或人工修改的原文保留并报错。改主题、来源或研究策略时使用新批次；去重仍遵守历史已选规则。
 
-后续显式运行 [Research 命令](research.md)并使用同一批次 ID、准备自己的账户授权，即可逐篇分析并保存到 `summary/<topic>/`。旧 `cycle run` 是 Research+Insight 全轮次，不作为这一步的入口。GitHub Actions 现有 `discover` 操作仍只发现候选，本次没有新增采集调度或页面。
+后续显式运行 [Research 命令](research.md)并使用同一批次 ID、准备自己的账户授权，即可逐篇分析并保存到 `summary/<topic>/`。定时任务通过[一条命令部署](self-hosted-worker.md)，串联采集、逐篇 Research 和 SDK Insight；Actions 的 `collect` 操作只采集原文，不调用模型。
 
 ## 离线验收
 
 ```sh
-PYTHONPATH=tests python3 -B -m unittest test_collection_only -v
+PYTHONPATH=tests python3 -B -m unittest test_sources test_collection_only -v
 ```
 
 测试在临时工作区使用虚构论文与博客，验证全文归档、零模型接触、跨批去重、中断恢复及人工修改保护，仓库本身不保存验收结果。

@@ -17,7 +17,6 @@ from uuid import UUID
 import researchdesk_offline as store
 import researchdesk_batch as batch
 import researchdesk_batch_inputs as research_inputs
-from researchdesk_sources import SafeFetcher
 
 
 HASH = re.compile(r'[0-9a-f]{64}\Z')

@@ -28,7 +28,6 @@ from contextlib import contextmanager
 SDK_PACKAGE = "openai-codex"
 SDK_VERSION = "0.163.0"
 RUNTIME_PACKAGE = "openai-codex-cli-bin"
-WHEEL_SHA256 = "d151e3ff8188bc2c07a962855d598b93bf87a49ec3440810e45a5f2e1167d99e"
 EventSink = Optional[Callable[[dict], None]]
 
 

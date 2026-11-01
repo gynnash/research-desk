@@ -10,7 +10,6 @@ import subprocess
 import sys
 
 import researchdesk_automatic as automatic
-import researchdesk_offline as store
 import researchdesk_publish as publisher
 import researchdesk_runner as runner
 import researchdesk_workbench as workbench
