@@ -7,24 +7,15 @@ on:
   workflow_dispatch:
     inputs:
       operation:
-        description: Health, discovery, bounded real cycle, or admit an existing reviewed cycle
+        description: Check the deployment, collect originals, run Research/Insight, or catch up
         required: true
         default: health
         type: choice
-        options: [health, discover, run, admit, catchup]
+        options: [health, collect, run, catchup]
       cycle_id:
-        description: Reuse the same ID to resume; empty uses this GitHub run ID
+        description: Reuse an existing ID to resume; empty selects the scheduled or manual batch
         type: string
         default: ''
-      config:
-        description: Trusted research cycle YAML in this repository
-        type: string
-        default: config/cycles/default.yaml
-      fail_after:
-        description: Optional acceptance interruption; resume with none
-        type: choice
-        default: none
-        options: [none, after_research]
 
 permissions:
   contents: read
@@ -34,101 +25,55 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  plan:
-    if: github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    permissions:
-      contents: read
-    outputs:
-      cycle_id: ${{ steps.plan.outputs.cycle_id }}
-      cycle_config: ${{ steps.plan.outputs.cycle_config }}
-      operation: ${{ steps.plan.outputs.operation }}
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          ref: main
-          persist-credentials: false
-      - uses: actions/setup-python@v7
-        with:
-          python-version: '3.12'
-      - name: Install planning dependency
-        run: python -m pip install -r workflows/requirements.txt
-      - name: Select a stable due slot or an explicit manual operation
-        id: plan
-        env:
-          EVENT_NAME: ${{ github.event_name }}
-          REQUESTED_CYCLE_ID: ${{ inputs.cycle_id }}
-          REQUESTED_CONFIG: ${{ inputs.config }}
-          REQUESTED_OPERATION: ${{ inputs.operation }}
-        run: |
-          python scripts/researchdesk_schedule.py plan \
-            --event "$EVENT_NAME" --requested-cycle-id "$REQUESTED_CYCLE_ID" \
-            --requested-config "$REQUESTED_CONFIG" --requested-operation "$REQUESTED_OPERATION" \
-            --github-output "$GITHUB_OUTPUT"
-
-  analyze:
-    needs: plan
-    if: github.ref == 'refs/heads/main' && needs.plan.outputs.cycle_id != ''
+  research:
+    # Only start() sets this nonsecret opt-in flag; a new fork stays idle.
+    if: github.ref == 'refs/heads/main' && vars.RESEARCHDESK_DEPLOYED == 'true'
     runs-on: [self-hosted, researchdesk]
     timeout-minutes: 90
     defaults:
       run:
-        # The runner's Application Support path contains spaces.
         shell: 'bash --noprofile --norc -eo pipefail "{0}"'
     permissions:
       contents: read
     outputs:
       artifact_id: ${{ steps.artifact.outputs.artifact-id }}
     steps:
-      - uses: actions/checkout@v7
-        timeout-minutes: 3
+      - name: Check out trusted main code separately from the persistent workbench
+        uses: actions/checkout@v7
         with:
           ref: main
-          path: researchdesk-worker
-          clean: false
+          path: researchdesk-code
           persist-credentials: false
-      - name: Prepare isolated bootstrap environment
-        working-directory: researchdesk-worker
-        run: |
-          python3 -m venv "$RUNNER_TEMP/researchdesk-bootstrap-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
-          "$RUNNER_TEMP/researchdesk-bootstrap-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT/bin/python" -m pip install -r workflows/requirements.txt
-      - name: Run trusted main with configured external membership runtime
+      - name: Reload configuration and run the registered workbench
         id: cycle
-        working-directory: researchdesk-worker
         env:
-          OPERATION: ${{ needs.plan.outputs.operation }}
-          CYCLE_ID: ${{ needs.plan.outputs.cycle_id }}
-          CYCLE_CONFIG: ${{ needs.plan.outputs.cycle_config }}
-          FAIL_AFTER: ${{ inputs.fail_after }}
+          TRIGGER_EVENT: ${{ github.event_name }}
+          REQUESTED_OPERATION: ${{ inputs.operation || 'run' }}
+          REQUESTED_CYCLE_ID: ${{ inputs.cycle_id }}
         run: |
-          args=()
-          if [ "$FAIL_AFTER" = after_research ]; then args+=(--fail-after after_research); fi
-          "$RUNNER_TEMP/researchdesk-bootstrap-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT/bin/python" scripts/researchdesk_job.py execute \
-            --state "$RUNNER_TEMP/researchdesk-state-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT" \
-            --config "$CYCLE_CONFIG" --cycle-id "$CYCLE_ID" \
-            --operation "$OPERATION" "${args[@]}"
-      - name: Export safe checkpoints even after a research failure
-        if: always() && steps.cycle.outcome != 'skipped' && needs.plan.outputs.operation != 'health'
-        id: export
-        working-directory: researchdesk-worker
-        run: |
-          "$RUNNER_TEMP/researchdesk-bootstrap-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT/bin/python" scripts/researchdesk_job.py export \
-            --state "$RUNNER_TEMP/researchdesk-state-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT" \
-            --destination "$RUNNER_TEMP/researchdesk-export-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
-      - name: Preserve checkpoints and reviewed admission files
+          if [ -z "${RESEARCHDESK_RUNTIME_PYTHON:-}" ] || [ -z "${RESEARCHDESK_WORKBENCH_ROOT:-}" ]; then
+            echo 'Run python scripts/researchdesk_workbench.py start on this machine first.'
+            exit 1
+          fi
+          "$RESEARCHDESK_RUNTIME_PYTHON" researchdesk-code/scripts/researchdesk_deployment.py dispatch \
+            --source "$GITHUB_WORKSPACE/researchdesk-code" --base-commit "$(git -C researchdesk-code rev-parse HEAD)" \
+            --event "$TRIGGER_EVENT" --operation "$REQUESTED_OPERATION" \
+            --cycle-id "$REQUESTED_CYCLE_ID" \
+            --artifact "$RUNNER_TEMP/researchdesk-export-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT" \
+            --github-output "$GITHUB_OUTPUT"
+      - name: Preserve verifiable results and partial checkpoints
         id: artifact
-        if: always() && steps.export.outcome == 'success'
+        if: always() && steps.cycle.outputs.artifact_path != ''
         uses: actions/upload-artifact@v7
         with:
-          name: researchdesk-test-checkpoints
-          path: ${{ runner.temp }}/researchdesk-export-${{ github.run_id }}-${{ github.run_attempt }}/
+          name: researchdesk-checkpoints
+          path: ${{ steps.cycle.outputs.artifact_path }}/
           if-no-files-found: error
           retention-days: 14
 
   save-checkpoints:
-    needs: [plan, analyze]
-    if: always() && github.ref == 'refs/heads/main' && needs.analyze.outputs.artifact_id != '' && needs.plan.outputs.operation != 'health'
+    needs: research
+    if: always() && github.ref == 'refs/heads/main' && needs.research.outputs.artifact_id != ''
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
@@ -141,11 +86,11 @@ jobs:
       - uses: actions/setup-python@v7
         with:
           python-version: '3.12'
-      - name: Install validation dependency
-        run: python -m pip install -r workflows/requirements.txt
+      - name: Install offline verification dependencies
+        run: python -m pip install -r workflows/requirements-membership.txt
       - uses: actions/download-artifact@v8
         with:
-          name: researchdesk-test-checkpoints
-          path: ${{ runner.temp }}/researchdesk-test-checkpoints
-      - name: Validate and save reviewed files without overwriting existing notes
-        run: python scripts/researchdesk_job.py apply --artifact "$RUNNER_TEMP/researchdesk-test-checkpoints"
+          name: researchdesk-checkpoints
+          path: ${{ runner.temp }}/researchdesk-checkpoints
+      - name: Verify frozen evidence and add results without overwriting notes
+        run: python scripts/researchdesk_publish.py apply --artifact "$RUNNER_TEMP/researchdesk-checkpoints" --push

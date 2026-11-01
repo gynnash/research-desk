@@ -798,7 +798,8 @@ def _codex_summary(root, relative, topic, hashes):
             'coverage': candidate['evidence']['coverage'], '_identities': set(store.identities(metadata)) | {'source:' + source_id}}
 
 
-def prepare_codex_bundle(root, topic, cycle_id, as_of=None, lookback_days=180):
+def prepare_codex_bundle(root, topic, cycle_id, as_of=None, lookback_days=180,
+                         topics_file='config/research_topics.yaml'):
     """Prepare verified local originals/summaries, with no input or count cap.
 
     The caller freezes these exact bytes outside the vault. This function does
@@ -815,11 +816,11 @@ def prepare_codex_bundle(root, topic, cycle_id, as_of=None, lookback_days=180):
     if end is None:
         raise store.OfflineError('as_of 必须是明确日期')
     start = (date.fromisoformat(end) - timedelta(days=lookback_days)).isoformat()
-    topics_path = _relative(root, 'config/research_topics.yaml', '研究方向配置')
+    topics_path = _relative(root, topics_file, '研究方向配置')
     topics = store.load_yaml(topics_path).get('topics', {})
     if not isinstance(topics.get(topic), dict) or topics[topic].get('enabled') is False:
         raise store.OfflineError('研究方向不存在或已停用')
-    hashes = {'config/research_topics.yaml': store.digest(topics_path.read_bytes())}
+    hashes = {topics_path.relative_to(root).as_posix(): store.digest(topics_path.read_bytes())}
     current, historical, omitted = [], [], []
     directory = root / 'summary' / topic
     for path in sorted(directory.glob('*/*.md')):

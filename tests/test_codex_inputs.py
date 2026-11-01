@@ -66,6 +66,18 @@ class CodexInputs(unittest.TestCase):
         self.assertEqual(result['sources'][0]['role'], 'current')
         self.assertIn('没有可核实的相关历史', result['history_note'])
 
+    def test_explicit_topics_snapshot_is_used_instead_of_live_private_topics(self):
+        self.prepared()
+        relative = 'config/local/automation/first/topics.yaml'
+        snapshot = self.root / relative
+        snapshot.parent.mkdir(parents=True)
+        snapshot.write_bytes((self.root / 'config/research_topics.yaml').read_bytes())
+        (self.root / 'config/research_topics.yaml').write_text('schema_version: 1\ntopics: {}\n')
+        bundle = inputs.prepare_codex_bundle(self.root, 'agent_memory', 'first', topics_file=relative)
+        self.assertTrue(bundle['sources'])
+        self.assertIn(relative, bundle['input_hashes'])
+        self.assertNotIn('config/research_topics.yaml', bundle['input_hashes'])
+
     def test_historical_research_date_window_uses_saved_receipt_instead_of_file_mtime(self):
         self.prepared()
         result = self.bundle('next')

@@ -29,6 +29,7 @@ from researchdesk_membership import DEFAULT_PROFILE
 
 PROXY_NAMES = ('http_proxy', 'https_proxy', 'all_proxy', 'HTTP_PROXY', 'HTTPS_PROXY', 'ALL_PROXY',
                'no_proxy', 'NO_PROXY')
+DEPLOYMENT_NAMES = ('RESEARCHDESK_WORKBENCH_ROOT', 'RESEARCHDESK_RUNTIME_PYTHON')
 
 
 class RunnerError(RuntimeError):
@@ -269,11 +270,10 @@ def _proxy_environment_configured(directory):
                for name, separator, value in (line.partition('='),) if separator)
 
 
-def _sync_proxy_environment(directory):
-    """Persist only explicitly supplied proxy keys; preserve absent keys."""
-    selected = {name: os.environ[name] for name in PROXY_NAMES if name in os.environ}
+def _sync_environment(directory, selected):
+    """Persist an explicit allowlist, retaining unrelated runner settings."""
     if any(any(char in value for char in '\r\n\x00') for value in selected.values()):
-        raise RunnerError('runner_proxy_environment_invalid')
+        raise RunnerError('runner_environment_value_invalid')
     original = _runner_environment(directory)
     if not selected:
         return False
@@ -296,6 +296,8 @@ def _sync_proxy_environment(directory):
     lines += [name + '=' + selected[name] + '\n' for name in missing]
     updated = ''.join(lines)
     if updated == original:
+        # The runner's first-created dotenv may have a permissive umask.
+        os.chmod(directory / '.env', 0o600, follow_symlinks=False)
         return False
     descriptor, temporary = tempfile.mkstemp(prefix='.researchdesk-proxy-', dir=str(directory))
     try:
@@ -311,6 +313,25 @@ def _sync_proxy_environment(directory):
         if os.path.exists(temporary):
             os.unlink(temporary)
     return True
+
+
+def _sync_proxy_environment(directory):
+    """Persist only explicitly supplied proxy keys; preserve absent keys."""
+    selected = {name: os.environ[name] for name in PROXY_NAMES if name in os.environ}
+    return _sync_environment(directory, selected)
+
+
+def _sync_deployment_environment(root, config):
+    """Bind one runner to one persistent workbench, never its ephemeral clone."""
+    directory = config['_directory']
+    selected = {DEPLOYMENT_NAMES[0]: str(Path(root).resolve()),
+                DEPLOYMENT_NAMES[1]: str(config['_venv'] / 'bin/python')}
+    existing = _runner_environment(directory) or ''
+    for line in existing.splitlines():
+        name, separator, value = line.partition('=')
+        if separator and name == DEPLOYMENT_NAMES[0] and value != selected[name]:
+            raise RunnerError('runner_workbench_binding_mismatch')
+    return _sync_environment(directory, selected)
 
 
 def doctor(root, config):
@@ -337,11 +358,11 @@ def doctor(root, config):
                       'curl': shutil.which('curl') is not None}, 'model_calls': 0}
 
 
-def setup(root, config):
+def setup(root, config, pre_start=None):
     """Install/register/start on this host; caller authorizes host mutations."""
     root = Path(root).resolve()
-    if sys.version_info < (3, 9):
-        raise RunnerError('python_3_9_or_newer_required')
+    if sys.version_info < (3, 10):
+        raise RunnerError('python_3_10_or_newer_required_for_codex')
     if os.getuid() == 0:
         raise RunnerError('run_setup_as_normal_user_not_root')
     if any(shutil.which(tool) is None for tool in ('git', 'gh', 'curl', 'tar')):
@@ -354,7 +375,7 @@ def setup(root, config):
     if not (venv / 'pyvenv.cfg').is_file():
         _run([sys.executable, '-m', 'venv', str(venv)], root, 'runtime_venv_creation_failed')
     _run([str(venv / 'bin/python'), '-m', 'pip', 'install', '--disable-pip-version-check',
-          '-r', str(root / 'workflows/requirements-membership.txt')], root,
+          '-r', str(root / 'workflows/requirements-codex.txt')], root,
          'runtime_dependencies_install_failed', timeout=600)
     _install_package(root, config, system, architecture)
     registration = directory / '.runner'
@@ -380,10 +401,15 @@ def setup(root, config):
             environment.pop('ACTIONS_RUNNER_INPUT_TOKEN', None)
             result.clear()
             token = None
-    proxy_changed = _sync_proxy_environment(directory)
+    environment_changed = _sync_proxy_environment(directory)
+    environment_changed = _sync_deployment_environment(root, config) or environment_changed
+    # Startup may require an additional SDK metadata check in the configured
+    # environment. Complete it before starting a newly registered service.
+    if pre_start is not None:
+        pre_start()
     state = _service_state(directory)
     service_prefix = [] if system == 'osx' else ['sudo', '-n']
-    if proxy_changed and state == 'running':
+    if environment_changed and state == 'running':
         _run(service_prefix + ['./svc.sh', 'stop'], directory, 'runner_service_stop_failed')
         state = 'stopped'
     if state == 'not_installed':

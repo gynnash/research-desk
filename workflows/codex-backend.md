@@ -272,7 +272,7 @@ articles/<topic>/<cycle>/topic-N.md
 
 首个闭环只导出到 `insights/test/<topic>/<cycle>/`、`articles/test/<topic>/<cycle>/`，脱敏证明沿用 `reports/test/<topic>/` 内部记录。正式路径仅是后续准入目标。当前不搬迁、删除或重写旧记录，也不新增研究成果。
 
-GitHub Actions 保留触发和结果回存框架；授权与 Codex 使用用户自己的执行主机。个人配置不进入 Git；hosted plan 缺少本地调度配置时跳过，不能只开启 Mac 的本地开关就声称远程调度可用。受信任配置交付尚需另行部署，本次不实现或启用。Git 凭据不进入模型工具环境，回存使用允许路径清单。GitHub 与 Obsidian 共享 Markdown；runtime 会话、凭据和原始事件不进入 Vault。
+GitHub Actions 保留触发和结果回存框架；授权与 Codex 使用用户自己的执行主机。个人配置不进入 Git；执行 `python scripts/researchdesk_workbench.py start` 后，计划与执行在绑定的持久 Mac 工作台中加载两层配置。GitHub 使用非敏感部署开关派发，独立回存 job 验证公开证据和产物后保存。Git 凭据不进入模型工具环境，回存使用允许路径清单。GitHub 与 Obsidian 共享 Markdown；runtime 会话、凭据和原始事件不进入 Vault。
 
 ## 10. 实施顺序与验收
 

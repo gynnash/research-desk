@@ -25,6 +25,26 @@ python3 -B scripts/researchdesk_workbench.py check
 
 初始化只准备本地文件，不登录、不调用模型、不安装或启动 runner、不启用定时任务，不创建提交或推送。两层合并后的默认 `automation.enabled` 和 `admission.enabled` 均为 `false`；不会触发研究、写作或公众号发布。
 
+## 授权后，一条命令注册并启动
+
+新版定时执行当前使用 Mac。准备 Python 3.12、GitHub CLI 和本人仓库的管理权限，在执行机器完成 ChatGPT 与 GitHub 授权：
+
+```sh
+python scripts/researchdesk_membership.py login
+python scripts/researchdesk_membership.py models
+gh auth login
+```
+
+填好本地模型、主题和预算后，需要自动研究的用户在同一 YAML 设置 `automation.enabled: true`，再运行：
+
+```sh
+python scripts/researchdesk_workbench.py start
+```
+
+命令自动应用配置、校验现有授权、安装 `runtime.python.venv` 需要的 SDK 依赖、注册并启动 runner。它不会推理，也不擅自打开自动研究开关；保留默认 `false` 时只启动执行服务，不自动研究。
+
+成功后仅向当前 GitHub 仓库设置非敏感 Actions Variable `RESEARCHDESK_DEPLOYED=true`，作为新仓库的部署入口开关；个人配置、路径和凭据仍留在本机。runner 绑定当前持久工作台，重复启动不搬迁或清空资料、去重及调用记录。部署细节见[执行器说明](self-hosted-worker.md)。
+
 ## 已有工作台
 
 仍使用旧的分散兼容配置、尚无本地统一 YAML 时：
@@ -41,7 +61,7 @@ python3 -B scripts/researchdesk_workbench.py migrate
 python3 -B scripts/researchdesk_workbench.py check
 ```
 
-`migrate` 先将完整本地 YAML 备份为 `config/local/workbench.before-layers.yaml`，再压缩为相对系统默认的差异，保留当前有效设置；旧配置缺少的默认来源会记录为禁用，避免迁移意外加入来源。备份同样不提交 Git。已有兼容文件保持原字节，人工笔记、原文和研究结果不改，去重状态、历史用量和实际请求账本不清空。以后只编辑差异配置并执行 `apply`。
+`migrate` 先将完整本地 YAML 备份为 `config/local/workbench.before-layers.yaml`，再压缩为相对系统默认的差异，保留当前有效设置；旧配置缺少的默认来源会记录为禁用，避免迁移意外加入来源。备份同样不提交 Git。已有兼容文件保持原字节，人工笔记、原文和研究结果不改，去重状态、历史用量和实际请求账本不清空。以后只编辑差异配置；已部署的定时入口会在下一轮自动应用。
 
 配置停止 Git 跟踪后，本机原文件仍在。此次不改写 Git 历史，因此此前已提交的非密钥设置仍可从旧提交查到。OAuth 凭据保持原来的仓库外存储位置，初始化不会读取、复制或重置凭据内容。
 
@@ -99,7 +119,7 @@ research:
 | `writing_style` | 本人写作偏好 | `config/writing_style.md` |
 | `admission`、`writing_admission` | 研究与稿件准入规则 | 对应的准入 YAML |
 
-编辑 `config/local/workbench.yaml` 后运行：
+需要立即检查本地修改，或使用独立手动研究入口时，可运行：
 
 ```sh
 python3 -B scripts/researchdesk_workbench.py apply
@@ -107,6 +127,10 @@ python3 -B scripts/researchdesk_workbench.py check
 ```
 
 `apply` 加载两层配置，合并并校验后更新兼容配置。`check` 检查两层配置及已应用结果，不修改工作台文件，不登录、不调用模型、不修改 Git。直接手改兼容文件会造成配置分歧，工具会停止并保留文件；先将修改合入用户覆盖，再按提示处理。预算归档和去重状态属于运行状态，继续保存在本地 `config/research_state.yaml`，不放进公共模板或个人配置副本。
+
+已注册的定时任务每轮自动执行合并和应用，无需手工重复这两个命令。本地系统文件有手工修改时保留该版本；未手改时，从 GitHub 最新 `main` 同步系统配置，再合并当前本地用户文件。主题、模型、来源、预算与开关在下一轮生效，不覆盖人工笔记或用户配置。
+
+运行中的批次继续使用固定快照。旧批次尚未完成、当前配置却已改变时，会明确阻塞并保留检查点；恢复原配置再补跑，或在新批次使用新配置，不能混用。基础 venv、runner 注册名称、标签或安装目录变化需要重跑 `start`；这些属于部署设置，普通研究参数无需重启。
 
 旧操作文档里的 `config/research_topics.yaml`、`config/cycles/default.yaml` 等路径仍供执行器读取。将其中的“编辑配置”理解为编辑本地统一 YAML 的对应部分，再执行 `apply`，不要维护两份设置。独立采集与 Research 的默认读取路径不变。
 
@@ -122,7 +146,9 @@ python3 -B scripts/researchdesk_harness.py preflight --config config/local/codex
 
 GitHub 保存框架、模板和研究资料。`config/local/`、生成配置、`config/research_state.yaml`、`reports/test/*/codex-requests/` 和 `reports/test/*/codex-sdk-smoke/` 不提交。后两类文件仍在本地参与用量核算或验收追溯，不应为了“清洁工作台”而删除当前真实记录。
 
-CI 从系统默认和短用户模板初始化通用配置，再执行离线检查，不需要维护者的本地配置或会员授权。运行主机需要自行初始化、配置和授权；本机修改不会通过 Git 自动送到远程 runner。云端缺少个人配置时保持安全关闭；如以后部署定时运行，需要另外设计并配置受信任的配置交付，本次不启用它。
+CI 从系统默认和短用户模板初始化通用配置，再执行离线检查，不需要维护者的本地配置或会员授权。定时任务由 GitHub 派发，在绑定的 Mac 工作台直接读取本人配置和会员授权；无需将私人 YAML 交给云端。回存包含原文和逐篇总结，以及测试区的 SDK Insight 和选题，不自动 Writing、正式晋级或发布。
+
+注册启动、每轮配置更新及新版回存均有离线验收；本次开发未实际执行 `start`、启用线上部署变量或新增会员调用。首次真实部署由用户在自己的机器执行。
 
 Obsidian 继续阅读同一份 Markdown。`.gitignore` 只控制 Git，不能决定 Obsidian Sync 是否同步本地配置；手机只阅读资料时无需运行初始化或复制会员凭据。不要把本地配置误当成 GitHub 与手机必须一致的研究内容。
 

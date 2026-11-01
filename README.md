@@ -12,10 +12,10 @@ ResearchDesk 是一套可配置的三 Agent 研究工作台框架：采集公开
 
 ## 快速开始
 
-1. 准备 Python（推荐 3.12）、Git 和 GitHub CLI，安装依赖：
+1. 将代码放入自己的 GitHub 仓库并克隆到本机。准备 Python 3.12、Git 和 GitHub CLI，安装初始化工具依赖：
 
    ```sh
-   python3 -m venv .venv-membership
+   python3.12 -m venv .venv-membership
    .venv-membership/bin/python -m pip install -r workflows/requirements-membership.txt
    ```
 
@@ -27,15 +27,32 @@ ResearchDesk 是一套可配置的三 Agent 研究工作台框架：采集公开
 
    这会把短模板复制到被 Git 忽略的 `config/local/workbench.yaml`，与公共[系统默认](config/system.yaml)合并，生成旧入口需要的兼容配置。已有旧兼容配置用 `init --adopt-existing` 导入；已有上一版完整本地 YAML 用 `migrate` 备份并压缩为差异配置。两者都保留资料、去重状态和实际用量。
 
-3. 只编辑本地 `config/local/workbench.yaml`，写需要覆盖的设置即可。常用的 `topic`、`models.generation`、`models.review`、`models.writing` 会联动相应阶段，默认主题为 `agent_memory`。需要调整来源或某一阶段时，按 `config/system.yaml` 的相同路径写局部覆盖；显式阶段设置优先于快捷项。修改后应用并检查：
+3. 完成本机 ChatGPT 和 GitHub 授权：
 
    ```sh
-   .venv-membership/bin/python -B scripts/researchdesk_workbench.py apply
-   .venv-membership/bin/python -B scripts/researchdesk_workbench.py check
+   .venv-membership/bin/python scripts/researchdesk_membership.py login
+   .venv-membership/bin/python scripts/researchdesk_membership.py models
+   gh auth login
    ```
 
-4. 按[会员授权说明](workflows/local-membership-analysis.md)完成自己的官方登录，核实账户可用模型，再选择不同的生成与审阅模型。模板里的模型名只是示例；凭据继续留在仓库之外，不写入配置 YAML。
-5. 按[初始化说明](workflows/workbench-init.md)和[执行器说明](workflows/self-hosted-worker.md)准备自己的运行主机。**模板默认关闭自动研究和正式研究准入**；初始化不登录、不调用模型、不安装 runner、不启用定时任务，也不修改 Git。GitHub 上保留模板和框架，个人配置由各自机器本地管理。
+   用户亲自在浏览器完成会员授权；模型以本人账户实际返回为准，生成与独立审阅选择不同模型。GitHub 账号需有自己仓库的 runner 管理权限。凭据留在仓库之外，不写入 YAML。
+
+4. 编辑本地 `config/local/workbench.yaml`：设置 `workbench_id`、`topic`、`models`、来源和预算。需要每周二、周五北京时间 03:00 自动研究时，合并以下设置：
+
+   ```yaml
+   automation:
+     enabled: true
+   ```
+
+   模板默认仍为 `false`；保留该值可以先注册执行器而不自动研究。其他设置继承[系统默认](config/system.yaml)，显式阶段设置优先于主题和模型快捷项。
+
+5. 一条命令应用配置、校验授权、安装外部 SDK 环境并注册启动执行器：
+
+   ```sh
+   .venv-membership/bin/python scripts/researchdesk_workbench.py start
+   ```
+
+   当前新版 SDK 调度范围为 macOS。`start` 不进行推理，也不擅自修改研究开关；它会给自己的 GitHub 仓库设置非敏感变量 `RESEARCHDESK_DEPLOYED=true`。执行器绑定当前持久工作台，后续每轮自动重新加载两层配置，普通研究参数无需再次 `apply` 或重启。详细步骤见[初始化说明](workflows/workbench-init.md)和[执行器说明](workflows/self-hosted-worker.md)。
 
 系统默认维护内置来源、SDK 和较少调整的参数；用户配置只保留本人差异。来源按 `id` 合并，可添加 RSS，或用 `enabled: false` 禁用某个默认来源。具体例子与合并规则见[配置说明](workflows/workbench-init.md)。
 
@@ -43,7 +60,7 @@ ResearchDesk 是一套可配置的三 Agent 研究工作台框架：采集公开
 
 先使用[独立采集入口](workflows/collection.md)把完整原文保存到 `collection/<主题>/`，不需要会员登录；再用 [Research 入口](workflows/research.md)对同一批次逐篇分析，审阅通过后把详细总结保存到 `summary/<主题>/`。此入口不自动执行 Insight 或 Writing。
 
-[Codex 后端](workflows/codex-backend.md)已在 Mac 接通官方 SDK 和本人 ChatGPT 会员授权，复用固定原文与历史总结，只做内容准确性审阅；逐次推理请求与旧后端共用预算。可以运行 `python3 -B scripts/researchdesk_harness.py offline-demo` 零调用验证流程，或按[运行说明](workflows/README.md)安装独立 SDK 环境后显式运行。已通过的小额真实验收只读取本地测试材料，不代表完成论文研究；默认旧入口与自动开关保持不变。
+[Codex 后端](workflows/codex-backend.md)在 Mac 使用官方 SDK 和用户自己的 ChatGPT 会员授权，复用固定原文与历史总结，只做内容准确性审阅；逐次推理请求与旧后端共用预算。新版 Actions 串联采集、逐篇 Research 和 Codex Insight，回存原文、总结及测试区的洞察和选题；不自动启动 Writing、正式晋级或发布公众号。可运行 `python3 -B scripts/researchdesk_harness.py offline-demo` 零调用验证流程。本次部署衔接使用离线验收，未替用户执行真实 `start` 或新增会员调用；此前小额真实 SDK 验收读取的是本地测试材料，不代表论文研究验收。
 
 ## 框架目录
 
@@ -57,7 +74,7 @@ ResearchDesk 是一套可配置的三 Agent 研究工作台框架：采集公开
 | `collection/<主题>/`   | 采集到的论文和博客原文，按批次保存                     |
 | `summary/<主题>/`      | Research 独立审阅通过的逐篇详细总结                |
 
-新采集与逐篇研究使用上述两个资料入口。已有三 Agent 全轮次及正式准入保留兼容：`reports/` 保存内部运行记录与原有正式报告，`insights/` 保存洞察，`articles/` 保存选题和稿件；本次不自动运行这些后续阶段或迁移旧资料。Obsidian 打开同一仓库即可看到新目录。
+新采集与逐篇研究使用上述两个资料入口。新版调度的综合洞察在 `insights/test/<主题>/<批次>/`，待确认选题在 `articles/test/<主题>/<批次>/`；`reports/test/<主题>/` 保留研究与审阅证明。已有三 Agent 全轮次及正式准入保持兼容，旧资料不自动迁移。Obsidian 打开同一工作台即可阅读 Markdown。
 
 当前框架支持 arXiv、Letta、LangChain、Hugging Face Blog、美团技术团队和阮一峰博客等公开来源适配器；来源和研究范围由 YAML 配置。[知乎官方 API](workflows/zhihu-api.md)提供独立额度查询与搜索候选验证入口，搜索摘要尚未接入全文研究。X、Reddit、Quora 未接入。关注度排序只反映实际扫描和可观测信号。
 

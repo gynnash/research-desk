@@ -3,9 +3,11 @@
 
 import argparse
 from copy import deepcopy
+from datetime import datetime, timezone
 import hashlib
 import json
 import os
+import platform
 from pathlib import Path
 import re
 import sys
@@ -169,13 +171,13 @@ def load_effective(root, overrides=None):
     defaults = _defaults(root)
     # Validate source IDs in both layers, including an unmodified defaults list.
     _sources(defaults['research']['discovery']['sources'])
-    result = merge_config(defaults, _expand_shortcuts(user))
     if _legacy_complete(user):
         # Previous releases stored an entire source list. It was an explicit
-        # selection, so newly inherited defaults must not revive removed IDs.
-        result['research']['discovery']['sources'] = list(
-            _sources(user['research']['discovery']['sources']).values())
-    return result
+        # selection, including absent optional features such as attention.
+        # Inheriting them here would change a frozen legacy configuration.
+        _sources(user['research']['discovery']['sources'])
+        return deepcopy(user)
+    return merge_config(defaults, _expand_shortcuts(user))
 
 
 def _difference(system, effective, path=()):
@@ -396,6 +398,74 @@ def _initialize_storage(root, value):
             target.mkdir(parents=True, exist_ok=True)
 
 
+def start(root):
+    """Register/start this host after the user has completed both sign-ins.
+
+    This command never signs in, performs inference, changes the operator's
+    research switch, or relocates existing research and membership records.
+    """
+    import researchdesk_runner as runner
+    from researchdesk_membership import MembershipClient
+
+    root = Path(root).resolve()
+    apply(root)
+    if platform.system() != 'Darwin':
+        raise store.OfflineError('one_command_start_requires_macos_for_codex')
+    config = runner.load_config(root)
+    if 'researchdesk' not in config['runner']['labels']:
+        raise store.OfflineError('runner_requires_researchdesk_label')
+    effective = load_effective(root)
+    client = MembershipClient(config['_profile'], root)
+    authorization = client.status()
+    if authorization.get('authenticated') is not True or authorization.get('plan_permission') is not True:
+        raise store.OfflineError('chatgpt_login_and_plan_permission_required')
+    catalog = client.models()
+    selected = set(effective['research']['models'].values()) | set(effective['insight']['models'].values())
+    selected |= set(effective['confirmation']['writing']['models'].values())
+    if not selected.issubset({entry['slug'] for entry in catalog}):
+        raise store.OfflineError('configured_models_unavailable_for_current_account')
+    runner._run(['gh', 'auth', 'status', '--hostname', 'github.com'], root, 'github_login_required')
+    repository = runner._repository(root)
+    metadata = runner._api(root, 'repos/' + repository)
+    if metadata.get('permissions', {}).get('admin') is not True:
+        raise store.OfflineError('github_repository_runner_admin_permission_required')
+
+    def sdk_preflight():
+        result = runner._run([
+            str(config['_venv'] / 'bin/python'), str(root / 'scripts/researchdesk_harness.py'),
+            'preflight', '--root', str(root), '--config', GENERATED_FILES['insight']],
+            root, 'configured_codex_preflight_failed')
+        try:
+            status = yaml.safe_load(result.stdout)
+        except yaml.YAMLError:
+            raise runner.RunnerError('configured_codex_preflight_invalid') from None
+        if not isinstance(status, dict) or status.get('live_ready') is not True:
+            raise runner.RunnerError('configured_codex_runtime_not_ready')
+
+    result = runner.setup(root, config, pre_start=sdk_preflight)
+    if result['runner'].get('registered') is not True or result['runner'].get('service') != 'running':
+        raise runner.RunnerError('runner_service_not_ready')
+    # A fresh fork must not queue unattended jobs before an execution host is
+    # ready. The sole remote deployment value is this non-sensitive boolean;
+    # neither local configuration nor credential/path data leaves this host.
+    runner._run(['gh', 'variable', 'set', 'RESEARCHDESK_DEPLOYED', '--repo', repository,
+                 '--body', 'true'], root, 'github_deployment_gate_activation_failed')
+    # The first successful deployment begins the catch-up horizon. A shared
+    # template's historic activated_at must not spend calls on pre-install slots.
+    started = _path(root, 'config/local/deployment-started-at.json')
+    if not started.exists():
+        descriptor = os.open(started, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
+        with os.fdopen(descriptor, 'w', encoding='utf-8') as handle:
+            json.dump({'started_at': datetime.now(timezone.utc).isoformat()}, handle)
+    return {'status': 'started', 'runner': result['runner'],
+            'config': LOCAL_CONFIG, 'system_config': SYSTEM_CONFIG,
+            'research_enabled': effective['automation']['enabled'],
+            'schedule_utc': effective['automation']['schedule_utc'],
+            'configuration_reload': 'before_each_run',
+            'github_deployment_gate': True,
+            'workbench_binding': 'persistent_current_directory', 'model_calls': 0}
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--root', type=Path, default=REPOSITORY)
@@ -404,16 +474,26 @@ def main(argv=None):
     commands.add_parser('apply')
     commands.add_parser('check')
     commands.add_parser('migrate')
+    commands.add_parser('start')
     args = parser.parse_args(argv)
     try:
         if args.operation == 'init':
             result = initialize(args.root, args.adopt_existing)
         elif args.operation == 'migrate':
             result = migrate(args.root)
+        elif args.operation == 'start':
+            result = start(args.root)
         else:
             result = apply(args.root, check_only=args.operation == 'check')
     except (store.OfflineError, OSError, ValueError, KeyError, TypeError) as exc:
         print('工作台配置停止：' + str(exc), file=sys.stderr)
+        return 2
+    except Exception as exc:
+        # Network/provider or process failures can contain account data. Runner
+        # errors deliberately expose fixed codes only; all other details stay local.
+        import researchdesk_runner as runner
+        message = str(exc) if isinstance(exc, runner.RunnerError) else 'workbench_start_failed'
+        print('工作台启动停止：' + message, file=sys.stderr)
         return 2
     print(json.dumps(result, ensure_ascii=False))
     return 0

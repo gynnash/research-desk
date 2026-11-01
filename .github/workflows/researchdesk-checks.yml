@@ -35,6 +35,8 @@ jobs:
           python scripts/researchdesk_workbench.py init
           python scripts/researchdesk_workbench.py check
           PYTHONPATH=tests python -m unittest test_workbench test_layered_config -v
+      - name: Check one-command deployment, configuration reload and scheduled result transfer offline
+        run: PYTHONPATH=tests python -m unittest test_workbench_start test_deployment test_automatic test_scheduled_publish -v
       - name: Validate knowledge base and test isolation
         run: python workflows/validate.py --include-test
       - name: Check explicitly retired historical notes

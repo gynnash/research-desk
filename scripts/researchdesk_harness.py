@@ -427,7 +427,8 @@ def run(root, config_path, cycle_id, backend=None, state_root=None, fail_after=N
     bundle = None
     if not path.exists():
         bundle = prepare_codex_bundle(root, config['topic'], cycle_id,
-            lookback_days=config.get('history', {}).get('lookback_days', 180))
+            lookback_days=config.get('history', {}).get('lookback_days', 180),
+            topics_file=config.get('topics_file', 'config/research_topics.yaml'))
         if not any(s['role'] == 'current' for s in bundle['sources']):
             return {'status': 'empty', 'cycle_id': cycle_id, 'model_request_count': 0,
                     'writing_started': False, 'outputs': []}
@@ -437,7 +438,8 @@ def run(root, config_path, cycle_id, backend=None, state_root=None, fail_after=N
             bundle = _frozen_bundle(directory, state)
         elif bundle is None:
             bundle = prepare_codex_bundle(root, config['topic'], cycle_id,
-                lookback_days=config.get('history', {}).get('lookback_days', 180))
+                lookback_days=config.get('history', {}).get('lookback_days', 180),
+                topics_file=config.get('topics_file', 'config/research_topics.yaml'))
         if bundle.get('topic') != config['topic'] or bundle.get('cycle_id') != cycle_id:
             raise store.OfflineError('资料集合不属于当前主题/批次')
         _verify_inputs(root, bundle)
@@ -532,7 +534,13 @@ def run(root, config_path, cycle_id, backend=None, state_root=None, fail_after=N
         except store.OfflineError:
             return result('conflict')
         status = 'no_insight' if not state['candidate']['insights'] else 'complete'
+        final_generation = state['tasks'].get('revision', state['tasks']['generation'])
+        final_review_task = state['tasks'].get('review_revision', state['tasks']['review'])
+        model_evidence = {role: {key: task.get('result', {}).get(key)
+                                for key in ('requested_model', 'observed_model')}
+                          for role, task in [('generation', final_generation), ('review', final_review_task)]}
         receipt = result(status, input_hashes=bundle['input_hashes'], output_hashes=plan,
+                         models=model_evidence,
             review_policy='accuracy_only', review_decision='pass', outputs=list(plan),
             config_fingerprint=fingerprint)
         receipt_path = 'reports/test/%s/codex-insight/%s/accepted.yaml' % (config['topic'], cycle_id)

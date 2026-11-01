@@ -30,6 +30,11 @@ research:
 membership_budget:
   month_max_calls: 100
 
+# Set true before start() to enable Tuesday/Friday 03:00 Asia/Shanghai research.
+# Later edits are reloaded automatically at the beginning of the next run.
+automation:
+  enabled: false
+
 # Advanced overrides use the same paths as config/system.yaml.
 # Example: confirmation.writing.models.review overrides models.review for Writing.
 # runtime:

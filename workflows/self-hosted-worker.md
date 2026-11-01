@@ -1,38 +1,64 @@
-# 自托管执行器
+# 一条命令部署自托管执行器
 
-GitHub Actions 负责派发、离线校验和结果回存；会员推理在用户选择的 Mac 或远程主机执行。runner、Python 环境与授权目录位于仓库及 Obsidian Vault 外。
+GitHub Actions 按时派发任务；用户自己的 Mac 执行采集、逐篇 Research 和 Codex Insight。runner、SDK 环境与会员凭据位于仓库及 Obsidian Vault 之外，研究与用量保存在同一个持久工作台中。新版 SDK 当前支持 macOS；远程部署应在目标 Mac 上执行同一流程，自行完成该机器的授权。
 
-## 本地或远程部署
+## 首次部署
 
-先按[初始化说明](workbench-init.md)建立本地 `config/local/workbench.yaml`，完成[会员授权](local-membership-analysis.md)，在统一 YAML 的 `runtime` 部分配置路径、runner 标签与会员 profile，再执行 `python3 -B scripts/researchdesk_workbench.py apply`。`config/runtime.yaml` 是生成的本地兼容文件，不另行编辑。远程主机可参考[字段示例](../config/examples/runtime-remote.yaml)，自行在该主机初始化与登录，不复制其他主机令牌。
-
-```sh
-.venv-membership/bin/python scripts/researchdesk_runner.py doctor
-.venv-membership/bin/python scripts/researchdesk_runner.py setup
-```
-
-`doctor` 检查环境，不调用模型；`setup` 安装依赖、校验 runner 下载散列、注册并启动服务。Mac 使用当前用户 LaunchAgent；Linux 服务安装需要预先安排相应权限。运行主机需要 Python 3.9+、Git、GitHub CLI、curl/tar 及自己仓库的 runner 管理权限。
-
-配置代理时，setup 可将显式代理变量保存在仓库外 runner 环境中；修改后需重启服务。执行器状态以自己的 GitHub runner 页面为准。
-
-以下 `health` 命令仅是已部署环境示例。除了 runner 与授权，还需要向 hosted plan 和执行主机交付受信任配置；本地个人 YAML 不通过 Git 同步，本次不新增该交付机制。
+准备 Python 3.12、Git、GitHub CLI、curl/tar，以及自己仓库的 runner 管理权限。在自己的仓库根目录安装初始化依赖，执行 `workbench init` 建立本地配置，然后完成两项授权：
 
 ```sh
-gh workflow run researchdesk-manual.yml --ref main -f operation=health -f config=config/cycles/default.yaml
+python scripts/researchdesk_membership.py login
+python scripts/researchdesk_membership.py models
+gh auth login
 ```
 
-健康检查不进行推理。任务排队时检查机器、网络、runner 服务及用户会话。一次成功不能保证休眠、关机或断网时仍可运行。
+这里的 `python` 应来自已安装项目依赖的环境。模型以本人账户返回为准；会员授权不借用浏览器、Codex 或其他应用的令牌。详情见[会员授权](local-membership-analysis.md)和[初始化说明](workbench-init.md)。
 
-## 可选调度
+编辑 `config/local/workbench.yaml` 的模型、研究主题与预算。需要自动研究时，在同一文件中设置：
 
-统一 YAML 的 `automation.enabled` 默认停用自动研究。[研究 workflow](../.github/workflows/researchdesk-manual.yml) 保留每周二、周五北京时间 03:00 的时间槽。hosted plan 缺少本地调度配置时会跳过；仅修改当前 Mac 的开关不会完成 GitHub 调度部署。需先准备受信任配置交付、核实执行主机配置和手动验证，再决定是否启用。本次初始化不部署或启用定时任务。
+```yaml
+automation:
+  enabled: true
+```
 
-周期 ID 使用 `<topic>-YYYYMMDD-0300`，迟到与补跑复用相同 ID、固定输入、检查点和请求账本。补跑范围由 YAML 配置；已准入、无新资料或终结决定不重复研究。已完成但保存失败时恢复保存或准入，不另起轮次重做。
+模板默认 `false`。随后执行：
 
-## 保存与权限
+```sh
+python scripts/researchdesk_workbench.py start
+```
 
-分析 job 使用只读 GitHub token，会员授权留在主机外部目录。独立保存 job 复核白名单、绑定散列和审阅结果后，才取得写权限新增文件并普通推送。Research、Insight、Writing 共用串行队列，避免同一部署重复调用。
+`start` 自动应用两层配置，检查本机会员授权、配置模型和 GitHub 权限，将 Codex SDK 依赖安装到 `runtime.python.venv`，下载并核对官方 runner 包，注册执行机器并启动用户服务。Mac 使用当前用户 LaunchAgent，按普通用户执行，无需 `sudo`。
 
-失败后保留原始响应、调用预留和可恢复现场。结果未知时停止，不盲目重发。模型不能自由选择文件路径；人工修改冲突时保留文件并停止覆盖，不强推。
+注册和 SDK 预检成功、服务实际运行后，命令才在当前仓库设置 Actions Variable `RESEARCHDESK_DEPLOYED=true`。Actions Variable 只保存这个布尔值；个人 YAML、会员凭据与本机路径不写入 GitHub 变量。新下载或 fork 的仓库没有该变量时，定时执行不会排队等待未注册的机器。
 
-只运行自己信任的 `main`，不在个人主机执行不可信 PR 或 fork 代码。开源用户使用自己的仓库、主机、授权与配置。可选 Obsidian 同步只处理 Markdown 文件，不代替 Git 拉取，也不复制凭据。
+命令不擅自修改 `automation.enabled`。设置为 `false` 时可以完成 runner 注册并启动服务，后续研究仍跳过；改成 `true` 后，下一次定时任务重新读取该设置。重复 `start` 不清空用量、去重或检查点，也不重新计算首次部署时间。执行器状态可在仓库的 `Settings → Actions → Runners` 查看。
+
+## 工作台与配置更新
+
+执行器绑定运行 `start` 时的当前工作台目录，不在每次任务中创建新的资料库。仓库外 runner 的 `.env` 只保存工作台和运行解释器指针，以及用户明确提供的代理设置。模型工具不读取这些部署文件。
+
+每轮开始时，调度入口重新加载 `config/local/workbench.yaml` 与 `config/system.yaml`，合并、校验并应用。主题、模型、采集来源、窗口、预算和自动开关等普通研究参数，修改后无需再手工 `apply` 或重启。
+
+本地手改过的 `config/system.yaml` 保留并使用；未手改时，调度入口从 GitHub 最新 `main` 同步系统配置。同步不覆盖用户文件、人工笔记或历史用量。更换基础 venv、runner 注册名称、标签或安装路径属于部署变更，需要重新执行 `start`；已有注册不匹配时明确停止，保留旧执行器。
+
+运行中的批次固定使用开始时的配置和证据快照。失败后使用原批次及检查点恢复；若新配置与未完成批次不一致，会保留现场并阻塞，避免将旧调用和新参数混用。可恢复原设置后继续，或在明确的新批次使用新配置。
+
+## 定时与手动检查
+
+[研究 workflow](../.github/workflows/researchdesk-manual.yml) 的默认时间为每周二、周五北京时间 03:00。任务在 Mac 上读取本人配置和授权，使用 `<topic>-YYYYMMDD-0300` 稳定批次 ID；首次部署时间限定补跑起点，已完成或无新资料的轮次不重复研究。如需重新指定启用起点，可以在用户配置设置带时区的 `automation.activated_at`。
+
+部署完成后，可先手动派发健康检查：
+
+```sh
+gh workflow run researchdesk-manual.yml --ref main -f operation=health
+```
+
+健康检查不推理。真实 `run` 会消耗会员请求；`collect` 只采集原文。任务排队时检查机器在线、网络、runner 服务和用户会话。Mac 休眠、关机或断网时不能立即执行；GitHub 定时也可能延迟。
+
+## 结果保存与边界
+
+新版执行顺序为采集原文、逐篇 Research、独立审阅、Codex Insight 及独立审阅。采集原文与审阅通过的逐篇总结回存 `collection/`、`summary/`；SDK 洞察和选题保存到 `insights/test/`、`articles/test/`。不自动 Writing、正式晋级或发布公众号。
+
+分析 job 使用只读 GitHub token；独立保存 job 复核允许路径、散列和证明后取得写权限，新增文件并普通推送。同名人工修改发生冲突时保留文件并停止覆盖，不强推。会员授权、真实请求账本、SDK 原始会话和个人配置继续留在本机，不随结果导出。
+
+只执行自己信任的 `main`，不在个人主机运行不可信 PR 代码。Obsidian 阅读同一套 Markdown，不复制会员凭据。本次注册、配置更新与回存衔接仅使用离线验收；开发过程未替用户实际执行 `start`、启用线上部署变量或新增会员调用。

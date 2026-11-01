@@ -4,7 +4,7 @@
 
 ## 配置与准备
 
-先按[工作台初始化说明](workbench-init.md)执行 `python3 -B scripts/researchdesk_workbench.py init`；已有配置用 `init --adopt-existing`。以后只编辑本地 `config/local/workbench.yaml`，再执行 `apply` 和 `check`。下表中的兼容文件由工具生成，不另行编辑，也不提交 GitHub。
+先按[工作台初始化说明](workbench-init.md)执行 `python3 -B scripts/researchdesk_workbench.py init`；已有配置用 `init --adopt-existing`。以后只编辑本地 `config/local/workbench.yaml`。手动入口用 `apply` 和 `check`；用 `start` 部署后，每轮定时任务会自动重新应用配置。下表中的兼容文件由工具生成，不另行编辑，也不提交 GitHub。
 
 | 设置 | 统一 YAML 部分 → 生成文件 |
 | --- | --- |
@@ -63,32 +63,39 @@ python3 -B scripts/researchdesk_research.py --cycle-id agent-memory-manual-001
 
 知乎来源先按[官方 API 接入说明](zhihu-api.md)验证本人凭证、额度和搜索候选。该独立客户端不运行模型、不自动保存资料；搜索摘要不能直接进入全文研究批次。
 
-`gh run list` 可查看已有运行。下面的 `health`、`run` 与后文 `catchup` 是部署示例：需要自己的 runner、授权，以及向 hosted plan 和执行主机交付受信任配置的机制。个人配置不随 Git 同步，本次不实现该交付；未部署前不要把这些命令视为已经可用的远程入口。
+完成本机 ChatGPT 与 GitHub CLI 授权后，一条命令部署当前工作台：
+
+```sh
+python3 -B scripts/researchdesk_workbench.py start
+```
+
+它应用两层配置、校验授权和模型、安装 SDK 依赖、注册并启动 runner，并设置非敏感仓库变量 `RESEARCHDESK_DEPLOYED=true`。新下载或 fork 未执行此命令时不会排队研究。要自动研究，先在用户文件设置 `automation.enabled: true`；命令会保留用户开关。执行器绑定当前持久工作台，不另起空克隆，也不上传个人配置或 OAuth。
+
+查看部署并显式手动运行：
 
 ```sh
 gh run list --workflow researchdesk-manual.yml --limit 5
-gh workflow run researchdesk-manual.yml --ref main -f operation=health -f config=config/cycles/default.yaml
+gh workflow run researchdesk-manual.yml --ref main -f operation=health
+gh workflow run researchdesk-manual.yml --ref main -f operation=run -f cycle_id=agent-memory-manual-001
 ```
 
-`health` 检查授权与模型，不进行推理。配置完成后，使用一个稳定 ID 发起小批研究：
-
-```sh
-gh workflow run researchdesk-manual.yml --ref main -f operation=run -f cycle_id=example-topic-manual-001 -f config=config/cycles/default.yaml
-```
-
-`discover` 只发现候选；`run` 执行采集、Research、独立审阅、Insight、独立审阅，并按配置正式准入；`admit` 只准入已通过结果，不新增推理。资料目录按需创建，不需要先放入论文样本。
+`health` 只检查授权、模型和 SDK 环境，不推理；`collect` 只获取原文；`run` 串联采集、逐篇 Research 和 SDK Insight。新产物经绑定散列及独立审阅校验后回存；SDK Insight 与选题仍位于 `test`，本入口不做旧正式准入、不启动 Writing，也不发布公众号。
 
 全文模式只研究完整可用正文。论文使用固定版本官方 HTML 或 PDF；博客提取公开主文。获取失败、正文不完整或超预算时跳过，获取记录说明原因。研究正文采用连贯技术文章，证据关联与审阅记录单独保存。
 
 ## 定时与恢复
 
-本地统一 YAML 的 `automation.enabled` 默认 `false`；workflow 保留每周二、周五北京时间 03:00 的时间槽。hosted plan 缺少本地调度配置时跳过研究；只把本人 Mac 上的开关改为 `true` 不会把配置送到 GitHub，也不会完成调度部署。后续需先配置受信任的配置交付并手动验证，再决定启用；配置与 workflow 调度值须一致。
+用户 YAML 的 `automation.enabled` 默认 `false`；`start` 完成部署后，GitHub 保留每周二、周五北京时间 03:00 的触发。计划与执行均在用户的 Mac 上读取本地配置，无需向云端交付个人 YAML。
 
-失败时复用原 `cycle_id`、配置、检查点和请求账本，不换 ID 重置预算。只差准入时使用 `operation=admit`；按配置补漏使用：
+每次新运行自动合并系统默认和用户覆盖；本地用户文件与本地已修改的系统文件直接生效。系统文件未手改时，会安全加载 GitHub 最新 `main` 的系统配置，不拉取覆盖人工笔记。运行中的批次固定快照；未完成旧批次遇到配置变化会停止混用。更换解释器、runner 身份或安装路径时需要重新执行 `start`。
+
+默认调度只处理最近到期槽，重复触发复用稳定 ID。失败恢复可在页面重新运行同 ID，或显式补漏：
 
 ```sh
 gh workflow run researchdesk-manual.yml --ref main -f operation=catchup
 ```
+
+`catchup` 只选已部署起点之后、配置回看范围内的一个最早未完成槽。首次启动记录起始时间，不为安装前的历史槽自动消耗会员请求。旧正式准入命令仍保留在原脚本中，和新版 SDK 调度分开。
 
 已完成响应复用，结果未知的请求停止并保留预留。来源、模型、配置或人工笔记变化时，不强行复用旧结果。正式研究以 `reports/<topic>/admissions/<cycle_id>/accepted.yaml` 及其配对散列为准，不能仅凭文件存在判断成功。
 

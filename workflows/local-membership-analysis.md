@@ -23,7 +23,7 @@ Python 需为 3.9+。`--profile-dir` 接收授权目录，必须位于仓库及 
 
 ## 接入执行器
 
-在 [runtime.yaml](../config/runtime.yaml) 选择外部 venv 和会员 profile，随后按[自托管部署说明](self-hosted-worker.md)安装执行器。`membership.profile: null` 使用这台主机的 ResearchDesk 默认授权目录，不读取其他应用授权。
+在本地 `config/local/workbench.yaml` 的 `runtime` 部分选择外部 venv 和会员 profile，随后按[自托管部署说明](self-hosted-worker.md)执行一条 `python scripts/researchdesk_workbench.py start` 注册并启动执行器。`membership.profile: null` 使用这台主机的 ResearchDesk 默认授权目录，不读取其他应用授权。
 
 ```sh
 gh workflow run researchdesk-manual.yml --ref main -f operation=health
