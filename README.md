@@ -28,7 +28,7 @@ ResearchDesk 是一套可配置的三 Agent 研究工作台框架：采集公开
 
 先使用[独立采集入口](workflows/collection.md)把完整原文保存到 `collection/<主题>/`，不需要会员登录；再用 [Research 入口](workflows/research.md)对同一批次逐篇分析，审阅通过后把详细总结保存到 `summary/<主题>/`。此入口不自动执行 Insight 或 Writing。
 
-[Codex 后端](workflows/codex-backend.md)已提供独立的 Insight 离线入口，复用固定原文与历史总结，只做内容准确性审阅。可以运行 `python3 -B scripts/researchdesk_harness.py offline-demo` 验证流程，无需安装 SDK 或会员登录。真实 Codex 仍因授权环境、权限和请求预算适配未完成而明确阻塞；默认三 Agent 入口与自动开关保持不变。
+[Codex 后端](workflows/codex-backend.md)已在 Mac 接通官方 SDK 和本人 ChatGPT 会员授权，复用固定原文与历史总结，只做内容准确性审阅；逐次推理请求与旧后端共用预算。可以运行 `python3 -B scripts/researchdesk_harness.py offline-demo` 零调用验证流程，或按[运行说明](workflows/README.md)安装独立 SDK 环境后显式运行。已通过的小额真实验收只读取本地测试材料，不代表完成论文研究；默认旧入口与自动开关保持不变。
 
 ## 框架目录
 

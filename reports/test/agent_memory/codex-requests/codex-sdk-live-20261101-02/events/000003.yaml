@@ -1,0 +1,12 @@
+schema_version: 1
+type: request_reserved
+backend: codex
+topic: agent_memory
+cycle_id: codex-sdk-live-20261101-02
+task_id: researchdesk-d5fcebc1ad0b/agent_memory/codex-sdk-live-20261101-02/sdk-smoke/review
+phase: review
+model_id: gpt-6-astra
+month: 2026-11
+at: '2026-11-01T02:48:22.018942+00:00'
+request_id: 8c9223c9-7cfe-4b84-89e3-36bcada3b05e
+usage_status: unknown

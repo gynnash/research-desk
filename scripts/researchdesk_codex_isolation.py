@@ -17,7 +17,6 @@ import re
 import shlex
 import socket
 import subprocess
-import sys
 import tempfile
 import threading
 import uuid
@@ -77,15 +76,16 @@ def build_runtime(task, runtime_binary, gateway_token, gateway_url, run_director
     codex_home = _directory(base / 'codex-state')
     temporary = _directory(base / 'runtime-tmp')
     launch = _directory(base / 'runtime-launch')
-    # -I disables PYTHONPATH and user-site startup before the wrapper can clear
-    # the inherited environment. The absolute interpreter is selected by host.
-    interpreter = str(Path(sys.executable).resolve())
-    if any(char.isspace() for char in interpreter):
-        raise ValueError('the wrapper interpreter path cannot contain whitespace')
+    # This stdlib-only launcher deliberately uses the SIP-protected system
+    # interpreter, independent of the SDK venv (whose path may contain spaces).
+    # -I disables PYTHONPATH and user-site startup before clearing inherited env.
+    interpreter = Path('/usr/bin/python3')
+    if not interpreter.is_file() or not os.access(interpreter, os.X_OK):
+        raise ValueError('the trusted Mac system Python launcher is unavailable')
     process_env = {'PATH': SAFE_PATH, 'HOME': str(home), 'CODEX_HOME': str(codex_home),
                    'TMPDIR': str(temporary), 'SHELL': '/bin/sh', 'LANG': 'en_US.UTF-8'}
     wrapper = launch / 'codex'
-    text = ('#!' + interpreter + ' -I\n'
+    text = ('#!' + str(interpreter) + ' -I\n'
             'import os, sys\n'
             'clean = ' + repr(process_env) + '\n'
             'capability = os.environ.get(' + repr(GATEWAY_ENV) + ')\n'

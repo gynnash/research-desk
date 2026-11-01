@@ -15,6 +15,7 @@ from importlib import metadata
 import importlib.util
 import json
 import os
+import platform
 import queue
 import sys
 import threading
@@ -186,6 +187,8 @@ class CodexBackend:
         reasons = []
         if sys.version_info < (3, 10):
             reasons.append("python_3_10_required")
+        if platform.system() != "Darwin":
+            reasons.append("macos_isolation_profile_required")
         if sdk != SDK_VERSION:
             reasons.append("sdk_missing_or_version_mismatch")
         if runtime != SDK_VERSION:
@@ -282,18 +285,18 @@ class CodexBackend:
         saved = entry.get("turns", {}).get(handle.get("turn_id"), {}).get("task", entry["task"])
         return TaskSpec(**dict(saved, input_dir=Path(saved["input_dir"]), instructions=""))
 
-    def _gateway(self, task):
+    def _gateway(self, task, read_only=False):
         if self.gateway_factory is not None:
             return self.gateway_factory(task)
         from researchdesk_codex_gateway import MembershipGateway
         return MembershipGateway(
             self.root, task.topic, task.cycle_id, task.task_id,
             allowed_models=[task.model], phase=task.phase,
-            max_requests=self.profile.get("max_requests_per_task", 3))
+            max_requests=0 if read_only else self.profile.get("max_requests_per_task", 3))
 
     @contextmanager
-    def _session(self, task):
-        with self._gateway(task) as gateway:
+    def _session(self, task, read_only=False):
+        with self._gateway(task, read_only=read_only) as gateway:
             runtime = _build_runtime(task, _runtime_binary(), gateway, self._directory())
             sdk = _sdk_module()
             overrides = tuple(runtime["config_overrides"]) + (
@@ -457,7 +460,7 @@ class CodexBackend:
             if task is None:
                 return TaskResult("blocked_unknown", *key,
                                   failure_class="runtime_context_missing")
-            with self._session(task) as (client, gateway, sdk):
+            with self._session(task, read_only=True) as (client, gateway, sdk):
                 thread = client.thread_resume(
                     handle["thread_id"], approval_mode=sdk.ApprovalMode.deny_all,
                     model_provider="researchdesk_gateway")

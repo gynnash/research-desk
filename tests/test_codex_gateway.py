@@ -161,6 +161,12 @@ class CodexGateway(unittest.TestCase):
             self.assertEqual(restarted.request_count('fixture-task'), 2)
         self.assertEqual(len(self.client.calls), 2)
 
+    def test_read_only_inspection_gateway_cannot_forward_or_reserve(self):
+        with self.make_gateway(max_requests=0) as bridge:
+            self.assertEqual(self.request(bridge)[0], 429)
+            self.assertEqual(bridge.request_count('fixture-task'), 0)
+        self.assertEqual(self.client.calls, [])
+
     def test_shared_monthly_limit_includes_archived_legacy_and_gateway_requests(self):
         month = shared.now()[:7]
         (self.root / 'config/research_state.yaml').write_text(yaml.safe_dump({

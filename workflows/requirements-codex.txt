@@ -1,4 +1,4 @@
-# Optional SDK only. Offline harness does not import or require this package.
+# Optional real SDK environment. Offline harness does not require this file.
 # Python >= 3.10. Published SDK pins openai-codex-cli-bin==0.163.0.
-# Installing this dependency does not enable live inference.
+-r requirements-membership.txt
 openai-codex==0.163.0

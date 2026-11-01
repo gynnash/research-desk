@@ -1,0 +1,24 @@
+failure_class: null
+final_response: '{"decision":"pass","issues":[]}'
+model_request_count: 2
+observed_model: gpt-6-astra
+requested_model: gpt-6-astra
+status: completed
+thread_id: 01a19502-0ca1-7781-aa61-779e3f630842
+turn_id: 01a19502-0cef-7512-92aa-819a77bd834e
+usage:
+  last:
+    cacheWriteInputTokens: 0
+    cachedInputTokens: 9088
+    inputTokens: 11034
+    outputTokens: 12
+    reasoningOutputTokens: 0
+    totalTokens: 11046
+  modelContextWindow: 258400
+  total:
+    cacheWriteInputTokens: 0
+    cachedInputTokens: 18176
+    inputTokens: 21788
+    outputTokens: 161
+    reasoningOutputTokens: 0
+    totalTokens: 21949

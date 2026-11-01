@@ -1,6 +1,8 @@
 # Codex SDK 能力核实
 
-核实日期：2026-11-01。只下载公开 wheel 到临时目录、校验 SHA-256 并静态检查源文件及类型；未安装到项目或共享环境，未启动 runtime、登录、读取用户凭证或调用模型。
+核实日期：2026-11-01。已核实官方发行包，并在当前 Mac 的独立 Python 3.12 环境真实接通 SDK、自有 SIWC 会员授权和独立模型审阅。真实验收只读取小型本地测试材料，没有采集或研究论文，没有启用定时任务。
+
+可复查的通过回执：[codex-sdk-live-20261101-02](../reports/test/agent_memory/codex-sdk-smoke/codex-sdk-live-20261101-02/accepted.yaml)。本次生成与审阅分别使用 `gpt-6.1-sol`、`gpt-6-astra`，合计 4 次请求；此前未通过的验收另保留 5 次，本轮累计预留 9 次。原线程查询核对通过，新增请求为 0。它们是接入验收，不是研究成果。
 
 ## 发行基线
 
@@ -27,15 +29,36 @@
 | 审批 | `ApprovalMode.deny_all` 映射拒绝扩权的 `never`；默认值是 `auto_review`，不能依赖默认配置 |
 | 实验能力 | `CodexConfig.experimental_api` 默认 `True`；正式适配应显式评估关闭，不能因 SDK 稳定就宣称启用的所有协议字段稳定 |
 
-## 尚未满足的真实执行条件
+## 已实现的真实调用路径
 
-当前 `CodexBackend.preflight()` 始终返回 `live_ready: false`；安装 SDK、修改 YAML 布尔值均不能绕过。`start`、修订、查询、恢复与中断均返回明确阻塞结果，不启动 SDK 或读取授权。
+```text
+ResearchDesk 固定输入和角色任务
+  → 官方 Python SDK / 配套 Codex runtime
+  → 本机临时 Responses 网关
+  → ResearchDesk 自有 SIWC 授权刷新与官方 /v1/responses
+```
 
-1. **会员授权与子进程环境未验收。** 官方支持本应用 SIWC access token 通过 `ACCESS_TOKEN` 加 Responses provider 配置接入，不要求额外 Codex 登录。但 SDK 会继承宿主环境，尚需受控启动隔离，以及工具子进程不能读取 token 的无敏感探针验收。不得复制用户 Codex 或浏览器登录，不回退到 API Key。
-2. **文件/工具权限未验收。** `cwd` 和 `Sandbox.read_only` 不能证明只读取任务输入。Beta permission profiles 可以描述读边界，但不能和旧 sandbox 配置混用；需要对所锁定 runtime 与运行平台实际验收。隔离 Codex 状态目录，禁用无关联网工具、MCP 与用户技能，保护 Git、SSH 和其他项目。
-3. **逐次推理预算缺口。** 检查的公开 SDK 没有在每次内部模型请求前供宿主预留预算的回调，也没有可靠模型请求计数。一个任务/turn 可能多次推理，不能记为一次调用。token 汇总不能履行已有每月 100 次请求硬上限；在预算方案被明确调整或找到经核实接口前，不接通真实执行。
+SDK 继续负责模型与工具往返循环。网关只做请求验证、逐次预算预留、授权转发和稀疏用量记录，不解析或派发 Agent 工具，不重写模型响应，不提供通用代理。
 
-这三个门槛是未完成的实现与验收条件，不能用配置自我声明通过。当前适配器只提供公开协议、发行元数据预检和显式阻塞，**不宣称已接通会员 Codex**。现有会员客户端与生产流程不受影响。
+真实 OAuth 留在父进程。SDK 仅获得每次启动生成的本机 capability；该值不写文件、不进入工具环境，服务退出即失效。上游地址固定为官方 Responses，复用本人已有会员授权，不读取 Codex 桌面端或浏览器登录，不回退 API Key。
+
+每个实际转发请求在共享锁内预留，新旧后端共计月度 100 次上限；失败、结果未知和重试均保留计数。每任务另有请求上限，示例为 3 次。真实模型标识和 token usage 从 `response.completed` 记录，任务数、turn 数、请求数分别保存。
+
+## 已验收的本机权限
+
+目前只支持 macOS。受控 wrapper 用 `/usr/bin/python3 -I` 清理继承环境后执行固定 runtime，支持 SDK venv 路径含空格；设置独立 HOME、CODEX_HOME 和运行目录。真实 OAuth 不进入该进程。
+
+使用 Beta permission profile，而不混用旧 sandbox 设置：工具仅能读取固定输入，不能写入；文件系统其余部分按默认拒绝与最小系统路径配置，禁用工具网络、MCP、浏览器与无关技能。当前 runtime 的内置技能通过公开 `skills.config` 设置完整 `SKILL.md` 路径禁用。
+
+原生 SDK `command/exec` 无模型探针已实际验证：输入可读不可写，合成宿主私有文件与 CODEX_HOME canary 不可读，工具环境没有 capability 或宿主秘密变量；宿主可连接同一本机测试服务，而沙箱工具不能连接。探针不触碰真实凭据文件，不消耗会员推理。
+
+## 恢复边界
+
+`start` 和 `continue_turn` 才能创建新 turn；`inspect/resume` 通过公开 `thread_resume/read` 核对原线程，使用请求上限为 0 的网关，即使误发推理 HTTP 也不能转发。跨实例查询已保存的真实线程，最终响应一致，月度计数保持 9。
+
+当前活跃的 `TurnHandle` 可以请求中断；服务重启后，公开 SDK 无法按旧 turn ID 重新取得活句柄。此时只核对终态，无法确认时返回未知，不伪称已经取消，也不重新发送任务。
+
+`preflight` 不读取授权、不启动进程、不推理；`live_ready` 仅表示版本、模块和本机配置齐备。具体账号模型访问以实际完成的请求为依据。Linux 等其他隔离平台尚未验收，明确阻塞，不降级为全盘权限。默认旧三 Agent 后端和调度开关不变。
 
 ## 离线契约
 
@@ -52,4 +75,4 @@
 - [App-server](https://learn.chatgpt.com/docs/app-server)：事件、线程与明确终态；裸命令/传输仍有实验性限制。
 - [Permissions](https://learn.chatgpt.com/docs/permissions)：Beta 文件权限与旧 sandbox 设置的互斥，及本地命令权限的适用范围。
 
-`model/list` 不证明账号具备某模型资格；本轮未做真实推理，模型资格保持未验证。官方 SDK 提供 Agent runtime，但不自动继承 ChatGPT 网页工具与全部连接器。
+`model/list` 不证明账号具备某模型资格；上文回执只证明本次访问了对应模型，不能承诺其他用户或未来账号资格。官方 SDK 提供 Agent runtime，不自动继承 ChatGPT 网页工具与全部连接器。

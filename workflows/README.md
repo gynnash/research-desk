@@ -15,7 +15,7 @@
 
 `agent_memory` 的研究范围和关键词已配置，可直接调整或新增其他主题。按[会员授权](local-membership-analysis.md)准备自己的实际模型和独立审阅模型；自动运行与旧正式准入仍保持关闭。仅复制配置不会完成账户授权。
 
-[Codex 后端与 Harness 技术方案](codex-backend.md)已完成 SDK 发行核实、适配器协议与 Insight 离线闭环。新路径内容只做准确性审阅，文风和结构由生成提示词引导。当前默认运行后端保持不变；真实 Codex 的授权环境、权限与请求预算尚未接通，具体见 [SDK 能力核实](codex-sdk-capabilities.md)。
+[Codex 后端与 Harness 技术方案](codex-backend.md)已接通官方 SDK：当前 Mac 可使用 ResearchDesk 自有 ChatGPT 会员授权，由 Codex 执行文件工具和模型循环。新路径只做内容准确性审阅，文风和结构由生成提示词引导。默认旧后端与定时开关保持不变，Research/Writing 尚未迁移；具体边界见 [SDK 能力核实](codex-sdk-capabilities.md)。
 
 以下命令只做元数据预检或临时目录内的虚构离线验收，不登录、不调用模型，也不需要安装 Codex SDK：
 
@@ -27,9 +27,20 @@ PYTHONPATH=tests python3 -B -m unittest test_codex_adapter test_codex_inputs tes
 
 `offline-demo` 验证生成、三条洞察、独立审阅、审阅后中断恢复和幂等导出；临时 Vault 退出后删除。完整验收另覆盖一次准确性修订、纯文风意见不拒收、未知请求不重发、人工笔记保护与历史去重。虚构响应只能验证流程，不能证明真实模型的研究准确性。
 
-新入口配置为 [codex-insight.yaml](../config/examples/codex-insight.yaml)。`insight --cycle-id <已完成逐篇研究的批次>` 会读取 `summary/<主题>/<批次>/` 及其原文与通过回执；没有本批资料时返回 `empty`，有资料但真实运行条件未满足时返回 `blocked`，不会偷偷改用模拟或 API Key。未来通过的结果只新增到 `insights/test/<主题>/<批次>/report.md`、`articles/test/<主题>/<批次>/topic-N.md`，候选、准确性审阅和回执在 `reports/test/<主题>/codex-insight/<批次>/`。这些新选题尚未接入确认页面或 Writing。
+新入口配置为 [codex-insight.yaml](../config/examples/codex-insight.yaml)。`insight --cycle-id <已完成逐篇研究的批次>` 会读取 `summary/<主题>/<批次>/` 及其原文与通过回执；没有本批资料时返回 `empty`，未安装 SDK 或不支持当前隔离平台时返回 `blocked`，不会偷偷改用模拟或 API Key。通过的结果只新增到 `insights/test/<主题>/<批次>/report.md`、`articles/test/<主题>/<批次>/topic-N.md`，候选、准确性审阅和回执在 `reports/test/<主题>/codex-insight/<批次>/`。这些新选题尚未接入确认页面或 Writing。
 
-新旧入口分开：旧 Research/Insight/Writing 的历史提示词和校验仍保持兼容；尚未切换为新后端。需要核查官方运行包时，在 Python 3.10+ 的独立环境安装 [requirements-codex.txt](requirements-codex.txt)，安装本身不会解锁真实执行。
+新旧入口分开：旧 Research/Insight/Writing 的历史提示词和校验仍保持兼容。真实 SDK 目前只验收 macOS；其他平台明确阻塞，旧后端的本地/远程能力保留。安装与显式运行方式如下，需要 Python 3.10+ 及本人已有的[官方会员授权](local-membership-analysis.md)：
+
+```sh
+python3.12 -m venv "$HOME/Library/Application Support/ResearchDesk/codex-venv"
+"$HOME/Library/Application Support/ResearchDesk/codex-venv/bin/python" -m pip install -r workflows/requirements-codex.txt
+"$HOME/Library/Application Support/ResearchDesk/codex-venv/bin/python" -B scripts/researchdesk_harness.py preflight
+"$HOME/Library/Application Support/ResearchDesk/codex-venv/bin/python" -B scripts/researchdesk_harness.py insight --cycle-id '<已完成逐篇研究的批次>'
+```
+
+`preflight` 不推理，`live_ready` 只表示本机运行条件齐备，不代表账号模型资格已验证。`sdk-smoke --cycle-id <稳定验收ID>` 会执行两项真实模型任务，读取小型本地验收文件并由另一模型核对；它不是论文研究。每任务默认最多 3 次上游请求，首次运行会消耗会员额度，恢复或查询不得创建新 turn。
+
+已完成的真实 SDK 验收回执为 [codex-sdk-live-20261101-02](../reports/test/agent_memory/codex-sdk-smoke/codex-sdk-live-20261101-02/accepted.yaml)：生成和独立审阅共 4 次请求。此前未通过的验收另保留 5 次，本轮累计预留 9 次；查询原线程已验证新增请求为 0。请求逐次预留在 `reports/test/<主题>/codex-requests/<批次>/`，与旧后端共用月度 100 次上限；未知和失败不释放。真实 OAuth 留在父进程，SDK 只接触本机短期 capability，文件工具只读固定输入，禁用工具网络与无关技能。
 
 ## 手动检查与研究
 

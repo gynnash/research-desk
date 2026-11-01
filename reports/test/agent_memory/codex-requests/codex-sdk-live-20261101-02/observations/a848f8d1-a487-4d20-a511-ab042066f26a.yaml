@@ -1,0 +1,10 @@
+schema_version: 1
+type: response_observed
+task_id: researchdesk-d5fcebc1ad0b/agent_memory/codex-sdk-live-20261101-02/sdk-smoke/generation
+request_id: a848f8d1-a487-4d20-a511-ab042066f26a
+model: gpt-6.1-sol
+usage:
+  input_tokens: 10918
+  output_tokens: 32
+  total_tokens: 10950
+source: responses_sse.response.completed

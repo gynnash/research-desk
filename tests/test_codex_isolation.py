@@ -9,6 +9,7 @@ import sys
 import tempfile
 from types import SimpleNamespace
 import unittest
+from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
 import researchdesk_codex_isolation as isolation
@@ -26,7 +27,7 @@ class CodexIsolation(unittest.TestCase):
 
     def test_wrapper_drops_ambient_credentials_and_does_not_persist_capability(self):
         binary = self.base / 'fake-codex'
-        binary.write_text('#!' + str(Path(sys.executable).resolve()) + '\n'
+        binary.write_text('#!/usr/bin/python3\n'
                           'import json, os\nprint(json.dumps(dict(os.environ)))\n')
         binary.chmod(0o700)
         runtime = isolation.build_runtime(self.task, binary, 'FAKE_EPHEMERAL_CAP',
@@ -56,6 +57,14 @@ class CodexIsolation(unittest.TestCase):
             isolation.build_runtime(self.task, binary, 'FAKE', 'https://example.org/v1', self.base)
         with self.assertRaises(ValueError):
             isolation.build_runtime(self.task, binary, 'FAKE', 'http://127.0.0.1:12345/v1', self.input_dir)
+
+    def test_sdk_interpreter_path_with_spaces_does_not_change_trusted_launcher(self):
+        with patch.object(sys, 'executable', str(self.base / 'Application Support/codex-venv/bin/python')):
+            runtime = isolation.build_runtime(self.task, '/usr/bin/true', 'FAKE',
+                                              'http://127.0.0.1:12345/v1', self.base)
+        self.assertEqual(Path(runtime['codex_bin']).read_text().splitlines()[0],
+                         '#!/usr/bin/python3 -I')
+        self.assertEqual(subprocess.run([runtime['codex_bin']], env=runtime['env']).returncode, 0)
 
     def test_official_runtime_native_tools_cannot_read_private_state_or_use_network(self):
         try:

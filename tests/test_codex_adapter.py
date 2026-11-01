@@ -182,6 +182,7 @@ def sdk_lifecycle_fixture(terminal='completed'):
                    'run_directory': str(directory / 'runtime')}
         stack.enter_context(patch.object(codex, '_installed_version', return_value=codex.SDK_VERSION))
         stack.enter_context(patch.object(codex.sys, 'version_info', (3, 12, 0)))
+        stack.enter_context(patch.object(codex.platform, 'system', return_value='Darwin'))
         stack.enter_context(patch.object(codex.importlib.util, 'find_spec', return_value=object()))
         stack.enter_context(patch.object(codex, '_sdk_module', return_value=sdk))
         stack.enter_context(patch.object(codex, '_runtime_binary', return_value=Path('/fixture/codex')))

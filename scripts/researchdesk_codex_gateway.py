@@ -100,8 +100,8 @@ class MembershipGateway:
                 or any(not isinstance(model, str) or not re.fullmatch(r'[A-Za-z0-9._:/-]{1,200}', model)
                        for model in allowed_models)):
             raise store.OfflineError('Codex 网关必须配置模型白名单')
-        if type(max_requests) is not int or not 1 <= max_requests <= 1000:
-            raise store.OfflineError('Codex 每任务请求上限必须是明确正整数')
+        if type(max_requests) is not int or not 0 <= max_requests <= 1000:
+            raise store.OfflineError('Codex 每任务请求上限必须为非负整数，0 只允许读取已存状态')
         self.topic, self.cycle_id, self.task_id, self.phase = topic, cycle_id, task_id, phase
         self.allowed_models = set(allowed_models)
         self.max_requests, self.client = max_requests, client

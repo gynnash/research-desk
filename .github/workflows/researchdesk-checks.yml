@@ -45,7 +45,7 @@ jobs:
       - name: Check Insight citation scopes and independent review without model calls
         run: python -m unittest discover -s tests -p 'test_insight*.py' -v
       - name: Check Codex adapter and accuracy-only Insight harness without models or SDK
-        run: PYTHONPATH=tests python -m unittest test_codex_adapter test_codex_inputs test_codex_harness -v
+        run: PYTHONPATH=tests python -m unittest test_codex_adapter test_codex_gateway test_codex_isolation test_codex_inputs test_codex_harness -v
       - name: Check bounded linked recovery and checkpoint transfer without model calls
         run: python -m unittest discover -s tests -p 'test_recovery*.py' -v
       - name: Check URL history deduplication without model calls

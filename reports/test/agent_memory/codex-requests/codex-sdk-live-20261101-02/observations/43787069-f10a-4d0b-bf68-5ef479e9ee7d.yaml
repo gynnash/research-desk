@@ -1,0 +1,10 @@
+schema_version: 1
+type: response_observed
+task_id: researchdesk-d5fcebc1ad0b/agent_memory/codex-sdk-live-20261101-02/sdk-smoke/review
+request_id: 43787069-f10a-4d0b-bf68-5ef479e9ee7d
+model: gpt-6-astra
+usage:
+  input_tokens: 11034
+  output_tokens: 12
+  total_tokens: 11046
+source: responses_sse.response.completed

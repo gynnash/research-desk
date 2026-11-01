@@ -1,8 +1,8 @@
 # Codex 后端与 ResearchDesk Harness 技术方案
 
-状态：SDK 静态能力核实、适配器协议与 Insight 离线闭环已实现；真实接入和其他 Agent 迁移待完成。基线日期：2026-11-01；已按“内容仅做准确性校验”修订。当前默认后端保持不变，真实模型调用和定时任务仍未开启。
+状态：官方 SDK 已在当前 Mac 真实接通，自有会员授权、原生文件工具、独立模型审阅与逐请求预算已通过小额接入验收；完整真实资料 Insight 批次、Research/Writing 迁移待完成。基线日期：2026-11-01；内容仅做准确性校验。默认旧后端与定时开关保持不变。
 
-已落地入口是 `scripts/researchdesk_harness.py`：`preflight` 只检查元数据，`offline-demo` 在临时目录验收；运行方式见[操作说明](README.md)。[SDK 核实记录](codex-sdk-capabilities.md)明确区分已核实接口与未实现的真实授权、权限和预算能力。当前真实 `CodexBackend` 返回阻塞结果，不能视为已经接通会员。
+已落地入口是 `scripts/researchdesk_harness.py`：`preflight` 只检查元数据，`offline-demo` 零调用演练，`sdk-smoke` 真实核对本地测试文件，`insight` 显式消费已审阅研究。运行方式见[操作说明](README.md)，实际验收及平台边界见 [SDK 核实记录](codex-sdk-capabilities.md)。
 
 目标是让 Research、Insight、Writing 复用官方 Codex 的读文件、检索、工具调用循环与会话管理，同时保留 ResearchDesk 的资料规范、独立审阅、人工确认、预算和入库规则。先接通 Insight，再迁移 Research 与 Writing。
 
@@ -60,11 +60,11 @@ flowchart TD
 
 首选稳定版 Python 包 `openai-codex`，锁定发行版本并使用包配套的 Codex runtime。官方要求 Python 3.10 及以上；现有 Python 项目可以直接集成，无须新增 Node 服务。[官方 SDK 文档](https://learn.chatgpt.com/docs/codex-sdk)
 
-会员路线优先复用 ResearchDesk 自己已经取得的 Sign in with ChatGPT（SIWC）授权。宿主负责刷新，将 access token 仅传给 Codex 子进程；官方支持以 `ACCESS_TOKEN` 和 Responses provider 接入，不需要另行提取 Codex 桌面端或浏览器的凭据。授权失效时停止，不回退到 API Key 计费。[官方 SIWC 接入说明](https://developers.openai.com/siwc/token-sharing-open-source/codex-app-server)
+会员路线复用 ResearchDesk 自己取得的 Sign in with ChatGPT（SIWC）授权。宿主负责刷新和向固定官方 Responses 地址转发；SDK 通过本机网关接入，仅获得临时 capability，不获得真实 OAuth token。官方提供自有 SIWC 授权与 Responses provider 的接入机制；本项目在宿主侧保留授权和预算控制，不提取其他应用凭据，不回退 API Key。[官方 SIWC 接入说明](https://developers.openai.com/siwc/token-sharing-open-source/codex-app-server)
 
-已静态核实 `openai-codex==0.163.0` 及配套 runtime 的公开类型：provider 配置、子进程环境、初始化身份、流式事件和线程恢复接口确实存在。但 SDK 的 `env` 是覆盖合并宿主环境，不能据此宣称凭证隔离已完成；公开接口也未提供逐次内部推理预留预算钩子。详细字段和发行文件散列见 [SDK 核实记录](codex-sdk-capabilities.md)。
+已核实并实际运行 `openai-codex==0.163.0` 及配套 runtime：provider 配置、初始化身份、流式事件和线程恢复均通过公开接口完成。SDK 的 `env` 会合并宿主环境，所以采用受控启动 wrapper 清理环境；SDK 未提供逐次推理预留钩子，由本机网关计量。详细接口、发行散列和验收见 [SDK 核实记录](codex-sdk-capabilities.md)。
 
-初始化时还须配置稳定的 `clientInfo.name/title/version`。应用名与自身 SIWC 注册使用的 `agent_name_hint` 保持一致；现有代码的 hint 是 `ResearchDesk`，不能未经核实沿用 SDK 默认身份。公开 SDK 是否允许设置这些字段也纳入能力验证。[官方初始化要求](https://developers.openai.com/siwc/token-sharing-open-source/codex-app-server)
+初始化显式配置 `clientInfo.name/title/version`，应用名与自身 SIWC 注册的 `agent_name_hint` 同为 `ResearchDesk`；SDK 已核实支持这些公开参数。[官方初始化要求](https://developers.openai.com/siwc/token-sharing-open-source/codex-app-server)
 
 直接操作 `codex app-server` 的协议与命令仍有 Experimental 标记，不能因为 Python SDK 标为稳定就承诺裸协议稳定。首期不自行维护第二套 JSON-RPC 客户端；SDK 缺少必要能力时，先报告能力缺口，再决定是否明确采用锁版本的实验适配。[App-server 文档](https://learn.chatgpt.com/docs/app-server)
 
@@ -74,16 +74,18 @@ Codex 提供的是 Agent runtime，并不自动继承 ChatGPT 网页的全部工
 
 ## 4. 最小代码组织与任务协议
 
-只新增两个核心模块，角色提示词沿用现有来源并做必要调整：
+业务执行保留两个核心模块，另有两项运行辅助，角色提示词沿用现有来源并做必要调整：
 
 ```text
 scripts/researchdesk_codex.py     # 官方 runtime 适配、能力检查与事件转换
 scripts/researchdesk_harness.py   # 固定输入、阶段状态、审阅、恢复与准入
+scripts/researchdesk_codex_gateway.py    # 本机授权转发及逐请求共享预算
+scripts/researchdesk_codex_isolation.py  # Mac 受控启动与原生只读权限探针
 ```
 
 适配器不读取业务资料目录、不决定研究选题、不提交 Git。Harness 调用既有采集索引、预算、人工笔记保护与渲染函数，避免同时重写整个项目。
 
-以下是已实现的项目自有协议，不是 SDK 的方法签名；真实驱动保留显式阻塞，离线驱动用脚本事件验证该契约：
+以下是已实现的项目自有协议，不是 SDK 的方法签名；真实驱动调用公开 SDK，离线驱动用脚本事件验证该契约：
 
 | 接口 | 行为 |
 | --- | --- |
@@ -136,7 +138,7 @@ Insight 读取本批已审阅总结，并使用近 90–180 天同主题、相�
 
 官方 permission profiles 目前为 Beta，不能与旧 `sandbox_mode`/`--sandbox` 混用；选择该路线时，SDK 也不能再发送覆盖它的旧 Sandbox 设置。权限配置需针对当前 Mac 验收，远程 Linux 另做平台检查；不能满足读隔离时停止，不降级全盘权限。[官方权限说明](https://learn.chatgpt.com/docs/permissions)
 
-Codex 进程自身需要 SIWC token 与模型服务通信，模型执行的工具子进程不应获得 token。使用最小工具环境、显式敏感变量排除、受控 shell 启动与独立 Codex 状态目录，并用无敏感值的探针验证。只过滤环境变量名称还不够，需同时防止从宿主文件和 shell 初始化配置再次读取凭证。[环境配置说明](https://learn.chatgpt.com/docs/config-file/config-advanced)
+真实 SIWC token 仅由宿主转发层使用，SDK 进程只接触短期本机 capability，工具子进程不获得该值。受控启动、最小工具环境、独立 HOME/CODEX_HOME 和原生探针共同验证边界，避免通过宿主文件或 shell 初始化重新读入凭据。[环境配置说明](https://learn.chatgpt.com/docs/config-file/config-advanced)
 
 关闭模型工具的网络、MCP、连接器与非任务技能自动加载；模型客户端的授权流量单独处理。定时模式不自动批准扩权请求，出现请求即停止并记录 `waiting_approval`。
 
@@ -221,7 +223,7 @@ prepared → input_frozen → generation_reserved → generation_running
 
 不记录私有思维链、token 值或环境转储。旧账本继续保留，不能清零、换算或因 backend 名变化漏计共享消耗。
 
-接入验收须确认是否能在每次内部推理前可靠预留与执行原请求上限。只有结束后的 token 汇总不能实现这件事。若 SDK 无此能力，先明确限制缺口，再由用户决定官方应用用量限制和新的本地任务/时长控制口径；不能静默降低原预算约束。能力与计量尚未确认前，只做离线闭环，不开启真实长期任务。
+官方 SDK 本身没有逐次内部推理预留钩子，结束后的 token 汇总不能执行原请求上限。当前通过本机 Responses 网关解决：每次真正转发前独立预留，旧后端月度统计也包含新账本，保持原 100 次口径；查询恢复的网关上限为 0。没有把任务数换算成请求数，也没有取消用户已有预算约束。
 
 不设置输入预算与不限制洞察条数，不代表取消会员用量控制。授权、账号额度、限流或任务控制触发时，保留检查点并停止。
 
@@ -296,4 +298,4 @@ GitHub Actions 仍负责触发和结果回存；用户授权与 Codex 在自己�
 | 导出恢复与笔记 | 审阅完成后中断只补导出；人工修改与原文保持不变 |
 | 用量与导出 | task/turn/真实请求与 usage 不混用；正文与来源保存正确，长输入不触发旧字符截断；不做文风或结构评分 |
 
-第一步已完成发行与公开接口核实，运行隔离和计量仍未验收；第二步已实现并通过离线用例，且加入已有的无模型 CI 检查。第三、四步尚未开始。下一项工作是解决受控运行环境与会员用量控制的适配缺口，再申请明确的小额真实验收；当前离线结果不证明真实模型已可用，也不授予定时启用或公众号发布权限。
+第一、二步已完成；真实 SDK 的本地文件读取与独立模型审阅也已小额验收，回执见 [codex-sdk-live-20261101-02](../reports/test/agent_memory/codex-sdk-smoke/codex-sdk-live-20261101-02/accepted.yaml)。该验收不包含真实论文，不代替第三步的研究内容验收；Research/Writing 迁移与定时启用尚未进行。现有无模型 CI 已覆盖适配器、网关、历史输入及业务闭环。
