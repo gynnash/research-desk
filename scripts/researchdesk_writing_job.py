@@ -228,14 +228,17 @@ def _verify_bindings(root, base, events, manifest, bundle):
     return accepted
 
 
-def _verify(root, value):
-    bundle = inputs.prepare_bundle(root, value['approval_id'], value['config_path'])
+def _verify(root, value, bundle=None, public=False):
+    bundle = bundle or inputs.prepare_bundle(root, value['approval_id'], value['config_path'])
+    if public:
+        inputs.verify_frozen_bundle(root, bundle)
     if (bundle['input_fingerprint'] != value['input_fingerprint'] or bundle['topic'] != value['topic']
             or bundle['batch_id'] != value['batch_id']):
         raise JobError('writing_original_confirmation_or_inputs_changed')
     base = 'reports/test/%s/writing-runs/%s' % (value['topic'], value['batch_id'])
     if not safe(root, base + '/manifest.yaml').exists():
-        if value.get('files'):
+        if value.get('files') and not (public and set(value['files']) <= {
+                base + '/input.yaml', base + '/input.yaml.sha256'}):
             raise JobError('writing_transfer_missing_run_manifest')
         return {'status': 'no_checkpoints', 'completed_calls': 0}
     manifest = store.checked_yaml(root, base + '/manifest.yaml')
@@ -257,7 +260,10 @@ def _verify(root, value):
         'confirmation_sha256': bundle['confirmation_sha256'], 'publish_authorized': False}
     if set(manifest) != set(expected) | {'created_at', 'protected_notes'} or any(manifest.get(k) != v for k, v in expected.items()):
         raise JobError('writing_frozen_manifest_invalid')
-    shared.verify_notes(root, manifest['protected_notes'])
+    notes = manifest['protected_notes']
+    if public:
+        notes = {path: sha for path, sha in notes.items() if safe(root, path).is_file()}
+    shared.verify_notes(root, notes)
     events = store.read_events(root, base)
     complete = member.verify_ledger(root, base, events, manifest, bundle)
     accepted = _verify_bindings(root, base, events, manifest, bundle)
@@ -367,7 +373,13 @@ def _verify_verifications(root, value, result):
 
 def apply(root, artifact):
     root, artifact = Path(root).resolve(), Path(artifact)
-    value = _context(json.loads((artifact / 'manifest.json').read_text()), artifact=True)
+    raw = json.loads((artifact / 'manifest.json').read_text())
+    if raw.get('mode') == 'writing_deployment_transfer':
+        from researchdesk_writing_deployment import apply as apply_deployment
+        result = apply_deployment(root, artifact)
+        print(json.dumps(result))
+        return result
+    value = _context(raw, artifact=True)
     if git(root, 'branch', '--show-current').decode().strip() != 'main':
         raise JobError('writing_publisher_main_required')
     check_baseline(root, value, publisher=True)
@@ -423,6 +435,13 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--root', type=Path, default=Path(__file__).resolve().parents[1])
     commands = parser.add_subparsers(dest='command', required=True)
+    deployed = commands.add_parser('dispatch')
+    deployed.add_argument('--source', type=Path, required=True)
+    deployed.add_argument('--base-commit', required=True)
+    deployed.add_argument('--artifact', type=Path, required=True)
+    deployed.add_argument('--approval-id', required=True)
+    deployed.add_argument('--max-new-calls', type=int, default=6)
+    deployed.add_argument('--github-output', type=Path)
     run = commands.add_parser('execute')
     run.add_argument('--state', type=Path, required=True)
     run.add_argument('--approval-id', required=True)
@@ -436,6 +455,12 @@ def main():
     publish.add_argument('--artifact', type=Path, required=True)
     args = parser.parse_args()
     try:
+        if args.command == 'dispatch':
+            from researchdesk_writing_deployment import dispatch
+            result = dispatch(args.source, args.base_commit, args.approval_id, args.artifact,
+                              args.max_new_calls, github_output=args.github_output)
+            print(json.dumps(result))
+            return 0 if result['status'] == 'test_accepted' else 1
         if args.command == 'execute':
             return execute(args.root, args.state, args.approval_id, args.config, args.max_new_calls, args.fail_after)
         if args.command == 'export':

@@ -6,7 +6,9 @@ Research、Insight、Writing 共用真实请求账本与本地锁。成功、失
 
 Codex SDK 通过本机 Responses 网关转发，每一次上游请求（包括 SDK 的重试）都在转发前独立预留，账本位于 `reports/test/<主题>/codex-requests/<批次>/`。旧后端也会统计这部分请求，不把一个 task/turn 算成一次模型调用。SDK 示例每任务另限 3 次，查询原线程使用上限为 0 的网关，不能触发推理；所有计数仍是本地预留，不能替代 ChatGPT 官方用量显示。
 
-每轮还有阶段预算，来自运行 YAML 和写作确认时冻结的配置。为修订保留的余量不足时，不保证每份候选都完成；不能换 ID 绕过限制。归档的历史调用计数可保留在 `config/research_state.yaml`，无需保留论文、URL或生成文章。
+每轮还有阶段预算，来自运行 YAML 和写作确认时冻结的配置。自动研究的 `research.budget.max_calls_per_cycle` 限制同一主题、同一批次的 Research 与 SDK 实际请求总数，`insight_max_calls` 额外限制 SDK 阶段；旧请求跨月或进入新 retry attempt 仍占原批次额度。每次预留均检查这些上限以及当前共享月度上限，超过即在发送前停止。Writing 使用人工确认时冻结的独立阶段预算，继续共享月度账本。
+
+为修订保留的余量不足时，不保证每份候选都完成。明确失败的 SDK 请求可显式重试一次，已完成阶段复用；结果未知时先查询旧 turn，不直接重发。所有旧预留保留，不因 retry attempt 改名释放。归档的历史调用计数可保留在 `config/research_state.yaml`，无需保留论文、URL或生成文章。
 
 ## 只读查看
 

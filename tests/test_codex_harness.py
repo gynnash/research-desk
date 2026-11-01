@@ -185,13 +185,43 @@ class CodexHarnessAcceptance(unittest.TestCase):
             scripts={'generation': {'_status': 'blocked_unknown'},
                      'review': {'decision': 'pass'}},
         )
-        self.assertEqual(self.run_harness(backend)['status'], 'blocked_unknown')
+        self.assertEqual(self.run_harness(backend, retry_failed=True)['status'], 'blocked_unknown')
         self.assertEqual(self.run_harness(backend)['status'], 'blocked_unknown')
         self.assertEqual(backend.calls.count(('start', 'generation')), 1)
         backend.inspected['generation'] = candidate()
         self.assertEqual(self.run_harness(backend)['status'], 'complete')
         self.assertEqual(backend.calls.count(('start', 'generation')), 1)
         self.assertIn(('inspect', 'generation'), backend.calls)
+
+    def test_explicit_failed_review_retry_keeps_the_generation_and_original_attempt(self):
+        backend = RecordingBackend(scripts={
+            'generation': candidate(), 'review': {'_status': 'failed'},
+        })
+        self.assertEqual(self.run_harness(backend)['status'], 'failed')
+        self.assertEqual(self.run_harness(backend)['status'], 'failed')
+        self.assertEqual(backend.calls, [('start', 'generation'), ('start', 'review')])
+        backend.scripts['review'] = {'decision': 'pass'}
+        result = self.run_harness(backend, retry_failed=True)
+        self.assertEqual(result['status'], 'complete')
+        self.assertEqual(result['failed_retry_count'], 1)
+        self.assertEqual(result['task_count'], 3)
+        self.assertEqual(backend.calls.count(('start', 'generation')), 1)
+        self.assertEqual(backend.calls.count(('start', 'review')), 2)
+        self.assertTrue(any(key.endswith('/review-attempt-2') for key in backend.handles))
+        state = harness._checkpoint(next(self.state.rglob('state.json')))
+        archived = state['failed_attempts'][0]
+        self.assertEqual(archived['phase'], 'review')
+        self.assertEqual(archived['task']['status'], 'failed')
+        self.assertEqual(state['tasks']['review']['attempt'], 2)
+
+    def test_repeated_explicit_failure_is_bounded_and_does_not_spend_a_third_attempt(self):
+        backend = RecordingBackend(scripts={'generation': {'_status': 'failed'}})
+        self.assertEqual(self.run_harness(backend)['status'], 'failed')
+        self.assertEqual(self.run_harness(backend, retry_failed=True)['status'], 'failed')
+        final = self.run_harness(backend, retry_failed=True)
+        self.assertEqual(final['reason'], 'failed_retry_limit_reached')
+        self.assertEqual(final['failed_retry_count'], 1)
+        self.assertEqual(backend.calls, [('start', 'generation'), ('start', 'generation')])
 
     def test_completed_generation_is_reused_after_interruption(self):
         backend = RecordingBackend()

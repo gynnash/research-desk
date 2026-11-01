@@ -64,12 +64,13 @@ def _synced_hashes(root, hashes):
     # writing fingerprint and must match at every resume/admission check.
     # Do not exempt arbitrary config paths, research snapshots or approvals.
     local_paths = set()
-    if (Path(root) / 'config/local/workbench.yaml').exists():
+    private_workbench = (Path(root) / 'config/local/workbench.yaml').exists()
+    if private_workbench or (Path(root) / '.git/researchdesk-workbench.json').is_file():
         from researchdesk_workbench import LOCAL_CONFIG, generated_config_paths
         admission._location(root, LOCAL_CONFIG)
         local_paths = set(generated_config_paths()) | {LOCAL_CONFIG}
     for relative in hashes.keys() & local_paths:
-        target = admission._location(root, relative)
+        target = inputs._path(root, relative)
         if not target.is_file() or store.digest(target.read_bytes()) != hashes[relative]:
             raise store.OfflineError('写作冻结本地配置已变化: ' + relative)
     hashes = {relative: expected for relative, expected in hashes.items()
@@ -102,7 +103,16 @@ def _synced_hashes(root, hashes):
             raise store.OfflineError('写作冻结输入已变化: ' + relative)
         blob = hashlib.new(algorithm, b'blob ' + str(len(payload)).encode() + b'\0' + payload).hexdigest()
         staged = index.get(relative)
-        if (staged is None or staged[0] not in {'100644', '100755'}
+        if private_workbench:
+            # The persistent Vault may intentionally lag main. Frozen input must
+            # still equal fetched origin/main; never merge over personal notes.
+            _git(root, 'merge-base', '--is-ancestor', 'HEAD', 'refs/remotes/origin/main')
+            mode = remote.get(relative, (None,))[0]
+            if (mode not in {'100644', '100755'} or remote.get(relative) != (mode, blob, 'blob')
+                    or (staged is not None and (staged[2] != '0' or
+                        local.get(relative) != (staged[0], staged[1], 'blob')))):
+                raise store.OfflineError('写作冻结输入与远端 main 不一致: ' + relative)
+        elif (staged is None or staged[0] not in {'100644', '100755'}
                 or staged[1] != blob or staged[2] != '0'
                 or local.get(relative) != (staged[0], blob, 'blob')
                 or remote.get(relative) != (staged[0], blob, 'blob')):
@@ -110,7 +120,7 @@ def _synced_hashes(root, hashes):
 
 
 def _synced(root, relative):
-    payload = admission._location(root, relative).read_bytes()
+    payload = inputs._path(root, relative).read_bytes()
     sha = store.digest(payload)
     _synced_hashes(root, {relative: sha})
     return sha
@@ -147,7 +157,7 @@ def _revocations(root, base):
         raise store.OfflineError('origin/main 已收到撤回，不能继续或重用旧写作结果')
 
 
-def _record(root, config, approval_id):
+def _record(root, config, approval_id, public=False):
     topic, base = _base(root, config, approval_id)
     _revocations(root, base)
     record_path, preview_path = base + '/confirmed.yaml', base + '/preview.yaml'
@@ -163,7 +173,8 @@ def _record(root, config, approval_id):
     payload = preview.get('payload')
     if not isinstance(payload, dict):
         raise store.OfflineError('页面冻结预览缺少真实选题材料')
-    config = inputs.frozen_config(root, config, payload)
+    if not public:
+        config = inputs.frozen_config(root, config, payload)
     if (type(record['schema_version']) is not int or record['schema_version'] != 1
             or type(preview['schema_version']) is not int or preview['schema_version'] != 1
             or record['mode'] != 'human_topic_confirmation'
@@ -190,11 +201,12 @@ def _record(root, config, approval_id):
     _git(root, 'merge-base', '--is-ancestor', preview['base_commit'], 'refs/remotes/origin/main')
     # This invokes the actual cached formal admission verifier. A YAML digest
     # alone cannot turn a fixture or an unreviewed topic into real evidence.
-    fresh = inputs.validate_preview(root, config, payload)
+    fresh = inputs.validate_public_preview(root, payload) if public else inputs.validate_preview(root, config, payload)
     hashes = dict(fresh['snapshot']['hashes'])
     for relative in (record_path, record_path + '.sha256', preview_path, preview_path + '.sha256'):
         hashes[relative] = store.digest(admission._location(root, relative).read_bytes())
-    _synced_hashes(root, hashes)
+    _synced_hashes(root, {path: sha for path, sha in hashes.items()
+                          if not public or Path(path).parts[:1] != ('config',)})
     # Recheck after the proof and Git reads, so cancellation observed during a
     # lengthy proof validation also prevents material being returned.
     _revocations(root, base)
@@ -247,18 +259,24 @@ def prepare_bundle(root, approval_id, config_path=confirmation.DEFAULT_CONFIG):
     config = confirmation.load_config(root, config_path)
     topic, base, record, preview, payload, hashes = _record(root, config, approval_id)
     topics_path = 'config/research_topics.yaml'
-    topics = store.load_yaml(admission._location(root, topics_path))
+    topics = store.load_yaml(inputs._path(root, topics_path))
     selected_topic = topics.get('topics', {}).get(topic)
     if (type(topics.get('schema_version')) is not int or topics['schema_version'] != 1
             or not isinstance(selected_topic, dict) or selected_topic.get('enabled') is not True):
         raise store.OfflineError('已确认的研究方向不存在或当前已停用')
     hashes[topics_path] = _synced(root, topics_path)
     material = _material(payload)
-    monthly = shared.membership_monthly_limit(root)
+    policy_root = inputs._path(root, 'config/membership_budget.yaml').parents[1]
+    monthly = shared.membership_monthly_limit(policy_root)
     if monthly is None:
         raise store.OfflineError('真实会员 Writing 必须配置共享月度调用上限')
     policy_path = 'config/membership_budget.yaml'
     hashes[policy_path] = _synced(root, policy_path)
+    return _bundle_value(topic, base, record, preview, payload, hashes, material, monthly)
+
+
+def _bundle_value(topic, base, record, preview, payload, hashes, material, monthly):
+    approval_id = record['id']
     result = {'schema_version': 1, 'mode': 'real_writing_input', 'backend': 'chatgpt_plan',
         'topic': topic, 'approval_id': approval_id, 'batch_id': 'writing-' + approval_id,
         'topic_card': material['topic_card'], 'choices': payload['choices'],
@@ -278,6 +296,44 @@ def prepare_bundle(root, approval_id, config_path=confirmation.DEFAULT_CONFIG):
         result['style_profile'] = payload['style_profile']
     result['input_fingerprint'] = store.digest(result)
     return result
+
+
+def verify_frozen_bundle(root, bundle):
+    """Publisher-only proof check; local YAML is neither exported nor invented.
+
+    The page-confirmed payload is the authority for its frozen Writing options.
+    Active execution continues to use prepare_bundle and local configuration.
+    """
+    root = Path(root).resolve()
+    checked = dict(bundle)
+    fingerprint = checked.pop('input_fingerprint', None)
+    if store.digest(checked) != fingerprint:
+        raise store.OfflineError('冻结 Writing 证明已变化')
+    _main(root)
+    original = bundle.get('preview', {}).get('payload', {})
+    if original.get('admission_mode') != 'codex_insight_admission':
+        # Old accepted topics retain their original, local-config verifier.
+        return verify_active(root, bundle)
+    config = {'workbench_id': original['workbench_id'], 'topics': [original['topic']],
+              'writing': original['writing'], '_config_path': original['config']['path'],
+              '_config_sha256': original['config']['sha256']}
+    topic, base, record, preview, payload, hashes = _record(root, config, bundle['approval_id'], public=True)
+    from researchdesk_workbench import generated_config_paths
+    extra = {'config/research_topics.yaml', 'config/membership_budget.yaml'}
+    actual = bundle.get('snapshot', {}).get('hashes', {})
+    if set(actual) != set(hashes) | extra or any(actual.get(path) != sha for path, sha in hashes.items()):
+        raise store.OfflineError('冻结 Writing 输入清单与原始页面确认不一致')
+    for relative in extra:
+        if relative not in generated_config_paths() or not inputs.HASH.fullmatch(actual.get(relative, '')):
+            raise store.OfflineError('冻结 Writing 配置绑定无效')
+        hashes[relative] = actual[relative]
+    monthly = bundle.get('month_max_calls')
+    if type(monthly) is not int or monthly < 1:
+        raise store.OfflineError('冻结 Writing 月预算无效')
+    fresh = _bundle_value(topic, base, record, preview, payload, hashes, _material(payload), monthly)
+    if fresh != bundle:
+        raise store.OfflineError('冻结 Writing 材料、确认或模型预算已变化')
+    return fresh
 
 
 def verify_active(root, bundle):

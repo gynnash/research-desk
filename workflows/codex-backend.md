@@ -270,7 +270,7 @@ articles/<topic>/<cycle>/topic-N.md
 
 洞察、比较、趋势和深入研究方向组织在同一篇综合文章中；选题卡单列，待页面人工确认。Writing 继续受确认 ID、选题/证据散列和写作要求约束，生成大纲、初稿和候选稿，分别独立审阅。
 
-首个闭环只导出到 `insights/test/<topic>/<cycle>/`、`articles/test/<topic>/<cycle>/`，脱敏证明沿用 `reports/test/<topic>/` 内部记录。正式路径仅是后续准入目标。当前不搬迁、删除或重写旧记录，也不新增研究成果。
+Harness 首先导出到 `insights/test/<topic>/<cycle>/`、`articles/test/<topic>/<cycle>/`，脱敏证明沿用 `reports/test/<topic>/` 内部记录。现已提供零模型调用的 `researchdesk_insight_admission.py admit/check`：真实且独立准确性审阅通过后，新增正式综合文章、待确认选题及版本 2 准入回执，保留 test 和人工笔记。自动入口遵守 `admission.enabled`；关闭时不正式晋级。新旧准入格式分流，正式选题可进入同一确认页面与 Writing。
 
 GitHub Actions 保留触发和结果回存框架；授权与 Codex 使用用户自己的执行主机。个人配置不进入 Git；执行 `python scripts/researchdesk_workbench.py start` 后，计划与执行在绑定的持久 Mac 工作台中加载两层配置。GitHub 使用非敏感部署开关派发，独立回存 job 验证公开证据和产物后保存。Git 凭据不进入模型工具环境，回存使用允许路径清单。GitHub 与 Obsidian 共享 Markdown；runtime 会话、凭据和原始事件不进入 Vault。
 

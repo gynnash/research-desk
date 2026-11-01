@@ -5,7 +5,7 @@ ResearchDesk 是一套可配置的三 Agent 研究工作台框架：采集公开
 | Agent | 职责 | 运行后产物 |
 | --- | --- | --- |
 | Research | 逐篇读取采集原文，详细解释问题、方法、实验和局限，经独立模型审阅 | `summary/<主题>/` 中的详细技术解读 |
-| Insight | 比较本轮与实际存在的历史资料，推导洞察、研究方向和选题 | 综合文章、洞察、待确认选题卡 |
+| Insight | 比较本轮与实际存在的历史资料，推导洞察、研究方向和选题 | `insights/<主题>/` 综合文章、洞察与 `articles/<主题>/` 待确认选题卡 |
 | Writing | 只处理用户确认过的选题，按配置文风写作 | 大纲、初稿、候选稿 |
 
 生成与独立审阅使用不同的实际模型，并读取同一绑定材料。没有足够跨时间证据时，只提出研究线索；不把单篇论文或同期材料写成行业趋势。稿件不会自动发布公众号。
@@ -42,9 +42,11 @@ ResearchDesk 是一套可配置的三 Agent 研究工作台框架：采集公开
    ```yaml
    automation:
      enabled: true
+   admission:
+     enabled: true
    ```
 
-   模板默认仍为 `false`；保留该值可以先注册执行器而不自动研究。其他设置继承[系统默认](config/system.yaml)，显式阶段设置优先于主题和模型快捷项。
+   两个开关默认均为 `false`。`automation` 控制定时研究，`admission` 控制真实 Insight 审阅通过后自动新增正式报告和选题；保留关闭时可先做测试。其他设置继承[系统默认](config/system.yaml)，显式阶段设置优先于主题和模型快捷项。
 
 5. 一条命令应用配置、校验授权、安装外部 SDK 环境并注册启动执行器：
 
@@ -60,7 +62,7 @@ ResearchDesk 是一套可配置的三 Agent 研究工作台框架：采集公开
 
 先使用[独立采集入口](workflows/collection.md)把完整原文保存到 `collection/<主题>/`，不需要会员登录；再用 [Research 入口](workflows/research.md)对同一批次逐篇分析，审阅通过后把详细总结保存到 `summary/<主题>/`。此入口不自动执行 Insight 或 Writing。
 
-[Codex 后端](workflows/codex-backend.md)在 Mac 使用官方 SDK 和用户自己的 ChatGPT 会员授权，复用固定原文与历史总结，只做内容准确性审阅；逐次推理请求与旧后端共用预算。新版 Actions 串联采集、逐篇 Research 和 Codex Insight，回存原文、总结及测试区的洞察和选题；不自动启动 Writing、正式晋级或发布公众号。可运行 `python3 -B scripts/researchdesk_harness.py offline-demo` 零调用验证流程。本次部署衔接使用离线验收，未替用户执行真实 `start` 或新增会员调用；此前小额真实 SDK 验收读取的是本地测试材料，不代表论文研究验收。
+[Codex 后端](workflows/codex-backend.md)在 Mac 使用官方 SDK 和用户自己的 ChatGPT 会员授权，复用固定原文与历史总结，只做内容准确性审阅；逐次推理请求与旧后端共用月度、整轮和阶段预算。新版 Actions 串联采集、逐篇 Research 和 Codex Insight，回存原文、总结及审阅证明；开启 `admission.enabled` 后，把真实且通过审阅的 Insight 另存为正式综合文章和待确认选题，保留测试区原结果。选题出现在现有确认页面，用户亲自确认后才能启动 Writing。稿件不会自动发布。可运行 `python3 -B scripts/researchdesk_harness.py offline-demo` 零调用验证流程；离线验收不代表已完成真实论文研究或已部署执行器。
 
 ## 框架目录
 
@@ -73,8 +75,10 @@ ResearchDesk 是一套可配置的三 Agent 研究工作台框架：采集公开
 | `workflows/`         | 操作说明、资料 Schema、Markdown 模板及虚构样例       |
 | `collection/<主题>/`   | 采集到的论文和博客原文，按批次保存                     |
 | `summary/<主题>/`      | Research 独立审阅通过的逐篇详细总结                |
+| `insights/<主题>/`     | 正式综合文章、洞察、趋势线索与后续研究方向                 |
+| `articles/<主题>/`     | 待确认选题，以及人工确认后生成的大纲、初稿和候选稿             |
 
-新采集与逐篇研究使用上述两个资料入口。新版调度的综合洞察在 `insights/test/<主题>/<批次>/`，待确认选题在 `articles/test/<主题>/<批次>/`；`reports/test/<主题>/` 保留研究与审阅证明。已有三 Agent 全轮次及正式准入保持兼容，旧资料不自动迁移。Obsidian 打开同一工作台即可阅读 Markdown。
+四个资料目录都按研究方向分组。新版正式综合文章在 `insights/<主题>/<批次>/report.md`，待确认选题在 `articles/<主题>/<批次>-topic-N.md`。`insights/test/`、`articles/test/` 和 `reports/` 中保留原始运行结果、准确性审阅及准入证明；它们供恢复和核验使用。模拟结果始终留在测试区，不能正式入库。已有三 Agent 全轮次及旧准入保持兼容，旧资料不自动迁移。Obsidian 打开同一工作台即可阅读 Markdown。
 
 当前框架支持 arXiv、Letta、LangChain、Hugging Face Blog、美团技术团队和阮一峰博客等公开来源适配器；来源和研究范围由 YAML 配置。[知乎官方 API](workflows/zhihu-api.md)提供独立额度查询与搜索候选验证入口，搜索摘要尚未接入全文研究。X、Reddit、Quora 未接入。关注度排序只反映实际扫描和可观测信号。
 
@@ -85,6 +89,8 @@ ResearchDesk 是一套可配置的三 Agent 研究工作台框架：采集公开
 Research 与 Insight 输出可连续阅读的技术文章，具体解释机制、实验条件、观点异同、推理和局限；来源集中在篇末。证据编号、散列和审阅细节留在运行记录中。选题需要用户确认，Writing 才能启动。
 
 已有人工修改不会被生成覆盖；恢复任务复用原轮次与已核实响应。真实请求计入[本地预算](workflows/membership-budget.md)，失败和结果未知的请求也保留计数。本地计数不是 ChatGPT 官方剩余额度或费用。
+
+SDK 明确失败后的重试需要显式授权；补跑 `catchup` 使用受限的失败重试，保留旧 attempt、已完成阶段和预算。未知状态先查询，不盲目发送新请求。已通过审阅但正式准入中断时，只补准入，不重新生成。具体命令见[操作说明](workflows/README.md)。
 
 ## 检查与可选同步
 

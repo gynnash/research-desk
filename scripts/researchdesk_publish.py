@@ -59,13 +59,17 @@ def _safe(root, relative):
 
 def _prefixes(topic, cycle):
     return [('collection', topic, cycle), ('summary', topic, cycle),
-            ('insights', 'test', topic, cycle), ('articles', 'test', topic, cycle)] + [
+            ('insights', 'test', topic, cycle), ('articles', 'test', topic, cycle),
+            ('insights', topic, cycle), ('reports', topic, 'admissions', cycle)] + [
         ('reports', 'test', topic, stage, cycle)
         for stage in ('cycles', 'research-batches', 'codex-insight', 'automation')]
 
 
 def allowed(relative, topic, cycle):
     parts = Path(relative).parts
+    if (Path(relative).as_posix() == relative and len(parts) == 3 and parts[:2] == ('articles', topic)
+            and re.fullmatch(re.escape(cycle) + r'-topic-[1-9][0-9]*\.md', parts[-1])):
+        return True
     valid = (Path(relative).suffix in {'.yaml', '.md', '.sha256'}
             and not any(part.startswith('.') for part in parts)
             and any(parts[:len(prefix)] == prefix and len(parts) > len(prefix)
@@ -78,9 +82,13 @@ def allowed(relative, topic, cycle):
     if parts[0] == 'summary':
         return len(parts) == 4 and parts[-1].endswith('.md')
     if parts[0] == 'insights':
-        return len(parts) == 5 and parts[-1] == 'report.md'
+        return ((len(parts) == 5 and parts[1] == 'test')
+                or (len(parts) == 4 and parts[1] == topic)) and parts[-1] == 'report.md'
     if parts[0] == 'articles':
         return len(parts) == 5 and bool(re.fullmatch(r'topic-[1-9][0-9]*\.md', parts[-1]))
+    if parts[:4] == ('reports', topic, 'admissions', cycle):
+        return len(parts) == 5 and parts[-1] in {
+            'plan.yaml', 'plan.yaml.sha256', 'accepted.yaml', 'accepted.yaml.sha256'}
     return True
 
 
@@ -355,6 +363,12 @@ def _overlay(root, files, topic, cycle):
         _restore_historical_contexts(overlay, topic, cycle)
         _validate_workspace(overlay, topic, cycle, topics)
         _verify_insight(overlay, context, topic, cycle)
+        formal = 'reports/%s/admissions/%s/accepted.yaml' % (topic, cycle)
+        if (_safe(overlay, formal).exists()
+                or (overlay / 'insights' / topic / cycle).exists()
+                or any((overlay / 'articles' / topic).glob(cycle + '-topic-*.md'))):
+            import researchdesk_insight_admission as admission
+            admission.load(overlay, topic, cycle)
         yield overlay
 
 
@@ -382,7 +396,11 @@ def export(root, destination, topic, cycle_id, base_commit):
     files = {}
     collection_complete = _safe(root, 'collection/%s/%s/manifest.yaml' % (topic, cycle_id)).is_file()
     insight_complete = _safe(root, 'reports/test/%s/codex-insight/%s/accepted.yaml' % (topic, cycle_id)).is_file()
+    formal_complete = _safe(root, 'reports/%s/admissions/%s/accepted.yaml' % (topic, cycle_id)).is_file()
     for prefix in _prefixes(topic, cycle_id):
+        is_formal = prefix in {('insights', topic, cycle_id), ('reports', topic, 'admissions', cycle_id)}
+        if is_formal and not formal_complete:
+            continue
         if prefix[0] in {'collection', 'summary'} and not collection_complete:
             continue
         if (prefix[0] in {'insights', 'articles'} or 'codex-insight' in prefix) and not insight_complete:
@@ -398,6 +416,12 @@ def export(root, destination, topic, cycle_id, base_commit):
                 continue
             if path.is_file():
                 files[relative] = _read(root, relative)
+    if formal_complete:
+        for path in sorted((root / 'articles' / topic).glob(cycle_id + '-topic-*.md')):
+            relative = path.relative_to(root).as_posix()
+            if not allowed(relative, topic, cycle_id):
+                raise PublishError('transfer_path_not_allowed')
+            files[relative] = _read(root, relative)
     with _overlay(root, files, topic, cycle_id) as overlay:
         for relative, payload in files.items():
             _guard(payload, relative, overlay)
@@ -407,7 +431,7 @@ def export(root, destination, topic, cycle_id, base_commit):
     for relative, payload in files.items():
         _write_new(_safe(destination / 'payload', relative), payload)
     _write_new(destination / 'manifest.json', json.dumps(manifest, sort_keys=True, indent=2).encode())
-    return {'cycle_id': cycle_id, 'exported_files': len(files), 'production_accepted': False}
+    return {'cycle_id': cycle_id, 'exported_files': len(files), 'production_accepted': formal_complete}
 
 
 def _git(root, *arguments):
@@ -472,7 +496,9 @@ def apply(root, artifact, push=False):
                  'commit', '-m', 'Save reviewed ResearchDesk results: ' + cycle)
             _git(root, 'push', 'origin', 'HEAD:refs/heads/main')
             pushed = True
-    return {'cycle_id': cycle, 'saved_files': len(additions), 'production_accepted': False, 'pushed': pushed}
+    formal = 'reports/%s/admissions/%s/accepted.yaml' % (topic, cycle)
+    return {'cycle_id': cycle, 'saved_files': len(additions),
+            'production_accepted': formal in files, 'pushed': pushed}
 
 
 def main(argv=None):

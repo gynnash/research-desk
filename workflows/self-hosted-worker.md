@@ -19,9 +19,11 @@ gh auth login
 ```yaml
 automation:
   enabled: true
+admission:
+  enabled: true
 ```
 
-模板默认 `false`。随后执行：
+两个开关默认均为 `false`；`admission` 控制真实审阅结果自动正式准入。随后执行：
 
 ```sh
 python scripts/researchdesk_workbench.py start
@@ -57,7 +59,7 @@ gh workflow run researchdesk-manual.yml --ref main -f operation=health
 
 ## 结果保存与边界
 
-新版执行顺序为采集原文、逐篇 Research、独立审阅、Codex Insight 及独立审阅。采集原文与审阅通过的逐篇总结回存 `collection/`、`summary/`；SDK 洞察和选题保存到 `insights/test/`、`articles/test/`。不自动 Writing、正式晋级或发布公众号。
+新版执行顺序为采集原文、逐篇 Research、独立审阅、Codex Insight 及独立审阅。采集原文与审阅通过的逐篇总结回存 `collection/`、`summary/`；SDK 原结果与证明保存在测试区。开启 `admission.enabled` 后，真实且通过审阅的结果自动新增到 `insights/<主题>/`、`articles/<主题>/`，保留 test，并回存正式准入回执。模拟产物不能晋级。用户在页面亲自确认正式选题后，才能另行启动 Writing；研究任务不代为确认或发布公众号。
 
 分析 job 使用只读 GitHub token；独立保存 job 复核允许路径、散列和证明后取得写权限，新增文件并普通推送。同名人工修改发生冲突时保留文件并停止覆盖，不强推。会员授权、真实请求账本、SDK 原始会话和个人配置继续留在本机，不随结果导出。
 

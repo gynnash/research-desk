@@ -18,6 +18,7 @@ import tempfile
 from zoneinfo import ZoneInfo
 
 import researchdesk_cycle as cycle
+import researchdesk_batch as request_budget
 import researchdesk_harness as harness
 import researchdesk_offline as store
 import researchdesk_research as research
@@ -67,7 +68,7 @@ def _latest_slot(config, topic, now):
     return ''
 
 
-def _catchup_slot(root, config, topic, now):
+def _catchup_slot(root, config, topic, now, admission_enabled=False):
     if now.tzinfo is None:
         raise store.OfflineError('调度时间必须带时区')
     now = now.astimezone(timezone.utc)
@@ -82,7 +83,14 @@ def _catchup_slot(root, config, topic, now):
             base = _base(topic, identity)
             if not (root / base / 'receipt.yaml').exists():
                 return identity
-            store.checked_yaml(root, base + '/receipt.yaml')
+            accepted = store.checked_yaml(root, base + '/receipt.yaml')
+            attempts = sorted((root / base / 'attempts').glob('*.yaml'))
+            latest = store.checked_yaml(root, attempts[-1].relative_to(root)) if attempts else accepted
+            if (latest.get('terminal') is False or admission_enabled
+                    and latest.get('production_accepted') is not True
+                    and latest.get('simulation') is not True
+                    and latest.get('stages', {}).get('insight', {}).get('status') in {'complete', 'no_insight'}):
+                return identity
         cursor += timedelta(days=1)
     return ''
 
@@ -185,14 +193,77 @@ def _context(root, effective, topic, identity, base, fingerprint, publisher_cont
 def _finish(root, base, result):
     # Attempt records are immutable. A terminal receipt is only created once,
     # so retries never overwrite a checkpoint already saved on GitHub.
+    # Use reservations rather than completed phase summaries, including calls
+    # whose SDK result was lost. A damaged ledger is never reported as zero.
+    result = dict(result)
+    try:
+        usage = request_budget.cycle_request_usage(root, result['topic'], result['cycle_id'])
+        result.update(research_reserved_requests=usage['research'],
+                      insight_model_request_count=usage['insight'],
+                      reserved_model_requests=usage['total'])
+    except store.OfflineError:
+        result.update(research_reserved_requests=None, insight_model_request_count=None,
+                      reserved_model_requests=None, budget_ledger_status='invalid')
     existing = sorted((root / base / 'attempts').glob('*.yaml'))
     relative = base + '/attempts/%06d.yaml' % (len(existing) + 1)
     result = dict(result, attempt=len(existing) + 1)
     store.save_yaml(root, relative, result)
-    if result['terminal']:
+    if result['terminal'] and not (root / base / 'receipt.yaml').exists():
         relative = base + '/receipt.yaml'
         store.save_yaml(root, relative, result)
     return dict(result, receipt_path=relative)
+
+
+def _admit(root, effective, result, admitter=None):
+    """Promote reviewed real results; no collection or model operation lives here."""
+    result = dict(result, production_accepted=False)
+    if result.get('simulation') is True:
+        return dict(result, admission_status='simulation')
+    if effective['admission']['enabled'] is not True:
+        return dict(result, admission_status='disabled')
+    if admitter is None:
+        from researchdesk_insight_admission import admit
+        admitter = admit
+    accepted = admitter(root, result['topic'], result['cycle_id'])
+    if accepted.get('production_accepted') is not True:
+        raise store.OfflineError('正式准入未完成')
+    result.update(production_accepted=True, admission_status='accepted',
+                  admission_receipt_path=accepted['receipt_path'])
+    result['stages'] = dict(result['stages'], admission={
+        'status': 'accepted', 'receipt_path': accepted['receipt_path']})
+    return result
+
+
+def _cached_result(root, base, effective, admitter=None):
+    """Keep the first terminal receipt immutable and surface later admission attempts."""
+    initial_path = base + '/receipt.yaml'
+    attempts = sorted((root / base / 'attempts').glob('*.yaml'))
+    latest_path = attempts[-1].relative_to(root).as_posix() if attempts else initial_path
+    if not (root / initial_path).exists():
+        initial_path = latest_path
+    initial = store.checked_yaml(root, initial_path)
+    result = store.checked_yaml(root, latest_path)
+    relative = initial_path if result == initial else latest_path
+    if result.get('production_accepted') is True:
+        if admitter is None:
+            from researchdesk_insight_admission import load
+            load(root, result['topic'], result['cycle_id'])
+        return dict(result, receipt_path=relative, cached=True)
+    insight_status = result.get('stages', {}).get('insight', {}).get('status')
+    if (effective['admission']['enabled'] is True and result.get('simulation') is not True
+            and insight_status in {'complete', 'no_insight'}):
+        # Enabling admission after a successful test or retrying failed export
+        # must not rerun sources, Research, SDK generation or its review.
+        promoted = dict(result, status=insight_status, terminal=True)
+        promoted.pop('failure_type', None)
+        promoted.pop('failed_stage', None)
+        try:
+            promoted = _admit(root, effective, promoted, admitter)
+        except Exception as exc:
+            promoted = dict(result, status='failed', terminal=False, failed_stage='admission',
+                            failure_type=type(exc).__name__)
+        return _finish(root, base, promoted)
+    return dict(result, receipt_path=relative, cached=True)
 
 
 def _health(root, effective):
@@ -222,7 +293,7 @@ def _health(root, effective):
 
 def run(root, event='schedule', operation='run', cycle_id=None, publisher_context=None,
         collector=None, researcher=None, insight_runner=None, health_checker=None,
-        now=None, prepare=None):
+        now=None, prepare=None, admitter=None):
     root = Path(root).resolve()
     if event not in {'schedule', 'manual'} or operation not in {'health', 'collect', 'run', 'catchup'}:
         raise store.OfflineError('自动研究事件或操作无效')
@@ -234,7 +305,7 @@ def run(root, event='schedule', operation='run', cycle_id=None, publisher_contex
         topic = effective['research']['topic']
         empty = {'schema_version': 1, 'topic': topic, 'cycle_id': '', 'status': 'skipped',
                  'terminal': False, 'receipt_path': None, 'writing_started': False,
-                 'publish_authorized': False, 'model_calls': 0}
+                 'publish_authorized': False, 'production_accepted': False, 'model_calls': 0}
         if event == 'schedule' and effective['automation']['enabled'] is not True:
             return dict(empty, reason='automation_disabled')
         if operation == 'health':
@@ -242,15 +313,18 @@ def run(root, event='schedule', operation='run', cycle_id=None, publisher_contex
             return dict(empty, status='healthy', health=health)
         clock = now or _now()
         scheduling = _activation(root, effective['automation'])
-        identity = cycle_id or (_catchup_slot(root, scheduling, topic, clock) if operation == 'catchup' else
+        identity = cycle_id or (_catchup_slot(root, scheduling, topic, clock,
+                                admission_enabled=effective['admission']['enabled']) if operation == 'catchup' else
                                _latest_slot(scheduling, topic, clock)
                                if event == 'schedule' else topic + '-manual-' + clock.strftime('%Y%m%d-%H%M%S'))
         if not identity:
             return dict(empty, reason='no_due_slot')
         base = _base(topic, identity)
-        if (root / base / 'receipt.yaml').exists():
-            receipt = store.checked_yaml(root, base + '/receipt.yaml')
-            return dict(receipt, receipt_path=base + '/receipt.yaml', cached=True)
+        attempts = sorted((root / base / 'attempts').glob('*.yaml'))
+        admission_only = bool(attempts) and store.checked_yaml(
+            root, attempts[-1].relative_to(root)).get('failed_stage') == 'admission'
+        if (root / base / 'receipt.yaml').exists() or admission_only:
+            return _cached_result(root, base, effective, admitter)
         fingerprint = _fingerprint(effective)
         context = _context(root, effective, topic, identity, base, fingerprint, publisher_context)
         initial = dict(empty, cycle_id=identity, config_fingerprint=fingerprint, stages={},
@@ -292,7 +366,10 @@ def run(root, event='schedule', operation='run', cycle_id=None, publisher_contex
             if studied['status'] != 'complete' and not settled:
                 return _finish(root, base, dict(result, status='research_incomplete'))
             phase = 'insight'
-            insight = (insight_runner or harness.run)(root, context['insight_config_path'], identity)
+            retry_options = {'retry_failed': True} if operation == 'catchup' else {}
+            insight = (insight_runner or harness.run)(root, context['insight_config_path'], identity,
+                                                     **retry_options)
+            result['simulation'] = insight.get('simulation', False)
             result['stages']['insight'] = {'status': insight['status'],
                                            'receipt_path': insight.get('receipt_path')}
             insight_count = insight.get('model_request_count')
@@ -301,7 +378,10 @@ def run(root, event='schedule', operation='run', cycle_id=None, publisher_contex
             if type(reserved) is int and type(insight_count) is int:
                 result['reserved_model_requests'] = reserved + insight_count
             if insight['status'] in {'complete', 'no_insight'}:
-                return _finish(root, base, dict(result, status=insight['status'], terminal=True))
+                phase = 'admission'
+                result = _admit(root, effective,
+                    dict(result, status=insight['status'], terminal=True), admitter)
+                return _finish(root, base, result)
             reason = insight.get('reason')
             rejected = reason == 'accuracy_review_not_passed'
             return _finish(root, base, dict(result, status='insight_rejected' if rejected else 'insight_incomplete',

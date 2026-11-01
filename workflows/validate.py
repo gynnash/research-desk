@@ -219,6 +219,54 @@ def check_workspace(root, topics, fail, frontmatter):
     return len(originals), summary_count
 
 
+def check_insight_admissions(root, topics, fail, frontmatter):
+    """Check new formal prose through its existing accuracy-review bindings."""
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
+    import researchdesk_insight_admission as admission
+
+    admitted = {}
+    for path in sorted((root / 'reports').glob('*/admissions/*/accepted.yaml')):
+        relative = path.relative_to(root).as_posix()
+        try:
+            data = yaml.load(path.read_text(encoding='utf-8'), Loader=UniqueKeyLoader)
+            if not isinstance(data, dict) or data.get('mode') != admission.MODE:
+                continue  # The legacy admission verifier retains its own format.
+            topic, cycle = path.parts[-4], path.parts[-2]
+            if topic not in topics:
+                raise ValueError('正式洞察属于未配置的研究方向')
+            admitted[(topic, cycle)] = admission.load(root, topic, cycle)
+        except (OSError, UnicodeError, ValueError, KeyError, TypeError, yaml.YAMLError) as exc:
+            fail(relative, str(exc))
+
+    for folder in ('insights', 'articles'):
+        for topic in topics:
+            base = root / folder / topic
+            if base.is_symlink():
+                fail(base.relative_to(root).as_posix(), '正式资料目录不可为符号链接')
+                continue
+            for path in sorted(base.rglob('*.md')):
+                if path.name == 'README.md':
+                    continue
+                relative = path.relative_to(root).as_posix()
+                try:
+                    if path.is_symlink():
+                        raise ValueError('正式资料不可为符号链接')
+                    text = path.read_text(encoding='utf-8')
+                    if not text.startswith('---\n'):
+                        continue  # Handwritten Markdown is not an AI receipt.
+                    data = frontmatter(text, relative)
+                    if not (data.get('schema_version') == 2 and data.get('backend') == 'codex'
+                            and data.get('production_accepted') is True
+                            and data.get('kind') in {'insight_report', 'topic_proposal'}):
+                        continue
+                    plan = admitted.get((topic, data.get('cycle_id')))
+                    if plan is None or relative not in plan['output_hashes']:
+                        raise ValueError('正式洞察或选题缺少可验证的准入回执')
+                except (OSError, UnicodeError, ValueError, KeyError, TypeError, yaml.YAMLError) as exc:
+                    fail(relative, str(exc))
+    return len(admitted)
+
+
 def check(root, include_test=False):
     root = Path(root).resolve()
     errors, warnings = [], []
@@ -529,6 +577,7 @@ def check(root, include_test=False):
                 fail(path, "测试 related_notes 必须保存在同一主题的 <reports|insights|articles>/test/<topic>/ 下")
 
     collection_count, summary_count = check_workspace(root, topics, fail, frontmatter)
+    insight_count = check_insight_admissions(root, topics, fail, frontmatter)
 
     for warning in warnings:
         print(f"WARN {warning}")
@@ -538,7 +587,7 @@ def check(root, include_test=False):
         print(f"检查失败：{len(errors)} 个问题。", file=sys.stderr)
         return 1
     test_label = f"{test_count} 条测试资料" if include_test else "测试资料未检查（使用 --include-test 纳入）"
-    print(f"检查通过：{len(topics)} 个主题，{len(records) - test_count} 条正式资料，{test_label}，{collection_count} 篇采集原文，{summary_count} 篇逐篇总结，{len(warnings)} 条旧资料豁免。")
+    print(f"检查通过：{len(topics)} 个主题，{len(records) - test_count} 条正式资料，{test_label}，{collection_count} 篇采集原文，{summary_count} 篇逐篇总结，{insight_count} 轮正式洞察，{len(warnings)} 条旧资料豁免。")
     return 0
 
 

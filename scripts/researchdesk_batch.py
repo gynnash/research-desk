@@ -197,6 +197,58 @@ def monthly_budget(root, config):
     return total, cap
 
 
+def cycle_request_budget(root, topic, cycle_id):
+    """Read the original cycle's immutable policy, never the operator's next config."""
+    if any(not isinstance(value, str) or not store.SAFE_ID.fullmatch(value)
+           for value in (topic, cycle_id)):
+        raise store.OfflineError('请求预算的主题或批次无效')
+    relative = 'reports/test/%s/cycles/%s/manifest.yaml' % (topic, cycle_id)
+    if not store.safe_path(root, relative).exists():
+        return None  # Standalone legacy/mock tasks retain their own limits.
+    manifest = store.checked_yaml(root, relative)
+    if (manifest.get('topic') != topic or manifest.get('cycle_id') != cycle_id
+            or manifest.get('mode') != 'research_cycle_test'
+            or manifest.get('backend') != 'chatgpt_plan'):
+        raise store.OfflineError('整轮请求预算的固定清单身份无效')
+    budget = manifest.get('config', {}).get('budget', {})
+    fields = ('max_calls_per_cycle', 'research_max_calls', 'insight_max_calls')
+    if (any(type(budget.get(key)) is not int or budget[key] < 1 for key in fields)
+            or budget['research_max_calls'] + budget['insight_max_calls'] > budget['max_calls_per_cycle']):
+        raise store.OfflineError('固定整轮请求预算无效')
+    return {key: budget[key] for key in fields}
+
+
+def cycle_request_usage(root, topic, cycle_id):
+    """Count durable reservations across months, failures and SDK retry attempts."""
+    # Validate identity even when a standalone task has no cycle manifest.
+    cycle_request_budget(root, topic, cycle_id)
+    base = 'reports/test/%s/research-batches/%s' % (topic, cycle_id)
+    manifest_path = base + '/manifest.yaml'
+    research_count = 0
+    if store.safe_path(root, manifest_path).exists():
+        manifest = store.checked_yaml(root, manifest_path)
+        if manifest.get('backend') == 'chatgpt_plan':
+            if manifest.get('topic') != topic or manifest.get('batch_id') != cycle_id:
+                raise store.OfflineError('逐篇研究账本身份与批次不一致')
+            research_count = sum(event['type'] == 'call_reserved'
+                                 for event in store.read_events(root, base))
+    from researchdesk_codex_gateway import _request_events
+    insight_count = sum(event['topic'] == topic and event['cycle_id'] == cycle_id
+                        for event in _request_events(root))
+    return {'research': research_count, 'insight': insight_count,
+            'total': research_count + insight_count}
+
+
+def ensure_cycle_room(root, topic, cycle_id, stage, count=1):
+    policy = cycle_request_budget(root, topic, cycle_id)
+    if policy is None:
+        return
+    usage = cycle_request_usage(root, topic, cycle_id)
+    if (usage[stage] + count > policy[stage + '_max_calls']
+            or usage['total'] + count > policy['max_calls_per_cycle']):
+        raise store.OfflineError('达到本阶段或整轮真实请求上限')
+
+
 def authorization(client, backend, models):
     if models['research'] == models['review']:
         raise store.OfflineError('研究和审阅必须选择不同的实际模型')
@@ -297,7 +349,7 @@ def verify_events(root, base, events, manifest):
                     raise store.OfflineError('单项终态和独立审阅决定不一致')
 
 
-def ensure_room(root, config, events, key, count):
+def ensure_room(root, config, events, key, count, cycle_id=None):
     budget = config['budget']
     reservations = [e for e in events if e['type'] == 'call_reserved']
     monthly, monthly_cap = monthly_budget(root, config)
@@ -305,6 +357,8 @@ def ensure_room(root, config, events, key, count):
             or sum(e['key'] == key for e in reservations) + count > budget['max_calls_per_item']
             or monthly + count > monthly_cap):
         raise store.OfflineError('达到单项、批次或共享月度请求上限')
+    if cycle_id and config['backend'] == 'chatgpt_plan':
+        ensure_cycle_room(root, config['topic'], cycle_id, 'research', count)
 
 
 def call(root, base, events, client, manifest, config, candidate, material, role, revision, instructions, request):
@@ -327,7 +381,7 @@ def call(root, base, events, client, manifest, config, candidate, material, role
         raise store.OfflineError('存在结果未知的请求，不自动重发')
     if len(instructions) + len(text) > config['budget']['max_input_chars']:
         raise store.OfflineError('超过本轮输入字符上限')
-    ensure_room(root, config, events, key, 1)
+    ensure_room(root, config, events, key, 1, manifest.get('batch_id'))
     reservation = '%s:%s:%s' % (key, role, revision)
     store.append_event(root, base, events, {'type': 'call_reserved', 'key': key,
         'reservation_id': reservation, 'role': role, 'revision': revision,
@@ -608,7 +662,7 @@ def process(root, base, events, client, manifest, config, candidate, material):
                               and e['revision'] == revision for e in relevant)
         if not cached_research:
             try:
-                ensure_room(root, config, events, key, 2)
+                ensure_room(root, config, events, key, 2, manifest.get('batch_id'))
             except store.OfflineError:
                 if review is not None:
                     revision -= 1

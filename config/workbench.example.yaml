@@ -35,6 +35,11 @@ membership_budget:
 automation:
   enabled: false
 
+# Add reviewed real Insight reports/topics to the formal reading directories.
+# Simulated results always stay in test; Writing still requires page confirmation.
+admission:
+  enabled: false
+
 # Advanced overrides use the same paths as config/system.yaml.
 # Example: confirmation.writing.models.review overrides models.review for Writing.
 # runtime:

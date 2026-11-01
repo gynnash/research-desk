@@ -61,6 +61,17 @@ class ScheduledPipeline(unittest.TestCase):
         self.researcher.assert_not_called()
         self.insight.assert_not_called()
 
+    def test_cycle_budget_can_cover_multiple_sdk_tool_requests_without_raising_defaults(self):
+        self.update({'research': {'budget': {
+            'max_calls_per_cycle': 24, 'insight_max_calls': 12}}})
+        result = self.run_pipeline(event='manual', operation='collect', cycle_id='larger-sdk-budget')
+        self.assertEqual(result['status'], 'collected')
+        context = store.checked_yaml(self.root, result['context_path'])
+        self.assertEqual(context['research_config']['budget']['insight_max_calls'], 12)
+        self.assertEqual(context['research_config']['budget']['max_calls_per_cycle'], 24)
+        self.researcher.assert_not_called()
+        self.insight.assert_not_called()
+
     def test_latest_slot_runs_once_and_freezes_selected_topic_without_private_configuration(self):
         private_profile = str(self.root.parent / 'private-member-profile')
         self.update({'automation': {'enabled': True},
@@ -76,6 +87,8 @@ class ScheduledPipeline(unittest.TestCase):
         self.assertEqual(result['cycle_id'], 'agent_memory-20261106-0300')
         self.assertEqual(result['collection_count'], 1)
         self.assertEqual(result['summary_count'], 1)
+        self.assertFalse(result['production_accepted'])
+        self.assertEqual(result['admission_status'], 'disabled')
         self.assertNotIn('model_calls', result, 'real execution cannot falsely report zero calls')
         context = store.checked_yaml(self.root, result['context_path'])
         self.assertEqual(set(context['selected_topic']['topics']), {'agent_memory'})
@@ -157,6 +170,42 @@ class ScheduledPipeline(unittest.TestCase):
         self.assertEqual(calls, ['prepared'])
         self.assertEqual(result['status'], 'complete')
 
+    def test_enabling_admission_promotes_cached_real_results_without_any_model_stage(self):
+        first = self.run_pipeline(event='manual', cycle_id='first')
+        original = (self.root / first['receipt_path']).read_bytes()
+        self.update({'admission': {'enabled': True}})
+        admitter = Mock(return_value={'production_accepted': True,
+            'receipt_path': 'reports/agent_memory/admissions/first/accepted.yaml'})
+        promoted = self.run_pipeline(event='manual', cycle_id='first', admitter=admitter)
+        self.assertTrue(promoted['production_accepted'])
+        self.assertEqual(promoted['admission_status'], 'accepted')
+        self.assertEqual((self.root / first['receipt_path']).read_bytes(), original)
+        self.assertNotEqual(promoted['receipt_path'], first['receipt_path'])
+        cached = self.run_pipeline(event='manual', cycle_id='first', admitter=admitter)
+        self.assertTrue(cached['cached'])
+        self.assertTrue(cached['production_accepted'])
+        self.assertEqual(cached['receipt_path'], promoted['receipt_path'])
+        self.assertEqual(self.collector.call_count, 1)
+        self.assertEqual(self.researcher.call_count, 1)
+        self.assertEqual(self.insight.call_count, 1)
+        admitter.assert_called_once_with(self.root, 'agent_memory', 'first')
+
+    def test_failed_admission_retries_only_the_admission_without_sources_auth_or_models(self):
+        self.update({'admission': {'enabled': True}})
+        admitter = Mock(side_effect=[store.OfflineError('Fixture formal conflict'),
+            {'production_accepted': True,
+             'receipt_path': 'reports/agent_memory/admissions/first/accepted.yaml'}])
+        first = self.run_pipeline(event='manual', cycle_id='first', admitter=admitter)
+        self.assertEqual(first['status'], 'failed')
+        self.assertEqual(first['failed_stage'], 'admission')
+        first_bytes = (self.root / first['receipt_path']).read_bytes()
+        second = self.run_pipeline(event='manual', operation='catchup', cycle_id='first', admitter=admitter)
+        self.assertEqual(second['status'], 'complete')
+        self.assertTrue(second['production_accepted'])
+        self.assertEqual((self.root / first['receipt_path']).read_bytes(), first_bytes)
+        for stage in (self.collector, self.health, self.researcher, self.insight):
+            self.assertEqual(stage.call_count, 1)
+
     def test_rejected_research_stops_before_insight_and_failed_collection_is_not_no_new(self):
         self.researcher.return_value = {'status': 'failed', 'items': [{'status': 'reject'}], 'summary_paths': []}
         rejected = self.run_pipeline(event='manual', cycle_id='rejected')
@@ -193,6 +242,7 @@ class ScheduledPipeline(unittest.TestCase):
         marker.unlink()
         historical = self.run_pipeline(event='manual', operation='catchup')
         self.assertEqual(historical['cycle_id'], 'agent_memory-20261027-0300')
+        self.assertEqual(self.insight.call_args.kwargs, {'retry_failed': True})
 
 
 class RealStageIntegration(unittest.TestCase):

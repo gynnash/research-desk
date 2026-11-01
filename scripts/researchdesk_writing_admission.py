@@ -104,6 +104,9 @@ def _proof_paths(root, bundle):
 
 def _historical_bundle(root, bundle):
     """Recheck original evidence and page proof without granting active rights."""
+    if bundle.get('preview', {}).get('payload', {}).get('admission_mode') == 'codex_insight_admission':
+        inputs.verify_frozen_bundle(root, bundle)
+        return
     value = dict(bundle)
     fingerprint = value.pop('input_fingerprint', None)
     if store.digest(value) != fingerprint:
@@ -308,9 +311,77 @@ def _read_plan(root, topic, approval_id, historical):
     return value
 
 
+def _frozen_plan(root, bundle):
+    inputs.verify_frozen_bundle(root, bundle)
+    originals = _test_proof(root, bundle)
+    topic, batch = bundle['topic'], bundle['batch_id']
+    files = dict(_promote(root, 'articles/test/%s/%s/%s.md' % (topic, batch, stage),
+                         originals['articles/test/%s/%s/%s.md' % (topic, batch, stage)],
+                         topic, batch, stage) for stage in writing.STAGES)
+    paths = {path for path in bundle['snapshot']['hashes'] if Path(path).parts[:1] != ('config',)}
+    paths |= _proof_paths(root, bundle)
+    input_path = 'reports/test/%s/writing-runs/%s/input.yaml' % (topic, batch)
+    paths |= {input_path, input_path + '.sha256'}
+    return {'schema_version': 2, 'mode': 'frozen_writing_admission_plan', 'topic': topic,
+            'approval_id': bundle['approval_id'], 'batch_id': batch, 'bundle_path': input_path,
+            'input_hashes': admission._hashes(root, paths), 'files': files,
+            'output_hashes': {path: store.digest(text.encode()) for path, text in files.items()},
+            'production_accepted': True, 'publish_authorized': False, 'new_model_calls': 0}
+
+
+def _frozen_receipt(value):
+    return {'schema_version': 2, 'mode': 'frozen_writing_admission', 'topic': value['topic'],
+            'approval_id': value['approval_id'], 'batch_id': value['batch_id'], 'status': 'accepted',
+            'plan_path': _base(value['topic'], value['approval_id']) + '/plan.yaml',
+            'plan_sha256': store.digest(_dump(value)), 'input_hashes': value['input_hashes'],
+            'output_hashes': value['output_hashes'], 'production_accepted': True,
+            'publish_authorized': False, 'new_model_calls': 0}
+
+
+def admit_frozen(root, bundle):
+    """Mechanically admit reviewed new-format Writing; no config or model use."""
+    root = Path(root).resolve()
+    value = _frozen_plan(root, bundle)
+    base = _base(bundle['topic'], bundle['approval_id'])
+    path = base + '/plan.yaml'
+    receipt = _frozen_receipt(value)
+    payloads = {path: text.encode() for path, text in value['files'].items()}
+    for relative, data in ((path, value), (base + '/accepted.yaml', receipt)):
+        payloads[relative] = _dump(data)
+        payloads[relative + '.sha256'] = (store.digest(payloads[relative]) + '\n').encode()
+    _preflight(root, payloads)
+    for relative, data in payloads.items():
+        target = admission._location(root, relative)
+        if not target.exists():
+            target.parent.mkdir(parents=True, exist_ok=True)
+            with target.open('xb') as handle:
+                handle.write(data)
+    return dict(receipt, files=sorted(payloads))
+
+
+def _verify_frozen(root, topic, approval_id):
+    base = _base(topic, approval_id)
+    value = admission._checked(root, base + '/plan.yaml')
+    if value.get('schema_version') != 2 or value.get('mode') != 'frozen_writing_admission_plan':
+        raise store.OfflineError('正式冻结稿准入计划无效')
+    bundle = store.checked_yaml(root, value['bundle_path'])
+    if bundle.get('topic') != topic or bundle.get('approval_id') != approval_id:
+        raise store.OfflineError('正式冻结稿不属于原页面确认')
+    expected = _frozen_plan(root, bundle)
+    receipt = admission._checked(root, base + '/accepted.yaml')
+    if value != expected or receipt != _frozen_receipt(value):
+        raise store.OfflineError('正式稿件与原确认、审阅或准入散列不一致')
+    admission._verify_hashes(root, value['output_hashes'])
+    return receipt
+
+
 def verify(root, topic, approval_id, historical=False):
     """Read-only acceptance proof. Historical checks never authorize execution."""
     root = Path(root).resolve()
+    receipt_path = _base(topic, approval_id) + '/accepted.yaml'
+    marker = admission._checked(root, receipt_path)
+    if marker.get('mode') == 'frozen_writing_admission':
+        return _verify_frozen(root, topic, approval_id)
     value = _read_plan(root, topic, approval_id, historical)
     receipt = admission._checked(root, _base(topic, approval_id) + '/accepted.yaml')
     if receipt != _receipt(value):

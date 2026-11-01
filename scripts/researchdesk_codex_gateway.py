@@ -133,6 +133,7 @@ class MembershipGateway:
                 'backend': 'chatgpt_plan', 'budget': {'month_max_calls': 100}})
             if count >= cap or self.request_count(self.task_id) >= self.max_requests:
                 raise store.OfflineError('Codex 会员请求预算已用尽')
+            shared.ensure_cycle_room(self.root, self.topic, self.cycle_id, 'insight')
             base = 'reports/test/%s/codex-requests/%s/events' % (self.topic, self.cycle_id)
             directory = store.safe_path(self.root, base)
             paths = sorted(directory.glob('*.yaml'))

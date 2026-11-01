@@ -23,7 +23,7 @@ concurrency:
 
 jobs:
   write:
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' && vars.RESEARCHDESK_DEPLOYED == 'true'
     runs-on: [self-hosted, researchdesk]
     timeout-minutes: 25
     defaults:
@@ -35,40 +35,31 @@ jobs:
       - uses: actions/checkout@v7
         with:
           ref: main
-          fetch-depth: 0
-          path: researchdesk-worker
-          clean: false
+          path: researchdesk-code
           persist-credentials: false
-      - name: Prepare bootstrap dependencies
-        working-directory: researchdesk-worker
-        run: |
-          python3 -m venv "$RUNNER_TEMP/researchdesk-writing-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
-          "$RUNNER_TEMP/researchdesk-writing-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT/bin/python" -m pip install -r workflows/requirements.txt
-      - name: Execute only a page-confirmed test Writing batch
+      - name: Execute only the existing human-confirmed Writing batch
         id: writing
-        working-directory: researchdesk-worker
         env:
           APPROVAL_ID: ${{ inputs.approval_id }}
           MAX_NEW_CALLS: ${{ inputs.max_new_calls }}
           GH_TOKEN: ${{ github.token }}
         run: |
-          "$RUNNER_TEMP/researchdesk-writing-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT/bin/python" scripts/researchdesk_writing_job.py execute \
-            --state "$RUNNER_TEMP/researchdesk-writing-state-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT" \
-            --approval-id "$APPROVAL_ID" --max-new-calls "$MAX_NEW_CALLS"
-      - name: Export completed or interrupted checkpoints
-        id: export
-        if: always() && steps.writing.outcome != 'skipped'
-        working-directory: researchdesk-worker
-        run: |
-          "$RUNNER_TEMP/researchdesk-writing-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT/bin/python" scripts/researchdesk_writing_job.py export \
-            --state "$RUNNER_TEMP/researchdesk-writing-state-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT" \
-            --destination "$RUNNER_TEMP/researchdesk-writing-export-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+          if [ -z "${RESEARCHDESK_RUNTIME_PYTHON:-}" ] || [ -z "${RESEARCHDESK_WORKBENCH_ROOT:-}" ]; then
+            echo 'Run python scripts/researchdesk_workbench.py start on this machine first.'
+            exit 1
+          fi
+          "$RESEARCHDESK_RUNTIME_PYTHON" researchdesk-code/scripts/researchdesk_writing_job.py dispatch \
+            --source "$GITHUB_WORKSPACE/researchdesk-code" \
+            --base-commit "$(git -C researchdesk-code rev-parse HEAD)" \
+            --approval-id "$APPROVAL_ID" --max-new-calls "$MAX_NEW_CALLS" \
+            --artifact "$RUNNER_TEMP/researchdesk-writing-export-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT" \
+            --github-output "$GITHUB_OUTPUT"
       - uses: actions/upload-artifact@v7
         id: artifact
-        if: always() && steps.export.outcome == 'success'
+        if: always() && steps.writing.outputs.artifact_path != ''
         with:
           name: researchdesk-writing-checkpoints
-          path: ${{ runner.temp }}/researchdesk-writing-export-${{ github.run_id }}-${{ github.run_attempt }}/
+          path: ${{ steps.writing.outputs.artifact_path }}/
           if-no-files-found: error
           retention-days: 14
 
@@ -92,5 +83,5 @@ jobs:
         with:
           name: researchdesk-writing-checkpoints
           path: ${{ runner.temp }}/researchdesk-writing-checkpoints
-      - name: Recheck authorization and save only new test outputs
+      - name: Recheck human confirmation and reviews, then save only new results
         run: python scripts/researchdesk_writing_job.py apply --artifact "$RUNNER_TEMP/researchdesk-writing-checkpoints"

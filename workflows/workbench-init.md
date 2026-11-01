@@ -35,7 +35,7 @@ python scripts/researchdesk_membership.py models
 gh auth login
 ```
 
-填好本地模型、主题和预算后，需要自动研究的用户在同一 YAML 设置 `automation.enabled: true`，再运行：
+填好本地模型、主题和预算后，需要自动研究的用户在同一 YAML 设置 `automation.enabled: true`；需要真实 Insight 独立审阅通过后自动正式入库，再设置 `admission.enabled: true`。两个开关默认关闭。随后运行：
 
 ```sh
 python scripts/researchdesk_workbench.py start
@@ -146,9 +146,9 @@ python3 -B scripts/researchdesk_harness.py preflight --config config/local/codex
 
 GitHub 保存框架、模板和研究资料。`config/local/`、生成配置、`config/research_state.yaml`、`reports/test/*/codex-requests/` 和 `reports/test/*/codex-sdk-smoke/` 不提交。后两类文件仍在本地参与用量核算或验收追溯，不应为了“清洁工作台”而删除当前真实记录。
 
-CI 从系统默认和短用户模板初始化通用配置，再执行离线检查，不需要维护者的本地配置或会员授权。定时任务由 GitHub 派发，在绑定的 Mac 工作台直接读取本人配置和会员授权；无需将私人 YAML 交给云端。回存包含原文和逐篇总结，以及测试区的 SDK Insight 和选题，不自动 Writing、正式晋级或发布。
+CI 从系统默认和短用户模板初始化通用配置，再执行离线检查，不需要维护者的本地配置或会员授权。定时任务由 GitHub 派发，在绑定的 Mac 工作台直接读取本人配置和会员授权；无需将私人 YAML 交给云端。回存包含原文、逐篇总结与测试区的 SDK 证明；开启准入后还包含正式综合文章和待确认选题。研究任务不自动 Writing 或发布。
 
-注册启动、每轮配置更新及新版回存均有离线验收；本次开发未实际执行 `start`、启用线上部署变量或新增会员调用。首次真实部署由用户在自己的机器执行。
+新版回存包含原文、逐篇总结、SDK 原结果，以及启用准入后新增的正式综合文章和选题。正式选题通过版本 2 准入回执进入页面；确认与 Writing 复用持久工作台的私有设置和授权，不通过 GitHub 传递整份个人 YAML。注册启动、配置更新及回存有离线验收；首次真实部署仍需在用户自己的机器验证。
 
 Obsidian 继续阅读同一份 Markdown。`.gitignore` 只控制 Git，不能决定 Obsidian Sync 是否同步本地配置；手机只阅读资料时无需运行初始化或复制会员凭据。不要把本地配置误当成 GitHub 与手机必须一致的研究内容。
 

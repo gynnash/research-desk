@@ -197,6 +197,39 @@ class CodexGateway(unittest.TestCase):
             self.assertEqual(bridge.request_count('fixture-task'), 0)
         self.assertEqual(self.client.calls, [])
 
+    def test_cycle_and_stage_limits_include_prior_research_and_failed_sdk_attempts(self):
+        topic, cycle_id = 'agent_memory', 'fixture-cycle'
+        store.save_yaml(self.root, 'reports/test/%s/cycles/%s/manifest.yaml' % (topic, cycle_id), {
+            'schema_version': 1, 'mode': 'research_cycle_test', 'backend': 'chatgpt_plan',
+            'topic': topic, 'cycle_id': cycle_id, 'config': {'budget': {
+                'max_calls_per_cycle': 4, 'research_max_calls': 2, 'insight_max_calls': 2}}})
+        research = 'reports/test/%s/research-batches/%s' % (topic, cycle_id)
+        store.save_yaml(self.root, research + '/manifest.yaml', {
+            'backend': 'chatgpt_plan', 'topic': topic, 'batch_id': cycle_id,
+            'created_at': shared.now(), 'budget': {'month_max_calls': 100}})
+        # A cycle spanning months retains its own prior reservations even
+        # though those calls no longer consume the current monthly budget.
+        for number in (1, 2):
+            store.save_yaml(self.root, research + '/events/%06d.yaml' % number,
+                {'type': 'call_reserved', 'month': '2000-01'})
+        self.client.failure = OSError('fixture-known-network-failure')
+        with self.make_gateway() as first:
+            self.assertEqual(self.request(first)[0], 502)
+        self.client.failure = None
+        # A new phase/retry task gets a fresh task allowance, but not a fresh
+        # Insight or whole-cycle allowance.
+        with gateway.MembershipGateway(self.root, topic, cycle_id, 'review-attempt-2',
+                ['fixture-model'], client=self.client) as second:
+            self.assertEqual(self.request(second)[0], 200)
+        with gateway.MembershipGateway(self.root, topic, cycle_id, 'third-task',
+                ['fixture-model'], client=self.client) as blocked:
+            self.assertEqual(self.request(blocked)[0], 429)
+        self.assertEqual(shared.cycle_request_usage(self.root, topic, cycle_id),
+                         {'research': 2, 'insight': 2, 'total': 4})
+        with self.assertRaisesRegex(store.OfflineError, '本阶段或整轮'):
+            shared.ensure_cycle_room(self.root, topic, cycle_id, 'research')
+        self.assertEqual(len(self.client.calls), 2)
+
     def test_shared_monthly_limit_includes_archived_legacy_and_gateway_requests(self):
         month = shared.now()[:7]
         (self.root / 'config/research_state.yaml').write_text(yaml.safe_dump({

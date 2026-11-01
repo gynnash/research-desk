@@ -17,11 +17,15 @@ TOPIC = re.compile(r'[a-z][a-z0-9]*(?:[-_][a-z0-9]+)*\Z')
 
 
 def _path(root, relative, formal=False):
-    path = admission._location(root, relative)
+    if Path(relative).parts[:1] == ('config',):
+        from researchdesk_confirmation import configuration_path
+        path = configuration_path(root, relative)
+    else:
+        path = admission._location(root, relative)
     if not path.is_file():
         raise store.OfflineError('确认输入不存在: ' + relative)
     if formal and ('test' in Path(relative).parts or path.suffix != '.md'
-                   or Path(relative).parts[0] not in {'sources', 'reports', 'insights', 'articles'}):
+                   or Path(relative).parts[0] not in {'sources', 'reports', 'insights', 'articles', 'collection', 'summary'}):
         raise store.OfflineError('选题预览只接受正式 Markdown 证据')
     return path
 
@@ -171,6 +175,11 @@ def _original_excerpts(root, value, item, max_chars=2400):
 
 def _trusted_cycle(root, topic, cycle_id):
     base = admission._base(topic, cycle_id)
+    marker = admission._checked(root, base + '/accepted.yaml')
+    if marker.get('mode') == 'codex_insight_admission':
+        import researchdesk_insight_admission as current
+        value = current.load(root, topic, cycle_id)
+        return value, value['files']
     # Refuse the creation branch of admission._plan: previews can only read a
     # complete, previously reviewed plan and its accepted marker.
     for relative in (base + '/plan.yaml', base + '/accepted.yaml'):
@@ -235,6 +244,8 @@ def _load_topic(root, config, topic_id):
     if not 0 <= number < len(candidates):
         raise store.OfflineError('选题序号不属于原审阅候选')
     card = candidates[number]
+    if value.get('mode') == 'codex_insight_admission':
+        card = dict(card, evidence_ids=card.get('source_ids') or [item['id'] for item in value['bundle']['sources']])
     expected_id = 'formal-topic-%s-%s-%s' % (topic, cycle_id, number + 1)
     if (metadata['id'] != expected_id or metadata.get('title') != card['title']
             or metadata.get('evidence_ids') != card['evidence_ids']):
@@ -332,10 +343,108 @@ def _choices(config, card, choices):
     return result
 
 
+def _sdk_evidence(root, value, selected, writing_v2=False):
+    available = {item['id']: item for item in value['bundle']['sources']}
+    result, remaining = [], 8000
+    for identifier in selected:
+        if identifier not in available:
+            raise store.OfflineError('选题引用未知原文')
+        item = available[identifier]
+        summary = _path(root, item['summary_path'], formal=True)
+        original = _path(root, item['original_path'], formal=True)
+        if summary.read_text(encoding='utf-8') != item['summary_text'] or original.read_text(encoding='utf-8') != item['original_text']:
+            raise store.OfflineError('已审阅原文或总结发生变化')
+        parts = Path(item['summary_path']).parts
+        research_base = 'reports/test/%s/research-batches/%s/items/%s' % (value['topic'], parts[2], Path(parts[-1]).stem)
+        research_result = store.checked_yaml(root, research_base + '/result.yaml')
+        from researchdesk_batch import parse_result
+        research = parse_result(store.checked_yaml(root, research_base + '/checkpoints/research-%s.yaml' % research_result['revision_count'])['result']['text'])
+        evidence = {'id': identifier, 'title': item['title'], 'path': item['summary_path'],
+            'origin': 'reviewed_research', 'coverage': item['coverage'],
+            'source_ids': [item['source_id']], 'source_paths': [item['original_path']],
+            'source_urls': [item['url']], 'source_version': None,
+            'independently_reviewed': True, 'can_support_original_facts': True,
+            'sha256': store.digest(summary.read_bytes()), 'text': item['summary_text'],
+            'summary': research['summary'], 'claims': research['claims'], 'limitations': research['limitations'],
+            'locators': []}
+        if writing_v2:
+            # Bound excerpts keep the confirmed Writing input manageable.
+            original_text = item['original_text'][:min(2400, remaining)]
+            remaining -= len(original_text)
+            evidence.update(original_excerpts=[{'locator_id': identifier, 'location': '已归档原文',
+                'text': original_text, 'reading_scope': item['coverage'],
+                'source_url': item['url'], 'archive_path': item['original_path'],
+                'archive_sha256': store.digest(original.read_bytes()), 'excerpt_only': True}] if original_text else [],
+                original_excerpt_note='仅提供已审阅研究对应归档的有限正文节选；不是 Writing 对全文的重新审阅，未独立复现实验。')
+        result.append(evidence)
+    return result
+
+
+def _sdk_preview(root, config, topic_id, choices=None, frozen=None):
+    topic, cycle_id, relative, metadata, value, effective, raw = _load_topic(root, config, topic_id)
+    sources = raw.get('source_ids') or [source['id'] for source in value['bundle']['sources']]
+    card = dict(raw, evidence_ids=sources)
+    selected = _choices(config, card, choices)
+    profile = frozen.get('style_profile') if frozen is not None else style_profile(root, config['writing'])
+    evidence = _sdk_evidence(root, value, sources, profile is not None)
+    hashes = {path: expected for path, expected in value['input_hashes'].items()
+              if Path(path).parts[:1] != ('config',)}
+    hashes.update(value['output_hashes'])
+    hashes.update(value['proof_hashes'])
+    for item in evidence:
+        for path in [item['path']] + item['source_paths']:
+            hashes[path] = store.digest(_path(root, path, formal=True).read_bytes())
+    hashes[config['_config_path']] = config['_config_sha256']
+    if profile is not None:
+        from researchdesk_writing_style import validate_profile
+        validate_profile(profile)
+        hashes[profile['path']] = profile['sha256']
+    insights = [dict(item, id='formal-insight-%s-%s-%s' % (topic, cycle_id, number),
+                     path='insights/%s/%s/report.md' % (topic, cycle_id))
+                for number, item in enumerate(value['candidate']['insights'], 1)]
+    coverage_note = '基于已采集正文、独立审阅通过的逐篇总结及实际历史资料；未复现实验，不把研究线索写成已成立趋势。'
+    result = {'schema_version': 1, 'mode': 'real_topic_preview', 'admission_mode': value['mode'],
+        'workbench_id': config['workbench_id'], 'topic_id': topic_id, 'id': topic_id,
+        'topic': topic, 'path': relative, 'cycle_id': cycle_id, 'status': 'proposed',
+        'date': metadata.get('created_at'), **selected, 'choices': selected,
+        'why_now': card.get('why_now', card['angle']),
+        'questions': card.get('key_questions', []), 'key_questions': card.get('key_questions', []),
+        'gaps': card.get('evidence_gaps', []), 'evidence_gaps': card.get('evidence_gaps', []),
+        'coverage_note': coverage_note, 'evidence': evidence, 'insights': insights,
+        'review': {'status': 'pass', 'models': value['models'], 'independent': True,
+                   'accepted_path': value['accepted_path']},
+        'writing': config['writing'], 'stages': ['outline', 'draft', 'candidate'],
+        'output_mode': 'test_only', 'approval_required': True, 'writing_started': False,
+        'publish_authorized': False, 'config': {'path': config['_config_path'], 'sha256': config['_config_sha256']},
+        'snapshot': {'hashes': dict(sorted(hashes.items())), 'fingerprint': store.digest(hashes)}}
+    if profile is not None:
+        result['style_profile'] = profile
+    result['preview_sha256'] = store.digest(result)
+    return result
+
+
+def validate_public_preview(root, preview):
+    """Verify an already confirmed SDK preview without exporting private YAML."""
+    if preview.get('admission_mode') != 'codex_insight_admission':
+        raise store.OfflineError('仅新版准入支持公开冻结证明复核')
+    config = {'workbench_id': preview['workbench_id'], 'topics': [preview['topic']],
+              'writing': preview['writing'], '_config_path': preview['config']['path'],
+              '_config_sha256': preview['config']['sha256']}
+    fresh = _sdk_preview(root, config, preview['topic_id'], preview['choices'], frozen=preview)
+    if fresh != preview:
+        raise store.OfflineError('正式选题、原文或已确认写作范围发生变化')
+    return fresh
+
+
 def prepare_preview(root, config, topic_id, choices=None):
     """Return a JSON-safe immutable candidate; this grants no authorization."""
     root = Path(root).resolve()
     _config(root, config)
+    entries = [entry for entry in _topic_entries(root, config) if entry[4]['id'] == topic_id]
+    if len(entries) == 1:
+        accepted = admission._checked(root, admission._base(entries[0][0], entries[0][1]) + '/accepted.yaml')
+        if accepted.get('mode') == 'codex_insight_admission':
+            return _sdk_preview(root, config, topic_id, choices)
     profile = style_profile(root, config['writing'])
     topic, cycle_id, relative, metadata, value, effective, card = _load_topic(root, config, topic_id)
     selected = _choices(config, card, choices)

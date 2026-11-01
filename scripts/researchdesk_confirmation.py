@@ -43,9 +43,43 @@ class ConfirmationError(store.OfflineError):
         super().__init__(message)
 
 
+def configuration_path(root, relative):
+    """Read generated private settings from the bound persistent workbench."""
+    root = Path(root).resolve()
+    from researchdesk_workbench import generated_config_paths
+    allowed = set(generated_config_paths())
+    if relative not in allowed:
+        return admission._location(root, relative)
+    marker = root / '.git/researchdesk-workbench.json'
+    if not marker.is_file():
+        return admission._location(root, relative)
+    value = json.loads(marker.read_text(encoding='utf-8'))
+    bound = Path(value.get('root', ''))
+    if (set(value) != {'root'} or not bound.is_absolute()
+            or any(p.is_symlink() for p in (bound, *bound.parents))
+            or not (bound / 'config/local/workbench.yaml').is_file()):
+        raise store.OfflineError('确认页面的持久工作台绑定无效')
+    return admission._location(bound.resolve(), relative)
+
+
+def bind_workbench(root, target):
+    """Store a local path in Git metadata, never copy private YAML or tokens."""
+    root, target = Path(root).resolve(), Path(target).resolve()
+    if not (root / 'config/local/workbench.yaml').is_file():
+        return
+    marker = target / '.git/researchdesk-workbench.json'
+    content = json.dumps({'root': str(root)}, sort_keys=True)
+    if marker.exists() and marker.read_text(encoding='utf-8') != content:
+        raise store.OfflineError('已有确认目录绑定其他工作台，保留原绑定')
+    descriptor = os.open(marker, os.O_WRONLY | os.O_CREAT | os.O_TRUNC | os.O_NOFOLLOW, 0o600)
+    with os.fdopen(descriptor, 'w', encoding='utf-8') as handle:
+        handle.write(content)
+
+
 def load_config(root, path=DEFAULT_CONFIG):
     root = Path(root).resolve()
-    target = common.config_path(root, path)
+    target = configuration_path(root, path)
+    common.config_path(target.parents[len(Path(path).parts) - 1], path)
     value = store.load_yaml(target)
     common.fields(value, {'schema_version', 'workbench_id', 'topics', 'server', 'workspace',
                           'preview_ttl_seconds', 'writing'}, '确认页面配置')
@@ -89,7 +123,7 @@ def load_config(root, path=DEFAULT_CONFIG):
         common.positive(writing['words'][key], 200, 5000, 'words.' + key)
     if not writing['words']['min'] <= writing['words']['default'] <= writing['words']['max']:
         raise store.OfflineError('默认字数须在配置范围内')
-    return dict(value, _config_path=target.relative_to(root).as_posix(),
+    return dict(value, _config_path=Path(path).as_posix(),
                 _config_sha256=store.digest(target.read_bytes()))
 
 
@@ -613,6 +647,7 @@ def setup(root, config):
     # Existing workspaces may predate this configuration file. Refresh their
     # clean main checkout before trying to load a newly introduced version.
     GitPublisher(target, config).refresh()
+    bind_workbench(root, target)
     load_config(target, config['_config_path'])
     return target
 
@@ -627,6 +662,9 @@ def main():
     args = parser.parse_args()
     try:
         root = args.root.resolve()
+        if (root / 'config/local/workbench.yaml').is_file():
+            from researchdesk_workbench import apply
+            apply(root)
         config = load_config(root, args.config)
         if args.command == 'setup':
             target = setup(root, config)

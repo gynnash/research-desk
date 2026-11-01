@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import argparse
 from contextlib import contextmanager
+from copy import deepcopy
 from dataclasses import asdict
 from datetime import datetime, timezone
 import fcntl
@@ -166,7 +167,9 @@ def load_config(root, config_path):
         raise store.OfflineError('此入口只支持 accuracy_only')
     limits = config.get('limits', {})
     turns, revisions = limits.get('max_agent_turns', 4), limits.get('max_revisions', 1)
-    if type(turns) is not int or turns < 1 or type(revisions) is not int or revisions not in (0, 1):
+    retries = limits.get('max_failed_retries', 1)
+    if (type(turns) is not int or turns < 1 or type(revisions) is not int or revisions not in (0, 1)
+            or type(retries) is not int or retries not in (0, 1)):
         raise store.OfflineError('任务额度必须为正整数，修订最多一次')
     days = config.get('history', {}).get('lookback_days', 180)
     if type(days) is not int or days < 1:
@@ -282,23 +285,41 @@ def _review(response):
 
 
 def _usage(state):
-    phases = list(state.get('tasks', {}).values())
+    phases = list(state.get('tasks', {}).values()) + [
+        attempt['task'] for attempt in state.get('failed_attempts', [])]
     known = [p.get('result', {}).get('model_request_count') for p in phases]
     counts_known = bool(phases) and all(type(value) is int and value >= 0 for value in known)
     turns = {(p.get('handle', {}).get('thread_id'), p.get('handle', {}).get('turn_id')) for p in phases
              if p.get('handle', {}).get('turn_id')}
     return {'task_count': len(phases), 'reserved_turn_count': len(phases), 'turn_count': len(turns),
             'model_request_count': sum(known) if counts_known else None,
+            **({'failed_retry_count': len(state['failed_attempts'])} if state.get('failed_attempts') else {}),
             'usage': {key: state['tasks'][key].get('result', {}).get('usage')
                       for key in sorted(state.get('tasks', {}))}}
 
 
-def _task(directory, state, phase, config, direction, instructions, backend, continuation=None):
+def _task(directory, state, phase, config, direction, instructions, backend, continuation=None,
+          retry_failed=False):
     state_path = directory / 'state.json'
     tasks = state.setdefault('tasks', {})
     existing = tasks.get(phase)
     if existing and existing.get('status') == 'completed':
         return existing['result']
+    attempt = 1
+    if existing and existing.get('status') in {'failed', 'interrupted', 'cancelled', 'canceled'}:
+        if not retry_failed:
+            return existing.get('result', {'status': 'failed'})
+        failed = state.setdefault('failed_attempts', [])
+        if len(failed) >= config.get('limits', {}).get('max_failed_retries', 1):
+            return {**existing.get('result', {'status': 'failed'}),
+                    'failure_class': 'failed_retry_limit_reached'}
+        if len(tasks) + len(failed) >= config.get('limits', {}).get('max_agent_turns', 4):
+            return {'status': 'blocked', 'failure_class': 'agent_turn_limit'}
+        # Preserve the completed failure before assigning a distinct new task.
+        # Unknown/running outcomes never enter this branch, even on catchup.
+        failed.append({'phase': phase, 'task': deepcopy(existing), 'archived_at': now()})
+        attempt = existing.get('attempt', 1) + 1
+        existing = None
     if existing:
         handle = existing.get('handle', {})
         if existing.get('status') not in {'running', 'blocked_unknown'}:
@@ -310,13 +331,15 @@ def _task(directory, state, phase, config, direction, instructions, backend, con
         except Exception:
             return {'status': 'blocked_unknown'}
     else:
-        if len(tasks) >= config.get('limits', {}).get('max_agent_turns', 4):
+        if (attempt == 1 and len(tasks) + len(state.get('failed_attempts', []))
+                >= config.get('limits', {}).get('max_agent_turns', 4)):
             return {'status': 'blocked', 'failure_class': 'agent_turn_limit'}
         model = config['models']['review' if phase.startswith('review') else 'generation']
-        task = codex.TaskSpec(task_id=state['task_prefix'] + '/' + phase,
+        suffix = phase if attempt == 1 else phase + '-attempt-' + str(attempt)
+        task = codex.TaskSpec(task_id=state['task_prefix'] + '/' + suffix,
             stage='insight', phase=phase, topic=config['topic'], cycle_id=state['cycle_id'],
             model=model, input_dir=directory / 'input', instructions=instructions)
-        existing = {'status': 'running', 'handle': {}, 'model': model,
+        existing = {'status': 'running', 'handle': {}, 'model': model, 'attempt': attempt,
                     'instructions_sha256': _sha(instructions.encode()), 'reserved_at': now()}
         tasks[phase] = existing
         _atomic(state_path, state)
@@ -408,7 +431,7 @@ def _render(candidate, bundle, state, simulated):
     return outputs
 
 
-def run(root, config_path, cycle_id, backend=None, state_root=None, fail_after=None):
+def run(root, config_path, cycle_id, backend=None, state_root=None, fail_after=None, retry_failed=False):
     root = Path(root).resolve()
     if not isinstance(cycle_id, str) or not store.SAFE_ID.fullmatch(cycle_id):
         raise store.OfflineError('批次 ID 无效')
@@ -467,17 +490,23 @@ def run(root, config_path, cycle_id, backend=None, state_root=None, fail_after=N
         _freeze(directory, bundle)
 
         def result(status, **extra):
+            usage = _usage(state)
+            if not simulated:
+                from researchdesk_batch import cycle_request_usage
+                usage['model_request_count'] = cycle_request_usage(root, config['topic'], cycle_id)['insight']
             return {'status': status, 'cycle_id': cycle_id, 'topic': config['topic'],
                     'backend': backend_name, 'simulation': simulated, 'writing_started': False,
-                    'production_accepted': False, **_usage(state), **extra}
+                    'production_accepted': False, **usage, **extra}
 
         if not state.get('candidate'):
             targets = config.get('generation', {}).get('target_words', [3000, 4500])
             instructions = GENERATION.format(target_words='–'.join(map(str, targets)))
             instructions += '\n研究方向：' + _json(direction) + '\n固定输入目录：' + str(directory / 'input')
-            generated = _task(directory, state, 'generation', config, direction, instructions, backend)
+            generated = _task(directory, state, 'generation', config, direction, instructions, backend,
+                              retry_failed=retry_failed)
             if generated['status'] != 'completed':
-                return result('blocked_unknown' if generated['status'] == 'blocked_unknown' else 'failed')
+                return result('blocked_unknown' if generated['status'] == 'blocked_unknown' else 'failed',
+                              reason=generated.get('failure_class'))
             state['candidate'] = _candidate(generated['final_response'], bundle)
             _atomic(path, state)
             if fail_after == 'generation':
@@ -485,9 +514,11 @@ def run(root, config_path, cycle_id, backend=None, state_root=None, fail_after=N
         if not state.get('review'):
             _create(directory / 'input' / 'review' / 'candidate.json', _json(state['candidate']))
             reviewed = _task(directory, state, 'review', config, direction,
-                ACCURACY_REVIEW + '\n候选：' + str(directory / 'input/review/candidate.json'), backend)
+                ACCURACY_REVIEW + '\n候选：' + str(directory / 'input/review/candidate.json'), backend,
+                retry_failed=retry_failed)
             if reviewed['status'] != 'completed':
-                return result('blocked_unknown' if reviewed['status'] == 'blocked_unknown' else 'failed')
+                return result('blocked_unknown' if reviewed['status'] == 'blocked_unknown' else 'failed',
+                              reason=reviewed.get('failure_class'))
             state['review'] = _review(reviewed['final_response'])
             _atomic(path, state)
         generated_model = state['tasks']['generation']['result'].get('observed_model')
@@ -499,15 +530,18 @@ def run(root, config_path, cycle_id, backend=None, state_root=None, fail_after=N
                 return result('failed', reason='accuracy_revision_disabled')
             revised = _task(directory, state, 'revision', config, direction,
                 '只修正这些准确性问题，返回同样的结果对象：' + _json(state['review']), backend,
-                continuation=state['tasks']['generation']['handle'])
+                continuation=state['tasks']['generation']['handle'], retry_failed=retry_failed)
             if revised['status'] != 'completed':
-                return result('blocked_unknown' if revised['status'] == 'blocked_unknown' else 'failed')
+                return result('blocked_unknown' if revised['status'] == 'blocked_unknown' else 'failed',
+                              reason=revised.get('failure_class'))
             state['candidate'] = _candidate(revised['final_response'], bundle)
             _create(directory / 'input' / 'review-revision' / 'candidate.json', _json(state['candidate']))
             rereviewed = _task(directory, state, 'review_revision', config, direction,
-                ACCURACY_REVIEW + '\n修订候选：' + str(directory / 'input/review-revision/candidate.json'), backend)
+                ACCURACY_REVIEW + '\n修订候选：' + str(directory / 'input/review-revision/candidate.json'), backend,
+                retry_failed=retry_failed)
             if rereviewed['status'] != 'completed':
-                return result('blocked_unknown' if rereviewed['status'] == 'blocked_unknown' else 'failed')
+                return result('blocked_unknown' if rereviewed['status'] == 'blocked_unknown' else 'failed',
+                              reason=rereviewed.get('failure_class'))
             state['final_review'] = _review(rereviewed['final_response'])
             _atomic(path, state)
             revised_model = state['tasks']['revision']['result'].get('observed_model')
@@ -557,6 +591,8 @@ def main(argv=None):
     parser.add_argument('--config', type=Path, default=Path('config/examples/codex-insight.yaml'))
     parser.add_argument('--cycle-id')
     parser.add_argument('--state-root', type=Path)
+    parser.add_argument('--retry-failed', action='store_true',
+                        help='Retry one explicitly failed SDK task; unknown requests are only inspected')
     args = parser.parse_args(argv)
     try:
         if args.operation == 'preflight':
@@ -577,7 +613,8 @@ def main(argv=None):
         else:
             if not args.cycle_id:
                 parser.error('insight requires --cycle-id')
-            result = run(args.root, args.config, args.cycle_id, state_root=args.state_root)
+            result = run(args.root, args.config, args.cycle_id, state_root=args.state_root,
+                         retry_failed=args.retry_failed)
     except (store.OfflineError, OSError, ValueError) as exc:
         print('Codex Insight 停止：' + str(exc), file=sys.stderr)
         return 2
