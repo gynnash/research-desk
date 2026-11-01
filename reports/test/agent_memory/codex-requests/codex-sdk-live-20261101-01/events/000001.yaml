@@ -1,0 +1,12 @@
+schema_version: 1
+type: request_reserved
+backend: codex
+topic: agent_memory
+cycle_id: codex-sdk-live-20261101-01
+task_id: researchdesk-d5fcebc1ad0b/agent_memory/codex-sdk-live-20261101-01/sdk-smoke/generation
+phase: generation
+model_id: gpt-6.1-sol
+month: 2026-11
+at: '2026-11-01T02:43:38.813048+00:00'
+request_id: 8ef3eb51-5dca-4132-adea-7abd0ef22151
+usage_status: unknown

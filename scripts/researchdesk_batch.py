@@ -191,6 +191,10 @@ def monthly_budget(root, config):
                 raise store.OfflineError('已有真实月度预算记录无效')
             if workspace_limit is None:
                 cap = min(cap, prior)
+    # A Codex task may make several Responses requests. Count its durable
+    # per-request reservations alongside legacy calls, including unknown ones.
+    from researchdesk_codex_gateway import reserved_calls
+    total += reserved_calls(root, month)
     return total, cap
 
 

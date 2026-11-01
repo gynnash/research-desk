@@ -1,6 +1,6 @@
 # Explicit opt-in Insight entry; default cycles and schedules are unchanged.
-# Live execution remains blocked until SDK isolation and request accounting
-# satisfy the existing membership limits. Offline tests never use credentials.
+# Real execution uses a loopback gateway for SIWC and per-request budgets;
+# native tool isolation is probed before inference. Schedules stay unchanged.
 schema_version: 1
 mode: codex_insight_test
 backend: codex
@@ -14,6 +14,8 @@ codex:
   sdk_version: '0.163.0'
   runtime: bundled
   auth_source: researchdesk_siwc
+  max_requests_per_task: 3  # Actual upstream requests, including retries/failures.
+  timeout_seconds: 240
 review_policy: accuracy_only
 history:
   lookback_days: 180

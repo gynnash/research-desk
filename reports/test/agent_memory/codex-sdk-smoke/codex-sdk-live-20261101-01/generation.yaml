@@ -1,0 +1,24 @@
+failure_class: null
+final_response: '{"marker":"1c826fb126a9bc5d","document_count":2,"scope":"仅 test，不发布。"}'
+model_request_count: 3
+observed_model: gpt-6.1-sol
+requested_model: gpt-6.1-sol
+status: completed
+thread_id: 01a194fd-b9fc-7c11-8f62-edd4414a15e1
+turn_id: 01a194fd-ba7b-7b63-a229-d2003d92b259
+usage:
+  last:
+    cacheWriteInputTokens: 0
+    cachedInputTokens: 9088
+    inputTokens: 12169
+    outputTokens: 31
+    reasoningOutputTokens: 0
+    totalTokens: 12200
+  modelContextWindow: 258400
+  total:
+    cacheWriteInputTokens: 0
+    cachedInputTokens: 27264
+    inputTokens: 35343
+    outputTokens: 135
+    reasoningOutputTokens: 15
+    totalTokens: 35478

@@ -158,7 +158,7 @@ class MembershipClient:
             if temporary.exists():
                 temporary.unlink()
 
-    def _open(self, url, data=None, bearer=None, timeout=30, content_type=None):
+    def _open(self, url, data=None, bearer=None, timeout=30, content_type=None, extra_headers=None):
         # No caller-supplied base URL and no credential-bearing redirects.
         allowed = {DISCOVERY, JWKS, TOKEN, RESOURCE + "/models", RESOURCE + "/responses"}
         if url not in allowed:
@@ -170,6 +170,12 @@ class MembershipClient:
             headers["Content-Type"] = content_type
         if url.endswith("/responses"):
             headers["Accept"] = "text/event-stream"
+        for key, value in (extra_headers or {}).items():
+            if (url != RESOURCE + "/responses" or key.lower() not in {"originator", "user-agent"}
+                    or not isinstance(value, str) or len(value) > 1024
+                    or any(ord(char) < 32 or ord(char) == 127 for char in value)):
+                raise MembershipError("unsafe_forward_header")
+            headers[{"originator": "Originator", "user-agent": "User-Agent"}[key.lower()]] = value
         try:
             return self.opener.open(urllib.request.Request(url, data=data, headers=headers),
                                     timeout=timeout)
@@ -190,6 +196,17 @@ class MembershipClient:
             raise MembershipError(code, exc.code, request_id, shape) from None
         except (OSError, urllib.error.URLError, ValueError):
             raise MembershipError("network_error") from None
+
+    def forward_responses(self, payload, headers=None):
+        """Forward one SDK request using this app's own SIWC authorization.
+
+        The caller reserves its request budget before calling. No inference
+        retry, configurable upstream URL, token return, or API-key fallback.
+        """
+        if not isinstance(payload, dict) or payload.get("store") is not False or payload.get("stream") is not True:
+            raise MembershipError("invalid_forward_request")
+        return self._open(RESOURCE + "/responses", _json_bytes(payload), self._access_token(),
+                          timeout=240, content_type="application/json", extra_headers=headers)
 
     def _json(self, url, data=None, bearer=None, form=False):
         if data is None:

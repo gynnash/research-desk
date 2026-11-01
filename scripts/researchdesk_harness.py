@@ -436,7 +436,8 @@ def run(root, config_path, cycle_id, backend=None, state_root=None, fail_after=N
         if bundle.get('topic') != config['topic'] or bundle.get('cycle_id') != cycle_id:
             raise store.OfflineError('资料集合不属于当前主题/批次')
         _verify_inputs(root, bundle)
-        backend = backend or codex.CodexBackend(profile=config.get('codex'))
+        backend = backend or codex.CodexBackend(profile={**config.get('codex', {}),
+            'run_directory': str(directory)}, root=root)
         capabilities = backend.preflight()
         backend_name = getattr(backend, 'name', capabilities.get('backend', 'codex'))
         simulated = backend_name in {'mock_codex', 'codex_mock'}
@@ -538,10 +539,11 @@ def run(root, config_path, cycle_id, backend=None, state_root=None, fail_after=N
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('operation', choices=('preflight', 'insight', 'offline-demo'))
+    parser.add_argument('operation', choices=('preflight', 'insight', 'offline-demo', 'sdk-smoke'))
     parser.add_argument('--root', type=Path, default=Path(__file__).resolve().parents[1])
     parser.add_argument('--config', type=Path, default=Path('config/examples/codex-insight.yaml'))
     parser.add_argument('--cycle-id')
+    parser.add_argument('--state-root', type=Path)
     args = parser.parse_args(argv)
     try:
         if args.operation == 'preflight':
@@ -549,10 +551,14 @@ def main(argv=None):
             result = codex.CodexBackend(config.get('codex')).preflight()
         elif args.operation == 'offline-demo':
             result = offline_demo()
+        elif args.operation == 'sdk-smoke':
+            result = sdk_smoke(args.root, args.config,
+                args.cycle_id or 'codex-sdk-smoke-' + datetime.now().strftime('%Y%m%d'),
+                state_root=args.state_root)
         else:
             if not args.cycle_id:
                 parser.error('insight requires --cycle-id')
-            result = run(args.root, args.config, args.cycle_id)
+            result = run(args.root, args.config, args.cycle_id, state_root=args.state_root)
     except (store.OfflineError, OSError, ValueError) as exc:
         print('Codex Insight 停止：' + str(exc), file=sys.stderr)
         return 2
@@ -607,6 +613,81 @@ def offline_demo():
                 'three_insights_preserved': len(candidate['insights']) == 3,
                 'idempotent_export': result['output_hashes'] == cached['output_hashes'],
                 'temporary_workspace_removed_on_exit': True}, 'real_model_calls': 0}
+
+
+def sdk_smoke(root, config_path, cycle_id, state_root=None):
+    """Two real SDK tasks on a tiny local probe, never a paper/Research result.
+
+    The marker is present only in a file, so the model must use a file tool.
+    Independent review reads the same file and the actual first response.
+    Each upstream request is reserved by the gateway, including failures.
+    """
+    root = Path(root).resolve()
+    config, direction = load_config(root, config_path)
+    if not store.SAFE_ID.fullmatch(cycle_id):
+        raise store.OfflineError('验收批次 ID 无效')
+    runtime = config.get('runtime', {})
+    outside = Path(state_root or runtime.get('state_directory',
+        '~/Library/Application Support/ResearchDesk/runs')).expanduser().resolve()
+    if outside.is_relative_to(root):
+        raise store.OfflineError('SDK 状态必须在 Vault 外')
+    topic = config['topic']
+    prefix = runtime.get('workbench_id', 'researchdesk') + '-' + _sha(str(root).encode())[:12]
+    directory = outside / prefix / topic / 'sdk-smoke' / cycle_id
+    marker = _sha(('researchdesk-smoke:' + cycle_id).encode())[:16]
+    text = 'ResearchDesk SDK 连接验收材料，非论文或博客。\n验收标记：%s\n资料条数：2\n运行范围：仅 test，不发布。\n' % marker
+    generation = ('使用文件工具读取本任务输入目录 facts.md，返回普通 JSON 对象：'
+                  '{"marker":"文件里的验收标记","document_count":文件里的资料条数,"scope":"文件里的运行范围"}。'
+                  '不要猜测、不要写文件、不要研究其他资料。')
+    review_prompt = ('使用文件工具读取 facts.md 和 candidate.json。只核对候选中的 marker、document_count、scope'
+                     '是否与原文一致。返回 {"decision":"pass 或 revise","issues":[]}；'
+                     '存在实质取值错误时写问题。无需评价文风，不执行其他研究。')
+    fingerprint = _sha({'mode': 'sdk_smoke', 'config': config, 'text': text,
+                        'instructions': [generation, review_prompt]})
+    with _lock(directory):
+        path = directory / 'state.json'
+        if path.exists():
+            state = _checkpoint(path)
+            if state.get('fingerprint') != fingerprint:
+                raise store.OfflineError('验收已绑定原配置，不能重置用量')
+        else:
+            state = {'schema_version': 1, 'topic': topic, 'cycle_id': cycle_id,
+                'backend': 'codex', 'fingerprint': fingerprint, 'tasks': {},
+                'task_prefix': prefix + '/' + topic + '/' + cycle_id + '/sdk-smoke'}
+            _atomic(path, state)
+        _create(directory / 'input/facts.md', text)
+        backend = codex.CodexBackend(profile={**config.get('codex', {}),
+            'run_directory': str(directory)}, root=root)
+        readiness = backend.preflight()
+        if not readiness.get('live_ready'):
+            return {'status': 'blocked', 'preflight': readiness, 'writing_started': False}
+        generated = _task(directory, state, 'generation', config, direction, generation, backend)
+        base = 'reports/test/%s/codex-sdk-smoke/%s/' % (topic, cycle_id)
+        _create(_inside(root, base + 'input.md'), text)
+        if generated['status'] != 'completed':
+            return {'status': generated['status'], 'failure_class': generated.get('failure_class'),
+                    'cycle_id': cycle_id, **_usage(state)}
+        candidate = _parse(generated['final_response'])
+        if (candidate.get('marker') != marker or candidate.get('document_count') != 2
+                or candidate.get('scope') != '仅 test，不发布。'):
+            return {'status': 'failed', 'reason': 'probe_value_mismatch', **_usage(state)}
+        _create(directory / 'input/candidate.json', _json(candidate))
+        reviewed = _task(directory, state, 'review', config, direction, review_prompt, backend)
+        if reviewed['status'] != 'completed':
+            return {'status': reviewed['status'], 'failure_class': reviewed.get('failure_class'),
+                    'cycle_id': cycle_id, **_usage(state)}
+        review = _review(reviewed['final_response'])
+        observed = [generated.get('observed_model'), reviewed.get('observed_model')]
+        collision = all(observed) and observed[0] == observed[1]
+        result = {'status': 'complete' if review['decision'] == 'pass' and not collision else 'failed',
+            'mode': 'codex_sdk_smoke', 'backend': 'codex', 'simulation': False,
+            'topic': topic, 'cycle_id': cycle_id, 'fixture_only': True,
+            'production_accepted': False, 'writing_started': False,
+            'model_access_verified': True, 'observed_models': observed, **_usage(state)}
+        for name, value in [('generation.yaml', generated), ('review.yaml', reviewed),
+                            ('accepted.yaml', result)]:
+            store.save_yaml(root, base + name, json.loads(_json(value)))
+        return {**result, 'receipt_path': base + 'accepted.yaml'}
 
 
 if __name__ == '__main__':

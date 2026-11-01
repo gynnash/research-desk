@@ -1,0 +1,25 @@
+failure_class: null
+final_response: '{"decision":"revise","issues":["当前权限禁止读取这两个文件所在的 /private/tmp 路径，无法核对
+  marker、document_count、scope；尚未确认存在实质取值错误。"]}'
+model_request_count: 2
+observed_model: gpt-6-astra
+requested_model: gpt-6-astra
+status: completed
+thread_id: 01a194fe-178c-7570-9698-0de8038468aa
+turn_id: 01a194fe-17d7-74c0-ace6-e1c1dd2f7c64
+usage:
+  last:
+    cacheWriteInputTokens: 0
+    cachedInputTokens: 9088
+    inputTokens: 11346
+    outputTokens: 92
+    reasoningOutputTokens: 40
+    totalTokens: 11438
+  modelContextWindow: 258400
+  total:
+    cacheWriteInputTokens: 0
+    cachedInputTokens: 18176
+    inputTokens: 22437
+    outputTokens: 148
+    reasoningOutputTokens: 40
+    totalTokens: 22585

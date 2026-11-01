@@ -119,6 +119,28 @@ class MembershipTests(unittest.TestCase):
             self.assertNotIn(private, text)
         self.assertEqual(len(status["account_fingerprint"]), 16)
 
+    def test_sdk_forward_uses_own_oauth_fixed_endpoint_and_one_request(self):
+        self.record()
+        self.opener.add(b'data: {"type":"response.completed"}\n\n')
+        payload = {"model": "fixture-model", "input": "fixture", "store": False, "stream": True}
+        with self.client.forward_responses(payload, headers={"originator": "ResearchDesk"}) as response:
+            self.assertIn(b'response.completed', response.read())
+        self.assertEqual(len(self.opener.calls), 1)
+        request = self.opener.calls[0][0]
+        self.assertEqual(request.full_url, membership.RESOURCE + '/responses')
+        self.assertEqual(request.get_header('Authorization'), 'Bearer private-access-token')
+        self.assertEqual(request.get_header('Originator'), 'ResearchDesk')
+        self.assertEqual(json.loads(request.data), payload)
+        with self.assertRaisesRegex(membership.MembershipError, 'unsafe_forward_header'):
+            self.client.forward_responses(payload, headers={"Authorization": "Bearer ignored"})
+        self.assertEqual(len(self.opener.calls), 1)
+
+    def test_sdk_forward_rejects_stored_or_nonstreaming_requests_before_auth(self):
+        for payload in ({'store': True, 'stream': True}, {'store': False, 'stream': False}):
+            with self.assertRaisesRegex(membership.MembershipError, 'invalid_forward_request'):
+                self.client.forward_responses(payload)
+        self.assertFalse(self.client.profile.exists())
+
     def test_fresh_pkce_and_stable_host(self):
         with self.client._lock():
             first, first_url = self.client._prepare_login("http://127.0.0.1:1234/auth/callback")
