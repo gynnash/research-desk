@@ -219,7 +219,8 @@ def refresh_origin(root):
         # checkout deliberately does not persist its token. Use the job's
         # read-only token only in this process, without Keychain interaction,
         # token-bearing URLs or credential changes in the repository.
-        command += ['-c', 'credential.helper=', '-c', 'credential.helper=!gh auth git-credential']
+        command += ['-c', 'credential.helper=', '-c', 'credential.helper=!gh auth git-credential',
+                    '-c', 'url.https://github.com/.insteadOf=git@github.com:']
     command += ['fetch', '--quiet', 'origin', 'main']
     try:
         completed = subprocess.run(command, env=environment,

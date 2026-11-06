@@ -19,6 +19,7 @@ class WritingRemoteRefresh(unittest.TestCase):
         command = run.call_args.args[0]
         self.assertIn('credential.helper=', command)
         self.assertIn('credential.helper=!gh auth git-credential', command)
+        self.assertIn('url.https://github.com/.insteadOf=git@github.com:', command)
         self.assertNotIn(environment['GH_TOKEN'], ' '.join(command))
         self.assertEqual(run.call_args.kwargs['env']['GH_TOKEN'], environment['GH_TOKEN'])
         self.assertEqual(run.call_args.kwargs['env']['GIT_TERMINAL_PROMPT'], '0')

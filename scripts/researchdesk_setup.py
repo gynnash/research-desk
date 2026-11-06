@@ -213,7 +213,11 @@ class SetupWizard:
             workbench.initialize(self.root, adopt_existing=adopt)
         self.update_setup()
         self.update('chatgpt', self.check_chatgpt())
-        self.update('github', self.github.status())
+        github = self.github.status()
+        self.update('github', github)
+        deployment = self.snapshot()['deployment']
+        if deployment['state'] == 'ready' and deployment.get('repository') != github.get('repository'):
+            self.update('deployment', section('idle', '仓库连接已变化，正在重新检查部署。'))
         self.update('obsidian', self.obsidian.status())
 
     def deploy(self, explicit=False):
@@ -233,9 +237,11 @@ class SetupWizard:
         self.update('deployment', section('running', '正在检查仓库与两个工作流。', url=url))
         try:
             self.notify('正在检查仓库与两个工作流…')
-            self.github.prepare()
+            self.github.prepare(expected_repository=repo, require_private=not explicit)
             self.notify('正在安装 Codex SDK、配置并启动 Mac 执行器…')
             with automatic.pipeline_lock(self.root):
+                if runner._repository(self.root).casefold() != repo.casefold():
+                    raise SetupError('工作台的 GitHub 远端已变化，请重新检查。')
                 workbench.start(self.root)
             self.notify('等待 GitHub 健康检查完成…')
             self.github.health()
@@ -250,7 +256,7 @@ class SetupWizard:
             self.update('deployment', section('blocked', message, url=url))
             return
         self.update('deployment', section(
-            'ready', '健康检查通过。定时采集、总结、洞察和选题已启用。', url=url))
+            'ready', '健康检查通过。定时采集、总结、洞察和选题已启用。', url=url, repository=repo))
         self.notify('正在准备 Obsidian 阅读库…')
         self.obsidian_action('obsidian_sync')
 
@@ -352,6 +358,8 @@ class SetupWizard:
                 'access_denied': '授权未完成。准备好后可重新连接。',
             }.get(exc.code, 'ChatGPT 授权未完成。请检查浏览器或网络后重试。')
             self.update('chatgpt', section('needs_login', message))
+            if stage == 'deployment':
+                self.update('deployment', section('needs_setup', '重新连接 ChatGPT 后继续部署。'))
         except store.OfflineError as exc:
             if str(exc).startswith(('兼容配置被手工修改', '已有配置', '当前持久工作台已有')):
                 message = str(exc)

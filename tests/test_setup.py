@@ -37,6 +37,9 @@ class SetupWizardTest(unittest.TestCase):
         platform = mock.patch.object(setup.platform, 'system', return_value='Darwin')
         platform.start()
         self.addCleanup(platform.stop)
+        origin = mock.patch.object(setup.runner, '_repository', return_value='fixture/workbench')
+        origin.start()
+        self.addCleanup(origin.stop)
 
     def test_activation_follows_both_authorizations_and_health(self):
         self.chatgpt.status.return_value['plan_permission'] = False
@@ -55,7 +58,8 @@ class SetupWizardTest(unittest.TestCase):
 
         def check_remote_health():
             self.start_runner.assert_called_once_with(self.root)
-            self.wizard.github.prepare.assert_called_once()
+            self.wizard.github.prepare.assert_called_once_with(
+                expected_repository='fixture/workbench', require_private=True)
             current = workbench.load_effective(self.root)
             self.assertFalse(current['automation']['enabled'])
             self.assertFalse(current['admission']['enabled'])

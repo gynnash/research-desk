@@ -167,7 +167,7 @@ class GitHubSetup:
             exc.url = url
             raise
         state = result.get('state')
-        if state != 'active' and state not in DISABLED_WORKFLOWS:
+        if not isinstance(state, str) or (state != 'active' and state not in DISABLED_WORKFLOWS):
             raise GitHubSetupError('工作流 ' + name + ' 不可启用。请检查 GitHub 上的工作流状态。',
                                    code='github_workflow_unavailable', url=url)
         return state
@@ -314,12 +314,18 @@ class GitHubSetup:
         raise GitHubSetupError(message + '可运行 gh auth refresh --hostname github.com --scopes workflow。',
                                code='github_workflow_scope_required')
 
-    def prepare(self):
+    def prepare(self, expected_repository=None, require_private=False):
         """Check the target again and enable only the two deployed workflows."""
         self._check_auth()
         repository = self._repository()
-        _, states = self._inspect(repository)
         url = _repo_url(repository)
+        if expected_repository is not None and repository.casefold() != expected_repository.casefold():
+            raise GitHubSetupError('当前 GitHub 仓库与向导显示的仓库不同。请重新检查后再部署。',
+                                   code='github_repository_changed', url=url)
+        private, states = self._inspect(repository)
+        if require_private and not private:
+            raise GitHubSetupError('当前 GitHub 仓库已变为公开。请重新检查并确认后再部署。',
+                                   code='github_visibility_changed', url=url + '/settings')
         message = '远端 main 缺少新版阅读同步入口。请把当前版本更新到 GitHub 的 main 后重试。'
         try:
             entry = self._api('repos/' + repository + '/contents/scripts/researchdesk_setup_obsidian.py?ref=main', message)
