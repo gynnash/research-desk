@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>ResearchDesk · 工作台设置</title>
+  <link rel="stylesheet" href="/style.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <header class="masthead">
+    <div class="shell masthead-inner">
+      <div class="brand"><span class="brand-mark" aria-hidden="true">R</span> ResearchDesk</div>
+      <span class="local-badge">本地设置</span>
+    </div>
+  </header>
+
+  <main class="shell">
+    <section class="hero" aria-labelledby="page-title">
+      <p class="eyebrow">首次配置</p>
+      <h1 id="page-title">设置研究工作台</h1>
+      <p class="lead">工作台会检查本机配置。ChatGPT 与 GitHub 授权就绪后，将自动部署定时研究，按计划采集论文和博客、整理总结、提炼洞察与公众号选题。</p>
+      <p class="hero-note">本次设置只检查并部署环境。首次采集和模型调用从定时任务开始。</p>
+    </section>
+
+    <div id="connection-error" class="notice error" role="alert" hidden></div>
+    <div id="operation" class="notice operation" role="status" aria-live="polite" hidden>
+      <span class="status-dot" aria-hidden="true"></span><p id="operation-message"></p>
+    </div>
+
+    <div class="layout">
+      <div class="steps" aria-label="设置步骤">
+        <section class="step" aria-labelledby="setup-heading">
+          <div class="step-heading">
+            <span class="step-number" aria-hidden="true">01</span>
+            <h2 id="setup-heading">工作台</h2>
+            <span class="status" id="setup-state">等待检查</span>
+          </div>
+          <div class="step-body">
+            <p id="setup-message" class="message" aria-live="polite">正在读取本机配置…</p>
+            <p id="setup-topic" class="detail" hidden><span>研究方向</span> <code id="topic-name"></code></p>
+            <div class="actions"><button type="button" class="button" id="check-button" data-action="check" disabled>重新检查</button></div>
+          </div>
+        </section>
+
+        <section class="step" aria-labelledby="accounts-heading">
+          <div class="step-heading">
+            <span class="step-number" aria-hidden="true">02</span>
+            <h2 id="accounts-heading">连接账号</h2>
+          </div>
+          <div class="step-body accounts">
+            <div class="account">
+              <div class="account-heading"><h3>ChatGPT</h3><span class="status" id="chatgpt-state">等待检查</span></div>
+              <p id="chatgpt-message" class="message" aria-live="polite">用于运行研究与写作模型。</p>
+              <div class="actions" id="chatgpt-actions" hidden>
+                <button type="button" class="button primary" data-action="chatgpt_login" hidden>用 ChatGPT 登录</button>
+                <a class="button" id="chatgpt-auth-url" target="_blank" rel="noopener noreferrer" hidden>打开 ChatGPT 授权页 <span aria-hidden="true">↗</span></a>
+              </div>
+            </div>
+            <div class="account">
+              <div class="account-heading"><h3>GitHub</h3><span class="status" id="github-state">等待检查</span></div>
+              <p id="github-message" class="message" aria-live="polite">用于派发任务和保存研究资料。</p>
+              <p id="github-repository-row" class="detail" hidden><span>资料仓库</span> <a id="github-repository" target="_blank" rel="noopener noreferrer"></a></p>
+              <div id="github-device" class="device" hidden>
+                <p>在 GitHub 授权页输入设备码。</p>
+                <div class="device-actions">
+                  <code id="github-device-code"></code>
+                  <button type="button" class="button" id="copy-code">复制设备码</button>
+                  <a class="button" id="github-auth-url" target="_blank" rel="noopener noreferrer">打开授权页 <span aria-hidden="true">↗</span></a>
+                </div>
+              </div>
+              <div class="actions" id="github-actions" hidden>
+                <button type="button" class="button primary" data-action="github_login" hidden>登录 GitHub</button>
+                <button type="button" class="button" data-action="github_create" hidden>创建私有 GitHub 仓库</button>
+                <a class="button" id="github-auth-link" target="_blank" rel="noopener noreferrer" hidden>打开 GitHub 授权页 <span aria-hidden="true">↗</span></a>
+              </div>
+              <p id="github-create-detail" class="detail" hidden>此操作将把当前项目推送到你账号下的新私有仓库，并将它设为当前工作台的远端。</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="step" aria-labelledby="deployment-heading">
+          <div class="step-heading">
+            <span class="step-number" aria-hidden="true">03</span>
+            <h2 id="deployment-heading">定时研究</h2>
+            <span class="status" id="deployment-state">等待检查</span>
+          </div>
+          <div class="step-body">
+            <p id="deployment-message" class="message" aria-live="polite">账号与仓库就绪后自动部署执行器。</p>
+            <div class="schedule"><span class="schedule-label" id="schedule-label">计划运行时间</span><strong id="schedule-time">每周二、周五 03:00 北京时间</strong></div>
+            <div class="actions" id="deployment-actions" hidden>
+              <button type="button" class="button primary" data-action="deploy" hidden>配置自动研究</button>
+              <a class="button" id="deployment-url" target="_blank" rel="noopener noreferrer" hidden>查看 GitHub Actions <span aria-hidden="true">↗</span></a>
+              <button type="button" class="button" data-action="confirmation_open" hidden>打开选题确认页</button>
+            </div>
+            <details class="guidance" id="github-guide">
+              <summary>需要在 GitHub 上处理什么？</summary>
+              <div class="guidance-content">
+                <ol>
+                  <li>进入自己的 GitHub 仓库，打开 <strong>Actions</strong>。如果 GitHub 提示工作流未启用，请按页面提示启用。</li>
+                  <li>仓库需允许注册自托管 runner。工作流回存和选题确认还需要能够推送至 <code>main</code>。组织策略或分支规则拦截时，请按仓库的权限要求处理。</li>
+                  <li>回到本页选择「重新检查」。定时任务执行时，请保持这台 Mac 开机、联网并运行执行器。</li>
+                </ol>
+                <p><a id="github-actions-guide-link" target="_blank" rel="noopener noreferrer" hidden>打开当前仓库的 Actions <span aria-hidden="true">↗</span></a></p>
+              </div>
+            </details>
+          </div>
+        </section>
+
+        <section class="step" aria-labelledby="obsidian-heading">
+          <div class="step-heading">
+            <span class="step-number" aria-hidden="true">04</span>
+            <h2 id="obsidian-heading">Obsidian 阅读库</h2>
+            <span class="status" id="obsidian-state">等待检查</span>
+          </div>
+          <div class="step-body">
+            <p id="obsidian-message" class="message" aria-live="polite">用单独的 Vault 阅读同步到本机的研究资料。你可以随时设置。</p>
+            <div id="obsidian-path-row" class="path-row" hidden>
+              <div><span class="detail-label">阅读库路径</span><code id="obsidian-path"></code></div>
+              <button type="button" class="button" id="copy-path">复制路径</button>
+            </div>
+            <div class="actions" id="obsidian-actions" hidden>
+              <button type="button" class="button" data-action="obsidian_sync" hidden>准备阅读库</button>
+              <button type="button" class="button" data-action="obsidian_open" hidden>打开 Vault 管理器</button>
+              <a class="button" id="obsidian-download" href="https://obsidian.md/download" target="_blank" rel="noopener noreferrer" hidden>下载 Obsidian <span aria-hidden="true">↗</span></a>
+            </div>
+            <p id="obsidian-first-open" class="detail" hidden>首次在 Vault 管理器中选择「打开文件夹作为仓库」，然后选中上方的阅读库路径。</p>
+            <details class="guidance">
+              <summary>分库、GitHub 更新和多设备阅读</summary>
+              <div class="guidance-content">
+                <ul>
+                  <li><strong>分开使用。</strong> 把阅读副本单独打开成一个 Vault，个人笔记继续放在自己的 Vault 中。<a href="https://obsidian.md/help/vault" target="_blank" rel="noopener noreferrer">打开现有文件夹</a></li>
+                  <li><strong>从 GitHub 更新。</strong> 用本页「从 GitHub 更新资料」刷新阅读副本。遇到本地改动或冲突时，先处理提示的文件，再重试。</li>
+                  <li><strong>在其他设备阅读。</strong> 在这台 Mac 上将阅读 Vault 连接到 Obsidian Sync 的远程 Vault，其他设备连接同一个远程 Vault。GitHub 更新集中在这台 Mac。<a href="https://obsidian.md/help/sync/setup" target="_blank" rel="noopener noreferrer">设置 Obsidian Sync</a></li>
+                </ul>
+              </div>
+            </details>
+          </div>
+        </section>
+      </div>
+
+      <aside class="overview" aria-label="研究流程">
+        <div class="overview-card">
+          <p class="eyebrow">定时任务</p>
+          <h2>每轮研究会保存什么</h2>
+          <ol class="outputs">
+            <li><div><strong>采集公开原文</strong><span>论文与博客 · <code>collection</code></span></div></li>
+            <li><div><strong>逐篇阅读与审阅</strong><span>技术总结 · <code>summary</code></span></div></li>
+            <li><div><strong>比较本轮与历史资料</strong><span>洞察与证据 · <code>insights</code></span></div></li>
+            <li><div><strong>提出公众号选题</strong><span>待确认选题卡 · <code>articles</code></span></div></li>
+          </ol>
+          <p class="overview-note">你在选题确认页保存确认后，可以单独启动写作。大纲、初稿和候选稿也会保存到资料仓库。</p>
+        </div>
+      </aside>
+    </div>
+    <p id="announcement" class="sr-only" role="status" aria-live="polite"></p>
+    <noscript><p class="notice error">请启用 JavaScript，再打开本地设置页。</p></noscript>
+  </main>
+</body>
+</html>
