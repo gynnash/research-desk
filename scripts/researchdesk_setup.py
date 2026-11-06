@@ -1,0 +1,481 @@
+#!/usr/bin/env python3
+"""Configure a recurring ResearchDesk workbench from one local browser page."""
+
+import argparse
+from copy import deepcopy
+from datetime import datetime, timezone
+import fcntl
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+import json
+import os
+from pathlib import Path
+import platform
+import re
+import secrets
+import select
+import subprocess
+import sys
+import tempfile
+import threading
+from urllib.parse import urlsplit
+import webbrowser
+
+import researchdesk_automatic as automatic
+from researchdesk_membership import MembershipClient, MembershipError
+import researchdesk_offline as store
+import researchdesk_runner as runner
+import researchdesk_schedule as schedule
+from researchdesk_setup_github import GitHubSetup, GitHubSetupError
+from researchdesk_setup_obsidian import ObsidianSetup, ObsidianSetupError
+import researchdesk_workbench as workbench
+
+
+SCHEDULE = '每周二、周五 03:00（北京时间）'
+ACTIONS = {
+    'check': '正在检查已有配置和授权…',
+    'chatgpt_login': '请在浏览器中的 OpenAI 页面授权…',
+    'github_login': '请在浏览器中的 GitHub 页面授权…',
+    'github_create': '正在准备你的私有 GitHub 仓库…',
+    'deploy': '正在检查 GitHub Actions…',
+    'obsidian_sync': '正在从 GitHub 更新独立阅读库…',
+    'obsidian_open': '正在打开 Obsidian…',
+    'confirmation_open': '正在准备选题确认页…',
+}
+START_ERRORS = {
+    'github_repository_runner_admin_permission_required': '当前 GitHub 账号没有目标仓库的管理员权限。',
+    'existing_runner_registration_mismatch': '这台机器上的 runner 已登记到其他仓库或使用了其他名称。',
+    'runner_workbench_binding_mismatch': '现有 runner 已绑定其他运行目录。请到那个目录重新打开向导。',
+    'runtime_dependencies_install_failed': 'SDK 依赖安装失败。请检查网络后重试。',
+    'configured_codex_preflight_failed': '本机 Codex SDK 检查失败。请检查运行环境后重试。',
+    'configured_codex_runtime_not_ready': '本机 Codex SDK 尚未就绪。请检查运行环境后重试。',
+    'github_deployment_gate_activation_failed': 'GitHub 未能保存部署变量。请核对仓库权限后重试。',
+    'configured_models_unavailable_for_current_account': 'ChatGPT 可用模型有变化。请重新检查授权和模型。',
+    'required_runner_tools_missing': '本机缺少 Git、GitHub CLI、curl 或 tar。安装后重新检查。',
+}
+
+
+class SetupError(ValueError):
+    pass
+
+
+def section(state, message, **fields):
+    return {'state': state, 'message': message, **fields}
+
+
+def save_user_config(root, user):
+    path = workbench._path(root, workbench.LOCAL_CONFIG)
+    if workbench._read(path) == user:
+        return
+    workbench.apply(root, check_only=True)
+    workbench.render(workbench.load_effective(root, user))
+    backup = workbench._path(root, 'config/local/workbench.before-setup.yaml')
+    if not backup.exists():
+        workbench._write(backup, path.read_bytes())
+    workbench._write(path, workbench._yaml(user))
+    workbench.apply(root)
+
+
+def configure_models(root, catalog):
+    available = list(dict.fromkeys(entry['slug'] for entry in catalog
+                                  if not entry['slug'].startswith('mock-')))
+    if len(available) < 2:
+        raise SetupError('此账号当前需要至少两个可用模型，分别用于生成和独立审阅。')
+    user = workbench._read(workbench._path(root, workbench.LOCAL_CONFIG))
+    shortcuts = user.get('models', {})
+    if shortcuts:
+        generation = shortcuts.get('generation')
+        if generation not in available:
+            generation = available[0]
+        review = shortcuts.get('review')
+        if review not in available or review == generation:
+            review = next(model for model in available if model != generation)
+        writing = shortcuts.get('writing')
+        if writing not in available or writing == review:
+            writing = generation
+        for key, model in (('generation', generation), ('review', review), ('writing', writing)):
+            if key in shortcuts:
+                shortcuts[key] = model
+    effective = workbench.load_effective(root, user)
+    groups = [
+        ('research', effective['research']['models'], ('research', 'insight')),
+        ('insight', effective['insight']['models'], ('generation',)),
+        ('confirmation', effective['confirmation']['writing']['models'], ('writing',)),
+    ]
+    for name, models, generators in groups:
+        updated = dict(models)
+        review = models['review']
+        for role in generators:
+            if updated[role] not in available:
+                updated[role] = next(model for model in available if model != review)
+        used = {updated[role] for role in generators}
+        if review not in available or review in used:
+            if len(used) == len(available):
+                updated[generators[-1]] = updated[generators[0]]
+                used = {updated[role] for role in generators}
+            updated['review'] = next(model for model in available if model not in used)
+        if models != updated:
+            target = user.setdefault(name, {})
+            if name == 'confirmation':
+                target = target.setdefault('writing', {})
+            target['models'] = updated
+    save_user_config(root, user)
+
+
+def enable_schedule(root):
+    user = workbench._read(workbench._path(root, workbench.LOCAL_CONFIG))
+    effective = workbench.load_effective(root, user)
+    if not effective['automation']['enabled']:
+        activated = max(datetime.now(timezone.utc),
+                        schedule.instant(effective['automation']['activated_at']))
+        user.setdefault('automation', {}).update(enabled=True, activated_at=activated.isoformat())
+    user.setdefault('admission', {})['enabled'] = True
+    save_user_config(root, user)
+
+
+class SetupWizard:
+    def __init__(self, root):
+        self.root = Path(root).resolve()
+        self.github = GitHubSetup(self.root)
+        self.obsidian = ObsidianSetup(self.root)
+        self.lock = threading.Lock()
+        self.state = {
+            'setup': section('idle', '正在准备本地工作台。', schedule=SCHEDULE),
+            'chatgpt': section('idle', '正在检查 ChatGPT 授权。'),
+            'github': section('idle', '正在检查 GitHub 授权。'),
+            'deployment': section('idle', '完成授权后自动配置每周研究。'),
+            'obsidian': section('idle', 'GitHub 就绪后准备独立阅读库。'),
+            'operation': None,
+        }
+        self.confirmation_process = None
+        self.confirmation_url = None
+
+    def snapshot(self):
+        with self.lock:
+            return deepcopy(self.state)
+
+    def update(self, name, value):
+        with self.lock:
+            self.state[name] = value
+
+    def notify(self, message, code=None):
+        with self.lock:
+            operation = self.state['operation']
+            if operation is not None:
+                operation['message'] = message
+                if code is not None:
+                    operation['code'] = code
+                else:
+                    operation.pop('code', None)
+
+    def submit(self, action):
+        if action not in ACTIONS:
+            raise SetupError('未知操作。')
+        with self.lock:
+            if self.state['operation'] is not None:
+                return False
+            self.state['operation'] = {'action': action, 'message': ACTIONS[action]}
+        threading.Thread(target=self.perform, args=(action,), daemon=True).start()
+        return True
+
+    def client(self):
+        host = runner.load_config(self.root)
+        return MembershipClient(host['_profile'], self.root)
+
+    def check_chatgpt(self):
+        try:
+            client = self.client()
+            status = client.status()
+            if not status.get('authenticated') or not status.get('plan_permission'):
+                return section('needs_login', '请授权 ResearchDesk 使用你的 ChatGPT 会员用量。')
+            catalog = client.models()
+            with automatic.pipeline_lock(self.root):
+                configure_models(self.root, catalog)
+            return section('ready', 'ChatGPT 授权和独立审阅模型已就绪。')
+        except MembershipError as exc:
+            if exc.code in {'login_required', 'plan_permission_missing'}:
+                return section('needs_login', 'ChatGPT 授权需要更新，请重新连接。')
+            return section('blocked', '无法确认 ChatGPT 模型权限。请检查网络或重新连接。')
+        except SetupError as exc:
+            return section('blocked', str(exc))
+
+    def update_setup(self):
+        value = workbench.load_effective(self.root)
+        self.update('setup', section(
+            'ready', '已准备本地主题、资料来源和用量上限。',
+            topic=value['research']['topic'], schedule=SCHEDULE,
+            automation=value['automation']['enabled'], admission=value['admission']['enabled'],
+        ))
+
+    def inspect(self):
+        with automatic.pipeline_lock(self.root):
+            adopt = not workbench._path(self.root, workbench.LOCAL_CONFIG).exists() and any(
+                workbench._path(self.root, name).exists() for name in workbench.generated_config_paths())
+            workbench.initialize(self.root, adopt_existing=adopt)
+        self.update_setup()
+        self.update('chatgpt', self.check_chatgpt())
+        self.update('github', self.github.status())
+        self.update('obsidian', self.obsidian.status())
+
+    def deploy(self, explicit=False):
+        current = self.snapshot()
+        if current['chatgpt']['state'] != 'ready' or current['github']['state'] != 'ready':
+            self.update('deployment', section('needs_setup', '完成 ChatGPT 和 GitHub 授权后可以继续。'))
+            return
+        if platform.system() != 'Darwin':
+            self.update('deployment', section('blocked', '请在执行每周研究的 Mac 上运行 ./setup。'))
+            return
+        repo = current['github']['repository']
+        url = f'https://github.com/{repo}/actions'
+        if current['github'].get('private') is not True and not explicit:
+            self.update('deployment', section(
+                'needs_setup', '此仓库的研究结果和稿件将随仓库公开。确认使用此仓库后可继续。', url=url))
+            return
+        self.update('deployment', section('running', '正在检查仓库与两个工作流。', url=url))
+        try:
+            self.notify('正在检查仓库与两个工作流…')
+            self.github.prepare()
+            self.notify('正在安装 Codex SDK、配置并启动 Mac 执行器…')
+            with automatic.pipeline_lock(self.root):
+                workbench.start(self.root)
+            self.notify('等待 GitHub 健康检查完成…')
+            self.github.health()
+            with automatic.pipeline_lock(self.root):
+                enable_schedule(self.root)
+            self.update_setup()
+        except GitHubSetupError as exc:
+            self.update('deployment', section('blocked', str(exc), url=getattr(exc, 'url', None) or url))
+            return
+        except (runner.RunnerError, store.OfflineError) as exc:
+            message = START_ERRORS.get(str(exc), '部署未完成。请检查本机运行环境和仓库设置后重试。')
+            self.update('deployment', section('blocked', message, url=url))
+            return
+        self.update('deployment', section(
+            'ready', '健康检查通过。定时采集、总结、洞察和选题已启用。', url=url))
+        self.notify('正在准备 Obsidian 阅读库…')
+        self.obsidian_action('obsidian_sync')
+
+    def obsidian_action(self, action):
+        try:
+            if action == 'obsidian_sync':
+                self.obsidian.sync()
+            else:
+                self.obsidian.open()
+            self.update('obsidian', self.obsidian.status())
+        except ObsidianSetupError as exc:
+            self.update('obsidian', {**self.obsidian.status(), 'state': 'blocked', 'message': str(exc)})
+
+    def open_confirmation(self):
+        if self.snapshot()['deployment']['state'] != 'ready':
+            raise SetupError('请先完成 GitHub 部署，正式选题回存后可在确认页查看。')
+        if self.confirmation_process is not None and self.confirmation_process.poll() is None:
+            webbrowser.open(self.confirmation_url, new=1)
+            return
+        # Reuse the selected gh account in this subprocess only, including a
+        # checkout originally cloned over SSH. Never change global Git config.
+        env = dict(os.environ, GIT_TERMINAL_PROMPT='0', GH_PROMPT_DISABLED='1', GIT_CONFIG_COUNT='3')
+        for index, (key, value) in enumerate([
+            ('credential.https://github.com.helper', ''),
+            ('credential.https://github.com.helper', '!gh auth git-credential'),
+            ('url.https://github.com/.insteadOf', 'git@github.com:'),
+        ]):
+            env['GIT_CONFIG_KEY_' + str(index)] = key
+            env['GIT_CONFIG_VALUE_' + str(index)] = value
+        command = [sys.executable, '-B', str(self.root / 'scripts/researchdesk_confirmation.py')]
+        configured = subprocess.run(command + ['setup'], cwd=self.root, env=env, stdin=subprocess.DEVNULL,
+                                    capture_output=True, check=False, timeout=90)
+        if configured.returncode:
+            raise SetupError('选题确认目录未能准备好。请检查 GitHub 权限和现有确认目录。')
+        process = subprocess.Popen(command + ['serve'], cwd=self.root, env=env, stdin=subprocess.DEVNULL,
+                                   stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, start_new_session=True)
+        with process.stdout:
+            if select.select([process.stdout], [], [], 45)[0]:
+                prefix, separator, value = process.stdout.readline().decode('utf-8', 'replace').strip().partition('http://')
+                if (prefix == 'ResearchDesk 选题确认：' and separator and re.fullmatch(r'127\.0\.0\.1:[0-9]{4,5}', value)
+                        and process.stdout.readline().decode('utf-8', 'replace').startswith('页面已接通')):
+                    self.confirmation_process = process
+                    self.confirmation_url = 'http://' + value
+        if self.confirmation_process is not process:
+            if process.poll() is None:
+                process.terminate()
+            raise SetupError('确认页未能启动。请检查该端口是否已被占用，或返回已经打开的确认页。')
+        webbrowser.open(self.confirmation_url, new=1)
+
+    def perform(self, action):
+        stage = 'setup'
+        try:
+            if action == 'check':
+                self.inspect()
+            elif action == 'chatgpt_login':
+                stage = 'chatgpt'
+                self.client().login(announce=lambda _: self.notify(ACTIONS[action]))
+                self.update(stage, self.check_chatgpt())
+            elif action == 'github_login':
+                stage = 'github'
+                self.github.login(self.notify)
+                self.update(stage, self.github.status())
+            elif action == 'github_create':
+                stage = 'github'
+                if not self.github.status().get('can_create') or not hasattr(self.github, 'create_repository'):
+                    raise SetupError('请在 GitHub 创建自己的仓库，然后返回检查。')
+                self.github.create_repository(self.notify)
+                self.update(stage, self.github.status())
+            elif action in {'obsidian_sync', 'obsidian_open'}:
+                stage = 'obsidian'
+                self.obsidian_action(action)
+                return
+            elif action == 'confirmation_open':
+                stage = 'notice'
+                self.open_confirmation()
+                self.update(stage, section('ready', '已请求打开选题确认页。正式选题回存后可在页面查看。'))
+                return
+            elif action == 'deploy':
+                self.inspect()
+            stage = 'deployment'
+            current = self.snapshot()
+            ready = all(current[key]['state'] == 'ready' for key in ('setup', 'chatgpt', 'github'))
+            if ready and (action == 'deploy' or current['deployment']['state'] != 'ready'):
+                self.deploy(explicit=action == 'deploy')
+            elif not ready:
+                self.update(stage, section('needs_setup', '完成必要授权和仓库配置后自动继续。'))
+        except GitHubSetupError as exc:
+            details = {**self.snapshot().get(stage, {}), 'code': exc.code}
+            if exc.url:
+                details['url'] = exc.url
+            details.update(state='needs_login' if action == 'github_login' else 'blocked', message=str(exc))
+            self.update(stage, details)
+        except (ObsidianSetupError, SetupError) as exc:
+            self.update(stage, {**self.snapshot().get(stage, {}), 'state': 'blocked', 'message': str(exc)})
+        except MembershipError as exc:
+            message = {
+                'authorization_timeout': '授权超时。请重新点击连接 ChatGPT。',
+                'system_browser_unavailable': '无法打开系统浏览器。请设定默认浏览器后重试。',
+                'access_denied': '授权未完成。准备好后可重新连接。',
+            }.get(exc.code, 'ChatGPT 授权未完成。请检查浏览器或网络后重试。')
+            self.update('chatgpt', section('needs_login', message))
+        except store.OfflineError as exc:
+            if str(exc).startswith(('兼容配置被手工修改', '已有配置', '当前持久工作台已有')):
+                message = str(exc)
+            else:
+                message = '工作台配置未通过检查。请检查本地配置后重试。'
+            self.update(stage, {**self.snapshot().get(stage, {}), 'state': 'blocked', 'message': message})
+        except Exception:
+            self.update(stage, {**self.snapshot().get(stage, {}), 'state': 'blocked',
+                                'message': '此步骤暂时无法完成，请检查本机环境和网络后重试。'})
+        finally:
+            self.update('operation', None)
+
+
+def create_server(wizard, port=0):
+    assets = Path(__file__).resolve().parent / 'setup_ui'
+    routes = {'/': ('index.html', 'text/html; charset=utf-8'),
+              '/style.css': ('style.css', 'text/css; charset=utf-8'),
+              '/app.js': ('app.js', 'text/javascript; charset=utf-8')}
+    token = secrets.token_urlsafe(32)
+
+    class Handler(BaseHTTPRequestHandler):
+        def log_message(self, *_):
+            pass
+
+        def setup(self):
+            super().setup()
+            self.connection.settimeout(10)
+
+        def reply(self, status, payload, content_type='application/json; charset=utf-8'):
+            if isinstance(payload, dict):
+                payload = json.dumps(payload, ensure_ascii=False).encode('utf-8')
+            self.send_response(status)
+            self.send_header('Content-Type', content_type)
+            self.send_header('Content-Length', str(len(payload)))
+            self.send_header('Cache-Control', 'no-store')
+            self.send_header('X-Content-Type-Options', 'nosniff')
+            self.send_header('X-Frame-Options', 'DENY')
+            self.send_header('Referrer-Policy', 'no-referrer')
+            self.send_header('Content-Security-Policy',
+                             "default-src 'self'; frame-ancestors 'none'; base-uri 'none'; object-src 'none'")
+            self.end_headers()
+            self.wfile.write(payload)
+
+        def trusted(self, mutation=False):
+            host = f'127.0.0.1:{self.server.server_port}'
+            if self.headers.get('Host') != host or self.headers.get('Sec-Fetch-Site') == 'cross-site':
+                return False
+            return not mutation or (
+                self.headers.get('Origin') == 'http://' + host
+                and secrets.compare_digest(self.headers.get('X-ResearchDesk-CSRF', '').encode('utf-8'),
+                                           token.encode('ascii'))
+            )
+
+        def do_GET(self):
+            if not self.trusted():
+                return self.reply(403, {'error': '请从本机向导地址访问。'})
+            path = urlsplit(self.path).path
+            if path == '/api/status':
+                return self.reply(200, {**wizard.snapshot(), 'csrf': token})
+            if path not in routes:
+                return self.reply(404, {'error': '未找到此页面。'})
+            name, content_type = routes[path]
+            self.reply(200, (assets / name).read_bytes(), content_type)
+
+        def do_POST(self):
+            if not self.trusted(mutation=True):
+                return self.reply(403, {'error': '请刷新本机向导页面后重试。'})
+            if self.path != '/api/action':
+                return self.reply(404, {'error': '未找到此操作。'})
+            if self.headers.get('Content-Type', '').split(';')[0].strip() != 'application/json':
+                return self.reply(415, {'error': '请求需要 JSON。'})
+            try:
+                length = int(self.headers.get('Content-Length', '0'))
+                if not 0 < length <= 1024:
+                    raise ValueError()
+                data = json.loads(self.rfile.read(length))
+                if (not isinstance(data, dict) or set(data) != {'action'}
+                        or not isinstance(data['action'], str) or data['action'] not in ACTIONS):
+                    raise ValueError()
+            except (ValueError, OSError):
+                return self.reply(400, {'error': '请求格式或操作无效。'})
+            if not wizard.submit(data['action']):
+                return self.reply(409, {'error': '向导正在处理另一步，请稍后再试。'})
+            self.reply(202, {'accepted': True})
+
+    return ThreadingHTTPServer(('127.0.0.1', port), Handler)
+
+
+def main(argv=None):
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--no-browser', action='store_true', help='仅显示向导地址')
+    args = parser.parse_args(argv)
+    root = workbench.REPOSITORY
+    path = Path(tempfile.gettempdir()) / ('researchdesk-setup-' + store.digest(str(root))[:24] + '.lock')
+    fd = os.open(path, os.O_CREAT | os.O_RDWR | os.O_NOFOLLOW, 0o600)
+    try:
+        try:
+            fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError:
+            existing = os.read(fd, 128).decode('ascii', 'replace')
+            if not re.fullmatch(r'http://127\.0\.0\.1:[0-9]{1,5}', existing):
+                print('此工作台的向导正在启动，请稍后重试。', file=sys.stderr)
+                return 1
+            print('ResearchDesk 配置向导 ' + existing, flush=True)
+            if not args.no_browser:
+                webbrowser.open(existing, new=1)
+            return 0
+        wizard = SetupWizard(root)
+        with create_server(wizard) as server:
+            url = f'http://127.0.0.1:{server.server_port}'
+            os.ftruncate(fd, 0)
+            os.write(fd, url.encode('ascii'))
+            print('ResearchDesk 配置向导 ' + url, flush=True)
+            wizard.submit('check')
+            if not args.no_browser:
+                webbrowser.open(url, new=1)
+            try:
+                server.serve_forever()
+            except KeyboardInterrupt:
+                pass
+        return 0
+    finally:
+        os.close(fd)
+
+
+if __name__ == '__main__':
+    raise SystemExit(main())

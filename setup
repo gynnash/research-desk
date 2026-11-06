@@ -1,0 +1,53 @@
+#!/bin/bash
+set -euo pipefail
+
+cd -- "$(dirname -- "$0")"
+
+# A graphical launch may not inherit Homebrew's PATH.
+export PATH="$PATH:/opt/homebrew/bin:/usr/local/bin"
+setup_env=.venv-membership
+
+if [[ -L "$setup_env" || ( -e "$setup_env" && ! -f "$setup_env/pyvenv.cfg" ) ]]; then
+  printf '%s\n' '现有 .venv-membership 不是可复用的本地虚拟环境。请保留该目录并调整名称后重试。' >&2
+  exit 1
+fi
+
+if [[ ! -x "$setup_env/bin/python" ]]; then
+  setup_python=
+  for candidate in python3.12 python3; do
+    if command -v "$candidate" >/dev/null && "$candidate" -c 'import sys; assert sys.version_info >= (3, 10)' 2>/dev/null; then
+      setup_python=$candidate
+      break
+    fi
+  done
+  if [[ -z "$setup_python" ]] && command -v brew >/dev/null; then
+    printf '%s\n' '正在使用 Homebrew 安装 Python 3.12…'
+    brew install python@3.12
+    setup_python=python3.12
+  fi
+  if [[ -z "$setup_python" ]]; then
+    printf '%s\n' '请从 https://www.python.org/downloads/macos/ 安装 Python 3.12，再运行 ./setup。' >&2
+    exit 1
+  fi
+  "$setup_python" -m venv "$setup_env"
+fi
+
+setup_python="$setup_env/bin/python"
+if ! "$setup_python" -c 'import sys; assert sys.version_info >= (3, 10)' 2>/dev/null; then
+  printf '%s\n' '现有 .venv-membership 需要 Python 3.10 或更新版本。请调整旧环境目录名后重试。' >&2
+  exit 1
+fi
+
+if ! "$setup_python" -c 'import yaml, pypdf, jwt, cryptography' 2>/dev/null; then
+  printf '%s\n' '正在安装 ResearchDesk 本地依赖…'
+  "$setup_python" -m pip install --disable-pip-version-check -r workflows/requirements-membership.txt
+fi
+
+if [[ "$(uname -s)" == Darwin ]] && ! command -v gh >/dev/null && command -v brew >/dev/null; then
+  printf '%s\n' '正在使用 Homebrew 安装 GitHub CLI…'
+  if ! brew install gh; then
+    printf '%s\n' 'GitHub CLI 尚未安装，向导会显示后续步骤。' >&2
+  fi
+fi
+
+exec "$setup_python" -B scripts/researchdesk_setup.py "$@"

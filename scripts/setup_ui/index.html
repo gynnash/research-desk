@@ -19,7 +19,7 @@
     <section class="hero" aria-labelledby="page-title">
       <p class="eyebrow">首次配置</p>
       <h1 id="page-title">设置研究工作台</h1>
-      <p class="lead">工作台会检查本机配置。ChatGPT 与 GitHub 授权就绪后，将自动部署定时研究，按计划采集论文和博客、整理总结、提炼洞察与公众号选题。</p>
+      <p class="lead">工作台会检查本机配置。ChatGPT 与 GitHub 授权就绪后，私有仓库会自动部署定时研究。使用公开仓库需要你确认。</p>
       <p class="hero-note">本次设置只检查并部署环境。首次采集和模型调用从定时任务开始。</p>
     </section>
 
@@ -27,6 +27,7 @@
     <div id="operation" class="notice operation" role="status" aria-live="polite" hidden>
       <span class="status-dot" aria-hidden="true"></span><p id="operation-message"></p>
     </div>
+    <p id="result-notice" class="notice operation" role="status" aria-live="polite" hidden></p>
 
     <div class="layout">
       <div class="steps" aria-label="设置步骤">
@@ -51,9 +52,9 @@
           <div class="step-body accounts">
             <div class="account">
               <div class="account-heading"><h3>ChatGPT</h3><span class="status" id="chatgpt-state">等待检查</span></div>
-              <p id="chatgpt-message" class="message" aria-live="polite">用于运行研究与写作模型。</p>
+              <p id="chatgpt-message" class="message" aria-live="polite">符合条件的研究和写作请求使用你的 ChatGPT 会员用量。</p>
               <div class="actions" id="chatgpt-actions" hidden>
-                <button type="button" class="button primary" data-action="chatgpt_login" hidden>用 ChatGPT 登录</button>
+                <button type="button" class="button primary" data-action="chatgpt_login" hidden>Continue with ChatGPT</button>
                 <a class="button" id="chatgpt-auth-url" target="_blank" rel="noopener noreferrer" hidden>打开 ChatGPT 授权页 <span aria-hidden="true">↗</span></a>
               </div>
             </div>
@@ -73,8 +74,10 @@
                 <button type="button" class="button primary" data-action="github_login" hidden>登录 GitHub</button>
                 <button type="button" class="button" data-action="github_create" hidden>创建私有 GitHub 仓库</button>
                 <a class="button" id="github-auth-link" target="_blank" rel="noopener noreferrer" hidden>打开 GitHub 授权页 <span aria-hidden="true">↗</span></a>
+                <a class="button" id="github-fix-link" target="_blank" rel="noopener noreferrer" hidden></a>
               </div>
-              <p id="github-create-detail" class="detail" hidden>此操作将把当前项目推送到你账号下的新私有仓库，并将它设为当前工作台的远端。</p>
+              <p id="github-create-detail" class="detail" hidden>此操作会把当前项目推送到你账号下的新私有仓库，并将它设为当前工作台的远端。复制工作流时，GitHub 可能要求补充授权。</p>
+              <p id="github-connect-detail" class="detail" hidden>如果已有自己的仓库，请将本地项目的 <code>origin</code> 指向该仓库，再重新检查。</p>
             </div>
           </div>
         </section>
@@ -86,8 +89,9 @@
             <span class="status" id="deployment-state">等待检查</span>
           </div>
           <div class="step-body">
-            <p id="deployment-message" class="message" aria-live="polite">账号与仓库就绪后自动部署执行器。</p>
+            <p id="deployment-message" class="message" aria-live="polite">等待账号授权和仓库检查。</p>
             <div class="schedule"><span class="schedule-label" id="schedule-label">计划运行时间</span><strong id="schedule-time">每周二、周五 03:00 北京时间</strong></div>
+            <p id="public-repository-notice" class="visibility-note" hidden>当前是公开仓库。回存的论文和博客原文、研究总结、选题和稿件都将公开可见。</p>
             <div class="actions" id="deployment-actions" hidden>
               <button type="button" class="button primary" data-action="deploy" hidden>配置自动研究</button>
               <a class="button" id="deployment-url" target="_blank" rel="noopener noreferrer" hidden>查看 GitHub Actions <span aria-hidden="true">↗</span></a>
@@ -130,8 +134,8 @@
               <div class="guidance-content">
                 <ul>
                   <li><strong>分开使用。</strong> 把阅读副本单独打开成一个 Vault，个人笔记继续放在自己的 Vault 中。<a href="https://obsidian.md/help/vault" target="_blank" rel="noopener noreferrer">打开现有文件夹</a></li>
-                  <li><strong>从 GitHub 更新。</strong> 用本页「从 GitHub 更新资料」刷新阅读副本。遇到本地改动或冲突时，先处理提示的文件，再重试。</li>
-                  <li><strong>在其他设备阅读。</strong> 在这台 Mac 上将阅读 Vault 连接到 Obsidian Sync 的远程 Vault，其他设备连接同一个远程 Vault。GitHub 更新集中在这台 Mac。<a href="https://obsidian.md/help/sync/setup" target="_blank" rel="noopener noreferrer">设置 Obsidian Sync</a></li>
+                  <li><strong>从 GitHub 更新。</strong> 研究和写作回存后会自动刷新阅读副本。其他更新可用本页「从 GitHub 更新资料」拉取。遇到本地改动时，先另行保存笔记，再重试。</li>
+                  <li><strong>在其他设备阅读。</strong> 已开通 Obsidian Sync 时，在这台 Mac 的阅读库中登录 Obsidian，在「核心插件」启用 Sync，再到「设置 → Sync」创建并连接远程 Vault。在手机或其他电脑上用「设置 Obsidian Sync」连接同一个远程 Vault。GitHub 更新集中在这台 Mac。<a href="https://obsidian.md/help/sync/setup" target="_blank" rel="noopener noreferrer">设置 Obsidian Sync</a></li>
                 </ul>
               </div>
             </details>
