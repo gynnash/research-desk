@@ -39,8 +39,20 @@
           </div>
           <div class="step-body">
             <p id="setup-message" class="message" aria-live="polite">正在读取本机配置…</p>
-            <p id="setup-topic" class="detail" hidden><span>研究方向</span> <code id="topic-name"></code></p>
-            <div class="actions"><button type="button" class="button" id="check-button" data-action="check" disabled>重新检查</button></div>
+            <form id="topic-editor" class="topic-editor" hidden>
+              <label for="topic-input">研究方向</label>
+              <ul id="topic-tags" class="topic-tags" role="list" aria-label="已添加的研究方向"></ul>
+              <div class="topic-entry">
+                <input id="topic-input" type="text" autocomplete="off" placeholder="例如多模态检索" aria-describedby="topic-hint">
+                <button type="button" class="button" id="topic-add">添加</button>
+              </div>
+              <p id="topic-hint" class="detail">按 Enter 或点「添加」，保存时保留 1 至 8 个方向。</p>
+              <p id="topic-error" class="detail topic-error" role="alert" hidden></p>
+            </form>
+            <div class="actions">
+              <button type="submit" class="button primary" id="topic-save" form="topic-editor" hidden disabled>保存研究方向</button>
+              <button type="button" class="button" id="check-button" data-action="check" disabled>重新检查</button>
+            </div>
           </div>
         </section>
 
@@ -53,31 +65,34 @@
             <div class="account">
               <div class="account-heading"><h3>ChatGPT</h3><span class="status" id="chatgpt-state">等待检查</span></div>
               <p id="chatgpt-message" class="message" aria-live="polite">符合条件的研究和写作请求使用你的 ChatGPT 会员用量。</p>
-              <div class="actions" id="chatgpt-actions" hidden>
-                <button type="button" class="button primary" data-action="chatgpt_login" hidden>Continue with ChatGPT</button>
-                <a class="button" id="chatgpt-auth-url" target="_blank" rel="noopener noreferrer" hidden>打开 ChatGPT 授权页 <span aria-hidden="true">↗</span></a>
+              <div class="account-footer">
+                <div class="actions" id="chatgpt-actions" hidden>
+                  <button type="button" class="button primary" data-action="chatgpt_login" hidden>Continue with ChatGPT</button>
+                  <a class="button" id="chatgpt-auth-url" target="_blank" rel="noopener noreferrer" hidden>打开 ChatGPT 授权页 <span aria-hidden="true">↗</span></a>
+                </div>
               </div>
             </div>
             <div class="account">
               <div class="account-heading"><h3>GitHub</h3><span class="status" id="github-state">等待检查</span></div>
               <p id="github-message" class="message" aria-live="polite">用于派发任务和保存研究资料。</p>
               <p id="github-repository-row" class="detail" hidden><span>资料仓库</span> <a id="github-repository" target="_blank" rel="noopener noreferrer"></a></p>
-              <div id="github-device" class="device" hidden>
-                <p>在 GitHub 授权页输入设备码。</p>
-                <div class="device-actions">
-                  <code id="github-device-code"></code>
-                  <button type="button" class="button" id="copy-code">复制设备码</button>
-                  <a class="button" id="github-auth-url" target="_blank" rel="noopener noreferrer">打开授权页 <span aria-hidden="true">↗</span></a>
-                </div>
-              </div>
-              <div class="actions" id="github-actions" hidden>
-                <button type="button" class="button primary" data-action="github_login" hidden>登录 GitHub</button>
-                <button type="button" class="button" data-action="github_create" hidden>创建私有 GitHub 仓库</button>
-                <a class="button" id="github-auth-link" target="_blank" rel="noopener noreferrer" hidden>打开 GitHub 授权页 <span aria-hidden="true">↗</span></a>
-                <a class="button" id="github-fix-link" target="_blank" rel="noopener noreferrer" hidden></a>
-              </div>
               <p id="github-create-detail" class="detail" hidden>此操作会把当前项目推送到你账号下的新私有仓库，并将它设为当前工作台的远端。复制工作流时，GitHub 可能要求补充授权。</p>
               <p id="github-connect-detail" class="detail" hidden>请选择有管理员权限的仓库，并将本版本代码放在其默认分支 <code>main</code>。用 <code>git remote set-url origin &lt;你的仓库地址&gt;</code> 连接后，返回本页重新检查。</p>
+              <div class="account-footer">
+                <div id="github-device" class="device" hidden>
+                  <p>在 GitHub 授权页输入设备码。</p>
+                  <div class="device-actions">
+                    <code id="github-device-code"></code>
+                    <button type="button" class="button" id="copy-code">复制设备码</button>
+                    <a class="button" id="github-auth-url" target="_blank" rel="noopener noreferrer" hidden>打开授权页 <span aria-hidden="true">↗</span></a>
+                  </div>
+                </div>
+                <div class="actions" id="github-actions" hidden>
+                  <button type="button" class="button primary" data-action="github_login" hidden>登录 GitHub</button>
+                  <button type="button" class="button" data-action="github_create" hidden>创建私有 GitHub 仓库</button>
+                  <a class="button" id="github-fix-link" target="_blank" rel="noopener noreferrer" hidden></a>
+                </div>
+              </div>
             </div>
           </div>
         </section>

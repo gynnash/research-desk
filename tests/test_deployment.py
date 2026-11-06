@@ -1,6 +1,7 @@
 """Reload current settings while preserving the registered workbench and notes."""
 
 from copy import deepcopy
+from datetime import datetime
 import json
 from pathlib import Path
 import subprocess
@@ -13,7 +14,9 @@ import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
 import researchdesk_deployment as deployment
+import researchdesk_automatic as automatic
 import researchdesk_membership as membership
+import researchdesk_publish as publish
 import researchdesk_workbench as workbench
 
 
@@ -119,6 +122,58 @@ class ConfigurationReload(unittest.TestCase):
         with self.assertRaisesRegex(deployment.DeploymentError, 'run_workbench_start'):
             self.dispatch()
         self.assertFalse((self.root / 'reports').exists())
+
+    def test_scheduled_topic_packages_keep_successful_exports_and_saves_when_another_fails(self):
+        topics = ['agent_memory', 'fixture-retrieval']
+        self.local['automation'] = {'enabled': True, 'topics': topics}
+        self.local['research_topics'] = {'topics': {'fixture-retrieval': {
+            'name': 'Retrieval', 'enabled': True, 'description': 'Offline fixture.',
+            'scope': ['Retrieval'], 'keywords': ['retrieval']}}}
+        self.write(self.root / workbench.LOCAL_CONFIG, self.local)
+
+        def collect(root, path, identity):
+            if identity.startswith('agent_memory-'):
+                raise RuntimeError('Fixture source failure')
+            return {'status': 'empty', 'discovery_status': 'complete'}
+
+        def pipeline(root, **kwargs):
+            return automatic.run(root, collector=collect,
+                                 now=datetime.fromisoformat('2026-11-06T09:00:00+08:00'), **kwargs)
+
+        artifact, outputs = self.source.parent / 'artifact', self.source.parent / 'outputs'
+        result = deployment.dispatch(self.source, self.commit, artifact,
+                                     environment=self.env, github_output=outputs, pipeline=pipeline)
+        self.assertEqual(result['status'], 'partial')
+        self.assertTrue(result['exported'])
+        self.assertIn('artifact_path=' + str(artifact), outputs.read_text())
+        identities = [(run['topic'], run['cycle_id']) for run in result['runs']]
+        self.assertEqual([run['status'] for run in result['runs']], ['failed', 'no_new'])
+
+        first, second = [automatic._base(topic, cycle) + '/context.yaml' for topic, cycle in identities]
+        conflict = self.source / first
+        conflict.parent.mkdir(parents=True)
+        conflict.write_text('keep this existing file\n')
+        remote = self.source.parent / 'remote.git'
+        remote.mkdir()
+        self.git(remote, 'init', '--bare')
+        self.git(self.source, 'remote', 'set-url', 'origin', str(remote))
+        self.git(self.source, 'push', 'origin', 'main')
+        saved = publish.apply(self.source, artifact, push=True)
+        self.assertEqual(saved['status'], 'partial')
+        self.assertEqual([item['status'] for item in saved['results']], ['failed', 'complete'])
+        self.assertEqual(conflict.read_text(), 'keep this existing file\n')
+        self.assertTrue((self.source / second).is_file())
+        self.assertTrue(saved['pushed'])
+        self.assertEqual(self.git(remote, 'show', 'refs/heads/main:' + second), (self.source / second).read_text())
+        self.assertNotIn(first, self.git(remote, 'ls-tree', '-r', '--name-only', 'refs/heads/main'))
+        self.assertEqual(publish.apply(self.source, artifact, push=True)['saved_files'], 0)
+
+        (self.root / first).write_text('invalid local proof\n')
+        second_artifact = self.source.parent / 'second-artifact'
+        partial_export = publish.export_many(self.root, second_artifact, identities, self.commit)
+        self.assertEqual(partial_export['exported_cycles'], 1)
+        self.assertEqual(partial_export['failures'][0]['topic'], 'agent_memory')
+        self.assertEqual(publish.apply(self.source, second_artifact)['status'], 'complete')
 
 
 if __name__ == '__main__':

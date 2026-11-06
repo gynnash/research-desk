@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run the configured collection -> Research -> SDK Insight on one persistent host.
+"""Run collection -> Research -> SDK Insight on one persistent host.
 
 Only explicit run/collect operations contact sources or models. Scheduling and
 configuration are read on this host; Writing is never launched here.
@@ -25,6 +25,9 @@ import researchdesk_research as research
 import researchdesk_runner as runner
 import researchdesk_schedule as schedule
 import researchdesk_workbench as workbench
+
+
+SUCCESS_STATUSES = {'healthy', 'skipped', 'cached', 'complete', 'collected', 'no_new', 'no_insight', 'empty'}
 
 
 def _now():
@@ -107,11 +110,16 @@ def _activation(root, config):
     return result
 
 
-def _fingerprint(effective):
+def _fingerprint(effective, *, selected_only=True):
     # Only settings used by the pipeline. A Writing preference does not change
-    # a frozen research task; account/runtime and budget changes do.
-    return store.digest({key: effective[key] for key in (
-        'workbench_id', 'research_topics', 'research', 'insight', 'runtime', 'membership_budget')})
+    # a frozen research task. Other directions also have separate evidence.
+    settings = {key: effective[key] for key in (
+        'workbench_id', 'research_topics', 'research', 'insight', 'runtime', 'membership_budget')}
+    if selected_only:
+        topic = effective['research']['topic']
+        catalog = settings['research_topics']
+        settings['research_topics'] = {**catalog, 'topics': {topic: catalog['topics'][topic]}}
+    return store.digest(settings)
 
 
 def _private_create(root, relative, payload):
@@ -170,10 +178,11 @@ def _context(root, effective, topic, identity, base, fingerprint, publisher_cont
         value = store.checked_yaml(root, base + '/context.yaml')
         if value.get('topic') != topic or value.get('cycle_id') != identity:
             raise store.OfflineError('冻结上下文不属于当前研究轮次')
-        if value.get('config_fingerprint') != fingerprint:
+        saved_fingerprint = value.get('config_fingerprint')
+        if saved_fingerprint != fingerprint and saved_fingerprint != _fingerprint(effective, selected_only=False):
             return None
         private = workbench._read(workbench._path(root, 'config/local/automation/' + identity + '/snapshot.yaml'))
-        if private.get('config_fingerprint') != fingerprint:
+        if private.get('config_fingerprint') != saved_fingerprint:
             raise store.OfflineError('冻结配置标识已变化')
         prefix = 'config/local/automation/' + identity + '/'
         expected_paths = {prefix + name for name in ('topics.yaml', 'cycle.yaml', 'insight.yaml')}
@@ -291,6 +300,91 @@ def _health(root, effective):
             'sdk_live_ready': capability.get('live_ready', False), 'model_calls': 0}
 
 
+def _empty(topic):
+    return {'schema_version': 1, 'topic': topic, 'cycle_id': '', 'status': 'skipped',
+            'terminal': False, 'receipt_path': None, 'writing_started': False,
+            'publish_authorized': False, 'production_accepted': False, 'model_calls': 0}
+
+
+def _run_topic(root, effective, identity, operation, publisher_context, collector, researcher,
+               insight_runner, health_checker, admitter):
+    topic = effective['research']['topic']
+    empty = _empty(topic)
+    if not identity:
+        return dict(empty, reason='no_due_slot')
+    base = _base(topic, identity)
+    attempts = sorted((root / base / 'attempts').glob('*.yaml'))
+    admission_only = bool(attempts) and store.checked_yaml(
+        root, attempts[-1].relative_to(root)).get('failed_stage') == 'admission'
+    if (root / base / 'receipt.yaml').exists() or admission_only:
+        return _cached_result(root, base, effective, admitter)
+    fingerprint = _fingerprint(effective)
+    context = _context(root, effective, topic, identity, base, fingerprint, publisher_context)
+    initial = dict(empty, cycle_id=identity, config_fingerprint=fingerprint, stages={},
+                   collection_count=0, summary_count=0)
+    initial.pop('model_calls', None)
+    if context is None:
+        return _finish(root, base, dict(initial, status='blocked', reason='configuration_changed'))
+    result = dict(initial, config_fingerprint=context['config_fingerprint'], context_path=base + '/context.yaml',
+                  context_sha256=store.digest((root / base / 'context.yaml').read_bytes()))
+    phase = 'collection'
+    try:
+        collected = (collector or cycle.collect_originals)(root, context['research_config_path'], identity)
+        result['collection_count'] = len(collected.get('records', []))
+        result['stages']['collection'] = {'status': collected['status'],
+                                         'count': result['collection_count']}
+        if collected['status'] == 'empty':
+            incomplete = collected.get('discovery_status') not in (None, 'complete')
+            return _finish(root, base, dict(result,
+                status='collection_incomplete' if incomplete else 'no_new', terminal=not incomplete))
+        if collected['status'] != 'collected':
+            return _finish(root, base, dict(result, status='collection_failed'))
+        if operation == 'collect':
+            return _finish(root, base, dict(result, status='collected', model_calls=0))
+        phase = 'health'
+        result['health'] = (health_checker or _health)(root, effective)
+        phase = 'research'
+        profile = runner.load_config(root)['_profile']
+        studied = (researcher or research.run)(root, context['research_config_path'], identity, profile=profile)
+        result['summary_count'] = len(studied.get('summary_paths', []))
+        result['stages']['research'] = {'status': studied['status'], 'count': result['summary_count']}
+        result['research_reserved_calls'] = studied.get('reserved_calls')
+        result['research_completed_calls'] = studied.get('completed_calls')
+        finished_items = studied.get('items', [])
+        settled = bool(finished_items) and all(item.get('status') in {'summarized', 'reject', 'rejected'}
+                                               for item in finished_items)
+        if not result['summary_count']:
+            return _finish(root, base, dict(result,
+                status='research_rejected' if settled else 'research_incomplete', terminal=settled))
+        if studied['status'] != 'complete' and not settled:
+            return _finish(root, base, dict(result, status='research_incomplete'))
+        phase = 'insight'
+        retry_options = {'retry_failed': True} if operation == 'catchup' else {}
+        insight = (insight_runner or harness.run)(root, context['insight_config_path'], identity,
+                                                 **retry_options)
+        result['simulation'] = insight.get('simulation', False)
+        result['stages']['insight'] = {'status': insight['status'],
+                                       'receipt_path': insight.get('receipt_path')}
+        insight_count = insight.get('model_request_count')
+        result['insight_model_request_count'] = insight_count
+        reserved = studied.get('reserved_calls')
+        if type(reserved) is int and type(insight_count) is int:
+            result['reserved_model_requests'] = reserved + insight_count
+        if insight['status'] in {'complete', 'no_insight'}:
+            phase = 'admission'
+            result = _admit(root, effective,
+                dict(result, status=insight['status'], terminal=True), admitter)
+            return _finish(root, base, result)
+        reason = insight.get('reason')
+        rejected = reason == 'accuracy_review_not_passed'
+        return _finish(root, base, dict(result, status='insight_rejected' if rejected else 'insight_incomplete',
+                                        terminal=rejected, reason=reason))
+    except Exception as exc:
+        # Never expose raw provider exceptions/private account paths in logs.
+        return _finish(root, base, dict(result, status='failed', failed_stage=phase,
+                                        failure_type=type(exc).__name__))
+
+
 def run(root, event='schedule', operation='run', cycle_id=None, publisher_context=None,
         collector=None, researcher=None, insight_runner=None, health_checker=None,
         now=None, prepare=None, admitter=None):
@@ -302,94 +396,50 @@ def run(root, event='schedule', operation='run', cycle_id=None, publisher_contex
             prepare()
         workbench.apply(root)
         effective = workbench.load_effective(root)
-        topic = effective['research']['topic']
-        empty = {'schema_version': 1, 'topic': topic, 'cycle_id': '', 'status': 'skipped',
-                 'terminal': False, 'receipt_path': None, 'writing_started': False,
-                 'publish_authorized': False, 'production_accepted': False, 'model_calls': 0}
+        primary = effective['research']['topic']
         if event == 'schedule' and effective['automation']['enabled'] is not True:
-            return dict(empty, reason='automation_disabled')
+            return dict(_empty(primary), reason='automation_disabled')
         if operation == 'health':
             health = (health_checker or _health)(root, effective)
-            return dict(empty, status='healthy', health=health)
+            return dict(_empty(primary), status='healthy', health=health)
         clock = now or _now()
         scheduling = _activation(root, effective['automation'])
-        identity = cycle_id or (_catchup_slot(root, scheduling, topic, clock,
-                                admission_enabled=effective['admission']['enabled']) if operation == 'catchup' else
-                               _latest_slot(scheduling, topic, clock)
-                               if event == 'schedule' else topic + '-manual-' + clock.strftime('%Y%m%d-%H%M%S'))
-        if not identity:
-            return dict(empty, reason='no_due_slot')
-        base = _base(topic, identity)
-        attempts = sorted((root / base / 'attempts').glob('*.yaml'))
-        admission_only = bool(attempts) and store.checked_yaml(
-            root, attempts[-1].relative_to(root)).get('failed_stage') == 'admission'
-        if (root / base / 'receipt.yaml').exists() or admission_only:
-            return _cached_result(root, base, effective, admitter)
-        fingerprint = _fingerprint(effective)
-        context = _context(root, effective, topic, identity, base, fingerprint, publisher_context)
-        initial = dict(empty, cycle_id=identity, config_fingerprint=fingerprint, stages={},
-                       collection_count=0, summary_count=0)
-        initial.pop('model_calls', None)
-        if context is None:
-            return _finish(root, base, dict(initial, status='blocked', reason='configuration_changed'))
-        result = dict(initial, context_path=base + '/context.yaml',
-                      context_sha256=store.digest((root / base / 'context.yaml').read_bytes()))
-        phase = 'collection'
-        try:
-            collected = (collector or cycle.collect_originals)(root, context['research_config_path'], identity)
-            result['collection_count'] = len(collected.get('records', []))
-            result['stages']['collection'] = {'status': collected['status'],
-                                             'count': result['collection_count']}
-            if collected['status'] == 'empty':
-                incomplete = collected.get('discovery_status') not in (None, 'complete')
-                return _finish(root, base, dict(result,
-                    status='collection_incomplete' if incomplete else 'no_new', terminal=not incomplete))
-            if collected['status'] != 'collected':
-                return _finish(root, base, dict(result, status='collection_failed'))
-            if operation == 'collect':
-                return _finish(root, base, dict(result, status='collected', model_calls=0))
-            phase = 'health'
-            result['health'] = (health_checker or _health)(root, effective)
-            phase = 'research'
-            profile = runner.load_config(root)['_profile']
-            studied = (researcher or research.run)(root, context['research_config_path'], identity, profile=profile)
-            result['summary_count'] = len(studied.get('summary_paths', []))
-            result['stages']['research'] = {'status': studied['status'], 'count': result['summary_count']}
-            result['research_reserved_calls'] = studied.get('reserved_calls')
-            result['research_completed_calls'] = studied.get('completed_calls')
-            finished_items = studied.get('items', [])
-            settled = bool(finished_items) and all(item.get('status') in {'summarized', 'reject', 'rejected'}
-                                                   for item in finished_items)
-            if not result['summary_count']:
-                return _finish(root, base, dict(result,
-                    status='research_rejected' if settled else 'research_incomplete', terminal=settled))
-            if studied['status'] != 'complete' and not settled:
-                return _finish(root, base, dict(result, status='research_incomplete'))
-            phase = 'insight'
-            retry_options = {'retry_failed': True} if operation == 'catchup' else {}
-            insight = (insight_runner or harness.run)(root, context['insight_config_path'], identity,
-                                                     **retry_options)
-            result['simulation'] = insight.get('simulation', False)
-            result['stages']['insight'] = {'status': insight['status'],
-                                           'receipt_path': insight.get('receipt_path')}
-            insight_count = insight.get('model_request_count')
-            result['insight_model_request_count'] = insight_count
-            reserved = studied.get('reserved_calls')
-            if type(reserved) is int and type(insight_count) is int:
-                result['reserved_model_requests'] = reserved + insight_count
-            if insight['status'] in {'complete', 'no_insight'}:
-                phase = 'admission'
-                result = _admit(root, effective,
-                    dict(result, status=insight['status'], terminal=True), admitter)
-                return _finish(root, base, result)
-            reason = insight.get('reason')
-            rejected = reason == 'accuracy_review_not_passed'
-            return _finish(root, base, dict(result, status='insight_rejected' if rejected else 'insight_incomplete',
-                                            terminal=rejected, reason=reason))
-        except Exception as exc:
-            # Never expose raw provider exceptions/private account paths in logs.
-            return _finish(root, base, dict(result, status='failed', failed_stage=phase,
-                                            failure_type=type(exc).__name__))
+
+        def execute(identity, selected=None):
+            config = effective if selected is None else {
+                **effective, 'research': {**effective['research'], 'topic': selected},
+                'insight': {**effective['insight'], 'topic': selected},
+            }
+            return _run_topic(root, config, identity, operation, publisher_context, collector,
+                              researcher, insight_runner, health_checker, admitter)
+
+        directions = (scheduling.get('topics')
+                      if event == 'schedule' and operation == 'run' and not cycle_id else None)
+        if directions is None or len(directions) == 1:
+            identity = cycle_id or (_catchup_slot(root, scheduling, primary, clock,
+                                    admission_enabled=effective['admission']['enabled']) if operation == 'catchup' else
+                                   _latest_slot(scheduling, primary, clock) if event == 'schedule' else
+                                   primary + '-manual-' + clock.strftime('%Y%m%d-%H%M%S'))
+            return execute(identity, primary if directions is not None else None)
+
+        results = []
+        for topic in directions:
+            identity = _latest_slot(scheduling, topic, clock)
+            try:
+                result = execute(identity, topic)
+            except Exception as exc:
+                # For example a damaged saved context must not stop other topics.
+                result = dict(_empty(topic), cycle_id=identity, status='failed', failed_stage='context',
+                              failure_type=type(exc).__name__)
+                result.pop('model_calls')
+            results.append(result)
+        successes = sum(result['status'] in SUCCESS_STATUSES for result in results)
+        status = 'complete' if successes == len(results) else 'partial' if successes else 'failed'
+        if all(result['status'] == 'skipped' for result in results):
+            status = 'skipped'
+        result = dict(_empty(primary), status=status, runs=results)
+        result.pop('model_calls')
+        return result
 
 
 def main(argv=None):
@@ -409,7 +459,7 @@ def main(argv=None):
                 for key in ('topic', 'cycle_id', 'status', 'receipt_path'):
                     handle.write('%s=%s\n' % (key, result.get(key) or ''))
         print(json.dumps(result, ensure_ascii=False))
-        return 0 if result['status'] in {'skipped', 'healthy', 'complete', 'no_insight', 'no_new', 'collected'} else 1
+        return 0 if result['status'] in SUCCESS_STATUSES else 1
     except (store.OfflineError, OSError, ValueError) as exc:
         print(json.dumps({'status': 'blocked', 'failure_type': type(exc).__name__, 'model_calls': 0}))
         return 1

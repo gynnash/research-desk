@@ -12,6 +12,9 @@ import researchdesk_batch_inputs as common
 import researchdesk_cycle as cycle
 
 
+MAX_TOPICS = 8
+
+
 def instant(value):
     result = datetime.fromisoformat(value.replace('Z', '+00:00'))
     if result.tzinfo is None:
@@ -23,7 +26,8 @@ def load_config(root):
     path = common.config_path(root, 'config/automation.yaml')
     config = store.load_yaml(path)
     common.fields(config, {'schema_version', 'enabled', 'timezone', 'schedule_utc', 'activated_at',
-                          'cycle_config', 'admission_config', 'catchup'}, '调度配置')
+                          'cycle_config', 'admission_config', 'catchup'} |
+                  ({'topics'} if 'topics' in config else set()), '调度配置')
     if (type(config['schema_version']) is not int or config['schema_version'] != 1
             or type(config['enabled']) is not bool or config['timezone'] != 'Asia/Shanghai'
             or config['schedule_utc'] != '0 19 * * 1,4'):
@@ -34,6 +38,19 @@ def load_config(root):
         raise store.OfflineError('每次仅补跑一个到期轮次')
     common.config_path(root, config['admission_config'])
     instant(config['activated_at'])
+    if 'topics' in config:
+        selected = config['topics']
+        if (not isinstance(selected, list) or not 1 <= len(selected) <= MAX_TOPICS
+                or any(not isinstance(topic, str) or not store.SAFE_ID.fullmatch(topic + '-20000101-0300')
+                       for topic in selected) or len(set(selected)) != len(selected)):
+            raise store.OfflineError('定时研究须选择 1–8 个不同的有效研究方向')
+        primary = cycle.load_config(root, config['cycle_config'])
+        directions = store.load_yaml(common.config_path(root, primary['topics_file'])).get('topics', {})
+        if selected[0] != primary['topic']:
+            raise store.OfflineError('第一个定时研究方向须与手动研究方向一致')
+        if any(not isinstance(directions.get(topic), dict) or directions[topic].get('enabled') is not True
+               for topic in selected):
+            raise store.OfflineError('定时研究方向不存在或尚未启用')
     return config
 
 

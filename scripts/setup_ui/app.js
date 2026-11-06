@@ -14,15 +14,24 @@
     check: '重新检查工作台', chatgpt_login: '等待 ChatGPT 授权', github_login: '等待 GitHub 授权',
     github_create: '创建私有 GitHub 仓库', deploy: '配置定时研究',
     obsidian_sync: '更新阅读库', obsidian_open: '打开 Vault 管理器',
-    confirmation_open: '打开选题确认页',
+    confirmation_open: '打开选题确认页', save_topics: '正在保存研究方向',
   };
   const problemStates = new Set(['blocked', 'failed', 'error']);
   const defaultSchedule = '每周二、周五 03:00 北京时间';
+  const githubDeviceUrl = 'https://github.com/login/device';
+  const maxTopics = 8;
+  const maxTopicLength = 80;
+  const topicInput = byId('topic-input');
+  const topicTags = byId('topic-tags');
   let snapshot = null;
   let loadingStatus = null;
   let requestedAction = null;
   let connectionIssue = '';
   let actionIssue = '';
+  let savedTopics = null;
+  let draftTopics = [];
+  let topicsEdited = false;
+  let pendingTopics = null;
 
   function setText(id, value) {
     const element = byId(id);
@@ -60,11 +69,6 @@
     }
   }
 
-  function githubAuthUrl(value) {
-    return httpsUrl(value, ({hostname, pathname}) => hostname === 'github.com'
-      && (pathname === '/login/device' || pathname === '/login/oauth/authorize'));
-  }
-
   function githubPage(value) {
     return httpsUrl(value, ({hostname, pathname}) => hostname === 'github.com' && !pathname.startsWith('/login'));
   }
@@ -80,6 +84,113 @@
 
   function isBusy() {
     return Boolean(requestedAction || snapshot?.operation);
+  }
+
+  function topicsFromSetup(setup) {
+    if (Array.isArray(setup.topics)) {
+      return setup.topics.filter((topic) => valueOf(topic?.id) && valueOf(topic?.name))
+        .map(({id, name}) => ({id, name}));
+    }
+    const id = valueOf(setup.topic);
+    return id ? [{id, name: id === 'agent_memory' ? 'Agent Memory' : id}] : null;
+  }
+
+  function normalizeTopicName(value) {
+    return valueOf(value).normalize('NFKC').replace(/\s+/gu, ' ').trim();
+  }
+
+  function sameTopics(actual, expected, saved = false) {
+    return actual.length === expected.length && actual.every(({id, name}, index) => {
+      const other = expected[index];
+      const sameName = saved ? normalizeTopicName(name).toLowerCase() === normalizeTopicName(other.name).toLowerCase()
+        : name === other.name;
+      return sameName && (id === other.id || (saved && !other.id));
+    });
+  }
+
+  function topicError(message) {
+    setText('topic-error', message);
+    setVisible('topic-error', Boolean(message));
+  }
+
+  function renderTopicTags() {
+    topicTags.replaceChildren(...draftTopics.map(({name}, index) => {
+      const tag = document.createElement('li');
+      tag.className = 'topic-tag';
+      tag.textContent = name;
+      const remove = document.createElement('button');
+      remove.className = 'topic-remove';
+      remove.type = 'button';
+      remove.textContent = '×';
+      remove.setAttribute('aria-label', `移除研究方向 ${name}`);
+      remove.addEventListener('click', () => {
+        draftTopics.splice(index, 1);
+        topicsEdited = true;
+        topicError('');
+        renderTopicTags();
+        renderTopicControls();
+        const next = topicTags.children[Math.min(index, draftTopics.length - 1)];
+        (next?.firstElementChild || topicInput).focus();
+      });
+      tag.append(remove);
+      return tag;
+    }));
+  }
+
+  function reconcileTopics(setup) {
+    const actual = topicsFromSetup(setup);
+    if (!actual) return;
+    savedTopics = actual;
+    if (pendingTopics && requestedAction !== 'save_topics' && !snapshot.operation) {
+      const notice = snapshot.notice;
+      const confirmed = notice?.action === 'save_topics' && notice.state === 'ready';
+      const failed = problemStates.has(notice?.state) && (!notice.action || notice.action === 'save_topics');
+      if (!failed && (confirmed || sameTopics(actual, pendingTopics, true))) topicsEdited = false;
+      pendingTopics = null;
+    }
+    if (!topicsEdited && !sameTopics(actual, draftTopics)) {
+      draftTopics = actual.slice();
+      renderTopicTags();
+    }
+  }
+
+  function renderTopicControls() {
+    const available = savedTopics !== null;
+    const saving = Boolean(pendingTopics) || requestedAction === 'save_topics' || snapshot?.operation?.action === 'save_topics';
+    const hasInput = Boolean(valueOf(topicInput.value));
+    const changed = available && !sameTopics(savedTopics, draftTopics);
+    setVisible('topic-editor', available);
+    setVisible('topic-save', available);
+    byId('topic-editor').setAttribute('aria-busy', String(saving));
+    topicInput.disabled = saving;
+    byId('topic-add').disabled = saving || !hasInput;
+    byId('topic-save').disabled = !snapshot?.csrf || isBusy() || saving
+      || !(hasInput || (draftTopics.length > 0 && changed));
+    for (const tag of topicTags.children) tag.firstElementChild.disabled = saving;
+  }
+
+  function addTopic() {
+    const name = normalizeTopicName(topicInput.value);
+    if (!name) return false;
+    if (Array.from(name).length > maxTopicLength || !/[\p{L}\p{N}]/u.test(name) || /\p{C}/u.test(topicInput.value)) {
+      topicError('研究方向名称须包含文字或数字，长度为 1 至 80 字符。');
+      return false;
+    }
+    if (draftTopics.some((topic) => normalizeTopicName(topic.name).toLowerCase() === name.toLowerCase())) {
+      topicError('这个研究方向已经添加。');
+      return false;
+    }
+    if (draftTopics.length >= maxTopics) {
+      topicError('最多可添加 8 个研究方向。');
+      return false;
+    }
+    draftTopics.push({name});
+    topicsEdited = true;
+    topicInput.value = '';
+    topicError('');
+    renderTopicTags();
+    renderTopicControls();
+    return true;
   }
 
   function renderAccounts(chatgpt, github, operation) {
@@ -99,27 +210,26 @@
     externalLink('github-repository', repositoryUrl);
     setVisible('github-repository-row', Boolean(repo && repositoryUrl));
     const githubRunning = ['github_login', 'github_create'].includes(operation?.action) ? operation : null;
-    const code = [githubRunning?.user_code, githubRunning?.device_code, githubRunning?.code,
-      github.user_code, github.device_code, github.code].find((item) => /^[A-Z0-9]{4}-[A-Z0-9]{4}$/.test(valueOf(item)));
-    const authorizationUrl = [githubRunning?.verification_uri, githubRunning?.url,
-      github.verification_uri, github.url].map(githubAuthUrl).find(Boolean);
+    const code = [githubRunning?.user_code, githubRunning?.device_code, githubRunning?.code]
+      .find((item) => /^[A-Z0-9]{4}-[A-Z0-9]{4}$/.test(valueOf(item)));
     setText('github-device-code', valueOf(code));
     setVisible('github-device', Boolean(code));
-    externalLink('github-auth-url', code ? authorizationUrl || 'https://github.com/login/device' : '');
-    externalLink('github-auth-link', code ? '' : authorizationUrl);
+    externalLink('github-auth-url', code ? githubDeviceUrl : '');
 
     const githubLogin = github.state === 'needs_login' || github.code === 'github_login_required';
     const githubCreate = github.can_create === true && (github.state !== 'ready' || github.private === false);
     const toolUrl = httpsUrl(github.url, ({hostname}) => hostname === 'cli.github.com' || hostname === 'git-scm.com');
     const fixUrl = github.state === 'missing_tool' ? toolUrl
       : problemStates.has(github.state) ? githubPage(github.url) : '';
-    setButton('github_login', githubLogin && !githubRunning);
-    setButton('github_create', githubCreate);
+    const showLogin = githubLogin && !code && githubRunning?.action !== 'github_create';
+    const showCreate = githubCreate && !githubRunning;
+    setButton('github_login', showLogin, githubRunning ? '正在获取设备码…' : '登录 GitHub');
+    setButton('github_create', showCreate);
     setText('github-fix-link', toolUrl ? '查看安装说明 ↗' : '打开 GitHub 检查 ↗');
     externalLink('github-fix-link', fixUrl);
     setVisible('github-create-detail', githubCreate);
     setVisible('github-connect-detail', github.state === 'needs_repository' && !githubCreate);
-    setVisible('github-actions', (githubLogin && !githubRunning) || githubCreate || (!code && authorizationUrl) || fixUrl);
+    setVisible('github-actions', showLogin || showCreate || fixUrl);
     return repositoryUrl;
   }
 
@@ -178,9 +288,7 @@
       setSection('setup', setup);
       setSection('chatgpt', chatgpt, '已授权');
       setSection('github', github, '已连接');
-      const topic = valueOf(setup.topic);
-      setText('topic-name', topic);
-      setVisible('setup-topic', Boolean(topic));
+      reconcileTopics(setup);
       const repositoryUrl = renderAccounts(chatgpt, github, operation);
       renderDeployment(setup, chatgpt, github, deployment, repositoryUrl);
       renderObsidian(obsidian, github);
@@ -192,6 +300,7 @@
     for (const [action, button] of buttons) {
       button.disabled = isBusy() || (!snapshot?.csrf && action !== 'check');
     }
+    renderTopicControls();
   }
 
   async function refresh() {
@@ -215,8 +324,8 @@
     return loadingStatus;
   }
 
-  async function runAction(action) {
-    if (!buttons.has(action) || isBusy()) return;
+  async function runAction(action, fields = {}) {
+    if ((!buttons.has(action) && action !== 'save_topics') || isBusy()) return;
     actionIssue = '';
     if (!snapshot?.csrf) {
       await refresh();
@@ -228,9 +337,16 @@
       const response = await fetch('/api/action', {
         method: 'POST',
         headers: {'Content-Type': 'application/json', 'X-ResearchDesk-CSRF': snapshot.csrf},
-        body: JSON.stringify({action}),
+        body: JSON.stringify({action, ...fields}),
       });
-      if (!response.ok) actionIssue = '本地工作台暂时无法接受此操作。请查看当前状态，再重试。';
+      if (response.ok) {
+        if (action === 'save_topics') pendingTopics = fields.topics;
+      } else if (action === 'save_topics' && response.status === 400) {
+        const result = await response.json().catch(() => null);
+        topicError(valueOf(result?.error) || '无法保存研究方向，请检查名称后重试。');
+      } else {
+        actionIssue = '本地工作台暂时无法接受此操作。请查看当前状态，再重试。';
+      }
     } catch {
       actionIssue = '暂时无法提交此操作。请确认本地设置服务仍在运行。';
     } finally {
@@ -262,6 +378,28 @@
   for (const [action, button] of buttons) {
     button.addEventListener('click', () => runAction(action));
   }
+  topicInput.addEventListener('input', () => {
+    topicError('');
+    renderTopicControls();
+  });
+  topicInput.addEventListener('keydown', (event) => {
+    if (event.key !== 'Enter' || event.isComposing || event.keyCode === 229) return;
+    event.preventDefault();
+    addTopic();
+  });
+  byId('topic-add').addEventListener('click', () => {
+    addTopic();
+    topicInput.focus();
+  });
+  byId('topic-editor').addEventListener('submit', (event) => {
+    event.preventDefault();
+    if (byId('topic-save').disabled) return;
+    if (valueOf(topicInput.value) && !addTopic()) return;
+    if (draftTopics.length > 0) {
+      topicError('');
+      return runAction('save_topics', {topics: draftTopics.slice()});
+    }
+  });
   byId('copy-code').addEventListener('click', () => copyValue('github-device-code', '已复制 GitHub 设备码。'));
   byId('copy-path').addEventListener('click', () => copyValue('obsidian-path', '已复制阅读库路径。'));
 

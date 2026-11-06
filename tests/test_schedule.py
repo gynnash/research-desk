@@ -69,6 +69,22 @@ class BeijingSchedule(unittest.TestCase):
         with self.assertRaises(store.OfflineError):
             schedule.load_config(self.root)
 
+    def test_optional_topics_require_enabled_directions_in_primary_order(self):
+        directions_path = self.root / 'config/research_topics.yaml'
+        directions = yaml.safe_load(directions_path.read_text())
+        primary = 'agent-memory'
+        directions['topics']['retrieval'] = dict(directions['topics'][primary], name='Retrieval')
+        directions['topics']['disabled'] = dict(directions['topics'][primary], enabled=False)
+        directions_path.write_text(yaml.safe_dump(directions), encoding='utf-8')
+        config_path = self.root / 'config/automation.yaml'
+        for topics in ([], [primary, primary], ['retrieval', primary], [primary, 'disabled'],
+                       [primary, 'unknown'], [primary, '../bad'], [primary, *[str(i) for i in range(8)]]):
+            with self.subTest(topics=topics), self.assertRaises(store.OfflineError):
+                config_path.write_text(yaml.safe_dump(dict(self.config, topics=topics)), encoding='utf-8')
+                schedule.load_config(self.root)
+        config_path.write_text(yaml.safe_dump(dict(self.config, topics=[primary, 'retrieval'])), encoding='utf-8')
+        self.assertEqual(schedule.load_config(self.root)['topics'], [primary, 'retrieval'])
+
     def test_tuesday_before_at_and_after_0300_use_beijing_date(self):
         self.assertEqual(self.due('2026-10-19T18:59:59+00:00')['cycle_id'], '')
         for value in ('2026-10-19T19:00:00+00:00', '2026-10-20T03:00:00+08:00',

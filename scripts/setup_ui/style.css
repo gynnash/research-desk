@@ -53,14 +53,25 @@ h1 { font-size: clamp(28px, 5vw, 39px); font-weight: 680; letter-spacing: -.045e
 .detail { margin-top: 7px; }
 .detail span { margin-right: 3px; }
 .detail code { background: var(--background); border-radius: 4px; padding: 2px 5px; }
+.topic-editor { margin-top: 13px; }
+.topic-editor label { display: block; font-size: 13px; font-weight: 650; }
+.topic-tags { display: flex; flex-wrap: wrap; gap: 7px; padding: 0; margin: 7px 0; list-style: none; }
+.topic-tags:empty { margin: 0 0 7px; }
+.topic-tag { position: relative; max-width: 100%; min-height: 32px; padding: 6px 33px 6px 9px; border-radius: 7px; background: var(--green-wash); color: var(--green); font-size: 13px; overflow-wrap: anywhere; }
+.topic-remove { position: absolute; top: 2px; right: 3px; display: grid; place-items: center; width: 26px; height: 26px; padding: 0; border: 0; border-radius: 5px; background: transparent; color: var(--green); font-size: 18px; line-height: 1; }
+.topic-remove:hover:not(:disabled) { background: #d9e9dc; }
+.topic-entry { display: flex; gap: 7px; align-items: stretch; }
+.topic-entry input { flex: 1; min-width: 0; max-width: 340px; padding: 5px 9px; border: 1px solid var(--line); border-radius: 7px; color: var(--ink); background: var(--paper); font-size: 13px; }
+.topic-error { color: var(--red); }
 .status { margin-left: auto; border-radius: 20px; padding: 3px 8px; background: var(--background); color: var(--subtle); font-size: 11px; line-height: 1.45; font-weight: 650; white-space: nowrap; }
 .status[data-state="ready"] { color: var(--green); background: var(--green-wash); }
 .status[data-state="running"], .status[data-state="needs_login"], .status[data-state="needs_repository"], .status[data-state="needs_setup"], .status[data-state="not_ready"], .status[data-state="missing_tool"] { color: var(--amber); background: var(--amber-wash); }
 .status[data-state="blocked"], .status[data-state="failed"], .status[data-state="error"] { color: var(--red); background: var(--red-wash); }
 .accounts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
-.account { min-width: 0; padding: 12px; border: 1px solid var(--line); border-radius: 9px; }
+.account { display: flex; flex-direction: column; min-width: 0; padding: 12px; border: 1px solid var(--line); border-radius: 9px; }
 .account-heading { margin-bottom: 5px; }
 .account-heading h3 { font-size: 14px; font-weight: 650; }
+.account-footer { margin-top: auto; }
 
 .button { display: inline-flex; align-items: center; justify-content: center; gap: 4px; padding: 5px 10px; min-height: 34px; border: 1px solid var(--line); border-radius: 7px; background: var(--paper); color: var(--green); font-size: 12px; line-height: 1.35; font-weight: 650; text-decoration: none; }
 .button:hover:not(:disabled) { background: var(--background); }

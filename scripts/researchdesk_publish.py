@@ -24,6 +24,7 @@ import researchdesk_archive as archive
 import researchdesk_harness as harness
 import researchdesk_insight_inputs as inputs
 import researchdesk_offline as store
+from researchdesk_schedule import MAX_TOPICS
 
 
 class PublishError(store.OfflineError):
@@ -34,6 +35,8 @@ IDENTITY = re.compile(r'[a-z0-9][a-z0-9_-]{0,100}\Z')
 SHA = re.compile(r'[0-9a-f]{64}\Z')
 COMMIT = re.compile(r'(?:[0-9a-f]{40}|[0-9a-f]{64})\Z')
 MAX_BYTES = 12_000_000
+BATCH_MODE = 'scheduled_research_transfer_batch'
+TRANSFER_ERRORS = (store.OfflineError, OSError, ValueError, KeyError, TypeError, AttributeError, yaml.YAMLError)
 
 
 def _hash(payload):
@@ -434,6 +437,50 @@ def export(root, destination, topic, cycle_id, base_commit):
     return {'cycle_id': cycle_id, 'exported_files': len(files), 'production_accepted': formal_complete}
 
 
+def _batch_identities(cycles):
+    if not 1 <= len(cycles) <= MAX_TOPICS:
+        raise PublishError('transfer_batch_size_invalid')
+    for topic, cycle in cycles:
+        _identity(topic, cycle)
+    if len({topic for topic, _ in cycles}) != len(cycles) or len({cycle for _, cycle in cycles}) != len(cycles):
+        raise PublishError('transfer_batch_identity_repeated')
+
+
+def _batch_path(topic, cycle):
+    return 'cycles/%s/%s' % (topic, cycle)
+
+
+def export_many(root, destination, cycles, base_commit, exporter=None):
+    """Build one artifact from independently verified topic packages."""
+    cycles = list(cycles)
+    _batch_identities(cycles)
+    if not isinstance(base_commit, str) or not COMMIT.fullmatch(base_commit):
+        raise PublishError('transfer_base_commit_invalid')
+    destination = Path(destination).absolute()
+    if destination.exists() or destination.is_symlink():
+        raise PublishError('transfer_batch_destination_exists')
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    entries, failures = [], []
+    with tempfile.TemporaryDirectory(prefix='researchdesk-topic-export-', dir=destination.parent) as temporary:
+        staging = Path(temporary)
+        for topic, cycle in cycles:
+            child = _safe(staging, _batch_path(topic, cycle))
+            try:
+                (exporter or export)(root, child, topic, cycle, base_commit)
+                digest = _hash(_read(child, 'manifest.json'))
+            except TRANSFER_ERRORS as exc:
+                failures.append({'topic': topic, 'cycle_id': cycle, 'failure_type': type(exc).__name__})
+                shutil.rmtree(child, ignore_errors=True)
+                continue
+            entries.append({'topic': topic, 'cycle_id': cycle, 'manifest_sha256': digest})
+        if entries:
+            destination.mkdir()
+            (staging / 'cycles').rename(destination / 'cycles')
+            manifest = {'schema_version': 1, 'mode': BATCH_MODE, 'base_commit': base_commit, 'cycles': entries}
+            _write_new(destination / 'manifest.json', json.dumps(manifest, sort_keys=True, indent=2).encode())
+    return {'exported_cycles': len(entries), 'failures': failures}
+
+
 def _git(root, *arguments):
     result = subprocess.run(['git', *arguments], cwd=root, capture_output=True, check=False)
     if result.returncode:
@@ -447,12 +494,11 @@ def _ancestor(root, base, head):
     return result.returncode == 0
 
 
-def apply(root, artifact, push=False):
-    root, artifact = Path(root).resolve(), Path(artifact).resolve()
-    manifest = json.loads((artifact / 'manifest.json').read_text())
+def _apply_one(root, artifact, manifest, push):
     if (set(manifest) != {'schema_version', 'mode', 'topic', 'cycle_id', 'base_commit', 'files'}
             or manifest['schema_version'] != 1 or manifest['mode'] != 'scheduled_research_transfer'
-            or not COMMIT.fullmatch(manifest.get('base_commit', '')) or not isinstance(manifest['files'], dict)):
+            or not isinstance(manifest['base_commit'], str) or not COMMIT.fullmatch(manifest['base_commit'])
+            or not isinstance(manifest['files'], dict)):
         raise PublishError('transfer_manifest_invalid')
     topic, cycle = manifest['topic'], manifest['cycle_id']
     _identity(topic, cycle)
@@ -506,6 +552,53 @@ def apply(root, artifact, push=False):
             'production_accepted': formal in files, 'pushed': pushed}
 
 
+def _apply_many(root, artifact, manifest, push):
+    if (set(manifest) != {'schema_version', 'mode', 'base_commit', 'cycles'}
+            or type(manifest['schema_version']) is not int or manifest['schema_version'] != 1
+            or not isinstance(manifest['base_commit'], str) or not COMMIT.fullmatch(manifest['base_commit'])
+            or not isinstance(manifest['cycles'], list)):
+        raise PublishError('transfer_batch_manifest_invalid')
+    entries = manifest['cycles']
+    if any(not isinstance(entry, dict) or set(entry) != {'topic', 'cycle_id', 'manifest_sha256'}
+           or not isinstance(entry['manifest_sha256'], str) or not SHA.fullmatch(entry['manifest_sha256'])
+           for entry in entries):
+        raise PublishError('transfer_batch_entry_invalid')
+    _batch_identities([(entry['topic'], entry['cycle_id']) for entry in entries])
+    results = []
+    for entry in entries:
+        topic, cycle = entry['topic'], entry['cycle_id']
+        try:
+            child = _safe(artifact, _batch_path(topic, cycle))
+            payload = _read(child, 'manifest.json')
+            if _hash(payload) != entry['manifest_sha256']:
+                raise PublishError('transfer_child_manifest_changed')
+            child_manifest = json.loads(payload)
+            if (not isinstance(child_manifest, dict) or child_manifest.get('topic') != topic
+                    or child_manifest.get('cycle_id') != cycle
+                    or child_manifest.get('base_commit') != manifest['base_commit']):
+                raise PublishError('transfer_child_binding_invalid')
+            saved = _apply_one(root, child, child_manifest, push)
+        except TRANSFER_ERRORS as exc:
+            results.append({'topic': topic, 'cycle_id': cycle, 'status': 'failed',
+                            'error': str(exc) if isinstance(exc, PublishError) else 'publish_validation_failed'})
+            continue
+        results.append({'topic': topic, 'status': 'complete', **saved})
+    successful = [result for result in results if result['status'] == 'complete']
+    return {'status': 'complete' if len(successful) == len(results) else 'partial' if successful else 'failed',
+            'saved_files': sum(result['saved_files'] for result in successful),
+            'pushed': any(result['pushed'] for result in successful), 'results': results}
+
+
+def apply(root, artifact, push=False):
+    root, artifact = Path(root).resolve(), Path(artifact).absolute()
+    manifest = json.loads(_read(artifact, 'manifest.json'))
+    if not isinstance(manifest, dict):
+        raise PublishError('transfer_manifest_invalid')
+    if manifest.get('mode') == BATCH_MODE:
+        return _apply_many(root, artifact, manifest, push)
+    return _apply_one(root, artifact, manifest, push)
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--root', type=Path, default=Path(__file__).resolve().parents[1])
@@ -522,11 +615,15 @@ def main(argv=None):
     try:
         result = (export(args.root, args.destination, args.topic, args.cycle_id, args.base_commit)
                   if args.command == 'export' else apply(args.root, args.artifact, args.push))
-    except (store.OfflineError, OSError, ValueError, KeyError, TypeError, AttributeError, yaml.YAMLError) as exc:
+    except TRANSFER_ERRORS as exc:
         print(json.dumps({'error': str(exc) if isinstance(exc, PublishError) else 'publish_validation_failed'}))
         return 1
     print(json.dumps(result))
-    return 0
+    if result.get('status') == 'partial':
+        failed_topics = ', '.join(item['topic'] for item in result['results'] if item['status'] == 'failed')
+        prefix = '::warning::' if os.environ.get('GITHUB_ACTIONS') == 'true' else ''
+        print(prefix + '部分研究方向未能回存，已保留其产物：' + failed_topics, file=sys.stderr)
+    return 1 if result.get('status') == 'failed' else 0
 
 
 if __name__ == '__main__':

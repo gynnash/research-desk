@@ -17,6 +17,7 @@ import subprocess
 import sys
 import tempfile
 import threading
+import unicodedata
 from urllib.parse import urlsplit
 import webbrowser
 
@@ -33,6 +34,7 @@ import researchdesk_workbench as workbench
 SCHEDULE = '每周二、周五 03:00（北京时间）'
 ACTIONS = {
     'check': '正在检查已有配置和授权…',
+    'save_topics': '正在保存研究方向…',
     'chatgpt_login': '请在浏览器中的 OpenAI 页面授权…',
     'github_login': '请在浏览器中的 GitHub 页面授权…',
     'github_create': '正在准备你的私有 GitHub 仓库…',
@@ -132,6 +134,84 @@ def enable_schedule(root):
     save_user_config(root, user)
 
 
+def topic_name(value):
+    if not isinstance(value, str) or any(unicodedata.category(char).startswith('C') for char in value):
+        raise SetupError('请输入有效的研究方向名称。')
+    name = ' '.join(unicodedata.normalize('NFKC', value).split())
+    if not 1 <= len(name) <= 80 or not any(char.isalnum() for char in name):
+        raise SetupError('研究方向名称须包含文字或数字，长度为 1–80 个字符。')
+    return name
+
+
+def topic_choices(value):
+    if not isinstance(value, list) or not 1 <= len(value) <= schedule.MAX_TOPICS:
+        raise SetupError(f'请保留 1–{schedule.MAX_TOPICS} 个研究方向。')
+    selected, names, ids = [], set(), set()
+    for item in value:
+        if not isinstance(item, dict) or set(item) not in ({'name'}, {'id', 'name'}):
+            raise SetupError('研究方向格式无效。')
+        name = topic_name(item['name'])
+        identity = item.get('id')
+        if 'id' in item and (not isinstance(identity, str) or not store.SAFE_ID.fullmatch(identity)):
+            raise SetupError('研究方向 ID 无效。')
+        if name.casefold() in names or identity in ids:
+            raise SetupError('研究方向有重复项，请移除重复项再保存。')
+        names.add(name.casefold())
+        if identity is not None:
+            ids.add(identity)
+        selected.append((identity, name))
+    return selected
+
+
+def configure_topics(root, choices):
+    user = workbench._read(workbench._path(root, workbench.LOCAL_CONFIG))
+    effective = workbench.load_effective(root, user)
+    definitions = effective['research_topics']['topics']
+    by_name = {}
+    for identity, definition in definitions.items():
+        try:
+            normalized = topic_name(definition.get('name'))
+        except SetupError:
+            continue
+        by_name.setdefault(normalized.casefold(), identity)
+    overrides = user.setdefault('research_topics', {}).setdefault('topics', {})
+    selected = []
+    for identity, name in choices:
+        if identity is not None:
+            if identity not in definitions or topic_name(definitions[identity].get('name')).casefold() != name.casefold():
+                raise SetupError('已有研究方向已变化，请重新检查工作台后保存。')
+        else:
+            identity = by_name.get(name.casefold())
+        if identity is None:
+            slug = re.sub(r'[^a-z0-9]+', '-', name.casefold()).strip('-')[:55].rstrip('-')
+            identity = slug if re.match(r'[a-z]', slug) and slug not in definitions and slug not in selected else (
+                'topic-' + store.digest(name.casefold())[:20])
+            if identity in definitions:
+                raise SetupError('此研究方向与现有标识冲突，请换一个名称。')
+            overrides[identity] = {
+                'name': name,
+                'enabled': True,
+                'description': f'研究与{name}直接相关的公开论文和技术文章。',
+                'scope': [f'梳理{name}相关的方法、证据、实现与适用边界。'],
+                'keywords': [name],
+            }
+        else:
+            overrides.setdefault(identity, {})['enabled'] = True
+        if identity in selected:
+            raise SetupError('研究方向有重复项，请移除重复项再保存。')
+        selected.append(identity)
+    previous = effective['automation'].get('topics', [effective['research']['topic']])
+    for identity in set(previous) - set(selected):
+        overrides.setdefault(identity, {})['enabled'] = False
+    if 'topic' in user:
+        user['topic'] = selected[0]
+    for stage in ('research', 'insight'):
+        user.setdefault(stage, {})['topic'] = selected[0]
+    for stage in ('automation', 'admission', 'confirmation', 'writing_admission'):
+        user.setdefault(stage, {})['topics'] = selected
+    save_user_config(root, user)
+
+
 class SetupWizard:
     def __init__(self, root):
         self.root = Path(root).resolve()
@@ -167,14 +247,15 @@ class SetupWizard:
                 else:
                     operation.pop('code', None)
 
-    def submit(self, action):
+    def submit(self, action, topics=None):
         if action not in ACTIONS:
             raise SetupError('未知操作。')
         with self.lock:
             if self.state['operation'] is not None:
                 return False
+            self.state.pop('notice', None)
             self.state['operation'] = {'action': action, 'message': ACTIONS[action]}
-        threading.Thread(target=self.perform, args=(action,), daemon=True).start()
+        threading.Thread(target=self.perform, args=(action, topics), daemon=True).start()
         return True
 
     def client(self):
@@ -200,9 +281,13 @@ class SetupWizard:
 
     def update_setup(self):
         value = workbench.load_effective(self.root)
+        topic = value['research']['topic']
+        definitions = value['research_topics']['topics']
+        selected = value['automation'].get('topics', [topic])
         self.update('setup', section(
             'ready', '已准备本地主题、资料来源和用量上限。',
-            topic=value['research']['topic'], schedule=SCHEDULE,
+            topic=topic, topics=[{'id': identity, 'name': definitions[identity]['name']} for identity in selected],
+            schedule=SCHEDULE,
             automation=value['automation']['enabled'], admission=value['admission']['enabled'],
         ))
 
@@ -306,11 +391,19 @@ class SetupWizard:
             raise SetupError('确认页未能启动。请检查该端口是否已被占用，或返回已经打开的确认页。')
         webbrowser.open(self.confirmation_url, new=1)
 
-    def perform(self, action):
+    def perform(self, action, topics=None):
         stage = 'setup'
         try:
             if action == 'check':
                 self.inspect()
+            elif action == 'save_topics':
+                stage = 'notice'
+                with automatic.pipeline_lock(self.root):
+                    configure_topics(self.root, topics)
+                self.update_setup()
+                self.update(stage, section('ready', '研究方向已保存，下次定时研究会使用这份列表。',
+                                           action='save_topics'))
+                return
             elif action == 'chatgpt_login':
                 stage = 'chatgpt'
                 self.client().login(announce=lambda _: self.notify(ACTIONS[action]))
@@ -433,15 +526,23 @@ def create_server(wizard, port=0):
                 return self.reply(415, {'error': '请求需要 JSON。'})
             try:
                 length = int(self.headers.get('Content-Length', '0'))
-                if not 0 < length <= 1024:
+                if not 0 < length <= 8192:
                     raise ValueError()
                 data = json.loads(self.rfile.read(length))
-                if (not isinstance(data, dict) or set(data) != {'action'}
-                        or not isinstance(data['action'], str) or data['action'] not in ACTIONS):
+                action = data.get('action') if isinstance(data, dict) else None
+                if not isinstance(action, str) or action not in ACTIONS:
                     raise ValueError()
+                topics = None
+                if action == 'save_topics' and set(data) == {'action', 'topics'}:
+                    topics = topic_choices(data['topics'])
+                elif action == 'save_topics' or set(data) != {'action'}:
+                    raise ValueError()
+            except SetupError as exc:
+                return self.reply(400, {'error': str(exc)})
             except (ValueError, OSError):
                 return self.reply(400, {'error': '请求格式或操作无效。'})
-            if not wizard.submit(data['action']):
+            accepted = wizard.submit(action) if topics is None else wizard.submit(action, topics)
+            if not accepted:
                 return self.reply(409, {'error': '向导正在处理另一步，请稍后再试。'})
             self.reply(202, {'accepted': True})
 

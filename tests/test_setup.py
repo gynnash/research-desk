@@ -103,6 +103,39 @@ class SetupWizardTest(unittest.TestCase):
         self.start_runner.assert_called_once_with(self.root)
         self.assertEqual(self.wizard.snapshot()['deployment']['state'], 'ready')
 
+    def test_saving_topics_updates_all_stages_and_keeps_previous_work(self):
+        workbench.initialize(self.root)
+        old_note = self.root / 'summary/agent_memory/previous.md'
+        old_note.write_text('已有研究', encoding='utf-8')
+        original = workbench.load_effective(self.root)
+        self.wizard.update_setup()
+        self.assertEqual(self.wizard.snapshot()['setup']['topics'], [{'id': 'agent_memory', 'name': 'Agent Memory'}])
+
+        topics = setup.topic_choices([{'name': '向量数据库'}, {'name': 'C++'}, {'name': 'C#'}])
+        self.wizard.perform('save_topics', topics)
+        snapshot = self.wizard.snapshot()
+        self.assertEqual(snapshot['notice']['state'], 'ready', snapshot)
+        saved = snapshot['setup']['topics']
+        self.assertEqual([topic['name'] for topic in saved], ['向量数据库', 'C++', 'C#'])
+        ids = [topic['id'] for topic in saved]
+        self.assertEqual(len(set(ids)), 3)
+        effective = workbench.load_effective(self.root)
+        for stage in ('automation', 'admission', 'confirmation', 'writing_admission'):
+            self.assertEqual(effective[stage]['topics'], ids)
+        self.assertEqual(effective['research']['topic'], ids[0])
+        self.assertEqual(effective['insight']['topic'], ids[0])
+        self.assertEqual(effective['research']['discovery'], original['research']['discovery'])
+        self.assertFalse(effective['research_topics']['topics']['agent_memory']['enabled'])
+        self.assertEqual(effective['research_topics']['topics'][ids[0]]['keywords'], ['向量数据库'])
+
+        self.wizard.perform('save_topics', setup.topic_choices([{'name': 'agent memory'}] + saved))
+        effective = workbench.load_effective(self.root)
+        self.assertEqual(effective['automation']['topics'], ['agent_memory'] + ids)
+        self.assertEqual(effective['research_topics']['topics']['agent_memory'],
+                         original['research_topics']['topics']['agent_memory'])
+        self.assertEqual(old_note.read_text(encoding='utf-8'), '已有研究')
+        self.start_runner.assert_not_called()
+
 
 class SetupHttpTest(unittest.TestCase):
     def test_mutations_require_the_same_local_origin_and_session(self):
@@ -133,6 +166,20 @@ class SetupHttpTest(unittest.TestCase):
                 self.assertEqual(response.status, 202)
                 response.read()
                 wizard.submit.assert_called_once_with('deploy')
+
+                connection.request('POST', '/api/action',
+                                   '{"action":"save_topics","topics":[{"name":"RAG"},{"name":"rag"}]}', headers)
+                response = connection.getresponse()
+                self.assertEqual(response.status, 400)
+                self.assertIn('重复', json.loads(response.read())['error'])
+                wizard.submit.assert_called_once()
+
+                connection.request('POST', '/api/action',
+                                   '{"action":"save_topics","topics":[{"name":"向量数据库"}]}'.encode(), headers)
+                response = connection.getresponse()
+                self.assertEqual(response.status, 202)
+                response.read()
+                wizard.submit.assert_called_with('save_topics', [(None, '向量数据库')])
                 connection.close()
             finally:
                 server.shutdown()

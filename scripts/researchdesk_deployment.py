@@ -123,20 +123,37 @@ def dispatch(source, base_commit, artifact, event='schedule', operation='run', c
         cycle_id=cycle_id or None, publisher_context={'base_commit': base_commit}, prepare=prepare)
     exported = None
     identity = result.get('cycle_id')
-    context = root / ('reports/test/%s/automation/%s/context.yaml' % (result.get('topic'), identity))
-    if identity and operation != 'health' and context.is_file():
+    status = result['status']
+    details = {}
+
+    def exportable(run):
+        topic, cycle = run.get('topic'), run.get('cycle_id')
+        return bool(cycle) and (root / automatic._base(topic, cycle) / 'context.yaml').is_file()
+
+    if 'runs' in result:
+        runs = result['runs']
+        details['runs'] = [{key: run[key] for key in ('topic', 'cycle_id', 'status')} for run in runs]
+        cycles = [(run['topic'], run['cycle_id']) for run in runs if exportable(run)]
+        if cycles:
+            transfer = publisher.export_many(root, Path(artifact), cycles, base_commit, exporter=exporter)
+            if transfer['exported_cycles']:
+                exported = transfer
+            if transfer['failures']:
+                details['export_failures'] = transfer['failures']
+                status = 'partial' if exported and status != 'failed' else 'failed'
+    elif operation != 'health' and exportable(result):
         exported = (exporter or publisher.export)(root, Path(artifact), result['topic'], identity, base_commit)
     if github_output:
         values = {'artifact_path': str(Path(artifact).absolute()) if exported else '',
-                  'cycle_id': identity or '', 'research_status': result['status']}
+                  'cycle_id': identity or '', 'research_status': status}
         with Path(github_output).open('a', encoding='utf-8') as handle:
             for key, value in values.items():
                 if any(character in value for character in '\r\n\x00'):
                     raise DeploymentError('deployment_output_invalid')
                 handle.write(key + '=' + value + '\n')
-    return {'status': result['status'], 'topic': result.get('topic'), 'cycle_id': identity,
+    return {'status': status, 'topic': result.get('topic'), 'cycle_id': identity,
             'cached': result.get('cached', False), 'exported': exported is not None,
-            'writing_started': False, **selection}
+            'writing_started': False, **selection, **details}
 
 
 def main(argv=None):
@@ -155,8 +172,7 @@ def main(argv=None):
         result = dispatch(args.source, args.base_commit, args.artifact, args.event, args.operation,
                           args.cycle_id, github_output=args.github_output)
         print(json.dumps(result, ensure_ascii=False))
-        return 0 if result['status'] in {'healthy', 'skipped', 'cached', 'complete', 'collected',
-                                       'no_new', 'no_insight', 'empty'} else 1
+        return 0 if result['status'] in automatic.SUCCESS_STATUSES else 1
     except Exception as exc:
         code = str(exc) if isinstance(exc, DeploymentError) else 'scheduled_workbench_failed_preserve_checkpoints'
         print(json.dumps({'error': code, 'writing_started': False}), file=sys.stderr)

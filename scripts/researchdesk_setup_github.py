@@ -113,7 +113,7 @@ class GitHubSetup:
             if exc.code != 'github_error':
                 raise
             raise GitHubSetupError('请通过浏览器登录 GitHub。若当前会话设置了 GitHub 环境令牌，请先确认它有效。',
-                                   code='github_login_required', url=DEVICE_URL) from None
+                                   code='github_login_required') from None
 
     def _check_actions(self, repository):
         base = 'repos/' + repository + '/actions/permissions'
@@ -242,7 +242,7 @@ class GitHubSetup:
             if exc.code != 'github_login_required':
                 raise
         self._authorize_in_browser(['login', '--hostname', HOST, '--web'], notify,
-                                   '请在浏览器打开 ' + DEVICE_URL + ' 完成 GitHub 授权。')
+                                   '正在获取 GitHub 设备码…')
         self._check_auth()
 
     def _authorize_in_browser(self, command, notify, message):
@@ -274,7 +274,7 @@ class GitHubSetup:
                             notify('在 GitHub 授权页面输入这个一次性设备码。', code=code)
                             # gh prints the verification URL in a noninteractive pipe.
                             try:
-                                webbrowser.open(DEVICE_URL)
+                                webbrowser.open(DEVICE_URL, new=2)
                             except (OSError, webbrowser.Error):
                                 pass
             if process.wait(timeout=max(0, deadline - time.monotonic())) != 0:
@@ -291,6 +291,7 @@ class GitHubSetup:
                 except subprocess.TimeoutExpired:
                     process.kill()
                     process.wait()
+        notify('GitHub 浏览器授权已完成，正在检查权限…')
 
     def _workflow_scope(self):
         response = self._run(['gh', 'api', '--hostname', HOST, '--include', 'user'],

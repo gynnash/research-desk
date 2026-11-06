@@ -61,6 +61,45 @@ class ScheduledPipeline(unittest.TestCase):
         self.researcher.assert_not_called()
         self.insight.assert_not_called()
 
+    def test_selected_topics_freeze_independent_cycles_and_resume_without_repeating_completed_models(self):
+        secondary = 'fixture-retrieval'
+        direction = {'name': 'Retrieval', 'enabled': True, 'description': 'Offline fixture.',
+                     'scope': ['Retrieval'], 'keywords': ['retrieval']}
+        self.update({'automation': {'enabled': True, 'topics': ['agent_memory', secondary]},
+                     'research_topics': {'topics': {secondary: direction}}})
+        researched = []
+
+        def study(root, path, identity, profile):
+            topic = store.load_yaml(root / path)['topic']
+            researched.append(topic)
+            if researched == ['agent_memory']:
+                raise store.OfflineError('Fixture interruption')
+            return self.researcher.return_value
+
+        self.researcher.side_effect = study
+        first = self.run_pipeline()
+        self.assertEqual(first['status'], 'partial')
+        self.assertEqual([(run['topic'], run['status']) for run in first['runs']],
+                         [('agent_memory', 'failed'), (secondary, 'complete')])
+        for item in first['runs']:
+            topic = item['topic']
+            self.assertEqual(item['cycle_id'], topic + '-20261106-0300')
+            context = store.checked_yaml(self.root, item['context_path'])
+            self.assertEqual(context['research_config']['topic'], topic)
+            self.assertEqual(context['insight_config']['topic'], topic)
+            self.assertEqual(set(context['selected_topic']['topics']), {topic})
+
+        self.update({'research_topics': {'topics': {'unrelated': dict(direction, name='Unrelated')}}})
+        retried = self.run_pipeline()
+        self.assertEqual(retried['status'], 'complete')
+        self.assertEqual(researched, ['agent_memory', secondary, 'agent_memory'])
+        self.assertEqual(self.insight.call_count, 2)
+        self.assertTrue(retried['runs'][1]['cached'])
+        self.assertNotIn('runs', self.run_pipeline(event='manual', operation='health'))
+        manual = self.run_pipeline(event='manual', operation='collect', cycle_id='manual')
+        self.assertEqual((manual['topic'], manual['status']), ('agent_memory', 'collected'))
+        self.assertNotIn('runs', manual)
+
     def test_cycle_budget_can_cover_multiple_sdk_tool_requests_without_raising_defaults(self):
         self.update({'research': {'budget': {
             'max_calls_per_cycle': 24, 'insight_max_calls': 12}}})
