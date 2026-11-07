@@ -102,12 +102,23 @@ class BeijingSchedule(unittest.TestCase):
     def test_spring_forward_advances_to_next_valid_minute_with_a_stable_nominal_id(self):
         self.config['activated_at'] = '2026-03-08T00:00:00-05:00'
         self.config['weekly'] = {'weekdays': [7], 'time': '02:30', 'timezone': 'America/New_York'}
-        self.assertEqual(self.due('2026-03-08T06:59:59+00:00')['cycle_id'], '')
+        before = '2026-03-08T06:59:59+00:00'
+        self.assertEqual(self.due(before)['cycle_id'], '')
         result = self.due('2026-03-08T07:00:00+00:00')
         self.assertEqual(result['cycle_id'], 'agent-memory-20260308-0230')
         self.assertEqual(result['slot_utc'], '2026-03-08T07:00:00+00:00')
+        preview = schedule.next_run(self.config['weekly'], datetime.fromisoformat(before))
+        self.assertEqual(preview.isoformat(), result['slot_utc'])
         self.config['activated_at'] = '2026-03-08T07:00:01+00:00'
         self.assertEqual(self.due('2026-03-08T07:00:02+00:00')['cycle_id'], '')
+        preview = schedule.next_run(self.config['weekly'], datetime.fromisoformat(before),
+                                    activated_at=self.config['activated_at'])
+        self.assertEqual(preview.isoformat(), '2026-03-15T06:30:00+00:00')
+
+    def test_preview_after_first_fall_back_occurrence_uses_next_week(self):
+        rule = {'weekdays': [7], 'time': '01:30', 'timezone': 'America/New_York'}
+        first = datetime.fromisoformat('2026-11-01T05:30:00+00:00')
+        self.assertEqual(schedule.next_run(rule, first).isoformat(), '2026-11-08T06:30:00+00:00')
 
     def test_tuesday_before_at_and_after_0300_use_beijing_date(self):
         self.assertEqual(self.due('2026-10-19T18:59:59+00:00')['cycle_id'], '')

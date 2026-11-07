@@ -1,7 +1,7 @@
 """Verify activation ordering and local-only wizard actions without live services."""
 
 import base64
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 import http.client
 import json
 from pathlib import Path
@@ -230,6 +230,59 @@ class SetupHttpTest(unittest.TestCase):
             finally:
                 server.shutdown()
                 thread.join(timeout=5)
+
+
+class SetupSchedulePreviewTest(unittest.TestCase):
+    def request(self, wizard, query, headers=None):
+        with mock.patch.object(setup, 'ThreadingHTTPServer', side_effect=lambda _, handler: handler):
+            handler = object.__new__(setup.create_server(wizard))
+        handler.server = mock.Mock(server_port=8765)
+        handler.headers = {'Host': '127.0.0.1:8765', **(headers or {})}
+        handler.path = '/api/schedule-preview?' + query
+        handler.reply = mock.Mock()
+        handler.do_GET()
+        handler.reply.assert_called_once()
+        return handler.reply.call_args.args
+
+    def test_preview_uses_local_guard_and_rejects_invalid_or_ambiguous_parameters(self):
+        wizard = mock.Mock(spec=['submit'])
+        query = 'weekdays=5,2&time=03%3A00&timezone=Asia%2FShanghai'
+        before = datetime.now(timezone.utc)
+        status, payload = self.request(wizard, query)
+        self.assertEqual(status, 200)
+        actual = datetime.fromisoformat(payload['next_run'])
+        self.assertGreater(actual, before)
+        self.assertEqual(actual.utcoffset(), timedelta(0))
+        shanghai = actual + timedelta(hours=8)
+        self.assertIn(shanghai.isoweekday(), {2, 5})
+        self.assertEqual((shanghai.hour, shanghai.minute), (3, 0))
+
+        for invalid in ('', query + '&timezone=UTC', query.replace('5,2', '2,2'),
+                        query.replace('03%3A00', '24%3A00'), query.replace('Shanghai', 'Unknown')):
+            with self.subTest(query=invalid):
+                status, payload = self.request(wizard, invalid)
+                self.assertEqual(status, 400)
+                self.assertEqual(set(payload), {'error'})
+        self.assertEqual(self.request(wizard, query, {'Sec-Fetch-Site': 'cross-site'})[0], 403)
+        self.assertEqual(self.request(wizard, query, {'Host': 'example.invalid:8765'})[0], 403)
+        wizard.submit.assert_not_called()
+
+    def test_preview_preserves_future_activation_without_writing_configuration(self):
+        with tempfile.TemporaryDirectory(prefix='researchdesk-preview-') as temporary:
+            root = Path(temporary).resolve()
+            workbench.initialize(root)
+            path = root / workbench.LOCAL_CONFIG
+            user = workbench._read(path)
+            user['automation']['activated_at'] = '2099-01-02T03:00:00+00:00'
+            workbench._write(path, workbench._yaml(user))
+            existing = path.read_bytes()
+            wizard = mock.Mock(root=root)
+            query = 'weekdays=1,2,3,4,5,6,7&time=03%3A00&timezone=UTC'
+            with mock.patch.object(workbench, '_write', side_effect=AssertionError('Read-only preview')):
+                status, payload = self.request(wizard, query)
+            self.assertEqual((status, payload), (200, {'next_run': user['automation']['activated_at']}))
+            self.assertEqual(path.read_bytes(), existing)
+            wizard.submit.assert_not_called()
 
 
 class GitHubScheduleTest(unittest.TestCase):
