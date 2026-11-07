@@ -19,8 +19,8 @@
     <section class="hero" aria-labelledby="page-title">
       <p class="eyebrow">首次配置</p>
       <h1 id="page-title">设置研究工作台</h1>
-      <p class="lead">工作台会检查本机配置。ChatGPT 与 GitHub 授权就绪后，私有仓库会自动部署定时研究。使用公开仓库需要你确认。</p>
-      <p class="hero-note">本次设置只检查并部署环境。首次采集和模型调用从定时任务开始。</p>
+      <p class="lead">选择研究方向，连接 ChatGPT 与 GitHub，再为工作台创建定时研究。</p>
+      <p class="hero-note">点击「创建」后会检查并配置运行环境。首次采集和模型调用从定时任务开始。</p>
     </section>
 
     <div id="connection-error" class="notice error" role="alert" hidden></div>
@@ -104,12 +104,39 @@
             <span class="status" id="deployment-state">等待检查</span>
           </div>
           <div class="step-body">
-            <p id="deployment-message" class="message" aria-live="polite">等待账号授权和仓库检查。</p>
-            <div class="schedule"><span class="schedule-label" id="schedule-label">计划运行时间</span><strong id="schedule-time">每周二、周五 03:00 北京时间</strong></div>
-            <p id="public-repository-notice" class="visibility-note" hidden>当前是公开仓库。回存的论文和博客原文、研究总结、选题和稿件都将公开可见。</p>
+            <p id="deployment-message" class="message" aria-live="polite">设置每周运行的时间，连接账号后即可创建。</p>
+            <div id="schedule-current" class="schedule" aria-live="polite" hidden>
+              <span class="schedule-label">当前日程</span><strong id="schedule-time"></strong>
+            </div>
+            <form id="schedule-editor" class="schedule-editor">
+              <fieldset id="schedule-days">
+                <legend>每周运行</legend>
+                <div class="schedule-days">
+                  <label><input type="checkbox" name="weekday" value="1"> 周一</label>
+                  <label><input type="checkbox" name="weekday" value="2" checked> 周二</label>
+                  <label><input type="checkbox" name="weekday" value="3"> 周三</label>
+                  <label><input type="checkbox" name="weekday" value="4"> 周四</label>
+                  <label><input type="checkbox" name="weekday" value="5" checked> 周五</label>
+                  <label><input type="checkbox" name="weekday" value="6"> 周六</label>
+                  <label><input type="checkbox" name="weekday" value="7"> 周日</label>
+                </div>
+              </fieldset>
+              <div class="schedule-fields">
+                <label for="schedule-clock">时间<input id="schedule-clock" type="time" value="03:00" required></label>
+                <label for="schedule-zone">时区<input id="schedule-zone" type="text" list="schedule-zones" value="Asia/Shanghai" required autocapitalize="off" spellcheck="false" aria-describedby="schedule-zone-hint"></label>
+              </div>
+              <datalist id="schedule-zones"></datalist>
+              <p id="schedule-zone-hint" class="detail">可从列表选择，或直接输入时区名称，如 <code>Asia/Shanghai</code>。</p>
+              <p id="public-repository-notice" class="visibility-note" hidden>当前是公开仓库。创建后，回存到仓库的研究资料、选题和稿件将公开可见。</p>
+              <p id="schedule-error" class="detail field-error" role="alert" hidden></p>
+              <div class="actions">
+                <button type="submit" class="button primary" id="schedule-submit" disabled>创建</button>
+                <span id="schedule-connection-hint" class="detail">连接 ChatGPT 和 GitHub 后可创建。</span>
+              </div>
+              <p id="schedule-device-guide" class="detail" hidden>请使用 <a href="#github-device">GitHub 设备码</a> 完成授权后继续。</p>
+            </form>
             <div class="actions" id="deployment-actions" hidden>
-              <button type="button" class="button primary" data-action="deploy" hidden>配置自动研究</button>
-              <a class="button" id="deployment-url" target="_blank" rel="noopener noreferrer" hidden>查看 GitHub Actions <span aria-hidden="true">↗</span></a>
+              <a class="button" id="deployment-url" target="_blank" rel="noopener noreferrer" hidden>GitHub Action</a>
               <button type="button" class="button" data-action="confirmation_open" hidden>打开选题确认页</button>
             </div>
             <details class="guidance" id="github-guide">

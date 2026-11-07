@@ -12,17 +12,22 @@
   };
   const actionLabels = {
     check: '重新检查工作台', chatgpt_login: '等待 ChatGPT 授权', github_login: '等待 GitHub 授权',
-    github_create: '创建私有 GitHub 仓库', deploy: '配置定时研究',
+    github_create: '创建私有 GitHub 仓库', create_schedule: '正在配置定时研究',
     obsidian_sync: '更新阅读库', obsidian_open: '打开 Vault 管理器',
     confirmation_open: '打开选题确认页', save_topics: '正在保存研究方向',
   };
   const problemStates = new Set(['blocked', 'failed', 'error']);
-  const defaultSchedule = '每周二、周五 03:00 北京时间';
+  const defaultSchedule = {weekdays: [2, 5], time: '03:00', timezone: 'Asia/Shanghai'};
+  const weekdayNames = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
   const githubDeviceUrl = 'https://github.com/login/device';
   const maxTopics = 8;
   const maxTopicLength = 80;
   const topicInput = byId('topic-input');
   const topicTags = byId('topic-tags');
+  const scheduleEditor = byId('schedule-editor');
+  const scheduleDays = Array.from(scheduleEditor.querySelectorAll('input[name="weekday"]'));
+  const scheduleClock = byId('schedule-clock');
+  const scheduleZone = byId('schedule-zone');
   let snapshot = null;
   let loadingStatus = null;
   let requestedAction = null;
@@ -32,6 +37,8 @@
   let draftTopics = [];
   let topicsEdited = false;
   let pendingTopics = null;
+  let scheduleEdited = false;
+  let pendingSchedule = null;
 
   function setText(id, value) {
     const element = byId(id);
@@ -193,6 +200,82 @@
     return true;
   }
 
+  function scheduleFromSetup(setup) {
+    const weekly = setup.weekly;
+    if (!Array.isArray(weekly?.weekdays) || !weekly.weekdays.length || !weekly.time || !weekly.timezone) {
+      return defaultSchedule;
+    }
+    return {weekdays: weekly.weekdays.slice().sort((a, b) => a - b), time: weekly.time, timezone: weekly.timezone};
+  }
+
+  function scheduleDraft() {
+    return {
+      weekdays: scheduleDays.filter(({checked}) => checked).map(({value}) => Number(value)),
+      time: scheduleClock.value,
+      timezone: valueOf(scheduleZone.value),
+    };
+  }
+
+  function sameSchedule(first, second) {
+    return first.time === second.time && first.timezone === second.timezone
+      && first.weekdays.join(',') === second.weekdays.join(',');
+  }
+
+  function scheduleError(message) {
+    setText('schedule-error', message);
+    setVisible('schedule-error', Boolean(message));
+  }
+
+  function reconcileSchedule(actual, deployed) {
+    if (pendingSchedule && requestedAction !== 'create_schedule' && !snapshot.operation) {
+      const confirmed = snapshot.notice?.action === 'create_schedule' && snapshot.notice.state === 'ready';
+      if (deployed && (confirmed || sameSchedule(actual, pendingSchedule))) scheduleEdited = false;
+      pendingSchedule = null;
+    }
+    if (!scheduleEdited && !sameSchedule(actual, scheduleDraft())) {
+      for (const input of scheduleDays) input.checked = actual.weekdays.includes(Number(input.value));
+      scheduleClock.value = actual.time;
+      scheduleZone.value = actual.timezone;
+    }
+  }
+
+  function renderScheduleControls() {
+    const {setup = {}, chatgpt = {}, github = {}, deployment = {}, operation} = snapshot || {};
+    const actual = scheduleFromSetup(setup);
+    const ready = deployment.state === 'ready';
+    const canCreate = setup.state === 'ready' && chatgpt.state === 'ready' && github.state === 'ready';
+    const saving = Boolean(pendingSchedule) || requestedAction === 'create_schedule' || operation?.action === 'create_schedule';
+    for (const input of [...scheduleDays, scheduleClock, scheduleZone]) input.disabled = saving;
+    scheduleEditor.setAttribute('aria-busy', String(saving));
+    setText('schedule-submit', ready ? '更新' : '创建');
+    byId('schedule-submit').disabled = !snapshot?.csrf || !canCreate || isBusy() || saving
+      || deployment.state === 'running' || (ready && sameSchedule(actual, scheduleDraft()));
+    setVisible('schedule-connection-hint', chatgpt.state !== 'ready' || github.state !== 'ready');
+  }
+
+  function validateSchedule({weekdays, time, timezone}) {
+    if (!weekdays.length) return '至少选择一个运行日。';
+    if (!/^(?:[01]\d|2[0-3]):[0-5]\d$/.test(time)) return '请输入有效的时间（HH:MM）。';
+    try {
+      if (!/^[A-Za-z][A-Za-z0-9_.+-]*(?:\/[A-Za-z0-9_.+-]+)*$/.test(timezone)) throw new RangeError();
+      new Intl.DateTimeFormat('zh-CN', {timeZone: timezone});
+    } catch {
+      return '请选择或输入有效的 IANA 时区，例如 Asia/Shanghai。';
+    }
+    return '';
+  }
+
+  function populateTimezones() {
+    const common = ['Asia/Shanghai', 'UTC', 'Asia/Hong_Kong', 'Asia/Singapore', 'Asia/Tokyo',
+      'Europe/London', 'Europe/Paris', 'America/New_York', 'America/Los_Angeles'];
+    const supported = typeof Intl.supportedValuesOf === 'function' ? Intl.supportedValuesOf('timeZone') : [];
+    for (const timezone of new Set([...common, ...supported])) {
+      const option = document.createElement('option');
+      option.value = timezone;
+      byId('schedule-zones').append(option);
+    }
+  }
+
   function renderAccounts(chatgpt, github, operation) {
     const chatgptRunning = operation?.action === 'chatgpt_login' ? operation : null;
     const chatgptLink = httpsUrl(chatgptRunning?.url || chatgpt.url, ({hostname}) => (
@@ -209,12 +292,13 @@
     setText('github-repository', repo);
     externalLink('github-repository', repositoryUrl);
     setVisible('github-repository-row', Boolean(repo && repositoryUrl));
-    const githubRunning = ['github_login', 'github_create'].includes(operation?.action) ? operation : null;
+    const githubRunning = ['github_login', 'github_create', 'create_schedule'].includes(operation?.action) ? operation : null;
     const code = [githubRunning?.user_code, githubRunning?.device_code, githubRunning?.code]
       .find((item) => /^[A-Z0-9]{4}-[A-Z0-9]{4}$/.test(valueOf(item)));
     setText('github-device-code', valueOf(code));
     setVisible('github-device', Boolean(code));
     externalLink('github-auth-url', code ? githubDeviceUrl : '');
+    setVisible('schedule-device-guide', Boolean(code) && operation?.action === 'create_schedule');
 
     const githubLogin = github.state === 'needs_login' || github.code === 'github_login_required';
     const githubCreate = github.can_create === true && (github.state !== 'ready' || github.private === false);
@@ -233,29 +317,31 @@
     return repositoryUrl;
   }
 
-  function renderDeployment(setup, chatgpt, github, deployment, repositoryUrl) {
+  function renderDeployment(setup, github, deployment, repositoryUrl) {
     const deployed = deployment.state === 'ready';
-    const enabled = deployed && setup.automation === true;
-    setSection('deployment', deployment, enabled ? '已启用' : '已部署');
-    setText('schedule-label', enabled ? '自动运行时间' : '计划运行时间');
-    const schedule = valueOf(setup.schedule);
-    setText('schedule-time', schedule && !/^[0-9* ,/-]+$/.test(schedule) ? schedule : defaultSchedule);
+    const actual = scheduleFromSetup(setup);
+    reconcileSchedule(actual, deployed);
+    setSection('deployment', deployment, '已启用');
+    setVisible('schedule-current', deployed);
+    const days = actual.weekdays.map((weekday) => weekdayNames[weekday - 1]).join('、');
+    const zone = actual.timezone === 'Asia/Shanghai' ? '北京时间' : actual.timezone;
+    setText('schedule-time', `每${days} ${actual.time}（${zone}）`);
 
-    const canDeploy = setup.state === 'ready' && chatgpt.state === 'ready' && github.state === 'ready'
-      && !enabled && deployment.state !== 'running';
-    const deploymentUrl = githubPage(deployment.url) || (repositoryUrl ? `${repositoryUrl}/actions` : '');
-    const showDeploymentLink = deployed || problemStates.has(deployment.state);
+    const actionsUrl = githubPage(deployment.url) || (repositoryUrl ? `${repositoryUrl}/actions` : '');
+    const workflowUrl = httpsUrl(deployment.url, ({hostname, pathname}) => hostname === 'github.com'
+      && /^\/[^/]+\/[^/]+\/actions\/workflows\/[^/]+\/?$/.test(pathname));
+    const repo = valueOf(github.repository);
+    const fallbackWorkflowUrl = /^[A-Za-z0-9-]+\/[A-Za-z0-9_.-]+$/.test(repo)
+      ? `https://github.com/${repo}/actions/workflows/researchdesk-manual.yml` : '';
+    const deploymentUrl = deployed ? workflowUrl || fallbackWorkflowUrl
+      : problemStates.has(deployment.state) ? actionsUrl : '';
     const canConfirm = deployed && deployment.can_confirm !== false;
-    const isPublic = github.private === false;
-    const deployLabel = isPublic ? '继续使用公开仓库'
-      : problemStates.has(deployment.state) ? '重试部署' : '配置自动研究';
-    setVisible('public-repository-notice', isPublic);
-    setButton('deploy', canDeploy, deployLabel);
+    setVisible('public-repository-notice', github.private === false);
     setButton('confirmation_open', canConfirm);
-    setText('deployment-url', deployed ? '查看 GitHub Actions ↗' : '检查 GitHub Actions ↗');
-    externalLink('deployment-url', showDeploymentLink ? deploymentUrl : '');
-    externalLink('github-actions-guide-link', deploymentUrl);
-    setVisible('deployment-actions', canDeploy || canConfirm || (showDeploymentLink && deploymentUrl));
+    setText('deployment-url', deployed ? 'GitHub Action' : '检查 GitHub Actions ↗');
+    externalLink('deployment-url', deploymentUrl);
+    externalLink('github-actions-guide-link', actionsUrl);
+    setVisible('deployment-actions', canConfirm || deploymentUrl);
   }
 
   function renderObsidian(obsidian, github) {
@@ -290,7 +376,7 @@
       setSection('github', github, '已连接');
       reconcileTopics(setup);
       const repositoryUrl = renderAccounts(chatgpt, github, operation);
-      renderDeployment(setup, chatgpt, github, deployment, repositoryUrl);
+      renderDeployment(setup, github, deployment, repositoryUrl);
       renderObsidian(obsidian, github);
     }
     const activeAction = snapshot?.operation?.action || requestedAction;
@@ -301,6 +387,7 @@
       button.disabled = isBusy() || (!snapshot?.csrf && action !== 'check');
     }
     renderTopicControls();
+    renderScheduleControls();
   }
 
   async function refresh() {
@@ -325,7 +412,7 @@
   }
 
   async function runAction(action, fields = {}) {
-    if ((!buttons.has(action) && action !== 'save_topics') || isBusy()) return;
+    if ((!buttons.has(action) && !['save_topics', 'create_schedule'].includes(action)) || isBusy()) return;
     actionIssue = '';
     if (!snapshot?.csrf) {
       await refresh();
@@ -341,9 +428,12 @@
       });
       if (response.ok) {
         if (action === 'save_topics') pendingTopics = fields.topics;
-      } else if (action === 'save_topics' && response.status === 400) {
+        if (action === 'create_schedule') pendingSchedule = fields.schedule;
+      } else if (response.status === 400 && ['save_topics', 'create_schedule'].includes(action)) {
         const result = await response.json().catch(() => null);
-        topicError(valueOf(result?.error) || '无法保存研究方向，请检查名称后重试。');
+        const message = valueOf(result?.error);
+        if (action === 'save_topics') topicError(message || '无法保存研究方向，请检查名称后重试。');
+        else scheduleError(message || '无法保存日程，请检查星期、时间和时区后重试。');
       } else {
         actionIssue = '本地工作台暂时无法接受此操作。请查看当前状态，再重试。';
       }
@@ -400,6 +490,19 @@
       return runAction('save_topics', {topics: draftTopics.slice()});
     }
   });
+  scheduleEditor.addEventListener('input', () => {
+    scheduleEdited = true;
+    scheduleError('');
+    renderScheduleControls();
+  });
+  scheduleEditor.addEventListener('submit', (event) => {
+    event.preventDefault();
+    if (byId('schedule-submit').disabled) return;
+    const weekly = scheduleDraft();
+    const error = validateSchedule(weekly);
+    scheduleError(error);
+    if (!error) return runAction('create_schedule', {schedule: weekly});
+  });
   byId('copy-code').addEventListener('click', () => copyValue('github-device-code', '已复制 GitHub 设备码。'));
   byId('copy-path').addEventListener('click', () => copyValue('obsidian-path', '已复制阅读库路径。'));
 
@@ -407,5 +510,6 @@
     await refresh();
     window.setTimeout(poll, isBusy() ? 1500 : 4000);
   }
+  populateTimezones();
   poll();
 })();

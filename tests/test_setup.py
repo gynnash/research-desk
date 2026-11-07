@@ -15,6 +15,10 @@ import researchdesk_setup as setup
 import researchdesk_workbench as workbench
 
 
+WEEKLY = {'weekdays': [1, 4], 'time': '09:35', 'timezone': 'America/New_York'}
+WORKFLOW_URL = 'https://github.com/fixture/workbench/actions/workflows/researchdesk-manual.yml'
+
+
 class SetupWizardTest(unittest.TestCase):
     def setUp(self):
         temporary = tempfile.TemporaryDirectory(prefix='researchdesk-setup-test-')
@@ -29,6 +33,8 @@ class SetupWizardTest(unittest.TestCase):
         self.wizard.github.status.return_value = {
             'state': 'ready', 'repository': 'fixture/workbench', 'private': True,
         }
+        self.wizard.github.configure_schedule.return_value = WORKFLOW_URL
+        self.wizard.github.schedule_matches.return_value = True
         self.wizard.obsidian = mock.Mock()
         self.wizard.obsidian.status.return_value = {'state': 'ready'}
         self.start = mock.patch.object(workbench, 'start', return_value={'status': 'started'})
@@ -41,7 +47,7 @@ class SetupWizardTest(unittest.TestCase):
         origin.start()
         self.addCleanup(origin.stop)
 
-    def test_activation_follows_both_authorizations_and_health(self):
+    def test_creation_is_explicit_and_local_activation_follows_github(self):
         self.chatgpt.status.return_value['plan_permission'] = False
         self.wizard.github.status.return_value = {'state': 'needs_login'}
         self.wizard.perform('check')
@@ -54,22 +60,36 @@ class SetupWizardTest(unittest.TestCase):
         self.wizard.github.status.return_value = {
             'state': 'ready', 'repository': 'fixture/workbench', 'private': True,
         }
+        self.wizard.perform('github_login')
+        self.start_runner.assert_not_called()
+        self.wizard.github.configure_schedule.assert_not_called()
+        self.assertEqual(self.wizard.snapshot()['deployment']['state'], 'needs_setup')
         before = datetime.now(timezone.utc)
 
         def check_remote_health():
             self.start_runner.assert_called_once_with(self.root)
             self.wizard.github.prepare.assert_called_once_with(
-                expected_repository='fixture/workbench', require_private=True)
+                expected_repository='fixture/workbench', require_private=True, require_schedule=True)
             current = workbench.load_effective(self.root)
             self.assertFalse(current['automation']['enabled'])
             self.assertFalse(current['admission']['enabled'])
             self.assertNotEqual(current['research']['models']['research'], current['research']['models']['review'])
+            self.wizard.github.configure_schedule.assert_not_called()
+
+        def update_remote(cron, zone, **kwargs):
+            self.wizard.github.health.assert_called_once()
+            self.assertEqual((cron, zone), ('35 9 * * 1,4', WEEKLY['timezone']))
+            self.assertFalse(workbench.load_effective(self.root)['automation']['enabled'])
+            return WORKFLOW_URL
 
         self.wizard.github.health.side_effect = check_remote_health
-        self.wizard.perform('github_login')
-
+        self.wizard.github.configure_schedule.side_effect = update_remote
+        self.wizard.perform('create_schedule', WEEKLY)
         current = workbench.load_effective(self.root)
         self.assertEqual(self.wizard.snapshot()['deployment']['state'], 'ready')
+        self.assertEqual(self.wizard.snapshot()['deployment']['url'], WORKFLOW_URL)
+        self.assertEqual(self.wizard.snapshot()['setup']['weekly'], WEEKLY)
+        self.assertEqual(current['automation']['weekly'], WEEKLY)
         self.assertTrue(current['automation']['enabled'])
         self.assertTrue(current['admission']['enabled'])
         self.assertGreaterEqual(setup.schedule.instant(current['automation']['activated_at']), before)
@@ -77,30 +97,47 @@ class SetupWizardTest(unittest.TestCase):
         self.chatgpt.infer.assert_not_called()
         self.assertFalse((self.root / 'reports').exists())
 
-    def test_failed_health_can_retry_without_enabling_schedule(self):
+        self.wizard.perform('check')
+        self.start_runner.assert_called_once_with(self.root)
+        self.wizard.github.configure_schedule.assert_called_once()
+        self.wizard.github.schedule_matches.assert_called_once_with(
+            '35 9 * * 1,4', WEEKLY['timezone'], expected_repository='fixture/workbench')
+        self.assertEqual(self.wizard.snapshot()['deployment']['url'], WORKFLOW_URL)
+
+    def test_failed_health_or_workflow_update_can_retry_without_activation(self):
         self.wizard.github.health.side_effect = setup.GitHubSetupError('检查失败')
         self.wizard.perform('check')
+        self.wizard.perform('create_schedule', WEEKLY)
         self.assertEqual(self.wizard.snapshot()['deployment']['state'], 'blocked')
         self.assertFalse(workbench.load_effective(self.root)['automation']['enabled'])
         self.wizard.obsidian.sync.assert_not_called()
-        self.wizard.github.health.side_effect = None
-        self.wizard.obsidian.sync.side_effect = setup.ObsidianSetupError('阅读库有本地改动')
+        self.wizard.github.configure_schedule.assert_not_called()
 
-        self.wizard.perform('deploy')
+        self.wizard.github.health.side_effect = None
+        self.wizard.github.configure_schedule.side_effect = setup.GitHubSetupError('无法保存工作流')
+        self.wizard.perform('create_schedule', WEEKLY)
+        self.assertFalse(workbench.load_effective(self.root)['automation']['enabled'])
+        self.assertEqual(self.wizard.snapshot()['deployment']['state'], 'blocked')
+
+        self.wizard.github.configure_schedule.side_effect = None
+        self.wizard.obsidian.sync.side_effect = setup.ObsidianSetupError('阅读库有本地改动')
+        self.wizard.perform('create_schedule', WEEKLY)
 
         self.assertEqual(self.wizard.snapshot()['deployment']['state'], 'ready')
         self.assertEqual(self.wizard.snapshot()['obsidian']['state'], 'blocked')
         self.assertTrue(workbench.load_effective(self.root)['automation']['enabled'])
 
-    def test_public_repository_waits_for_explicit_deploy(self):
+    def test_public_repository_requires_explicit_creation(self):
         self.wizard.github.status.return_value['private'] = False
         self.wizard.perform('check')
         self.start_runner.assert_not_called()
         self.assertEqual(self.wizard.snapshot()['deployment']['state'], 'needs_setup')
 
-        self.wizard.perform('deploy')
+        self.wizard.perform('create_schedule', WEEKLY)
 
         self.start_runner.assert_called_once_with(self.root)
+        self.wizard.github.prepare.assert_called_once_with(
+            expected_repository='fixture/workbench', require_private=False, require_schedule=True)
         self.assertEqual(self.wizard.snapshot()['deployment']['state'], 'ready')
 
     def test_saving_topics_updates_all_stages_and_keeps_previous_work(self):
@@ -151,7 +188,7 @@ class SetupHttpTest(unittest.TestCase):
                 response = connection.getresponse()
                 self.assertEqual(response.status, 200)
                 csrf = json.loads(response.read())['csrf']
-                body = '{"action":"deploy"}'
+                body = json.dumps({'action': 'create_schedule', 'schedule': WEEKLY})
                 headers = {'Content-Type': 'application/json', 'X-ResearchDesk-CSRF': csrf}
 
                 connection.request('POST', '/api/action', body, {**headers, 'Origin': 'https://example.org'})
@@ -165,7 +202,15 @@ class SetupHttpTest(unittest.TestCase):
                 response = connection.getresponse()
                 self.assertEqual(response.status, 202)
                 response.read()
-                wizard.submit.assert_called_once_with('deploy')
+                wizard.submit.assert_called_once_with('create_schedule', WEEKLY)
+
+                connection.request('POST', '/api/action', json.dumps({
+                    'action': 'create_schedule', 'schedule': {**WEEKLY, 'time': '24:15'},
+                }), headers)
+                response = connection.getresponse()
+                self.assertEqual(response.status, 400)
+                response.read()
+                wizard.submit.assert_called_once()
 
                 connection.request('POST', '/api/action',
                                    '{"action":"save_topics","topics":[{"name":"RAG"},{"name":"rag"}]}', headers)

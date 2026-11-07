@@ -118,13 +118,17 @@ def dispatch(source, base_commit, artifact, event='schedule', operation='run', c
         if Path(sys.prefix).absolute() != expected:
             raise DeploymentError('runtime_environment_changed_run_workbench_start')
 
+    trigger = environment.get('RESEARCHDESK_TRIGGER_CRON') if event == 'schedule' else None
     result = (pipeline or automatic.run)(root,
         event='schedule' if event == 'schedule' else 'manual', operation=operation,
-        cycle_id=cycle_id or None, publisher_context={'base_commit': base_commit}, prepare=prepare)
+        cycle_id=cycle_id or None, publisher_context={'base_commit': base_commit}, prepare=prepare,
+        **({'trigger_cron': trigger} if trigger else {}))
     exported = None
     identity = result.get('cycle_id')
     status = result['status']
     details = {}
+    if result.get('reason') == 'schedule_trigger_mismatch':
+        details['reason'] = result['reason']
 
     def exportable(run):
         topic, cycle = run.get('topic'), run.get('cycle_id')

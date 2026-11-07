@@ -94,7 +94,7 @@ gh workflow run researchdesk-manual.yml --ref main -f operation=run -f cycle_id=
 
 ## 定时与恢复
 
-用户 YAML 的 `automation.enabled` 默认 `false`；`start` 完成部署后，GitHub 保留每周二、周五北京时间 03:00 的触发。计划与执行均在用户的 Mac 上读取本地配置，无需向云端交付个人 YAML。
+用户 YAML 的 `automation.enabled` 默认 `false`。GitHub 工作流初始时段为每周二、周五北京时间 03:00。通过 `./setup` 的「定时研究」创建日程，可以选择星期、时间和时区。GitHub 保存触发时间，Mac 使用本地配置执行对应批次。
 
 每次新运行自动合并系统默认和用户覆盖；本地用户文件与本地已修改的系统文件直接生效。系统文件未手改时，会安全加载 GitHub 最新 `main` 的系统配置，不拉取覆盖人工笔记。运行中的批次固定快照；未完成旧批次遇到配置变化会停止混用。更换解释器、runner 身份或安装路径时需要重新执行 `start`。
 

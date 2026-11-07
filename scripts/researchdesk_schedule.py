@@ -2,10 +2,11 @@
 """Choose a stable due slot; no model calls, credential access or file mutation."""
 
 import argparse
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, time, timedelta, timezone
 import json
 from pathlib import Path
-from zoneinfo import ZoneInfo
+import re
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 import researchdesk_offline as store
 import researchdesk_batch_inputs as common
@@ -13,13 +14,99 @@ import researchdesk_cycle as cycle
 
 
 MAX_TOPICS = 8
+DEFAULT_WEEKLY = {'weekdays': [2, 5], 'time': '03:00', 'timezone': 'Asia/Shanghai'}
+_CLOCK = re.compile(r'(?:[01][0-9]|2[0-3]):[0-5][0-9]')
+_ZONE = re.compile(r'[A-Za-z0-9_+-]+(?:/[A-Za-z0-9_+-]+)*')
 
 
 def instant(value):
-    result = datetime.fromisoformat(value.replace('Z', '+00:00'))
-    if result.tzinfo is None:
+    try:
+        return _utc(datetime.fromisoformat(value.replace('Z', '+00:00')))
+    except (AttributeError, ValueError):
+        raise store.OfflineError('调度时间必须带时区') from None
+
+
+def _utc(value):
+    if value.utcoffset() is None:
         raise store.OfflineError('调度时间必须带时区')
-    return result.astimezone(timezone.utc)
+    return value.astimezone(timezone.utc)
+
+
+def validate_weekly(value):
+    common.fields(value, {'weekdays', 'time', 'timezone'}, '每周研究日程')
+    days, clock, zone = (value[key] for key in ('weekdays', 'time', 'timezone'))
+    if (not isinstance(days, list) or not 1 <= len(days) <= 7
+            or any(type(day) is not int or not 1 <= day <= 7 for day in days)
+            or len(set(days)) != len(days)):
+        raise store.OfflineError('请选择 1–7 个不同的星期，星期一为 1，星期日为 7')
+    if not isinstance(clock, str) or not _CLOCK.fullmatch(clock):
+        raise store.OfflineError('每周运行时间须使用 24 小时制 HH:MM')
+    if (not isinstance(zone, str) or not _ZONE.fullmatch(zone) or len(zone) > 100
+            or zone.split('/')[0] in {'localtime', 'posixrules', 'posix', 'right'}):
+        raise store.OfflineError('请使用 IANA 时区，例如 Asia/Shanghai')
+    try:
+        ZoneInfo(zone)
+    except (ZoneInfoNotFoundError, ValueError):
+        raise store.OfflineError('请使用有效的 IANA 时区，例如 Asia/Shanghai') from None
+    return {'weekdays': sorted(days), 'time': clock, 'timezone': zone}
+
+
+def weekly(config):
+    """Read the selected schedule, or the original Beijing weekly schedule."""
+    return validate_weekly(config.get('weekly', DEFAULT_WEEKLY))
+
+
+def workflow_cron(rule):
+    """GitHub interprets this cron expression in the rule's IANA time zone."""
+    rule = validate_weekly(rule)
+    hour, minute = map(int, rule['time'].split(':'))
+    days = ','.join(str(day) for day in sorted(day % 7 for day in rule['weekdays']))
+    return f'{minute} {hour} * * {days}'
+
+
+def _local_instant(day, clock, zone):
+    wall = datetime.combine(day, clock)
+    # On a spring-forward day, advance to the first valid local minute. On a
+    # fall-back day fold=0 picks the first occurrence of the same logical slot.
+    for _ in range(24 * 60 + 1):
+        actual = _utc(wall.replace(tzinfo=zone, fold=0))
+        if actual.astimezone(zone).replace(tzinfo=None) == wall:
+            return actual
+        wall += timedelta(minutes=1)
+    raise store.OfflineError('无法解析日程对应的本地时间')
+
+
+def _slots_between(rule, start, end):
+    if end < start:
+        return
+    zone = ZoneInfo(rule['timezone'])
+    clock = time.fromisoformat(rule['time'])
+    suffix = rule['time'].replace(':', '')
+    # A time-zone transition can advance a skipped slot past local midnight.
+    cursor = start.astimezone(zone).date() - timedelta(days=1)
+    last = end.astimezone(zone).date()
+    while cursor <= last:
+        if cursor.isoweekday() in rule['weekdays']:
+            actual = _local_instant(cursor, clock, zone)
+            if start <= actual <= end:
+                yield f'{cursor:%Y%m%d}-{suffix}', actual
+        cursor += timedelta(days=1)
+
+
+def due_slots(config, now=None):
+    """Yield (nominal date and HHMM, actual UTC instant) from oldest to latest."""
+    now = _utc(now or datetime.now(timezone.utc))
+    start = max(instant(config['activated_at']), now - timedelta(days=config['catchup']['lookback_days']))
+    yield from _slots_between(weekly(config), start, now)
+
+
+def next_run(config, now=None):
+    """Return the next scheduled UTC instant, or None for a disabled schedule."""
+    if config.get('enabled') is False:
+        return None
+    now = _utc(now or datetime.now(timezone.utc))
+    start = max(instant(config['activated_at']), now + timedelta(microseconds=1))
+    return next((actual for _, actual in _slots_between(weekly(config), start, start + timedelta(days=8))), None)
 
 
 def load_config(root):
@@ -27,17 +114,19 @@ def load_config(root):
     config = store.load_yaml(path)
     common.fields(config, {'schema_version', 'enabled', 'timezone', 'schedule_utc', 'activated_at',
                           'cycle_config', 'admission_config', 'catchup'} |
-                  ({'topics'} if 'topics' in config else set()), '调度配置')
+                  ({'topics', 'weekly'} & config.keys()), '调度配置')
     if (type(config['schema_version']) is not int or config['schema_version'] != 1
             or type(config['enabled']) is not bool or config['timezone'] != 'Asia/Shanghai'
             or config['schedule_utc'] != '0 19 * * 1,4'):
-        raise store.OfflineError('当前调度仅支持周二/周五北京时间03:00')
+        raise store.OfflineError('旧版调度字段须保留周二/周五北京时间 03:00 的默认值')
     common.fields(config['catchup'], {'lookback_days', 'max_slots_per_run'}, '补跑配置')
     common.positive(config['catchup']['lookback_days'], 1, 30, 'lookback_days')
     if type(config['catchup']['max_slots_per_run']) is not int or config['catchup']['max_slots_per_run'] != 1:
         raise store.OfflineError('每次仅补跑一个到期轮次')
     common.config_path(root, config['admission_config'])
     instant(config['activated_at'])
+    if 'weekly' in config:
+        config['weekly'] = weekly(config)
     if 'topics' in config:
         selected = config['topics']
         if (not isinstance(selected, list) or not 1 <= len(selected) <= MAX_TOPICS
@@ -69,39 +158,24 @@ def accepted_marker(root, relative):
 
 
 def due_slot(root, config, now=None):
-    now = now or datetime.now(timezone.utc)
-    if now.tzinfo is None:
-        raise store.OfflineError('当前时间必须带时区')
-    now = now.astimezone(timezone.utc)
     topic = cycle.load_config(root, config['cycle_config'])['topic']
-    start = max(instant(config['activated_at']), now - timedelta(days=config['catchup']['lookback_days']))
-    local_zone = ZoneInfo(config['timezone'])
-    local_start = start.astimezone(local_zone)
-    local_now = now.astimezone(local_zone)
-    cursor = local_start.replace(hour=3, minute=0, second=0, microsecond=0)
-    if cursor < local_start:
-        cursor += timedelta(days=1)
-    while cursor <= local_now:
-        if cursor.weekday() in (1, 4):
-            cycle_id = '%s-%s-0300' % (topic, cursor.strftime('%Y%m%d'))
-            accepted = 'reports/%s/admissions/%s/accepted.yaml' % (topic, cycle_id)
-            if (root / accepted).exists():
-                marker = accepted_marker(root, accepted)
-                if marker.get('production_accepted') is not True:
-                    raise store.OfflineError('正式准入标记无效，保留现场')
-            else:
-                receipt_path = 'reports/test/%s/cycles/%s/receipt.yaml' % (topic, cycle_id)
-                receipt = store.checked_yaml(root, receipt_path) if (root / receipt_path).exists() else None
-                # A terminal no-new/rejected/blocked run should notify through
-                # its original job, not consume calls again at every trigger.
-                # Successful-but-unpublished runs resume admission with no inference.
-                terminal = receipt is not None and not all(
-                    receipt.get('stages', {}).get(stage, {}).get('status') == 'test_accepted'
-                    for stage in ('research', 'insight'))
-                if not terminal:
-                    return {'cycle_id': cycle_id, 'cycle_config': config['cycle_config'],
-                            'operation': 'run', 'slot_utc': cursor.astimezone(timezone.utc).isoformat()}
-        cursor += timedelta(days=1)
+    for slot, actual in due_slots(config, now):
+        cycle_id = f'{topic}-{slot}'
+        accepted = 'reports/%s/admissions/%s/accepted.yaml' % (topic, cycle_id)
+        if (root / accepted).exists():
+            marker = accepted_marker(root, accepted)
+            if marker.get('production_accepted') is not True:
+                raise store.OfflineError('正式准入标记无效，保留现场')
+        else:
+            receipt_path = 'reports/test/%s/cycles/%s/receipt.yaml' % (topic, cycle_id)
+            receipt = store.checked_yaml(root, receipt_path) if (root / receipt_path).exists() else None
+            # Successful-but-unpublished runs resume admission with no inference.
+            terminal = receipt is not None and not all(
+                receipt.get('stages', {}).get(stage, {}).get('status') == 'test_accepted'
+                for stage in ('research', 'insight'))
+            if not terminal:
+                return {'cycle_id': cycle_id, 'cycle_config': config['cycle_config'],
+                        'operation': 'run', 'slot_utc': actual.isoformat()}
     return {'cycle_id': '', 'cycle_config': config['cycle_config'], 'operation': 'run', 'slot_utc': ''}
 
 

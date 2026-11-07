@@ -2,8 +2,9 @@ name: ResearchDesk research cycle
 
 on:
   schedule:
-    # Tuesday and Friday 03:00 Asia/Shanghai = Monday and Thursday 19:00 UTC.
+    # ResearchDesk managed weekly schedule
     - cron: '0 19 * * 1,4'
+      timezone: 'UTC'
   workflow_dispatch:
     inputs:
       operation:
@@ -50,6 +51,7 @@ jobs:
           TRIGGER_EVENT: ${{ github.event_name }}
           REQUESTED_OPERATION: ${{ inputs.operation || 'run' }}
           REQUESTED_CYCLE_ID: ${{ inputs.cycle_id }}
+          RESEARCHDESK_TRIGGER_CRON: ${{ github.event.schedule || '' }}
         run: |
           if [ -z "${RESEARCHDESK_RUNTIME_PYTHON:-}" ] || [ -z "${RESEARCHDESK_WORKBENCH_ROOT:-}" ]; then
             echo 'Run python scripts/researchdesk_workbench.py start on this machine first.'

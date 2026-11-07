@@ -47,7 +47,7 @@ python scripts/researchdesk_workbench.py start
 
 ## 定时与手动检查
 
-[研究 workflow](../.github/workflows/researchdesk-manual.yml) 的默认时间为每周二、周五北京时间 03:00。任务在 Mac 上读取本人配置和授权，使用 `<topic>-YYYYMMDD-0300` 稳定批次 ID；首次部署时间限定补跑起点，已完成或无新资料的轮次不重复研究。如需重新指定启用起点，可以在用户配置设置带时区的 `automation.activated_at`。
+[研究 workflow](../.github/workflows/researchdesk-manual.yml) 的默认时间为每周二、周五北京时间 03:00。用 `./setup` 在「定时研究」创建或更新日程时，向导同时更新 GitHub 触发时间与本地 `automation.weekly`。任务在 Mac 上读取本人配置和授权，使用 `<topic>-YYYYMMDD-HHMM` 稳定批次 ID。首次部署或修改日程时从启用时间起算。已完成或无新资料的轮次复用原批次。
 
 部署完成后，可先手动派发健康检查：
 

@@ -8,14 +8,13 @@ configuration are read on this host; Writing is never launched here.
 import argparse
 from contextlib import contextmanager
 from copy import deepcopy
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 import fcntl
 import json
 import os
 from pathlib import Path
 import re
 import tempfile
-from zoneinfo import ZoneInfo
 
 import researchdesk_cycle as cycle
 import researchdesk_batch as request_budget
@@ -56,45 +55,24 @@ def _base(topic, identity):
 
 
 def _latest_slot(config, topic, now):
-    if now.tzinfo is None:
-        raise store.OfflineError('调度时间必须带时区')
-    now = now.astimezone(timezone.utc)
-    start = max(schedule.instant(config['activated_at']),
-                now - timedelta(days=config['catchup']['lookback_days']))
-    cursor = now.astimezone(ZoneInfo(config['timezone'])).replace(hour=3, minute=0, second=0, microsecond=0)
-    if cursor > now.astimezone(cursor.tzinfo):
-        cursor -= timedelta(days=1)
-    while cursor.astimezone(timezone.utc) >= start:
-        if cursor.weekday() in (1, 4):
-            return '%s-%s-0300' % (topic, cursor.strftime('%Y%m%d'))
-        cursor -= timedelta(days=1)
-    return ''
+    slots = list(schedule.due_slots(config, now))
+    return f'{topic}-{slots[-1][0]}' if slots else ''
 
 
 def _catchup_slot(root, config, topic, now, admission_enabled=False):
-    if now.tzinfo is None:
-        raise store.OfflineError('调度时间必须带时区')
-    now = now.astimezone(timezone.utc)
-    start = max(schedule.instant(config['activated_at']),
-                now - timedelta(days=config['catchup']['lookback_days']))
-    cursor = start.astimezone(ZoneInfo(config['timezone'])).replace(hour=3, minute=0, second=0, microsecond=0)
-    if cursor.astimezone(timezone.utc) < start:
-        cursor += timedelta(days=1)
-    while cursor.astimezone(timezone.utc) <= now:
-        if cursor.weekday() in (1, 4):
-            identity = '%s-%s-0300' % (topic, cursor.strftime('%Y%m%d'))
-            base = _base(topic, identity)
-            if not (root / base / 'receipt.yaml').exists():
-                return identity
-            accepted = store.checked_yaml(root, base + '/receipt.yaml')
-            attempts = sorted((root / base / 'attempts').glob('*.yaml'))
-            latest = store.checked_yaml(root, attempts[-1].relative_to(root)) if attempts else accepted
-            if (latest.get('terminal') is False or admission_enabled
-                    and latest.get('production_accepted') is not True
-                    and latest.get('simulation') is not True
-                    and latest.get('stages', {}).get('insight', {}).get('status') in {'complete', 'no_insight'}):
-                return identity
-        cursor += timedelta(days=1)
+    for slot, _ in schedule.due_slots(config, now):
+        identity = f'{topic}-{slot}'
+        base = _base(topic, identity)
+        if not (root / base / 'receipt.yaml').exists():
+            return identity
+        accepted = store.checked_yaml(root, base + '/receipt.yaml')
+        attempts = sorted((root / base / 'attempts').glob('*.yaml'))
+        latest = store.checked_yaml(root, attempts[-1].relative_to(root)) if attempts else accepted
+        if (latest.get('terminal') is False or admission_enabled
+                and latest.get('production_accepted') is not True
+                and latest.get('simulation') is not True
+                and latest.get('stages', {}).get('insight', {}).get('status') in {'complete', 'no_insight'}):
+            return identity
     return ''
 
 
@@ -387,7 +365,7 @@ def _run_topic(root, effective, identity, operation, publisher_context, collecto
 
 def run(root, event='schedule', operation='run', cycle_id=None, publisher_context=None,
         collector=None, researcher=None, insight_runner=None, health_checker=None,
-        now=None, prepare=None, admitter=None):
+        now=None, prepare=None, admitter=None, trigger_cron=None):
     root = Path(root).resolve()
     if event not in {'schedule', 'manual'} or operation not in {'health', 'collect', 'run', 'catchup'}:
         raise store.OfflineError('自动研究事件或操作无效')
@@ -397,13 +375,19 @@ def run(root, event='schedule', operation='run', cycle_id=None, publisher_contex
         workbench.apply(root)
         effective = workbench.load_effective(root)
         primary = effective['research']['topic']
-        if event == 'schedule' and effective['automation']['enabled'] is not True:
+        automation = effective['automation']
+        if event == 'schedule' and automation['enabled'] is not True:
             return dict(_empty(primary), reason='automation_disabled')
         if operation == 'health':
             health = (health_checker or _health)(root, effective)
             return dict(_empty(primary), status='healthy', health=health)
+        if event == 'schedule' and trigger_cron:
+            expected = (schedule.workflow_cron(schedule.weekly(automation)) if 'weekly' in automation
+                        else automation['schedule_utc'])
+            if not isinstance(trigger_cron, str) or ' '.join(trigger_cron.split()) != expected:
+                return dict(_empty(primary), reason='schedule_trigger_mismatch')
         clock = now or _now()
-        scheduling = _activation(root, effective['automation'])
+        scheduling = _activation(root, automation)
 
         def execute(identity, selected=None):
             config = effective if selected is None else {

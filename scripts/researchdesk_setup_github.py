@@ -1,5 +1,6 @@
-"""GitHub authorization and Actions checks for the local setup wizard."""
+"""GitHub authorization and Actions setup for the local wizard."""
 
+import base64
 from fnmatch import fnmatchcase
 import json
 import os
@@ -10,12 +11,17 @@ import shutil
 import subprocess
 import time
 import webbrowser
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
+
+import yaml
 
 import researchdesk_runner as runner
 
 
 RESEARCH_WORKFLOW = 'researchdesk-manual.yml'
 WRITING_WORKFLOW = 'researchdesk-writing.yml'
+RESEARCH_WORKFLOW_PATH = '.github/workflows/' + RESEARCH_WORKFLOW
+SCHEDULE_MARKER = '    # ResearchDesk managed weekly schedule'
 DISABLED_WORKFLOWS = {'disabled_fork', 'disabled_inactivity', 'disabled_manually'}
 HOST = 'github.com'
 DEVICE_URL = 'https://github.com/login/device'
@@ -31,6 +37,8 @@ _HTTP_STATUS = re.compile(r'\(HTTP ([1-5][0-9]{2})\)')
 _OWNER = re.compile(r'[A-Za-z0-9][A-Za-z0-9-]{0,38}')
 _REPOSITORY = re.compile(r'[A-Za-z0-9][A-Za-z0-9-]{0,38}/[A-Za-z0-9_.-]{1,100}')
 _USES = re.compile(r'^\s*(?:-\s+)?uses:\s*[\'\"]?(actions/[\w.-]+@[\w./-]+)', re.M)
+_WEEKLY_CRON = re.compile(r'([0-9]{1,2}) ([0-9]{1,2}) \* \* (\*|[0-6](?:,[0-6]){0,6})')
+_TIMEZONE = re.compile(r'[A-Za-z0-9_+-]+(?:/[A-Za-z0-9_+-]+)*')
 
 
 class GitHubSetupError(RuntimeError):
@@ -53,6 +61,74 @@ def _environment():
 
 def _repo_url(repository):
     return 'https://github.com/' + repository
+
+
+def _workflow_url(repository):
+    return _repo_url(repository) + '/actions/workflows/' + RESEARCH_WORKFLOW
+
+
+def _validate_weekly_schedule(cron, timezone):
+    match = _WEEKLY_CRON.fullmatch(cron) if isinstance(cron, str) else None
+    if not match or int(match[1]) > 59 or int(match[2]) > 23:
+        raise ValueError('invalid weekly cron')
+    days = match[3].split(',')
+    if len(days) != len(set(days)) or not isinstance(timezone, str) or not _TIMEZONE.fullmatch(timezone):
+        raise ValueError('invalid weekly schedule')
+    ZoneInfo(timezone)
+
+
+def _yaml_pair(node, key):
+    if not isinstance(node, yaml.MappingNode):
+        raise ValueError('invalid schedule mapping')
+    pairs = [(name, value) for name, value in node.value
+             if isinstance(name, yaml.ScalarNode) and name.value == key]
+    if len(pairs) != 1:
+        raise ValueError('ambiguous schedule mapping')
+    return pairs[0]
+
+
+def _schedule_values(source, url):
+    markers = [index for index, line in enumerate(source.splitlines()) if line == SCHEDULE_MARKER]
+    if not markers:
+        raise GitHubSetupError('GitHub 的 main 缺少新版定时配置标记。请先更新远端 main。',
+                               code='github_schedule_upgrade_required', url=url)
+    try:
+        if len(markers) != 1:
+            raise ValueError('ambiguous managed schedule marker')
+        root = yaml.compose(source, Loader=yaml.SafeLoader)
+        _, events = _yaml_pair(root, 'on')
+        key, schedule = _yaml_pair(events, 'schedule')
+        if (not isinstance(schedule, yaml.SequenceNode) or schedule.flow_style or len(schedule.value) != 1
+                or key.start_mark.column != 2 or not key.start_mark.line < markers[0] < schedule.start_mark.line):
+            raise ValueError('unmanaged schedule structure')
+        entry = schedule.value[0]
+        if not isinstance(entry, yaml.MappingNode) or entry.flow_style or len(entry.value) != 2:
+            raise ValueError('unmanaged schedule entry')
+        values = []
+        for field in ('cron', 'timezone'):
+            field_key, value = _yaml_pair(entry, field)
+            if (not isinstance(value, yaml.ScalarNode) or field_key.start_mark.column != 6
+                    or field_key.start_mark.line != value.start_mark.line
+                    or value.start_mark.line != value.end_mark.line or value.style not in (None, "'", '"')):
+                raise ValueError('unmanaged schedule scalar')
+            quote = value.style or ''
+            span = source[value.start_mark.index:value.end_mark.index]
+            if span != quote + value.value + quote:
+                raise ValueError('unmanaged schedule quoting')
+            values.append(value)
+        _validate_weekly_schedule(values[0].value, values[1].value)
+        return values
+    except (ValueError, ZoneInfoNotFoundError, yaml.YAMLError):
+        raise GitHubSetupError('远端工作流包含自定义或无法识别的定时规则。请在 GitHub 核对工作流。',
+                               code='github_schedule_format', url=url) from None
+
+
+def _updated_schedule(source, values, cron, timezone):
+    replacements = sorted(zip(values, (cron, timezone)), key=lambda item: item[0].start_mark.index, reverse=True)
+    for node, replacement in replacements:
+        quote = node.style or ''
+        source = source[:node.start_mark.index] + quote + replacement + quote + source[node.end_mark.index:]
+    return source
 
 
 class GitHubSetup:
@@ -307,7 +383,7 @@ class GitHubSetup:
     def _ensure_workflow_scope(self, notify):
         if self._workflow_scope():
             return
-        message = '复制 GitHub Actions 文件需要 workflow 权限。请授权后再创建私有仓库。'
+        message = '写入 GitHub Actions 工作流需要 workflow 权限。请在 GitHub 授权后继续。'
         if notify is not None:
             self._authorize_in_browser(['refresh', '--hostname', HOST, '--scopes', 'workflow'], notify, message)
             if self._workflow_scope():
@@ -315,18 +391,107 @@ class GitHubSetup:
         raise GitHubSetupError(message + '可运行 gh auth refresh --hostname github.com --scopes workflow。',
                                code='github_workflow_scope_required')
 
-    def prepare(self, expected_repository=None, require_private=False):
-        """Check the target again and enable only the two deployed workflows."""
-        self._check_auth()
+    def _expected_repository(self, expected_repository):
         repository = self._repository()
-        url = _repo_url(repository)
-        if expected_repository is not None and repository.casefold() != expected_repository.casefold():
+        if expected_repository is not None and (not isinstance(expected_repository, str)
+                                                or repository.casefold() != expected_repository.casefold()):
             raise GitHubSetupError('当前 GitHub 仓库与向导显示的仓库不同。请重新检查后再部署。',
-                                   code='github_repository_changed', url=url)
+                                   code='github_repository_changed', url=_repo_url(repository))
+        return repository
+
+    def _deployment_target(self, expected_repository, require_private):
+        self._check_auth()
+        repository = self._expected_repository(expected_repository)
         private, states = self._inspect(repository)
         if require_private and not private:
             raise GitHubSetupError('当前 GitHub 仓库已变为公开。请重新检查并确认后再部署。',
-                                   code='github_visibility_changed', url=url + '/settings')
+                                   code='github_visibility_changed', url=_repo_url(repository) + '/settings')
+        return repository, states
+
+    def _workflow_content(self, repository):
+        url = _workflow_url(repository)
+        message = '无法读取 GitHub 的 main 工作流。请检查仓库权限和文件是否存在。'
+        try:
+            entry = self._api('repos/' + repository + '/contents/' + RESEARCH_WORKFLOW_PATH + '?ref=main', message)
+        except GitHubSetupError as exc:
+            exc.url = url
+            raise
+        sha, encoded = entry.get('sha'), entry.get('content')
+        if (entry.get('type') != 'file' or entry.get('encoding') != 'base64'
+                or not isinstance(sha, str) or not re.fullmatch(r'[0-9a-f]{40}', sha) or not isinstance(encoded, str)):
+            raise GitHubSetupError(message, code='github_workflow_content_invalid', url=url)
+        try:
+            source = base64.b64decode(''.join(encoded.split()), validate=True).decode('utf-8')
+        except ValueError:
+            raise GitHubSetupError(message, code='github_workflow_content_invalid', url=url) from None
+        return source, sha
+
+    def _check_schedule_input(self, repository, cron, timezone):
+        try:
+            _validate_weekly_schedule(cron, timezone)
+        except (ValueError, ZoneInfoNotFoundError):
+            raise GitHubSetupError('请选择有效的每周运行时间、星期和 IANA 时区。',
+                                   code='github_schedule_input', url=_workflow_url(repository)) from None
+
+    def schedule_matches(self, cron, timezone, *, expected_repository):
+        """Check that main has the requested managed schedule and it is active."""
+        if expected_repository is None:
+            raise GitHubSetupError('请先确认 GitHub 仓库。', code='github_repository_required')
+        repository = self._expected_repository(expected_repository)
+        self._check_schedule_input(repository, cron, timezone)
+        source, _ = self._workflow_content(repository)
+        values = _schedule_values(source, _workflow_url(repository))
+        return ([value.value for value in values] == [cron, timezone]
+                and self._workflow_state(repository, RESEARCH_WORKFLOW) == 'active')
+
+    def configure_schedule(self, cron, timezone, *, expected_repository, require_private=False, notify=None):
+        """Update the single managed GitHub Actions schedule on main."""
+        if expected_repository is None:
+            raise GitHubSetupError('请先确认 GitHub 仓库。', code='github_repository_required')
+        repository, states = self._deployment_target(expected_repository, require_private)
+        url = _workflow_url(repository)
+        self._check_schedule_input(repository, cron, timezone)
+        if states[RESEARCH_WORKFLOW] != 'active':
+            raise GitHubSetupError('请先启用 GitHub 上的 ResearchDesk 研究工作流。',
+                                   code='github_schedule_workflow_disabled', url=url)
+        source, sha = self._workflow_content(repository)
+        values = _schedule_values(source, url)
+        content = _updated_schedule(source, values, cron, timezone)
+        if content == source:
+            return url
+        try:
+            self._ensure_workflow_scope(notify)
+        except GitHubSetupError as exc:
+            exc.url = exc.url or url
+            raise
+        # The operator may have changed repositories or permissions during browser authorization.
+        _, current_states = self._deployment_target(repository, require_private)
+        if current_states[RESEARCH_WORKFLOW] != 'active':
+            raise GitHubSetupError('ResearchDesk 研究工作流已停用。请在 GitHub 检查。',
+                                   code='github_schedule_workflow_disabled', url=url)
+        route = 'repos/' + repository + '/contents/' + RESEARCH_WORKFLOW_PATH
+        try:
+            self._api(route, 'GitHub 未确认定时设置已保存。请检查仓库权限、main 分支规则或现有定时设置。',
+                      method='PUT', json_response=False, data={
+                          'message': 'Configure ResearchDesk weekly schedule',
+                          'content': base64.b64encode(content.encode('utf-8')).decode('ascii'),
+                          'sha': sha, 'branch': 'main',
+                      })
+        except GitHubSetupError as exc:
+            if exc.http_status == 409:
+                raise GitHubSetupError('远端工作流已变化。请在 GitHub 核对后重新尝试。',
+                                       code='github_schedule_conflict', url=url) from None
+            exc.url = _repo_url(repository) + '/settings/branches'
+            raise
+        return url
+
+    def prepare(self, expected_repository=None, require_private=False, require_schedule=False):
+        """Check the target again and enable only the two deployed workflows."""
+        repository, states = self._deployment_target(expected_repository, require_private)
+        url = _repo_url(repository)
+        if require_schedule:
+            source, _ = self._workflow_content(repository)
+            _schedule_values(source, _workflow_url(repository))
         message = '远端 main 缺少新版阅读同步入口。请把当前版本更新到 GitHub 的 main 后重试。'
         try:
             entry = self._api('repos/' + repository + '/contents/scripts/researchdesk_setup_obsidian.py?ref=main', message)

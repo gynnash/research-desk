@@ -10,7 +10,7 @@
 
 个人使用只编辑本地 `config/local/workbench.yaml`。工具加载系统默认，再合并本人覆盖，校验后生成旧入口需要的兼容配置。个人副本和生成文件均被 Git 忽略，不需要把本人设置推送到 GitHub 才能运行本地工作台。
 
-首次配置定时研究，在 Mac 的仓库根目录运行 `./setup` 打开本机向导。它复用已有授权和工作台设置，在 GitHub 健康检查通过后启用正式准入和定时任务。首次启用从当前时间起算，配置期间只检查部署。下文保留手动配置、迁移和维护命令，均在仓库根目录运行，并使用已安装项目依赖的 Python。
+首次配置定时研究，在 Mac 的仓库根目录运行 `./setup` 打开本机向导。完成授权后，选择星期、时间和时区，点击「创建」。向导会在健康检查通过后更新 GitHub 工作流日程，并启用本地定时研究与正式准入。首次启用从当前时间起算，配置期间只检查部署。下文保留手动配置、迁移和维护命令，均在仓库根目录运行，并使用已安装项目依赖的 Python。
 
 ## 新下载或 fork 的工作台
 
@@ -114,7 +114,7 @@ research:
 | `insight` | Codex SDK、独立审阅、历史窗口与任务限制 | `config/local/codex-insight.yaml` |
 | `membership_budget` | 共享月度会员请求上限 | `config/membership_budget.yaml` |
 | `runtime` | 本地或远程执行环境与运行目录 | `config/runtime.yaml` |
-| `automation` | 定时开关与补跑设置 | `config/automation.yaml` |
+| `automation` | 定时开关、每周日程与补跑设置 | `config/automation.yaml` |
 | `confirmation` | 选题确认页及 Writing 模型与预算 | `config/confirmation-v2.yaml`、旧版兼容配置 |
 | `writing_style` | 本人写作偏好 | `config/writing_style.md` |
 | `admission`、`writing_admission` | 研究与稿件准入规则 | 对应的准入 YAML |

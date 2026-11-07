@@ -62,7 +62,7 @@ h1 { font-size: clamp(28px, 5vw, 39px); font-weight: 680; letter-spacing: -.045e
 .topic-remove:hover:not(:disabled) { background: #d9e9dc; }
 .topic-entry { display: flex; gap: 7px; align-items: stretch; }
 .topic-entry input { flex: 1; min-width: 0; max-width: 340px; padding: 5px 9px; border: 1px solid var(--line); border-radius: 7px; color: var(--ink); background: var(--paper); font-size: 13px; }
-.topic-error { color: var(--red); }
+.topic-error, .field-error { color: var(--red); }
 .status { margin-left: auto; border-radius: 20px; padding: 3px 8px; background: var(--background); color: var(--subtle); font-size: 11px; line-height: 1.45; font-weight: 650; white-space: nowrap; }
 .status[data-state="ready"] { color: var(--green); background: var(--green-wash); }
 .status[data-state="running"], .status[data-state="needs_login"], .status[data-state="needs_repository"], .status[data-state="needs_setup"], .status[data-state="not_ready"], .status[data-state="missing_tool"] { color: var(--amber); background: var(--amber-wash); }
@@ -81,6 +81,16 @@ h1 { font-size: clamp(28px, 5vw, 39px); font-weight: 680; letter-spacing: -.045e
 .schedule { display: flex; align-items: baseline; flex-wrap: wrap; gap: 5px 10px; margin-top: 10px; padding: 9px 11px; border-radius: 7px; background: var(--background); font-size: 13px; }
 .schedule-label, .detail-label { font-size: 11px; color: var(--subtle); }
 .schedule strong { color: var(--green); font-weight: 650; }
+.schedule-editor { margin-top: 12px; }
+.schedule-editor fieldset { border: 0; margin: 0; min-width: 0; padding: 0; }
+.schedule-editor legend, .schedule-fields label { color: var(--ink); font-size: 13px; font-weight: 650; }
+.schedule-days { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 5px; }
+.schedule-days label { display: flex; align-items: center; gap: 4px; min-height: 33px; padding: 3px 8px; border: 1px solid var(--line); border-radius: 7px; font-size: 12px; cursor: pointer; }
+.schedule-days label:has(:checked) { color: var(--green); background: var(--green-wash); }
+.schedule-days input { margin: 0; accent-color: var(--green); }
+.schedule-fields { display: grid; grid-template-columns: minmax(100px, 125px) minmax(0, 245px); gap: 10px; margin-top: 10px; }
+.schedule-fields input { display: block; width: 100%; min-height: 34px; min-width: 0; margin-top: 4px; padding: 5px 8px; border: 1px solid var(--line); border-radius: 7px; color: var(--ink); background: var(--paper); font-size: 13px; font-weight: 400; }
+#schedule-connection-hint { margin: 0; }
 .visibility-note { padding: 7px 10px; border-radius: 7px; margin-top: 8px; color: var(--amber); background: var(--amber-wash); font-size: 12px; }
 .path-row { display: flex; align-items: center; justify-content: space-between; gap: 7px 12px; margin-top: 10px; padding: 9px 11px; background: var(--background); border-radius: 7px; }
 .path-row > div { min-width: 0; }
@@ -125,5 +135,6 @@ h1 { font-size: clamp(28px, 5vw, 39px); font-weight: 680; letter-spacing: -.045e
   .step-body { margin-left: 0; }
   .accounts { grid-template-columns: minmax(0, 1fr); gap: 8px; }
   .path-row { align-items: flex-start; flex-wrap: wrap; }
+  .schedule-days label { min-height: 40px; }
   .button { min-height: 40px; }
 }

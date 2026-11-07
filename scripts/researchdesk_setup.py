@@ -31,14 +31,13 @@ from researchdesk_setup_obsidian import ObsidianSetup, ObsidianSetupError
 import researchdesk_workbench as workbench
 
 
-SCHEDULE = '每周二、周五 03:00（北京时间）'
 ACTIONS = {
     'check': '正在检查已有配置和授权…',
     'save_topics': '正在保存研究方向…',
     'chatgpt_login': '请在浏览器中的 OpenAI 页面授权…',
     'github_login': '请在浏览器中的 GitHub 页面授权…',
     'github_create': '正在准备你的私有 GitHub 仓库…',
-    'deploy': '正在检查 GitHub Actions…',
+    'create_schedule': '正在检查 GitHub Actions…',
     'obsidian_sync': '正在从 GitHub 更新独立阅读库…',
     'obsidian_open': '正在打开 Obsidian…',
     'confirmation_open': '正在准备选题确认页…',
@@ -123,15 +122,22 @@ def configure_models(root, catalog):
     save_user_config(root, user)
 
 
-def enable_schedule(root):
+def schedule_config(root, weekly):
     user = workbench._read(workbench._path(root, workbench.LOCAL_CONFIG))
-    effective = workbench.load_effective(root, user)
-    if not effective['automation']['enabled']:
-        activated = max(datetime.now(timezone.utc),
-                        schedule.instant(effective['automation']['activated_at']))
-        user.setdefault('automation', {}).update(enabled=True, activated_at=activated.isoformat())
+    current = workbench.load_effective(root, user)['automation']
+    automation = user.setdefault('automation', {})
+    if not current['enabled'] or schedule.weekly(current) != weekly:
+        activated = max(datetime.now(timezone.utc), schedule.instant(current['activated_at']))
+        automation['activated_at'] = activated.isoformat()
+    automation.update(enabled=True, weekly=weekly)
     user.setdefault('admission', {})['enabled'] = True
-    save_user_config(root, user)
+    return user
+
+
+def schedule_text(weekly):
+    days = '一二三四五六日'
+    selected = '、'.join('周' + days[day - 1] for day in weekly['weekdays'])
+    return f"每{selected} {weekly['time']}（{weekly['timezone']}）"
 
 
 def topic_name(value):
@@ -219,10 +225,10 @@ class SetupWizard:
         self.obsidian = ObsidianSetup(self.root)
         self.lock = threading.Lock()
         self.state = {
-            'setup': section('idle', '正在准备本地工作台。', schedule=SCHEDULE),
+            'setup': section('idle', '正在准备本地工作台。'),
             'chatgpt': section('idle', '正在检查 ChatGPT 授权。'),
             'github': section('idle', '正在检查 GitHub 授权。'),
-            'deployment': section('idle', '完成授权后自动配置每周研究。'),
+            'deployment': section('idle', '连接账号后，选择时间并创建定时研究。'),
             'obsidian': section('idle', 'GitHub 就绪后准备独立阅读库。'),
             'operation': None,
         }
@@ -247,7 +253,7 @@ class SetupWizard:
                 else:
                     operation.pop('code', None)
 
-    def submit(self, action, topics=None):
+    def submit(self, action, payload=None):
         if action not in ACTIONS:
             raise SetupError('未知操作。')
         with self.lock:
@@ -255,7 +261,7 @@ class SetupWizard:
                 return False
             self.state.pop('notice', None)
             self.state['operation'] = {'action': action, 'message': ACTIONS[action]}
-        threading.Thread(target=self.perform, args=(action, topics), daemon=True).start()
+        threading.Thread(target=self.perform, args=(action, payload), daemon=True).start()
         return True
 
     def client(self):
@@ -284,10 +290,11 @@ class SetupWizard:
         topic = value['research']['topic']
         definitions = value['research_topics']['topics']
         selected = value['automation'].get('topics', [topic])
+        weekly = schedule.weekly(value['automation'])
         self.update('setup', section(
             'ready', '已准备本地主题、资料来源和用量上限。',
             topic=topic, topics=[{'id': identity, 'name': definitions[identity]['name']} for identity in selected],
-            schedule=SCHEDULE,
+            schedule=schedule_text(weekly), weekly=weekly,
             automation=value['automation']['enabled'], admission=value['admission']['enabled'],
         ))
 
@@ -298,31 +305,49 @@ class SetupWizard:
             workbench.initialize(self.root, adopt_existing=adopt)
         self.update_setup()
         self.update('chatgpt', self.check_chatgpt())
-        github = self.github.status()
-        self.update('github', github)
-        deployment = self.snapshot()['deployment']
-        if deployment['state'] == 'ready' and deployment.get('repository') != github.get('repository'):
-            self.update('deployment', section('idle', '仓库连接已变化，正在重新检查部署。'))
+        self.update('github', self.github.status())
         self.update('obsidian', self.obsidian.status())
 
-    def deploy(self, explicit=False):
+    def refresh_schedule(self):
         current = self.snapshot()
-        if current['chatgpt']['state'] != 'ready' or current['github']['state'] != 'ready':
-            self.update('deployment', section('needs_setup', '完成 ChatGPT 和 GitHub 授权后可以继续。'))
+        if any(current[key]['state'] != 'ready' for key in ('setup', 'chatgpt', 'github')):
+            self.update('deployment', section('needs_setup', '连接 ChatGPT 和 GitHub 后即可创建。'))
+            return
+        repo = current['github']['repository']
+        url = f'https://github.com/{repo}/actions/workflows/researchdesk-manual.yml'
+        automation = workbench.load_effective(self.root)['automation']
+        if automation['enabled']:
+            if 'weekly' in automation:
+                weekly = schedule.weekly(automation)
+                cron, zone = schedule.workflow_cron(weekly), weekly['timezone']
+            else:
+                cron, zone = automation['schedule_utc'], 'UTC'
+            try:
+                if self.github.schedule_matches(cron, zone, expected_repository=repo):
+                    self.update('deployment', section('ready', '定时研究已创建。', url=url, repository=repo))
+                    return
+            except GitHubSetupError as exc:
+                self.update('deployment', section('blocked', str(exc), url=exc.url or url))
+                return
+            self.update('deployment', section('needs_setup', '本地日程与 GitHub 不一致，请选择时间并重新创建。'))
+            return
+        self.update('deployment', section('needs_setup', '选择运行时间，然后点击「创建」。'))
+
+    def create_schedule(self, weekly):
+        current = self.snapshot()
+        if any(current[key]['state'] != 'ready' for key in ('setup', 'chatgpt', 'github')):
+            self.update('deployment', section('needs_setup', '连接 ChatGPT 和 GitHub 后即可创建。'))
             return
         if platform.system() != 'Darwin':
             self.update('deployment', section('blocked', '请在执行每周研究的 Mac 上运行 ./setup。'))
             return
         repo = current['github']['repository']
-        url = f'https://github.com/{repo}/actions'
-        if current['github'].get('private') is not True and not explicit:
-            self.update('deployment', section(
-                'needs_setup', '此仓库的研究结果和稿件将随仓库公开。确认使用此仓库后可继续。', url=url))
-            return
+        url = f'https://github.com/{repo}/actions/workflows/researchdesk-manual.yml'
+        require_private = current['github'].get('private') is not False
         self.update('deployment', section('running', '正在检查仓库与两个工作流。', url=url))
         try:
             self.notify('正在检查仓库与两个工作流…')
-            self.github.prepare(expected_repository=repo, require_private=not explicit)
+            self.github.prepare(expected_repository=repo, require_private=require_private, require_schedule=True)
             self.notify('正在安装 Codex SDK、配置并启动 Mac 执行器…')
             with automatic.pipeline_lock(self.root):
                 if runner._repository(self.root).casefold() != repo.casefold():
@@ -330,8 +355,14 @@ class SetupWizard:
                 workbench.start(self.root)
             self.notify('等待 GitHub 健康检查完成…')
             self.github.health()
+            self.notify('正在创建 GitHub Actions 定时触发…')
             with automatic.pipeline_lock(self.root):
-                enable_schedule(self.root)
+                workbench.apply(self.root, check_only=True)
+                workbench.render(workbench.load_effective(self.root, schedule_config(self.root, weekly)))
+                url = self.github.configure_schedule(schedule.workflow_cron(weekly), weekly['timezone'],
+                                                     expected_repository=repo, require_private=require_private,
+                                                     notify=self.notify)
+                save_user_config(self.root, schedule_config(self.root, weekly))
             self.update_setup()
         except GitHubSetupError as exc:
             self.update('deployment', section('blocked', str(exc), url=getattr(exc, 'url', None) or url))
@@ -341,7 +372,7 @@ class SetupWizard:
             self.update('deployment', section('blocked', message, url=url))
             return
         self.update('deployment', section(
-            'ready', '健康检查通过。定时采集、总结、洞察和选题已启用。', url=url, repository=repo))
+            'ready', '定时研究已创建。健康检查通过，任务将按所选时间运行。', url=url, repository=repo))
         self.notify('正在准备 Obsidian 阅读库…')
         self.obsidian_action('obsidian_sync')
 
@@ -391,7 +422,7 @@ class SetupWizard:
             raise SetupError('确认页未能启动。请检查该端口是否已被占用，或返回已经打开的确认页。')
         webbrowser.open(self.confirmation_url, new=1)
 
-    def perform(self, action, topics=None):
+    def perform(self, action, payload=None):
         stage = 'setup'
         try:
             if action == 'check':
@@ -399,7 +430,7 @@ class SetupWizard:
             elif action == 'save_topics':
                 stage = 'notice'
                 with automatic.pipeline_lock(self.root):
-                    configure_topics(self.root, topics)
+                    configure_topics(self.root, payload)
                 self.update_setup()
                 self.update(stage, section('ready', '研究方向已保存，下次定时研究会使用这份列表。',
                                            action='save_topics'))
@@ -427,15 +458,12 @@ class SetupWizard:
                 self.open_confirmation()
                 self.update(stage, section('ready', '已请求打开选题确认页。正式选题回存后可在页面查看。'))
                 return
-            elif action == 'deploy':
-                self.inspect()
+            elif action == 'create_schedule':
+                stage = 'deployment'
+                self.create_schedule(payload)
+                return
             stage = 'deployment'
-            current = self.snapshot()
-            ready = all(current[key]['state'] == 'ready' for key in ('setup', 'chatgpt', 'github'))
-            if ready and (action == 'deploy' or current['deployment']['state'] != 'ready'):
-                self.deploy(explicit=action == 'deploy')
-            elif not ready:
-                self.update(stage, section('needs_setup', '完成必要授权和仓库配置后自动继续。'))
+            self.refresh_schedule()
         except GitHubSetupError as exc:
             details = {**self.snapshot().get(stage, {}), 'code': exc.code}
             if exc.url:
@@ -532,16 +560,21 @@ def create_server(wizard, port=0):
                 action = data.get('action') if isinstance(data, dict) else None
                 if not isinstance(action, str) or action not in ACTIONS:
                     raise ValueError()
-                topics = None
+                payload = None
                 if action == 'save_topics' and set(data) == {'action', 'topics'}:
-                    topics = topic_choices(data['topics'])
-                elif action == 'save_topics' or set(data) != {'action'}:
+                    payload = topic_choices(data['topics'])
+                elif action == 'create_schedule' and set(data) == {'action', 'schedule'}:
+                    try:
+                        payload = schedule.validate_weekly(data['schedule'])
+                    except store.OfflineError as exc:
+                        raise SetupError(str(exc)) from exc
+                elif action in {'save_topics', 'create_schedule'} or set(data) != {'action'}:
                     raise ValueError()
             except SetupError as exc:
                 return self.reply(400, {'error': str(exc)})
             except (ValueError, OSError):
                 return self.reply(400, {'error': '请求格式或操作无效。'})
-            accepted = wizard.submit(action) if topics is None else wizard.submit(action, topics)
+            accepted = wizard.submit(action) if payload is None else wizard.submit(action, payload)
             if not accepted:
                 return self.reply(409, {'error': '向导正在处理另一步，请稍后再试。'})
             self.reply(202, {'accepted': True})
