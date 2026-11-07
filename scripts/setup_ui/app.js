@@ -6,12 +6,14 @@
     (button) => [button.dataset.action, button]));
   const labels = {
     ready: '已就绪', needs_login: '待授权', needs_repository: '待连接仓库',
+    needs_workflow_scope: '待补充授权',
     idle: '待配置', running: '处理中', blocked: '需要处理', needs_setup: '待设置',
     not_ready: '待准备', unavailable: '暂不可用', failed: '需要处理', error: '需要处理',
     missing_tool: '待安装',
   };
   const actionLabels = {
     check: '重新检查工作台', chatgpt_login: '等待 ChatGPT 授权', github_login: '等待 GitHub 授权',
+    github_workflow_auth: '等待 GitHub 补充授权',
     github_create: '创建私有 GitHub 仓库', create_schedule: '正在配置定时研究',
     obsidian_sync: '更新阅读库', obsidian_open: '打开 Vault 管理器',
     confirmation_open: '打开选题确认页', save_topics: '正在保存研究方向',
@@ -270,7 +272,9 @@
     const {setup = {}, chatgpt = {}, github = {}, deployment = {}, operation} = snapshot || {};
     const actual = scheduleFromSetup(setup);
     const ready = deployment.state === 'ready';
-    const canCreate = setup.state === 'ready' && chatgpt.state === 'ready' && github.state === 'ready';
+    const accountsReady = chatgpt.state === 'ready' && github.state === 'ready';
+    const workflowReady = github.workflow_scope === true;
+    const canCreate = setup.state === 'ready' && accountsReady && workflowReady;
     const saving = Boolean(pendingSchedule) || requestedAction === 'create_schedule' || operation?.action === 'create_schedule';
     const editing = !ready || scheduleEditorOpen;
     setVisible('schedule-editor', editing);
@@ -284,7 +288,14 @@
     setText('schedule-submit', ready || setup.automation ? '保存修改' : '创建定时研究');
     byId('schedule-submit').disabled = !snapshot?.csrf || !canCreate || isBusy() || saving
       || deployment.state === 'running' || (ready && sameSchedule(actual, scheduleDraft()));
-    setVisible('schedule-connection-hint', chatgpt.state !== 'ready' || github.state !== 'ready');
+    setVisible('schedule-connection-hint', !accountsReady || !workflowReady);
+    let connectionHint = '连接 ChatGPT 和 GitHub 后可创建。';
+    if (github.workflow_scope === false) {
+      connectionHint = '请在「连接账号」中补充 GitHub 工作流授权。';
+    } else if (accountsReady && !workflowReady) {
+      connectionHint = '请确认 GitHub 工作流权限后再创建日程。';
+    }
+    setText('schedule-connection-hint', connectionHint);
     renderSchedulePreview(editing && Boolean(snapshot));
   }
 
@@ -366,30 +377,37 @@
     setText('github-repository', repo);
     externalLink('github-repository', repositoryUrl);
     setVisible('github-repository-row', Boolean(repo && repositoryUrl));
-    const githubRunning = ['github_login', 'github_create', 'create_schedule'].includes(operation?.action) ? operation : null;
+    const githubRunning = ['github_login', 'github_workflow_auth', 'github_create'].includes(operation?.action)
+      ? operation : null;
     const code = [githubRunning?.user_code, githubRunning?.device_code, githubRunning?.code]
       .find((item) => /^[A-Z0-9]{4}-[A-Z0-9]{4}$/.test(valueOf(item)));
     setText('github-device-code', valueOf(code));
     setVisible('github-device', Boolean(code));
     externalLink('github-auth-url', code ? githubDeviceUrl : '');
-    setVisible('schedule-device-guide', Boolean(code) && operation?.action === 'create_schedule');
 
     const githubLogin = github.state === 'needs_login' || github.code === 'github_login_required';
+    const needsWorkflowScope = !githubLogin && github.workflow_scope === false;
+    const scopeMessage = valueOf(github.workflow_scope_message);
     const githubCreate = github.can_create === true && (github.state !== 'ready' || github.private === false);
     const toolUrl = httpsUrl(github.url, ({hostname}) => hostname === 'cli.github.com' || hostname === 'git-scm.com');
     const fixUrl = github.state === 'missing_tool' ? toolUrl
       : problemStates.has(github.state) ? githubPage(github.url) : '';
     const showLogin = githubLogin && !code && githubRunning?.action !== 'github_create';
-    const showCreate = githubCreate && !githubRunning;
+    const showWorkflowAuth = needsWorkflowScope && !code;
+    const showCreate = githubCreate && github.workflow_scope === true && !githubRunning;
     setButton('github_login', showLogin, githubRunning ? '正在获取设备码…' : '登录 GitHub');
+    setButton('github_workflow_auth', showWorkflowAuth,
+      githubRunning?.action === 'github_workflow_auth' ? '正在获取设备码…' : '补充授权');
     setButton('github_create', showCreate);
     setText('github-fix-link', toolUrl ? '查看安装说明 ↗' : '打开 GitHub 检查 ↗');
     externalLink('github-fix-link', fixUrl);
-    setVisible('github-create-detail', githubCreate);
+    setText('github-workflow-detail', scopeMessage || '创建或修改定时研究需要 GitHub 工作流权限（workflow）。');
+    setVisible('github-workflow-detail', !githubLogin && (needsWorkflowScope || scopeMessage));
+    setVisible('github-create-detail', githubCreate && github.workflow_scope === true);
     setVisible('github-connect-detail', github.state === 'needs_repository' && !githubCreate);
-    setVisible('github-actions', showLogin || showCreate || fixUrl);
+    setVisible('github-actions', showLogin || showWorkflowAuth || showCreate || fixUrl);
     byId('account-cards').classList.toggle('is-compact', chatgpt.state === 'ready' && github.state === 'ready'
-      && !chatgptLink && !code && !showLogin && !githubCreate && !fixUrl);
+      && github.workflow_scope === true && !chatgptLink && !code && !showLogin && !githubCreate && !fixUrl);
     return repositoryUrl;
   }
 
@@ -455,7 +473,9 @@
       const {setup = {}, chatgpt = {}, github = {}, deployment = {}, obsidian = {}, operation} = snapshot;
       setSection('setup', setup);
       setSection('chatgpt', chatgpt, '已授权');
-      setSection('github', github, '已连接');
+      const githubDisplay = github.state === 'ready' && github.workflow_scope === false
+        ? {...github, state: 'needs_workflow_scope'} : github;
+      setSection('github', githubDisplay, '已连接');
       reconcileTopics(setup);
       const repositoryUrl = renderAccounts(chatgpt, github, operation);
       renderDeployment(setup, github, deployment, repositoryUrl);
@@ -466,7 +486,8 @@
     setText('operation-message', activeMessage);
     setVisible('operation', isBusy());
     for (const [action, button] of buttons) {
-      button.disabled = isBusy() || (!snapshot?.csrf && action !== 'check');
+      button.disabled = isBusy() || (!snapshot?.csrf && action !== 'check')
+        || (action === 'github_workflow_auth' && snapshot?.github?.can_authorize_workflow === false);
     }
     renderTopicControls();
     renderScheduleControls();

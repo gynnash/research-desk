@@ -30,6 +30,9 @@ LOGIN_TIMEOUT = 300
 HEALTH_TIMEOUT = 240
 HEALTH_STEP = 'Reload configuration and run the registered workbench'
 PRIVATE_REPOSITORY_NAME = 'researchdesk-workbench'
+_WORKFLOW_SCOPE_REQUIRED = '请在第 2 步点击「补充授权」，授予 GitHub Actions 工作流写入权限。'
+_WORKFLOW_ENV_GUIDANCE = ('无法确认当前 GitHub 环境令牌的 workflow 权限。请使用具备 workflow 权限的令牌，'
+                          '或取消 GH_TOKEN / GITHUB_TOKEN 后重启向导并通过浏览器授权。')
 _GIT_HELPER = ('-c', 'credential.https://github.com.helper=',
                '-c', 'credential.https://github.com.helper=!gh auth git-credential')
 _DEVICE_CODE = re.compile(rb'one-time code[:(\s]+([A-Z0-9]{4}-[A-Z0-9]{4})(?![A-Z0-9-])', re.I)
@@ -57,6 +60,10 @@ def _environment():
     environment.pop('GH_FORCE_TTY', None)
     environment.pop('GH_DEBUG', None)
     return environment
+
+
+def _uses_environment_token():
+    return bool(os.environ.get('GH_TOKEN') or os.environ.get('GITHUB_TOKEN'))
 
 
 def _repo_url(repository):
@@ -285,15 +292,27 @@ class GitHubSetup:
             return {'state': 'missing_tool', 'message': '请先安装 Git。', 'code': 'git_missing',
                     'url': 'https://git-scm.com/downloads'}
         repository = None
+        workflow_status = {}
         try:
             self._check_auth()
+            try:
+                workflow_scope = self._workflow_scope()
+            except GitHubSetupError as exc:
+                workflow_status['workflow_scope_message'] = str(exc)
+            else:
+                workflow_status['workflow_scope'] = workflow_scope
+                if not workflow_scope:
+                    can_authorize = not _uses_environment_token()
+                    workflow_status['can_authorize_workflow'] = can_authorize
+                    if not can_authorize:
+                        workflow_status['workflow_scope_message'] = _WORKFLOW_ENV_GUIDANCE
             repository = self._repository()
             private, states = self._inspect(repository)
         except GitHubSetupError as exc:
             state = {'github_login_required': 'needs_login',
                      'github_repository_required': 'needs_repository',
                      'github_public_upstream': 'needs_repository'}.get(exc.code, 'blocked')
-            result = {'state': state, 'message': str(exc), 'code': exc.code}
+            result = {'state': state, 'message': str(exc), 'code': exc.code, **workflow_status}
             if repository:
                 result['repository'] = repository
                 if exc.code == 'github_public_upstream' and self._can_create(repository):
@@ -305,7 +324,7 @@ class GitHubSetup:
                    if any(state != 'active' for state in states.values()) else 'GitHub 仓库和工作流已就绪。')
         return {'state': 'ready', 'message': message, 'repository': repository,
                 'private': private, 'can_create': not private and self._can_create(repository),
-                'url': _repo_url(repository)}
+                'url': _repo_url(repository), **workflow_status}
 
     def login(self, notify):
         """Delegate device authorization to gh and expose only its one-time code."""
@@ -317,7 +336,7 @@ class GitHubSetup:
         except GitHubSetupError as exc:
             if exc.code != 'github_login_required':
                 raise
-        self._authorize_in_browser(['login', '--hostname', HOST, '--web'], notify,
+        self._authorize_in_browser(['login', '--hostname', HOST, '--web', '--scopes', 'workflow'], notify,
                                    '正在获取 GitHub 设备码…')
         self._check_auth()
 
@@ -380,16 +399,26 @@ class GitHubSetup:
                 return 'workflow' in {scope.strip() for scope in value.split(',')}
         return False
 
-    def _ensure_workflow_scope(self, notify):
+    def _ensure_workflow_scope(self, notify=None):
         if self._workflow_scope():
             return
-        message = '写入 GitHub Actions 工作流需要 workflow 权限。请在 GitHub 授权后继续。'
+        if _uses_environment_token():
+            raise GitHubSetupError(_WORKFLOW_ENV_GUIDANCE, code='github_workflow_scope_required')
         if notify is not None:
-            self._authorize_in_browser(['refresh', '--hostname', HOST, '--scopes', 'workflow'], notify, message)
+            self._authorize_in_browser(['refresh', '--hostname', HOST, '--scopes', 'workflow'], notify,
+                                       '正在获取 GitHub 工作流授权设备码…')
             if self._workflow_scope():
                 return
-        raise GitHubSetupError(message + '可运行 gh auth refresh --hostname github.com --scopes workflow。',
-                               code='github_workflow_scope_required')
+        raise GitHubSetupError(_WORKFLOW_SCOPE_REQUIRED, code='github_workflow_scope_required')
+
+    def require_workflow_scope(self):
+        """Check permission before changing workflows, without opening authorization."""
+        self._ensure_workflow_scope()
+
+    def authorize_workflow(self, notify):
+        """Add workflow permission to the active GitHub CLI login."""
+        self._check_auth()
+        self._ensure_workflow_scope(notify)
 
     def _expected_repository(self, expected_repository):
         repository = self._repository()
@@ -444,7 +473,7 @@ class GitHubSetup:
         return ([value.value for value in values] == [cron, timezone]
                 and self._workflow_state(repository, RESEARCH_WORKFLOW) == 'active')
 
-    def configure_schedule(self, cron, timezone, *, expected_repository, require_private=False, notify=None):
+    def configure_schedule(self, cron, timezone, *, expected_repository, require_private=False):
         """Update the single managed GitHub Actions schedule on main."""
         if expected_repository is None:
             raise GitHubSetupError('请先确认 GitHub 仓库。', code='github_repository_required')
@@ -460,11 +489,11 @@ class GitHubSetup:
         if content == source:
             return url
         try:
-            self._ensure_workflow_scope(notify)
+            self.require_workflow_scope()
         except GitHubSetupError as exc:
             exc.url = exc.url or url
             raise
-        # The operator may have changed repositories or permissions during browser authorization.
+        # Recheck the target before writing, in case the GitHub configuration changed.
         _, current_states = self._deployment_target(repository, require_private)
         if current_states[RESEARCH_WORKFLOW] != 'active':
             raise GitHubSetupError('ResearchDesk 研究工作流已停用。请在 GitHub 检查。',
@@ -559,7 +588,7 @@ class GitHubSetup:
         except GitHubSetupError:
             return False
 
-    def create_repository(self, notify=None):
+    def create_repository(self):
         """Create an empty private personal repo, push upstream main, then bind origin."""
         self._check_auth()
         source, head = self._creation_source()
@@ -585,7 +614,7 @@ class GitHubSetup:
             raise GitHubSetupError('目标私有仓库名称已存在。请检查该仓库，向导会保留它。', url=url)
 
         try:
-            self._ensure_workflow_scope(notify)
+            self.require_workflow_scope()
             if self._api('user', '无法确认当前 GitHub 账号。').get('login') != login:
                 raise GitHubSetupError('GitHub 登录账号在创建期间发生变化。请重新检查目标仓库。')
             created = self._api('user/repos', '无法确认私有仓库是否创建。请先在 GitHub 检查目标仓库。', method='POST',

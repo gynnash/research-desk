@@ -36,12 +36,14 @@ ACTIONS = {
     'save_topics': '正在保存研究方向…',
     'chatgpt_login': '请在浏览器中的 OpenAI 页面授权…',
     'github_login': '请在浏览器中的 GitHub 页面授权…',
+    'github_workflow_auth': '请在浏览器中补充 GitHub Actions 授权…',
     'github_create': '正在准备你的私有 GitHub 仓库…',
     'create_schedule': '正在检查 GitHub Actions…',
     'obsidian_sync': '正在从 GitHub 更新独立阅读库…',
     'obsidian_open': '正在打开 Obsidian…',
     'confirmation_open': '正在准备选题确认页…',
 }
+GITHUB_WORKFLOW_REQUIRED = '请在「连接账号」中完成 GitHub Actions 授权。'
 START_ERRORS = {
     'github_repository_runner_admin_permission_required': '当前 GitHub 账号没有目标仓库的管理员权限。',
     'existing_runner_registration_mismatch': '这台机器上的 runner 已登记到其他仓库或使用了其他名称。',
@@ -355,12 +357,17 @@ class SetupWizard:
                 return
             self.update('deployment', section('needs_setup', '本地日程与 GitHub 不一致，请选择时间并重新创建。'))
             return
-        self.update('deployment', section('needs_setup', '选择运行时间，然后点击「创建」。'))
+        message = ('选择运行时间，然后点击「创建定时研究」。' if current['github'].get('workflow_scope') is True
+                   else GITHUB_WORKFLOW_REQUIRED)
+        self.update('deployment', section('needs_setup', message))
 
     def create_schedule(self, weekly):
         current = self.snapshot()
         if any(current[key]['state'] != 'ready' for key in ('setup', 'chatgpt', 'github')):
             self.update('deployment', section('needs_setup', '连接 ChatGPT 和 GitHub 后即可创建。'))
+            return
+        if current['github'].get('workflow_scope') is not True:
+            self.update('notice', section('blocked', GITHUB_WORKFLOW_REQUIRED))
             return
         if platform.system() != 'Darwin':
             self.update('deployment', section('blocked', '请在执行每周研究的 Mac 上运行 ./setup。'))
@@ -368,8 +375,9 @@ class SetupWizard:
         repo = current['github']['repository']
         url = f'https://github.com/{repo}/actions/workflows/researchdesk-manual.yml'
         require_private = current['github'].get('private') is not False
-        self.update('deployment', section('running', '正在检查仓库与两个工作流。', url=url))
         try:
+            self.github.require_workflow_scope()
+            self.update('deployment', section('running', '正在检查仓库与两个工作流。', url=url))
             self.notify('正在检查仓库与两个工作流…')
             self.github.prepare(expected_repository=repo, require_private=require_private, require_schedule=True)
             self.notify('正在安装 Codex SDK、配置并启动 Mac 执行器…')
@@ -384,11 +392,13 @@ class SetupWizard:
                 workbench.apply(self.root, check_only=True)
                 workbench.render(workbench.load_effective(self.root, schedule_config(self.root, weekly)))
                 url = self.github.configure_schedule(schedule.workflow_cron(weekly), weekly['timezone'],
-                                                     expected_repository=repo, require_private=require_private,
-                                                     notify=self.notify)
+                                                     expected_repository=repo, require_private=require_private)
                 save_user_config(self.root, schedule_config(self.root, weekly))
             self.update_setup()
         except GitHubSetupError as exc:
+            if exc.code == 'github_workflow_scope_required':
+                self.update('deployment', current['deployment'])
+                raise
             self.update('deployment', section('blocked', str(exc), url=getattr(exc, 'url', None) or url))
             return
         except (runner.RunnerError, store.OfflineError) as exc:
@@ -467,11 +477,20 @@ class SetupWizard:
                 stage = 'github'
                 self.github.login(self.notify)
                 self.update(stage, self.github.status())
+            elif action == 'github_workflow_auth':
+                stage = 'notice'
+                self.github.authorize_workflow(self.notify)
+                self.update('github', self.github.status())
             elif action == 'github_create':
                 stage = 'github'
-                if not self.github.status().get('can_create') or not hasattr(self.github, 'create_repository'):
+                github = self.github.status()
+                self.update(stage, github)
+                if not github.get('can_create'):
                     raise SetupError('请在 GitHub 创建自己的仓库，然后返回检查。')
-                self.github.create_repository(self.notify)
+                if github.get('workflow_scope') is not True:
+                    self.update('notice', section('blocked', GITHUB_WORKFLOW_REQUIRED))
+                    return
+                self.github.create_repository()
                 self.update(stage, self.github.status())
             elif action in {'obsidian_sync', 'obsidian_open'}:
                 stage = 'obsidian'
@@ -489,6 +508,10 @@ class SetupWizard:
             stage = 'deployment'
             self.refresh_schedule()
         except GitHubSetupError as exc:
+            if action in ('create_schedule', 'github_create') and exc.code == 'github_workflow_scope_required':
+                self.update('github', {**self.snapshot()['github'], 'workflow_scope': False})
+                self.update('notice', section('blocked', str(exc)))
+                return
             details = {**self.snapshot().get(stage, {}), 'code': exc.code}
             if exc.url:
                 details['url'] = exc.url

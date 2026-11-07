@@ -64,14 +64,14 @@ h1 { font-size: clamp(25px, 4vw, 32px); font-weight: 680; letter-spacing: -.04em
 .topic-error, .field-error { color: var(--red); }
 .status { margin-left: auto; border-radius: 20px; padding: 3px 8px; background: var(--background); color: var(--subtle); font-size: 11px; line-height: 1.45; font-weight: 650; white-space: nowrap; }
 .status[data-state="ready"] { color: var(--green); background: var(--green-wash); }
-.status[data-state="running"], .status[data-state="needs_login"], .status[data-state="needs_repository"], .status[data-state="needs_setup"], .status[data-state="not_ready"], .status[data-state="missing_tool"] { color: var(--amber); background: var(--amber-wash); }
+.status[data-state="running"], .status[data-state="needs_login"], .status[data-state="needs_workflow_scope"], .status[data-state="needs_repository"], .status[data-state="needs_setup"], .status[data-state="not_ready"], .status[data-state="missing_tool"] { color: var(--amber); background: var(--amber-wash); }
 .status[data-state="blocked"], .status[data-state="failed"], .status[data-state="error"] { color: var(--red); background: var(--red-wash); }
 .accounts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
 .account { display: flex; flex-direction: column; min-width: 0; padding: 8px 10px; border: 1px solid var(--line); border-radius: 9px; }
 .account-heading { margin-bottom: 5px; }
 .account-heading h3 { font-size: 14px; font-weight: 650; }
 .account-footer { margin-top: auto; }
-.account-footer button[data-action$="_login"] { min-width: min(162px, 100%); }
+.account-footer button[data-action$="_login"], .account-footer button[data-action="github_workflow_auth"] { min-width: min(162px, 100%); }
 .accounts.is-compact { gap: 0; border: 1px solid var(--line); border-radius: 8px; background: var(--background); }
 .is-compact .account { flex-flow: row wrap; align-items: center; gap: 4px 9px; padding: 6px 9px; border: 0; border-radius: 0; }
 .is-compact .account + .account { border-left: 1px solid var(--line); }

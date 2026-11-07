@@ -80,7 +80,8 @@
               <div class="account-heading"><h3>GitHub</h3><span class="status" id="github-state">等待检查</span></div>
               <p id="github-message" class="message" aria-live="polite">用于派发任务和保存研究资料。</p>
               <p id="github-repository-row" class="detail" hidden><span>资料仓库</span> <a id="github-repository" target="_blank" rel="noopener noreferrer"></a></p>
-              <p id="github-create-detail" class="detail" hidden>此操作会把当前项目推送到你账号下的新私有仓库，并将它设为当前工作台的远端。复制工作流时，GitHub 可能要求补充授权。</p>
+              <p id="github-workflow-detail" class="detail" aria-live="polite" hidden></p>
+              <p id="github-create-detail" class="detail" hidden>此操作会把当前项目推送到你账号下的新私有仓库，并将它设为当前工作台的远端。</p>
               <p id="github-connect-detail" class="detail" hidden>请选择有管理员权限的仓库，并将本版本代码放在其默认分支 <code>main</code>。用 <code>git remote set-url origin &lt;你的仓库地址&gt;</code> 连接后，返回本页重新检查。</p>
               <div class="account-footer">
                 <div id="github-device" class="device" hidden>
@@ -93,6 +94,7 @@
                 </div>
                 <div class="actions" id="github-actions" hidden>
                   <button type="button" class="button primary" data-action="github_login" hidden>登录 GitHub</button>
+                  <button type="button" class="button primary" data-action="github_workflow_auth" aria-describedby="github-workflow-detail" hidden>补充授权</button>
                   <button type="button" class="button" data-action="github_create" hidden>创建私有 GitHub 仓库</button>
                   <a class="button" id="github-fix-link" target="_blank" rel="noopener noreferrer" hidden></a>
                 </div>
@@ -152,7 +154,6 @@
                   <button type="submit" class="button primary" id="schedule-submit" disabled>创建</button>
                 </div>
               </div>
-              <p id="schedule-device-guide" class="detail" hidden>请使用 <a href="#github-device">GitHub 设备码</a> 完成授权后继续。</p>
             </form>
             <details class="guidance" id="github-guide">
               <summary>需要在 GitHub 上处理什么？</summary>

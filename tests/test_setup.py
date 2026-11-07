@@ -4,6 +4,7 @@ import base64
 from datetime import datetime, timedelta, timezone
 import http.client
 import json
+import os
 from pathlib import Path
 import sys
 import tempfile
@@ -32,7 +33,7 @@ class SetupWizardTest(unittest.TestCase):
         self.wizard.client = mock.Mock(return_value=self.chatgpt)
         self.wizard.github = mock.Mock()
         self.wizard.github.status.return_value = {
-            'state': 'ready', 'repository': 'fixture/workbench', 'private': True,
+            'state': 'ready', 'repository': 'fixture/workbench', 'private': True, 'workflow_scope': True,
         }
         self.wizard.github.configure_schedule.return_value = WORKFLOW_URL
         self.wizard.github.schedule_matches.return_value = True
@@ -59,7 +60,7 @@ class SetupWizardTest(unittest.TestCase):
         self.wizard.perform('chatgpt_login')
         self.start_runner.assert_not_called()
         self.wizard.github.status.return_value = {
-            'state': 'ready', 'repository': 'fixture/workbench', 'private': True,
+            'state': 'ready', 'repository': 'fixture/workbench', 'private': True, 'workflow_scope': True,
         }
         self.wizard.perform('github_login')
         self.start_runner.assert_not_called()
@@ -104,6 +105,56 @@ class SetupWizardTest(unittest.TestCase):
         self.wizard.github.schedule_matches.assert_called_once_with(
             '35 9 * * 1,4', WEEKLY['timezone'], expected_repository='fixture/workbench')
         self.assertEqual(self.wizard.snapshot()['deployment']['url'], WORKFLOW_URL)
+
+    def test_workflow_scope_is_authorized_separately_before_deployment(self):
+        github = self.wizard.github
+        github.status.return_value.update(workflow_scope=False, can_create=True)
+        self.wizard.perform('check')
+        self.wizard.perform('github_create')
+        self.wizard.perform('create_schedule', WEEKLY)
+        github.create_repository.assert_not_called()
+        github.prepare.assert_not_called()
+        github.health.assert_not_called()
+        github.authorize_workflow.assert_not_called()
+        self.start_runner.assert_not_called()
+
+        github.authorize_workflow.side_effect = setup.GitHubSetupError('等待 GitHub 授权超时。')
+        self.wizard.perform('github_workflow_auth')
+        snapshot = self.wizard.snapshot()
+        self.assertEqual(snapshot['github']['state'], 'ready')
+        self.assertFalse(snapshot['github']['workflow_scope'])
+        self.assertEqual(snapshot['notice']['message'], '等待 GitHub 授权超时。')
+
+        def grant_workflow_scope(_notify):
+            github.status.return_value['workflow_scope'] = True
+
+        github.authorize_workflow.side_effect = grant_workflow_scope
+        self.wizard.perform('github_workflow_auth')
+        self.assertTrue(self.wizard.snapshot()['github']['workflow_scope'])
+        self.start_runner.assert_not_called()
+
+        self.wizard.perform('create_schedule', WEEKLY)
+        github.require_workflow_scope.assert_called_once()
+        github.configure_schedule.assert_called_once_with(
+            '35 9 * * 1,4', WEEKLY['timezone'], expected_repository='fixture/workbench', require_private=True)
+        self.assertEqual(self.wizard.snapshot()['deployment']['state'], 'ready')
+
+    def test_revoked_workflow_scope_preserves_the_existing_schedule(self):
+        github = self.wizard.github
+        self.wizard.perform('check')
+        self.wizard.perform('create_schedule', WEEKLY)
+        github.require_workflow_scope.side_effect = setup.GitHubSetupError(
+            setup.GITHUB_WORKFLOW_REQUIRED, code='github_workflow_scope_required')
+
+        self.wizard.perform('create_schedule', {**WEEKLY, 'time': '10:00'})
+        snapshot = self.wizard.snapshot()
+        self.assertFalse(snapshot['github']['workflow_scope'])
+        self.assertEqual(snapshot['notice']['message'], setup.GITHUB_WORKFLOW_REQUIRED)
+        self.assertEqual(snapshot['deployment']['state'], 'ready')
+        self.assertEqual(snapshot['setup']['weekly'], WEEKLY)
+        github.prepare.assert_called_once()
+        github.configure_schedule.assert_called_once()
+        github.authorize_workflow.assert_not_called()
 
     def test_failed_health_or_workflow_update_can_retry_without_activation(self):
         self.wizard.github.health.side_effect = setup.GitHubSetupError('检查失败')
@@ -286,6 +337,63 @@ class SetupSchedulePreviewTest(unittest.TestCase):
 
 
 class GitHubScheduleTest(unittest.TestCase):
+    def test_first_login_requests_workflow_permission(self):
+        github = setup.GitHubSetup(workbench.REPOSITORY)
+        missing = setup.GitHubSetupError('需要登录', code='github_login_required')
+        notify = mock.Mock()
+        with (mock.patch('researchdesk_setup_github.shutil.which', return_value='gh'),
+              mock.patch.object(github, '_check_auth', side_effect=[missing, None]) as check,
+              mock.patch.object(github, '_authorize_in_browser') as browser):
+            github.login(notify)
+        self.assertEqual(check.call_count, 2)
+        browser.assert_called_once_with(['login', '--hostname', 'github.com', '--web', '--scopes', 'workflow'],
+                                        notify, mock.ANY)
+
+    def test_permission_status_is_independent_of_repository_connection(self):
+        github = setup.GitHubSetup(workbench.REPOSITORY)
+        missing_repository = setup.GitHubSetupError('需要连接仓库', code='github_repository_required')
+        with (mock.patch('researchdesk_setup_github.shutil.which', return_value='gh'),
+              mock.patch.dict(os.environ, {'GH_TOKEN': '', 'GITHUB_TOKEN': ''}),
+              mock.patch.object(github, '_check_auth'),
+              mock.patch.object(github, '_repository', side_effect=missing_repository),
+              mock.patch.object(github, '_workflow_scope', return_value=False) as scope):
+            status = github.status()
+            self.assertEqual(status['state'], 'needs_repository')
+            self.assertFalse(status['workflow_scope'])
+            self.assertTrue(status['can_authorize_workflow'])
+            with mock.patch.dict(os.environ, {'GITHUB_TOKEN': 'fixture-token'}):
+                status = github.status()
+                self.assertFalse(status['workflow_scope'])
+                self.assertFalse(status['can_authorize_workflow'])
+                self.assertIn('GITHUB_TOKEN', status['workflow_scope_message'])
+            scope.return_value = True
+            self.assertTrue(github.status()['workflow_scope'])
+            scope.side_effect = setup.GitHubSetupError('GitHub 查询超时', code='github_timeout')
+            status = github.status()
+            self.assertEqual(status['state'], 'needs_repository')
+            self.assertNotIn('workflow_scope', status)
+            self.assertEqual(status['workflow_scope_message'], 'GitHub 查询超时')
+
+    def test_workflow_browser_refresh_requires_explicit_action_and_local_credential(self):
+        github = setup.GitHubSetup(workbench.REPOSITORY)
+        notify = mock.Mock()
+        with (mock.patch.dict(os.environ, {'GH_TOKEN': '', 'GITHUB_TOKEN': ''}),
+              mock.patch.object(github, '_check_auth'),
+              mock.patch.object(github, '_workflow_scope', return_value=False) as scope,
+              mock.patch.object(github, '_authorize_in_browser') as browser):
+            with self.assertRaises(setup.GitHubSetupError) as check:
+                github.require_workflow_scope()
+            self.assertEqual(check.exception.code, 'github_workflow_scope_required')
+            browser.assert_not_called()
+            with mock.patch.dict(os.environ, {'GH_TOKEN': 'fixture-token'}):
+                with self.assertRaisesRegex(setup.GitHubSetupError, 'GH_TOKEN'):
+                    github.authorize_workflow(notify)
+                browser.assert_not_called()
+            scope.side_effect = [False, True]
+            github.authorize_workflow(notify)
+            browser.assert_called_once_with(['refresh', '--hostname', 'github.com', '--scopes', 'workflow'],
+                                            notify, mock.ANY)
+
     def test_prepare_uses_authenticated_main_content_without_git_https(self):
         github = setup.GitHubSetup(workbench.REPOSITORY)
         workflow = workbench.REPOSITORY / '.github/workflows/researchdesk-manual.yml'
@@ -314,7 +422,7 @@ class GitHubScheduleTest(unittest.TestCase):
         sha = 'a' * 40
         with (mock.patch.object(github, '_deployment_target', return_value=target),
               mock.patch.object(github, '_workflow_content', return_value=(source, sha)) as content,
-              mock.patch.object(github, '_ensure_workflow_scope') as scope,
+              mock.patch.object(github, 'require_workflow_scope') as scope,
               mock.patch.object(github, '_api') as api):
             result = github.configure_schedule('35 9 * * 1,4', WEEKLY['timezone'],
                                                expected_repository='fixture/workbench')
