@@ -76,25 +76,43 @@ def _local_instant(day, clock, zone):
     raise store.OfflineError('无法解析日程对应的本地时间')
 
 
-def due_slots(config, now=None):
-    """Yield (nominal date and HHMM, actual UTC instant) from oldest to latest."""
-    now = _utc(now or datetime.now(timezone.utc))
-    start = max(instant(config['activated_at']), now - timedelta(days=config['catchup']['lookback_days']))
-    if now < start:
+def _slots_between(rule, start, end):
+    if end < start:
         return
-    rule = weekly(config)
     zone = ZoneInfo(rule['timezone'])
     clock = time.fromisoformat(rule['time'])
     suffix = rule['time'].replace(':', '')
     # A time-zone transition can advance a skipped slot past local midnight.
     cursor = start.astimezone(zone).date() - timedelta(days=1)
-    last = now.astimezone(zone).date()
+    last = end.astimezone(zone).date()
     while cursor <= last:
         if cursor.isoweekday() in rule['weekdays']:
             actual = _local_instant(cursor, clock, zone)
-            if start <= actual <= now:
+            if start <= actual <= end:
                 yield f'{cursor:%Y%m%d}-{suffix}', actual
         cursor += timedelta(days=1)
+
+
+def due_slots(config, now=None):
+    """Yield (nominal date and HHMM, actual UTC instant) from oldest to latest."""
+    now = _utc(now or datetime.now(timezone.utc))
+    start = max(instant(config['activated_at']), now - timedelta(days=config['catchup']['lookback_days']))
+    yield from _slots_between(weekly(config), start, now)
+
+
+def next_run(rule, now=None, *, activated_at=None):
+    """Return the first actual UTC slot strictly after now, on or after activation."""
+    rule = validate_weekly(rule)
+    now = _utc(now or datetime.now(timezone.utc))
+    try:
+        start = now + timedelta(microseconds=1)
+        if activated_at is not None:
+            start = max(start, instant(activated_at))
+        # Allow a full weekly interval plus a day for clock changes.
+        _, actual = next(_slots_between(rule, start, start + timedelta(days=8)))
+    except (StopIteration, OverflowError):
+        raise store.OfflineError('无法计算下一次预计运行时间') from None
+    return actual
 
 
 def load_config(root):

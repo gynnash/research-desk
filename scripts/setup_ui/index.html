@@ -17,10 +17,8 @@
 
   <main class="shell">
     <section class="hero" aria-labelledby="page-title">
-      <p class="eyebrow">首次配置</p>
       <h1 id="page-title">设置研究工作台</h1>
-      <p class="lead">选择研究方向，连接 ChatGPT 与 GitHub，再为工作台创建定时研究。</p>
-      <p class="hero-note">点击「创建」后会检查并配置运行环境。首次采集和模型调用从定时任务开始。</p>
+      <p class="lead">选好研究方向并连接账号后，创建每周日程。研究将在计划时间运行。</p>
     </section>
 
     <div id="connection-error" class="notice error" role="alert" hidden></div>
@@ -36,23 +34,29 @@
             <span class="step-number" aria-hidden="true">01</span>
             <h2 id="setup-heading">工作台</h2>
             <span class="status" id="setup-state">等待检查</span>
+            <button type="button" class="button" id="check-button" data-action="check" disabled>重新检查</button>
           </div>
           <div class="step-body">
             <p id="setup-message" class="message" aria-live="polite">正在读取本机配置…</p>
             <form id="topic-editor" class="topic-editor" hidden>
-              <label for="topic-input">研究方向</label>
-              <ul id="topic-tags" class="topic-tags" role="list" aria-label="已添加的研究方向"></ul>
-              <div class="topic-entry">
-                <input id="topic-input" type="text" autocomplete="off" placeholder="例如多模态检索" aria-describedby="topic-hint">
-                <button type="button" class="button" id="topic-add">添加</button>
+              <div class="topic-row">
+                <span class="field-label">研究方向</span>
+                <ul id="topic-tags" class="topic-tags" role="list" aria-label="已添加的研究方向"></ul>
+                <div class="topic-controls">
+                  <button type="button" class="button" id="topic-toggle" aria-controls="topic-entry" aria-expanded="false">添加方向</button>
+                  <button type="submit" class="button primary" id="topic-save" hidden disabled>保存研究方向</button>
+                </div>
               </div>
-              <p id="topic-hint" class="detail">按 Enter 或点「添加」，保存时保留 1 至 8 个方向。</p>
+              <div id="topic-entry" hidden>
+                <div class="topic-entry">
+                  <label class="sr-only" for="topic-input">新的研究方向</label>
+                  <input id="topic-input" type="text" autocomplete="off" placeholder="例如多模态检索" aria-describedby="topic-hint">
+                  <button type="button" class="button" id="topic-add">添加</button>
+                </div>
+                <p id="topic-hint" class="detail">按 Enter 或点「添加」，保存时保留 1 至 8 个方向。</p>
+              </div>
               <p id="topic-error" class="detail topic-error" role="alert" hidden></p>
             </form>
-            <div class="actions">
-              <button type="submit" class="button primary" id="topic-save" form="topic-editor" hidden disabled>保存研究方向</button>
-              <button type="button" class="button" id="check-button" data-action="check" disabled>重新检查</button>
-            </div>
           </div>
         </section>
 
@@ -61,7 +65,7 @@
             <span class="step-number" aria-hidden="true">02</span>
             <h2 id="accounts-heading">连接账号</h2>
           </div>
-          <div class="step-body accounts">
+          <div id="account-cards" class="step-body accounts">
             <div class="account">
               <div class="account-heading"><h3>ChatGPT</h3><span class="status" id="chatgpt-state">等待检查</span></div>
               <p id="chatgpt-message" class="message" aria-live="polite">符合条件的研究和写作请求使用你的 ChatGPT 会员用量。</p>
@@ -105,8 +109,14 @@
           </div>
           <div class="step-body">
             <p id="deployment-message" class="message" aria-live="polite">设置每周运行的时间，连接账号后即可创建。</p>
-            <div id="schedule-current" class="schedule" aria-live="polite" hidden>
-              <span class="schedule-label">当前日程</span><strong id="schedule-time"></strong>
+            <div id="schedule-result" class="schedule-result" hidden>
+              <div id="schedule-current" class="schedule" aria-live="polite" hidden>
+                <span class="schedule-label">当前日程</span><strong id="schedule-time"></strong>
+              </div>
+              <div class="actions" id="deployment-actions" hidden>
+                <a class="button" id="deployment-url" target="_blank" rel="noopener noreferrer" hidden>GitHub Action</a>
+                <button type="button" class="button" id="schedule-edit" aria-controls="schedule-editor" hidden>修改日程</button>
+              </div>
             </div>
             <form id="schedule-editor" class="schedule-editor">
               <fieldset id="schedule-days">
@@ -129,16 +139,19 @@
               <p id="schedule-zone-hint" class="detail">可从列表选择，或直接输入时区名称，如 <code>Asia/Shanghai</code>。</p>
               <p id="public-repository-notice" class="visibility-note" hidden>当前是公开仓库。创建后，回存到仓库的研究资料、选题和稿件将公开可见。</p>
               <p id="schedule-error" class="detail field-error" role="alert" hidden></p>
-              <div class="actions">
-                <button type="submit" class="button primary" id="schedule-submit" disabled>创建</button>
-                <span id="schedule-connection-hint" class="detail">连接 ChatGPT 和 GitHub 后可创建。</span>
+              <div class="schedule-footer">
+                <div class="schedule-preview" aria-live="polite" aria-atomic="true">
+                  <p id="schedule-preview-summary"></p>
+                  <p id="schedule-preview-next" class="detail"></p>
+                  <p id="schedule-connection-hint" class="detail">连接 ChatGPT 和 GitHub 后可创建。</p>
+                </div>
+                <div class="actions">
+                  <button type="button" class="button" id="schedule-cancel" hidden>取消</button>
+                  <button type="submit" class="button primary" id="schedule-submit" disabled>创建</button>
+                </div>
               </div>
               <p id="schedule-device-guide" class="detail" hidden>请使用 <a href="#github-device">GitHub 设备码</a> 完成授权后继续。</p>
             </form>
-            <div class="actions" id="deployment-actions" hidden>
-              <a class="button" id="deployment-url" target="_blank" rel="noopener noreferrer" hidden>GitHub Action</a>
-              <button type="button" class="button" data-action="confirmation_open" hidden>打开选题确认页</button>
-            </div>
             <details class="guidance" id="github-guide">
               <summary>需要在 GitHub 上处理什么？</summary>
               <div class="guidance-content">
@@ -153,12 +166,13 @@
           </div>
         </section>
 
-        <section class="step" aria-labelledby="obsidian-heading">
-          <div class="step-heading">
+        <details class="step disclosure" aria-labelledby="obsidian-heading">
+          <summary class="step-heading">
             <span class="step-number" aria-hidden="true">04</span>
-            <h2 id="obsidian-heading">Obsidian 阅读库</h2>
+            <span id="obsidian-heading" class="step-title">Obsidian 阅读库</span>
+            <span class="optional">可选</span>
             <span class="status" id="obsidian-state">等待检查</span>
-          </div>
+          </summary>
           <div class="step-body">
             <p id="obsidian-message" class="message" aria-live="polite">用单独的 Vault 阅读同步到本机的研究资料。你可以随时设置。</p>
             <div id="obsidian-path-row" class="path-row" hidden>
@@ -182,13 +196,12 @@
               </div>
             </details>
           </div>
-        </section>
+        </details>
       </div>
 
-      <aside class="overview" aria-label="研究流程">
-        <div class="overview-card">
-          <p class="eyebrow">定时任务</p>
-          <h2>每轮研究会保存什么</h2>
+      <details class="step disclosure" aria-labelledby="outputs-heading">
+        <summary class="step-heading"><span id="outputs-heading" class="step-title">每轮研究会保存什么</span></summary>
+        <div class="outputs-body">
           <ol class="outputs">
             <li><div><strong>采集公开原文</strong><span>论文与博客 · <code>collection</code></span></div></li>
             <li><div><strong>逐篇阅读与审阅</strong><span>技术总结 · <code>summary</code></span></div></li>
@@ -196,8 +209,9 @@
             <li><div><strong>提出公众号选题</strong><span>待确认选题卡 · <code>articles</code></span></div></li>
           </ol>
           <p class="overview-note">你在选题确认页保存确认后，可以单独启动写作。大纲、初稿和候选稿也会保存到资料仓库。</p>
+          <div class="actions"><button type="button" class="button" data-action="confirmation_open" hidden>打开选题确认页</button></div>
         </div>
-      </aside>
+      </details>
     </div>
     <p id="announcement" class="sr-only" role="status" aria-live="polite"></p>
     <noscript><p class="notice error">请启用 JavaScript，再打开本地设置页。</p></noscript>

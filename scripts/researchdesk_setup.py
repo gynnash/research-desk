@@ -18,7 +18,7 @@ import sys
 import tempfile
 import threading
 import unicodedata
-from urllib.parse import urlsplit
+from urllib.parse import parse_qs, urlsplit
 import webbrowser
 
 import researchdesk_automatic as automatic
@@ -138,6 +138,30 @@ def schedule_text(weekly):
     days = '一二三四五六日'
     selected = '、'.join('周' + days[day - 1] for day in weekly['weekdays'])
     return f"每{selected} {weekly['time']}（{weekly['timezone']}）"
+
+
+def schedule_preview(query, root=None):
+    try:
+        fields = parse_qs(query, keep_blank_values=True, strict_parsing=True, max_num_fields=3)
+    except ValueError:
+        raise SetupError('请输入星期、时间和时区。') from None
+    if set(fields) != {'weekdays', 'time', 'timezone'} or any(len(values) != 1 for values in fields.values()):
+        raise SetupError('请输入星期、时间和时区。')
+    days, clock, zone = (fields[key][0] for key in ('weekdays', 'time', 'timezone'))
+    if not re.fullmatch(r'[1-7](?:,[1-7]){0,6}', days):
+        raise SetupError('请选择 1–7 个不同的星期，星期一为 1，星期日为 7。')
+    rule = {'weekdays': [int(day) for day in days.split(',')], 'time': clock, 'timezone': zone}
+    activated_at = None
+    if isinstance(root, Path):
+        try:
+            config = workbench.load_effective(root)['automation']
+            value = automatic._activation(root, config)['activated_at']
+            schedule.instant(value)
+            activated_at = value
+        except (OSError, ValueError, KeyError, TypeError):
+            # Preview is available before a workbench is initialized.
+            pass
+    return {'next_run': schedule.next_run(rule, activated_at=activated_at).isoformat()}
 
 
 def topic_name(value):
@@ -537,9 +561,16 @@ def create_server(wizard, port=0):
         def do_GET(self):
             if not self.trusted():
                 return self.reply(403, {'error': '请从本机向导地址访问。'})
-            path = urlsplit(self.path).path
+            url = urlsplit(self.path)
+            path = url.path
             if path == '/api/status':
                 return self.reply(200, {**wizard.snapshot(), 'csrf': token})
+            if path == '/api/schedule-preview':
+                try:
+                    preview = schedule_preview(url.query, getattr(wizard, 'root', None))
+                except (SetupError, store.OfflineError) as exc:
+                    return self.reply(400, {'error': str(exc)})
+                return self.reply(200, preview)
             if path not in routes:
                 return self.reply(404, {'error': '未找到此页面。'})
             name, content_type = routes[path]
