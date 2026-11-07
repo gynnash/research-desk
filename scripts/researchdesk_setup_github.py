@@ -492,6 +492,8 @@ class GitHubSetup:
         if require_schedule:
             source, _ = self._workflow_content(repository)
             _schedule_values(source, _workflow_url(repository))
+        # This authenticated content lookup verifies access to main. The
+        # workflow health check tests the actual checkout on the runner.
         message = '远端 main 缺少新版阅读同步入口。请把当前版本更新到 GitHub 的 main 后重试。'
         try:
             entry = self._api('repos/' + repository + '/contents/scripts/researchdesk_setup_obsidian.py?ref=main', message)
@@ -499,12 +501,6 @@ class GitHubSetup:
                 raise GitHubSetupError(message)
         except GitHubSetupError as exc:
             exc.url = url + '/tree/main'
-            raise
-        try:
-            self._git('ls-remote', '--exit-code', '--heads', '--', url + '.git', 'refs/heads/main', github_auth=True,
-                      message='Git 无法通过当前 GitHub 授权读取 main。请检查网络和账号的仓库读取权限。')
-        except GitHubSetupError as exc:
-            exc.url = url
             raise
         for name, state in states.items():
             if state == 'active':

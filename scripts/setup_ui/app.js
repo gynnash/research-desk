@@ -84,6 +84,11 @@
     return httpsUrl(value, ({hostname, pathname}) => hostname === 'github.com' && !pathname.startsWith('/login'));
   }
 
+  function githubRepositoryUrl(repository) {
+    return /^[A-Za-z0-9][A-Za-z0-9-]{0,38}\/(?!\.{1,2}$)[A-Za-z0-9_.-]{1,100}$/.test(repository)
+      ? `https://github.com/${repository}` : '';
+  }
+
   function setSection(name, data, readyLabel) {
     if (!data) return;
     const badge = byId(`${name}-state`);
@@ -357,8 +362,7 @@
     setVisible('chatgpt-actions', chatgptLogin || chatgptLink);
 
     const repo = valueOf(github.repository);
-    const repositoryUrl = /^[A-Za-z0-9-]+\/[A-Za-z0-9_.-]+$/.test(repo)
-      ? `https://github.com/${repo}` : githubPage(github.url);
+    const repositoryUrl = githubRepositoryUrl(repo);
     setText('github-repository', repo);
     externalLink('github-repository', repositoryUrl);
     setVisible('github-repository-row', Boolean(repo && repositoryUrl));
@@ -398,19 +402,23 @@
     setVisible('schedule-current', deployed);
     setText('schedule-time', describeSchedule(actual));
 
-    const actionsUrl = githubPage(deployment.url) || (repositoryUrl ? `${repositoryUrl}/actions` : '');
-    const workflowUrl = httpsUrl(deployment.url, ({hostname, pathname}) => hostname === 'github.com'
-      && /^\/[^/]+\/[^/]+\/actions\/workflows\/[^/]+\/?$/.test(pathname));
-    const repo = valueOf(github.repository);
-    const fallbackWorkflowUrl = /^[A-Za-z0-9-]+\/[A-Za-z0-9_.-]+$/.test(repo)
-      ? `https://github.com/${repo}/actions/workflows/researchdesk-manual.yml` : '';
-    const deploymentUrl = deployed ? workflowUrl || fallbackWorkflowUrl
-      : problemStates.has(deployment.state) ? actionsUrl : '';
+    const actionsUrl = repositoryUrl ? `${repositoryUrl}/actions` : '';
+    const failed = problemStates.has(deployment.state);
+    const deploymentUrl = deployed && actionsUrl ? `${actionsUrl}/workflows/researchdesk-manual.yml`
+      : failed ? actionsUrl : '';
+    const diagnosticUrl = failed && repositoryUrl ? httpsUrl(deployment.url, ({hostname, pathname}) => {
+      const repoPath = new URL(repositoryUrl).pathname.toLowerCase();
+      const path = pathname.toLowerCase();
+      return hostname === 'github.com' && path.startsWith(`${repoPath}/`)
+        && /^\/(?:settings(?:\/actions|\/branches)?|tree\/main|actions\/(?:runs\/\d+|workflows\/[a-z0-9_.-]+))\/?$/
+          .test(path.slice(repoPath.length));
+    }) : '';
     const canConfirm = deployed && deployment.can_confirm !== false;
     setVisible('public-repository-notice', github.private === false);
     setButton('confirmation_open', canConfirm);
     setText('deployment-url', deployed ? 'GitHub Action' : '检查 GitHub Actions ↗');
     externalLink('deployment-url', deploymentUrl);
+    externalLink('deployment-diagnostic-url', diagnosticUrl);
     externalLink('github-actions-guide-link', actionsUrl);
     setVisible('schedule-result', deployed || Boolean(deploymentUrl));
     setVisible('deployment-actions', deployed || Boolean(deploymentUrl));

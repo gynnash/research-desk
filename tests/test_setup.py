@@ -286,6 +286,24 @@ class SetupSchedulePreviewTest(unittest.TestCase):
 
 
 class GitHubScheduleTest(unittest.TestCase):
+    def test_prepare_uses_authenticated_main_content_without_git_https(self):
+        github = setup.GitHubSetup(workbench.REPOSITORY)
+        workflow = workbench.REPOSITORY / '.github/workflows/researchdesk-manual.yml'
+        source = workflow.read_text(encoding='utf-8')
+        target = ('fixture/workbench', {'researchdesk-manual.yml': 'active', 'researchdesk-writing.yml': 'active'})
+        with (mock.patch.object(github, '_deployment_target', return_value=target),
+              mock.patch.object(github, '_git', side_effect=AssertionError('unexpected Git transport')),
+              mock.patch.object(github, '_api', side_effect=[
+                  {'type': 'file', 'encoding': 'base64', 'sha': 'a' * 40,
+                   'content': base64.b64encode(source.encode()).decode()},
+                  {'type': 'file'},
+              ]) as api):
+            github.prepare(expected_repository='fixture/workbench', require_private=True, require_schedule=True)
+            self.assertEqual([call.args[0] for call in api.call_args_list], [
+                'repos/fixture/workbench/contents/.github/workflows/researchdesk-manual.yml?ref=main',
+                'repos/fixture/workbench/contents/scripts/researchdesk_setup_obsidian.py?ref=main',
+            ])
+
     def test_workflow_update_preserves_other_lines_and_same_schedule_needs_no_commit(self):
         github = setup.GitHubSetup(workbench.REPOSITORY)
         workflow = workbench.REPOSITORY / '.github/workflows/researchdesk-manual.yml'
