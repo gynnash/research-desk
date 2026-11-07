@@ -123,6 +123,33 @@ class ConfigurationReload(unittest.TestCase):
             self.dispatch()
         self.assertFalse((self.root / 'reports').exists())
 
+    def test_scheduled_trigger_with_stale_cron_or_zone_skips_before_collection(self):
+        self.local['automation'] = {'enabled': True, 'weekly': {
+            'weekdays': [5], 'time': '03:25', 'timezone': 'Asia/Shanghai'}}
+        self.write(self.root / workbench.LOCAL_CONFIG, self.local)
+        workflow = self.source / '.github/workflows/researchdesk-manual.yml'
+        # Same cron in a different timezone must also skip when the remote
+        # workflow has changed but the operator's local settings have not.
+        self.write(workflow, {'on': {'schedule': [{'cron': '25 3 * * 5', 'timezone': 'America/New_York'}]}})
+        self.git(self.source, 'add', str(workflow))
+        self.git(self.source, 'commit', '-m', 'Change remote timezone')
+        self.commit = self.git(self.source, 'rev-parse', 'HEAD').strip()
+
+        def pipeline(root, **kwargs):
+            collector = mock.Mock(side_effect=AssertionError('Stale events must not collect'))
+            result = automatic.run(root, collector=collector,
+                                   now=datetime.fromisoformat('2026-11-06T23:00:00+08:00'), **kwargs)
+            collector.assert_not_called()
+            return result
+
+        for expression in ('0 19 * * 1,4', '25 3 * * 5'):
+            with self.subTest(expression=expression):
+                result = deployment.dispatch(self.source, self.commit, self.source / 'artifact',
+                    environment={**self.env, 'RESEARCHDESK_TRIGGER_CRON': expression}, pipeline=pipeline)
+                self.assertEqual((result['status'], result['reason']), ('skipped', 'schedule_trigger_mismatch'))
+                self.assertFalse(result['exported'])
+        self.assertFalse((self.root / 'reports').exists())
+
     def test_scheduled_topic_packages_keep_successful_exports_and_saves_when_another_fails(self):
         topics = ['agent_memory', 'fixture-retrieval']
         self.local['automation'] = {'enabled': True, 'topics': topics}

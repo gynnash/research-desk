@@ -1,5 +1,6 @@
 """Verify activation ordering and local-only wizard actions without live services."""
 
+import base64
 from datetime import datetime, timezone
 import http.client
 import json
@@ -229,6 +230,33 @@ class SetupHttpTest(unittest.TestCase):
             finally:
                 server.shutdown()
                 thread.join(timeout=5)
+
+
+class GitHubScheduleTest(unittest.TestCase):
+    def test_workflow_update_preserves_other_lines_and_same_schedule_needs_no_commit(self):
+        github = setup.GitHubSetup(workbench.REPOSITORY)
+        workflow = workbench.REPOSITORY / '.github/workflows/researchdesk-manual.yml'
+        source = workflow.read_text(encoding='utf-8')
+        updated = source.replace("cron: '0 19 * * 1,4'", "cron: '35 9 * * 1,4'").replace(
+            "timezone: 'UTC'", "timezone: 'America/New_York'")
+        target = ('fixture/workbench', {'researchdesk-manual.yml': 'active'})
+        sha = 'a' * 40
+        with (mock.patch.object(github, '_deployment_target', return_value=target),
+              mock.patch.object(github, '_workflow_content', return_value=(source, sha)) as content,
+              mock.patch.object(github, '_ensure_workflow_scope') as scope,
+              mock.patch.object(github, '_api') as api):
+            result = github.configure_schedule('35 9 * * 1,4', WEEKLY['timezone'],
+                                               expected_repository='fixture/workbench')
+            self.assertEqual(result, WORKFLOW_URL)
+            self.assertEqual(api.call_args.kwargs['method'], 'PUT')
+            data = api.call_args.kwargs['data']
+            self.assertEqual((data['branch'], data['sha']), ('main', sha))
+            self.assertEqual(base64.b64decode(data['content']).decode('utf-8'), updated)
+            content.return_value = updated, 'b' * 40
+            self.assertEqual(github.configure_schedule('35 9 * * 1,4', WEEKLY['timezone'],
+                                                       expected_repository='fixture/workbench'), WORKFLOW_URL)
+            scope.assert_called_once()
+            api.assert_called_once()
 
 
 if __name__ == '__main__':

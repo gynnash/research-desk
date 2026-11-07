@@ -65,7 +65,8 @@ class ScheduledPipeline(unittest.TestCase):
         secondary = 'fixture-retrieval'
         direction = {'name': 'Retrieval', 'enabled': True, 'description': 'Offline fixture.',
                      'scope': ['Retrieval'], 'keywords': ['retrieval']}
-        self.update({'automation': {'enabled': True, 'topics': ['agent_memory', secondary]},
+        self.update({'automation': {'enabled': True, 'topics': ['agent_memory', secondary],
+                                    'weekly': {'weekdays': [5], 'time': '08:15', 'timezone': 'Asia/Shanghai'}},
                      'research_topics': {'topics': {secondary: direction}}})
         researched = []
 
@@ -77,13 +78,16 @@ class ScheduledPipeline(unittest.TestCase):
             return self.researcher.return_value
 
         self.researcher.side_effect = study
-        first = self.run_pipeline()
+        old = self.run_pipeline(trigger_cron='0 19 * * 1,4')
+        self.assertEqual(old['reason'], 'schedule_trigger_mismatch')
+        self.collector.assert_not_called()
+        first = self.run_pipeline(trigger_cron='15 8 * * 5', trigger_timezone='Asia/Shanghai')
         self.assertEqual(first['status'], 'partial')
         self.assertEqual([(run['topic'], run['status']) for run in first['runs']],
                          [('agent_memory', 'failed'), (secondary, 'complete')])
         for item in first['runs']:
             topic = item['topic']
-            self.assertEqual(item['cycle_id'], topic + '-20261106-0300')
+            self.assertEqual(item['cycle_id'], topic + '-20261106-0815')
             context = store.checked_yaml(self.root, item['context_path'])
             self.assertEqual(context['research_config']['topic'], topic)
             self.assertEqual(context['insight_config']['topic'], topic)
@@ -95,10 +99,24 @@ class ScheduledPipeline(unittest.TestCase):
         self.assertEqual(researched, ['agent_memory', secondary, 'agent_memory'])
         self.assertEqual(self.insight.call_count, 2)
         self.assertTrue(retried['runs'][1]['cached'])
-        self.assertNotIn('runs', self.run_pipeline(event='manual', operation='health'))
+        self.assertNotIn('runs', self.run_pipeline(event='manual', operation='health', trigger_cron='ignored'))
         manual = self.run_pipeline(event='manual', operation='collect', cycle_id='manual')
         self.assertEqual((manual['topic'], manual['status']), ('agent_memory', 'collected'))
         self.assertNotIn('runs', manual)
+
+    def test_fall_back_occurrences_share_one_cycle_for_automatic_run_and_catchup(self):
+        self.update({'automation': {'enabled': True, 'activated_at': '2026-11-01T00:00:00-04:00',
+                                    'weekly': {'weekdays': [7], 'time': '01:30', 'timezone': 'America/New_York'}}})
+        self.now = datetime.fromisoformat('2026-11-01T05:30:00+00:00')
+        first = self.run_pipeline()
+        self.assertEqual(first['cycle_id'], 'agent_memory-20261101-0130')
+        self.now = datetime.fromisoformat('2026-11-01T06:30:00+00:00')
+        repeated = self.run_pipeline()
+        self.assertEqual(repeated['cycle_id'], first['cycle_id'])
+        self.assertTrue(repeated['cached'])
+        self.assertEqual(self.researcher.call_count, 1)
+        catchup = self.run_pipeline(event='manual', operation='catchup')
+        self.assertEqual(catchup['reason'], 'no_due_slot')
 
     def test_cycle_budget_can_cover_multiple_sdk_tool_requests_without_raising_defaults(self):
         self.update({'research': {'budget': {

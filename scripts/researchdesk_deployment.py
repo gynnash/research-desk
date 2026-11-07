@@ -9,6 +9,8 @@ import re
 import subprocess
 import sys
 
+import yaml
+
 import researchdesk_automatic as automatic
 import researchdesk_publish as publisher
 import researchdesk_runner as runner
@@ -99,6 +101,23 @@ def _binding(source, base_commit, environment):
     return root
 
 
+def _workflow_trigger_zone(source, cron):
+    """Read the verified main checkout's zone for the GitHub event expression."""
+    path = Path(source) / '.github/workflows/researchdesk-manual.yml'
+    try:
+        workflow = yaml.load(path.read_text(encoding='utf-8'), Loader=yaml.BaseLoader)
+    except (OSError, ValueError, yaml.YAMLError):
+        return ''
+    events = workflow.get('on') if isinstance(workflow, dict) else None
+    entries = events.get('schedule') if isinstance(events, dict) else None
+    if not isinstance(entries, list):
+        return ''
+    expected = ' '.join(cron.split())
+    zones = [entry.get('timezone', 'UTC') for entry in entries if isinstance(entry, dict)
+             and isinstance(entry.get('cron'), str) and ' '.join(entry['cron'].split()) == expected]
+    return zones[0] if len(zones) == 1 and isinstance(zones[0], str) else ''
+
+
 def dispatch(source, base_commit, artifact, event='schedule', operation='run', cycle_id=None,
              environment=None, github_output=None, pipeline=None, exporter=None):
     environment = os.environ if environment is None else environment
@@ -122,7 +141,7 @@ def dispatch(source, base_commit, artifact, event='schedule', operation='run', c
     result = (pipeline or automatic.run)(root,
         event='schedule' if event == 'schedule' else 'manual', operation=operation,
         cycle_id=cycle_id or None, publisher_context={'base_commit': base_commit}, prepare=prepare,
-        **({'trigger_cron': trigger} if trigger else {}))
+        **({'trigger_cron': trigger, 'trigger_timezone': _workflow_trigger_zone(source, trigger)} if trigger else {}))
     exported = None
     identity = result.get('cycle_id')
     status = result['status']

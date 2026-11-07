@@ -76,37 +76,25 @@ def _local_instant(day, clock, zone):
     raise store.OfflineError('无法解析日程对应的本地时间')
 
 
-def _slots_between(rule, start, end):
-    if end < start:
+def due_slots(config, now=None):
+    """Yield (nominal date and HHMM, actual UTC instant) from oldest to latest."""
+    now = _utc(now or datetime.now(timezone.utc))
+    start = max(instant(config['activated_at']), now - timedelta(days=config['catchup']['lookback_days']))
+    if now < start:
         return
+    rule = weekly(config)
     zone = ZoneInfo(rule['timezone'])
     clock = time.fromisoformat(rule['time'])
     suffix = rule['time'].replace(':', '')
     # A time-zone transition can advance a skipped slot past local midnight.
     cursor = start.astimezone(zone).date() - timedelta(days=1)
-    last = end.astimezone(zone).date()
+    last = now.astimezone(zone).date()
     while cursor <= last:
         if cursor.isoweekday() in rule['weekdays']:
             actual = _local_instant(cursor, clock, zone)
-            if start <= actual <= end:
+            if start <= actual <= now:
                 yield f'{cursor:%Y%m%d}-{suffix}', actual
         cursor += timedelta(days=1)
-
-
-def due_slots(config, now=None):
-    """Yield (nominal date and HHMM, actual UTC instant) from oldest to latest."""
-    now = _utc(now or datetime.now(timezone.utc))
-    start = max(instant(config['activated_at']), now - timedelta(days=config['catchup']['lookback_days']))
-    yield from _slots_between(weekly(config), start, now)
-
-
-def next_run(config, now=None):
-    """Return the next scheduled UTC instant, or None for a disabled schedule."""
-    if config.get('enabled') is False:
-        return None
-    now = _utc(now or datetime.now(timezone.utc))
-    start = max(instant(config['activated_at']), now + timedelta(microseconds=1))
-    return next((actual for _, actual in _slots_between(weekly(config), start, start + timedelta(days=8))), None)
 
 
 def load_config(root):

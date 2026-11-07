@@ -62,7 +62,7 @@ class BeijingSchedule(unittest.TestCase):
         workflow = yaml.load((REPOSITORY / '.github/workflows/researchdesk-manual.yml').read_text(),
                              Loader=yaml.BaseLoader)
         self.assertEqual(self.config['schedule_utc'], '0 19 * * 1,4')
-        self.assertEqual(workflow['on']['schedule'], [{'cron': self.config['schedule_utc']}])
+        self.assertEqual(workflow['on']['schedule'], [{'cron': self.config['schedule_utc'], 'timezone': 'UTC'}])
         self.assertEqual(self.config['catchup'], {'lookback_days': 14, 'max_slots_per_run': 1})
         self.config['schedule_utc'] = '0 1 * * 2,5'
         (self.root / 'config/automation.yaml').write_text(yaml.safe_dump(self.config), encoding='utf-8')
@@ -84,6 +84,30 @@ class BeijingSchedule(unittest.TestCase):
                 schedule.load_config(self.root)
         config_path.write_text(yaml.safe_dump(dict(self.config, topics=[primary, 'retrieval'])), encoding='utf-8')
         self.assertEqual(schedule.load_config(self.root)['topics'], [primary, 'retrieval'])
+
+    def test_weekly_config_normalizes_iso_weekdays_and_uses_github_local_cron(self):
+        path = self.root / 'config/automation.yaml'
+        weekly = {'weekdays': [7, 3, 1], 'time': '21:35', 'timezone': 'America/Los_Angeles'}
+        path.write_text(yaml.safe_dump(dict(self.config, weekly=weekly)), encoding='utf-8')
+        loaded = schedule.load_config(self.root)
+        self.assertEqual(loaded['weekly'], dict(weekly, weekdays=[1, 3, 7]))
+        self.assertEqual(schedule.workflow_cron(loaded['weekly']), '35 21 * * 0,1,3')
+        for invalid in (dict(weekly, weekdays=[]), dict(weekly, weekdays=[1, 1]),
+                        dict(weekly, weekdays=[True]), dict(weekly, weekdays=[0]),
+                        dict(weekly, time='24:00'), dict(weekly, time='9:30'),
+                        dict(weekly, timezone='Pacific/Unknown'), dict(weekly, timezone='localtime')):
+            with self.subTest(rule=invalid), self.assertRaises(store.OfflineError):
+                schedule.validate_weekly(invalid)
+
+    def test_spring_forward_advances_to_next_valid_minute_with_a_stable_nominal_id(self):
+        self.config['activated_at'] = '2026-03-08T00:00:00-05:00'
+        self.config['weekly'] = {'weekdays': [7], 'time': '02:30', 'timezone': 'America/New_York'}
+        self.assertEqual(self.due('2026-03-08T06:59:59+00:00')['cycle_id'], '')
+        result = self.due('2026-03-08T07:00:00+00:00')
+        self.assertEqual(result['cycle_id'], 'agent-memory-20260308-0230')
+        self.assertEqual(result['slot_utc'], '2026-03-08T07:00:00+00:00')
+        self.config['activated_at'] = '2026-03-08T07:00:01+00:00'
+        self.assertEqual(self.due('2026-03-08T07:00:02+00:00')['cycle_id'], '')
 
     def test_tuesday_before_at_and_after_0300_use_beijing_date(self):
         self.assertEqual(self.due('2026-10-19T18:59:59+00:00')['cycle_id'], '')

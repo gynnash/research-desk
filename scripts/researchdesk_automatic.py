@@ -365,7 +365,7 @@ def _run_topic(root, effective, identity, operation, publisher_context, collecto
 
 def run(root, event='schedule', operation='run', cycle_id=None, publisher_context=None,
         collector=None, researcher=None, insight_runner=None, health_checker=None,
-        now=None, prepare=None, admitter=None, trigger_cron=None):
+        now=None, prepare=None, admitter=None, trigger_cron=None, trigger_timezone=None):
     root = Path(root).resolve()
     if event not in {'schedule', 'manual'} or operation not in {'health', 'collect', 'run', 'catchup'}:
         raise store.OfflineError('自动研究事件或操作无效')
@@ -382,9 +382,12 @@ def run(root, event='schedule', operation='run', cycle_id=None, publisher_contex
             health = (health_checker or _health)(root, effective)
             return dict(_empty(primary), status='healthy', health=health)
         if event == 'schedule' and trigger_cron:
-            expected = (schedule.workflow_cron(schedule.weekly(automation)) if 'weekly' in automation
-                        else automation['schedule_utc'])
-            if not isinstance(trigger_cron, str) or ' '.join(trigger_cron.split()) != expected:
+            expected, zone = automation['schedule_utc'], 'UTC'
+            if 'weekly' in automation:
+                rule = schedule.weekly(automation)
+                expected, zone = schedule.workflow_cron(rule), rule['timezone']
+            if (not isinstance(trigger_cron, str) or ' '.join(trigger_cron.split()) != expected
+                    or trigger_timezone is not None and trigger_timezone != zone):
                 return dict(_empty(primary), reason='schedule_trigger_mismatch')
         clock = now or _now()
         scheduling = _activation(root, automation)
