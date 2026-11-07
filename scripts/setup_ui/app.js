@@ -36,9 +36,13 @@
   let savedTopics = null;
   let draftTopics = [];
   let topicsEdited = false;
+  let topicEntryOpen = false;
   let pendingTopics = null;
   let scheduleEdited = false;
+  let scheduleEditorOpen = false;
   let pendingSchedule = null;
+  let previewKey = '';
+  let previewTimer;
 
   function setText(id, value) {
     const element = byId(id);
@@ -133,11 +137,11 @@
       remove.addEventListener('click', () => {
         draftTopics.splice(index, 1);
         topicsEdited = true;
-        topicError('');
+        topicError(draftTopics.length ? '' : '请至少添加一个研究方向。');
         renderTopicTags();
         renderTopicControls();
         const next = topicTags.children[Math.min(index, draftTopics.length - 1)];
-        (next?.firstElementChild || topicInput).focus();
+        (next?.firstElementChild || (topicEntryOpen ? topicInput : byId('topic-toggle'))).focus();
       });
       tag.append(remove);
       return tag;
@@ -152,7 +156,10 @@
       const notice = snapshot.notice;
       const confirmed = notice?.action === 'save_topics' && notice.state === 'ready';
       const failed = problemStates.has(notice?.state) && (!notice.action || notice.action === 'save_topics');
-      if (!failed && (confirmed || sameTopics(actual, pendingTopics, true))) topicsEdited = false;
+      if (!failed && (confirmed || sameTopics(actual, pendingTopics, true))) {
+        topicsEdited = false;
+        topicEntryOpen = Boolean(valueOf(topicInput.value));
+      }
       pendingTopics = null;
     }
     if (!topicsEdited && !sameTopics(actual, draftTopics)) {
@@ -164,10 +171,15 @@
   function renderTopicControls() {
     const available = savedTopics !== null;
     const saving = Boolean(pendingTopics) || requestedAction === 'save_topics' || snapshot?.operation?.action === 'save_topics';
-    const hasInput = Boolean(valueOf(topicInput.value));
+    const hasInput = topicEntryOpen && Boolean(valueOf(topicInput.value));
     const changed = available && !sameTopics(savedTopics, draftTopics);
     setVisible('topic-editor', available);
-    setVisible('topic-save', available);
+    setVisible('topic-entry', topicEntryOpen);
+    setVisible('topic-save', available && (changed || hasInput));
+    const toggle = byId('topic-toggle');
+    toggle.setAttribute('aria-expanded', String(topicEntryOpen));
+    setText('topic-toggle', topicEntryOpen ? '收起' : '添加方向');
+    toggle.disabled = saving;
     byId('topic-editor').setAttribute('aria-busy', String(saving));
     topicInput.disabled = saving;
     byId('topic-add').disabled = saving || !hasInput;
@@ -226,10 +238,20 @@
     setVisible('schedule-error', Boolean(message));
   }
 
+  function describeSchedule({weekdays, time, timezone}) {
+    const days = weekdays.map((weekday) => weekdayNames[weekday - 1]).join('、');
+    const zone = timezone === 'Asia/Shanghai' ? '北京时间' : timezone;
+    return `每${days} ${time}（${zone}）`;
+  }
+
   function reconcileSchedule(actual, deployed) {
     if (pendingSchedule && requestedAction !== 'create_schedule' && !snapshot.operation) {
       const confirmed = snapshot.notice?.action === 'create_schedule' && snapshot.notice.state === 'ready';
-      if (deployed && (confirmed || sameSchedule(actual, pendingSchedule))) scheduleEdited = false;
+      if (deployed && (confirmed || sameSchedule(actual, pendingSchedule))) {
+        scheduleEdited = false;
+        scheduleEditorOpen = false;
+        scheduleError('');
+      }
       pendingSchedule = null;
     }
     if (!scheduleEdited && !sameSchedule(actual, scheduleDraft())) {
@@ -245,12 +267,55 @@
     const ready = deployment.state === 'ready';
     const canCreate = setup.state === 'ready' && chatgpt.state === 'ready' && github.state === 'ready';
     const saving = Boolean(pendingSchedule) || requestedAction === 'create_schedule' || operation?.action === 'create_schedule';
+    const editing = !ready || scheduleEditorOpen;
+    setVisible('schedule-editor', editing);
+    setVisible('schedule-edit', ready && !editing);
+    setVisible('schedule-cancel', ready && editing);
+    byId('schedule-edit').disabled = isBusy();
+    byId('schedule-edit').setAttribute('aria-expanded', String(editing));
+    byId('schedule-cancel').disabled = saving;
     for (const input of [...scheduleDays, scheduleClock, scheduleZone]) input.disabled = saving;
     scheduleEditor.setAttribute('aria-busy', String(saving));
-    setText('schedule-submit', ready ? '更新' : '创建');
+    setText('schedule-submit', ready || setup.automation ? '保存修改' : '创建定时研究');
     byId('schedule-submit').disabled = !snapshot?.csrf || !canCreate || isBusy() || saving
       || deployment.state === 'running' || (ready && sameSchedule(actual, scheduleDraft()));
     setVisible('schedule-connection-hint', chatgpt.state !== 'ready' || github.state !== 'ready');
+    renderSchedulePreview(editing && Boolean(snapshot));
+  }
+
+  function renderSchedulePreview(visible) {
+    const weekly = scheduleDraft();
+    const error = visible ? validateSchedule(weekly) : '';
+    if (!visible || error) {
+      window.clearTimeout(previewTimer);
+      previewKey = '';
+      setText('schedule-preview-summary', error);
+      setText('schedule-preview-next', '');
+      return;
+    }
+    const params = new URLSearchParams({
+      weekdays: weekly.weekdays.join(','), time: weekly.time, timezone: weekly.timezone,
+    });
+    const key = `${params}/${Math.floor(Date.now() / 60000)}`;
+    if (key === previewKey) return;
+    previewKey = key;
+    window.clearTimeout(previewTimer);
+    setText('schedule-preview-summary', describeSchedule(weekly));
+    setText('schedule-preview-next', '正在计算下一次运行时间…');
+    previewTimer = window.setTimeout(async () => {
+      try {
+        const response = await fetch(`/api/schedule-preview?${params}`, {cache: 'no-store'});
+        if (!response.ok) throw new Error('schedule preview');
+        const {next_run} = await response.json();
+        const date = new Intl.DateTimeFormat('zh-CN', {
+          timeZone: weekly.timezone, month: 'numeric', day: 'numeric', weekday: 'short',
+          hour: '2-digit', minute: '2-digit', hourCycle: 'h23',
+        }).format(new Date(next_run));
+        if (key === previewKey) setText('schedule-preview-next', `下一次预计运行：${date}`);
+      } catch {
+        if (key === previewKey) setText('schedule-preview-next', '暂时无法预览下一次运行时间。');
+      }
+    }, 180);
   }
 
   function validateSchedule({weekdays, time, timezone}) {
@@ -314,6 +379,8 @@
     setVisible('github-create-detail', githubCreate);
     setVisible('github-connect-detail', github.state === 'needs_repository' && !githubCreate);
     setVisible('github-actions', showLogin || showCreate || fixUrl);
+    byId('account-cards').classList.toggle('is-compact', chatgpt.state === 'ready' && github.state === 'ready'
+      && !chatgptLink && !code && !showLogin && !githubCreate && !fixUrl);
     return repositoryUrl;
   }
 
@@ -322,10 +389,9 @@
     const actual = scheduleFromSetup(setup);
     reconcileSchedule(actual, deployed);
     setSection('deployment', deployment, '已启用');
+    setVisible('deployment-message', !deployed);
     setVisible('schedule-current', deployed);
-    const days = actual.weekdays.map((weekday) => weekdayNames[weekday - 1]).join('、');
-    const zone = actual.timezone === 'Asia/Shanghai' ? '北京时间' : actual.timezone;
-    setText('schedule-time', `每${days} ${actual.time}（${zone}）`);
+    setText('schedule-time', describeSchedule(actual));
 
     const actionsUrl = githubPage(deployment.url) || (repositoryUrl ? `${repositoryUrl}/actions` : '');
     const workflowUrl = httpsUrl(deployment.url, ({hostname, pathname}) => hostname === 'github.com'
@@ -341,7 +407,8 @@
     setText('deployment-url', deployed ? 'GitHub Action' : '检查 GitHub Actions ↗');
     externalLink('deployment-url', deploymentUrl);
     externalLink('github-actions-guide-link', actionsUrl);
-    setVisible('deployment-actions', canConfirm || deploymentUrl);
+    setVisible('schedule-result', deployed || Boolean(deploymentUrl));
+    setVisible('deployment-actions', deployed || Boolean(deploymentUrl));
   }
 
   function renderObsidian(obsidian, github) {
@@ -365,7 +432,9 @@
     setText('connection-error', issue);
     setVisible('connection-error', Boolean(issue));
     const notice = snapshot?.notice;
-    const showNotice = Boolean(valueOf(notice?.message)) && !isBusy();
+    const scheduleReady = notice?.action === 'create_schedule' && notice.state === 'ready'
+      && snapshot?.deployment?.state === 'ready';
+    const showNotice = Boolean(valueOf(notice?.message)) && !isBusy() && !scheduleReady;
     setText('result-notice', showNotice ? notice.message : '');
     setVisible('result-notice', showNotice);
     byId('result-notice').classList.toggle('error', problemStates.has(notice?.state));
@@ -468,6 +537,12 @@
   for (const [action, button] of buttons) {
     button.addEventListener('click', () => runAction(action));
   }
+  byId('topic-toggle').addEventListener('click', () => {
+    topicEntryOpen = !topicEntryOpen;
+    if (draftTopics.length) topicError('');
+    renderTopicControls();
+    if (topicEntryOpen) topicInput.focus();
+  });
   topicInput.addEventListener('input', () => {
     topicError('');
     renderTopicControls();
@@ -484,11 +559,23 @@
   byId('topic-editor').addEventListener('submit', (event) => {
     event.preventDefault();
     if (byId('topic-save').disabled) return;
-    if (valueOf(topicInput.value) && !addTopic()) return;
+    if (topicEntryOpen && valueOf(topicInput.value) && !addTopic()) return;
     if (draftTopics.length > 0) {
       topicError('');
       return runAction('save_topics', {topics: draftTopics.slice()});
     }
+  });
+  byId('schedule-edit').addEventListener('click', () => {
+    scheduleEditorOpen = true;
+    renderScheduleControls();
+    scheduleDays[0].focus();
+  });
+  byId('schedule-cancel').addEventListener('click', () => {
+    scheduleEditorOpen = false;
+    scheduleEdited = false;
+    scheduleError('');
+    render();
+    byId('schedule-edit').focus();
   });
   scheduleEditor.addEventListener('input', () => {
     scheduleEdited = true;
