@@ -114,10 +114,12 @@
                 <span class="schedule-label">当前日程</span><strong id="schedule-time"></strong>
               </div>
               <div class="actions" id="deployment-actions" hidden>
+                <button type="button" class="button" data-action="confirmation_open" hidden>打开选题确认页</button>
                 <a class="button" id="deployment-url" target="_blank" rel="noopener noreferrer" hidden>GitHub Action</a>
                 <button type="button" class="button" id="schedule-edit" aria-controls="schedule-editor" hidden>修改日程</button>
               </div>
             </div>
+            <p id="public-repository-notice" class="visibility-note" hidden>当前仓库公开可见，回存到仓库的研究资料、选题和稿件也会公开。</p>
             <form id="schedule-editor" class="schedule-editor">
               <fieldset id="schedule-days">
                 <legend>每周运行</legend>
@@ -137,7 +139,6 @@
               </div>
               <datalist id="schedule-zones"></datalist>
               <p id="schedule-zone-hint" class="detail">可从列表选择，或直接输入时区名称，如 <code>Asia/Shanghai</code>。</p>
-              <p id="public-repository-notice" class="visibility-note" hidden>当前是公开仓库。创建后，回存到仓库的研究资料、选题和稿件将公开可见。</p>
               <p id="schedule-error" class="detail field-error" role="alert" hidden></p>
               <div class="schedule-footer">
                 <div class="schedule-preview" aria-live="polite" aria-atomic="true">
@@ -209,7 +210,6 @@
             <li><div><strong>提出公众号选题</strong><span>待确认选题卡 · <code>articles</code></span></div></li>
           </ol>
           <p class="overview-note">你在选题确认页保存确认后，可以单独启动写作。大纲、初稿和候选稿也会保存到资料仓库。</p>
-          <div class="actions"><button type="button" class="button" data-action="confirmation_open" hidden>打开选题确认页</button></div>
         </div>
       </details>
     </div>

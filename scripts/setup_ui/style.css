@@ -71,10 +71,12 @@ h1 { font-size: clamp(25px, 4vw, 32px); font-weight: 680; letter-spacing: -.04em
 .account-heading { margin-bottom: 5px; }
 .account-heading h3 { font-size: 14px; font-weight: 650; }
 .account-footer { margin-top: auto; }
+.account-footer button[data-action$="_login"] { min-width: min(162px, 100%); }
 .accounts.is-compact { gap: 0; border: 1px solid var(--line); border-radius: 8px; background: var(--background); }
 .is-compact .account { flex-flow: row wrap; align-items: center; gap: 4px 9px; padding: 6px 9px; border: 0; border-radius: 0; }
 .is-compact .account + .account { border-left: 1px solid var(--line); }
 .is-compact .account-heading, .is-compact #github-repository-row { margin: 0; }
+.is-compact .account-heading h3 { min-width: 62px; }
 .is-compact .account .message, .is-compact #github-repository-row span { display: none; }
 .is-compact .account-footer { flex-basis: 100%; }
 .is-compact .account-footer:not(:has(.actions:not([hidden]), .device:not([hidden]))) { display: none; }
@@ -97,7 +99,7 @@ h1 { font-size: clamp(25px, 4vw, 32px); font-weight: 680; letter-spacing: -.04em
 .schedule-days label:has(:checked) { color: var(--green); background: var(--green-wash); }
 .schedule-days input { margin: 0; accent-color: var(--green); }
 .schedule-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; margin-top: 8px; }
-.schedule-fields input { display: block; width: 100%; min-height: 34px; min-width: 0; margin-top: 4px; padding: 5px 8px; border: 1px solid var(--line); border-radius: 7px; color: var(--ink); background: var(--paper); font-size: 13px; font-weight: 400; }
+.schedule-fields input { display: block; width: 100%; height: 36px; min-width: 0; margin-top: 4px; padding: 5px 8px; border: 1px solid var(--line); border-radius: 7px; color: var(--ink); background: var(--paper); font-size: 13px; font-weight: 400; }
 .schedule-footer { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 6px 12px; margin-top: 9px; padding-top: 8px; border-top: 1px solid var(--line); }
 .schedule-footer .actions { margin: 0 0 0 auto; }
 .schedule-preview { min-width: 0; color: var(--green); font-size: 13px; overflow-wrap: anywhere; }

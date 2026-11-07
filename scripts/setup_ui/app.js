@@ -305,13 +305,18 @@
     previewTimer = window.setTimeout(async () => {
       try {
         const response = await fetch(`/api/schedule-preview?${params}`, {cache: 'no-store'});
+        const result = await response.json();
+        if (key !== previewKey) return;
+        if (response.status === 400 && valueOf(result.error)) {
+          setText('schedule-preview-next', result.error);
+          return;
+        }
         if (!response.ok) throw new Error('schedule preview');
-        const {next_run} = await response.json();
         const date = new Intl.DateTimeFormat('zh-CN', {
           timeZone: weekly.timezone, month: 'numeric', day: 'numeric', weekday: 'short',
           hour: '2-digit', minute: '2-digit', hourCycle: 'h23',
-        }).format(new Date(next_run));
-        if (key === previewKey) setText('schedule-preview-next', `下一次预计运行：${date}`);
+        }).format(new Date(result.next_run));
+        setText('schedule-preview-next', `下一次预计运行：${date}`);
       } catch {
         if (key === previewKey) setText('schedule-preview-next', '暂时无法预览下一次运行时间。');
       }
@@ -389,7 +394,7 @@
     const actual = scheduleFromSetup(setup);
     reconcileSchedule(actual, deployed);
     setSection('deployment', deployment, '已启用');
-    setVisible('deployment-message', !deployed);
+    setVisible('deployment-message', !deployed && (deployment.state !== 'needs_setup' || setup.automation));
     setVisible('schedule-current', deployed);
     setText('schedule-time', describeSchedule(actual));
 
