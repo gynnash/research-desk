@@ -16,7 +16,7 @@
     github_workflow_auth: '等待 GitHub 补充授权',
     github_create: '创建私有 GitHub 仓库', create_schedule: '正在配置定时研究',
     obsidian_sync: '更新阅读库', obsidian_open: '打开 Vault 管理器',
-    confirmation_open: '打开选题确认页', save_topics: '正在保存研究方向',
+    save_topics: '正在保存研究方向',
   };
   const problemStates = new Set(['blocked', 'failed', 'error']);
   const defaultSchedule = {weekdays: [2, 5], time: '03:00', timezone: 'Asia/Shanghai'};
@@ -445,9 +445,7 @@
         && /^\/(?:settings(?:\/actions|\/branches)?|tree\/main|actions\/(?:runs\/\d+|workflows\/[a-z0-9_.-]+))\/?$/
           .test(path.slice(repoPath.length));
     }) : '';
-    const canConfirm = deployed && deployment.can_confirm !== false;
     setVisible('public-repository-notice', github.private === false);
-    setButton('confirmation_open', canConfirm);
     setText('deployment-url', deployed ? 'GitHub Action' : '检查 GitHub Actions ↗');
     externalLink('deployment-url', deploymentUrl);
     externalLink('deployment-diagnostic-url', diagnosticUrl);
