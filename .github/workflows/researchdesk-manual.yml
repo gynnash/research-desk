@@ -3,7 +3,7 @@ name: ResearchDesk research cycle
 on:
   schedule:
     # ResearchDesk managed weekly schedule
-    - cron: '7 21 * * 0'
+    - cron: '0 9 * * 1'
       timezone: 'Asia/Shanghai'
   workflow_dispatch:
     inputs:
