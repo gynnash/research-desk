@@ -99,13 +99,13 @@ def _files(root, bundle):
     return sorted(paths)
 
 
-def dispatch(source, base_commit, approval_id, artifact, max_new_calls=6,
+def dispatch(source, base_commit, approval_id, artifact, max_new_calls=writing.MAX_NEW_CALLS,
              environment=None, github_output=None, writer=None):
     environment = os.environ if environment is None else environment
     if environment.get('GITHUB_EVENT_NAME') != 'workflow_dispatch':
         raise job.JobError('writing_manual_confirmation_dispatch_required')
-    if type(max_new_calls) is not int or not 0 <= max_new_calls <= 6:
-        raise job.JobError('writing_small_validation_limit_is_six')
+    if type(max_new_calls) is not int or not 0 <= max_new_calls <= writing.MAX_NEW_CALLS:
+        raise job.JobError('writing_invocation_limit_invalid')
     source = Path(source).resolve()
     root = deployment._binding(source, base_commit, environment)
     deployment.sync_system(root, source, base_commit)

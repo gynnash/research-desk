@@ -23,6 +23,21 @@ def task(task_id, phase, model='fixture-generator'):
 
 
 class CodexAdapterAcceptance(unittest.TestCase):
+    def test_frozen_task_limit_can_increase_without_enabling_read_only_requests(self):
+        backend = codex.CodexBackend({'max_requests_per_task': 3}, root=Path('/not-read'))
+        generation = task('generate', 'generation')
+        with patch('researchdesk_batch.cycle_request_budget', return_value=None):
+            self.assertEqual(backend._gateway(generation).max_requests, 3)
+
+        with patch('researchdesk_batch.cycle_request_budget',
+                   return_value={'insight_max_requests_per_task': 100}) as policy:
+            self.assertEqual(backend._gateway(generation).max_requests, 100)
+            self.assertEqual(backend._gateway(generation, read_only=True).max_requests, 0)
+            disabled = codex.CodexBackend({'max_requests_per_task': 0}, root=backend.root)
+            self.assertEqual(disabled._gateway(generation).max_requests, 0)
+            policy.assert_called_once_with(backend.root, generation.topic, generation.cycle_id)
+        self.assertEqual(backend.profile['max_requests_per_task'], 3)
+
     def test_real_backend_stays_blocked_even_with_matching_versions_and_live_flag(self):
         forbidden = AssertionError('Preflight must not start SDK or read credentials')
         with patch.object(codex, '_installed_version', return_value=codex.SDK_VERSION), \

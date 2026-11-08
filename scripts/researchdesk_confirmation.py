@@ -111,7 +111,7 @@ def load_config(root, path=DEFAULT_CONFIG):
     if (any(not isinstance(m, str) or not re.fullmatch(r'[A-Za-z0-9._:/-]{1,120}', m)
             or m.startswith('mock-') for m in models.values()) or models['writing'] == models['review']):
         raise store.OfflineError('写作和独立审阅须指定不同的真实模型')
-    bounds = {'max_calls': (6, 12), 'max_calls_per_stage': (2, 4), 'max_revisions': (0, 1),
+    bounds = {'max_calls': (6, 100), 'max_calls_per_stage': (2, 100), 'max_revisions': (0, 1),
               'max_input_chars': (1000, 60000), 'max_output_chars': (1000, 12000), 'timeout_seconds': (1, 120)}
     common.fields(writing['budget'], bounds, '写作预算')
     for key, (low, high) in bounds.items():
@@ -475,7 +475,7 @@ class ConfirmationStore:
                 'at': datetime.fromtimestamp(now, timezone.utc).isoformat()}
             try:
                 response = subprocess.run(['gh', 'workflow', 'run', 'researchdesk-writing.yml', '--ref', 'main',
-                    '-f', 'approval_id=' + confirmation_id, '-f', 'max_new_calls=6'], cwd=self.root,
+                    '-f', 'approval_id=' + confirmation_id], cwd=self.root,
                     stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=45, check=False)
             except (OSError, subprocess.TimeoutExpired) as exc:
                 raise ConfirmationError('writing_dispatch_unknown', '派发结果尚不明确，请先刷新记录或查看 GitHub 运行记录；同一确认会复用已有检查点。', 503) from exc

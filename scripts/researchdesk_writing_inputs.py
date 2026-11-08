@@ -109,7 +109,7 @@ def load_config(root, path):
         raise store.OfflineError('Writing 只允许明确的 mock-* 模型，无真实后端')
     if config['models']['writing'] == config['models']['review']:
         raise store.OfflineError('模拟写作和独立审阅必须使用不同模型')
-    ranges = {'max_calls': (2, 12), 'max_calls_per_stage': (2, 4), 'max_revisions': (0, 1),
+    ranges = {'max_calls': (2, 100), 'max_calls_per_stage': (2, 100), 'max_revisions': (0, 1),
               'max_input_chars': (1000, 30000), 'max_output_chars': (1000, 12000)}
     _fields(config['budget'], ranges, 'Writing 预算')
     for key, (low, high) in ranges.items():

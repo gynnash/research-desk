@@ -287,11 +287,18 @@ class CodexBackend:
     def _gateway(self, task, read_only=False):
         if self.gateway_factory is not None:
             return self.gateway_factory(task)
-        from researchdesk_codex_gateway import MembershipGateway
+        from researchdesk_codex_gateway import DEFAULT_MAX_REQUESTS, MembershipGateway
+        max_requests = 0 if read_only else self.profile.get("max_requests_per_task", DEFAULT_MAX_REQUESTS)
+        if max_requests != 0 and task.stage == "insight":
+            # Runtime allowance can grow without changing the frozen task profile.
+            from researchdesk_batch import cycle_request_budget
+            policy = cycle_request_budget(self.root, task.topic, task.cycle_id)
+            if policy is not None:
+                max_requests = policy.get("insight_max_requests_per_task", max_requests)
         return MembershipGateway(
             self.root, task.topic, task.cycle_id, task.task_id,
             allowed_models=[task.model], phase=task.phase,
-            max_requests=0 if read_only else self.profile.get("max_requests_per_task", 3))
+            max_requests=max_requests)
 
     @contextmanager
     def _session(self, task, read_only=False):

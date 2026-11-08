@@ -105,6 +105,19 @@ class ResearchEntry(unittest.TestCase):
         self.assertEqual(before, {path.relative_to(self.root): path.read_bytes()
                                   for path in self.root.rglob('*') if path.is_file()})
 
+    def test_research_budget_can_allow_100_per_paper_and_batch(self):
+        self.config['budget'].update(max_calls_per_cycle=100, research_max_calls=100,
+                                     insight_max_calls=100, max_calls_per_item=100)
+        self.config_path.write_text(yaml.safe_dump(self.config, allow_unicode=True, sort_keys=False))
+        self.collect()
+        result = self.run_research()
+        self.assertEqual(result['status'], 'complete')
+        batch_config = store.checked_yaml(
+            self.root, 'reports/test/agent_memory/cycles/first/configs/research.yaml')
+        self.assertEqual(batch_config['budget']['max_calls_per_item'], 100)
+        self.assertEqual(batch_config['budget']['max_calls_per_batch'], 100)
+        self.assertEqual(len(self.client.calls), 4)
+
     def test_rejected_sources_never_become_public_summaries(self):
         self.collect()
         self.client.review_decisions = ['reject', 'reject']

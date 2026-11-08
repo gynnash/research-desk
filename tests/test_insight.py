@@ -835,16 +835,18 @@ class InsightLoop(unittest.TestCase):
         self.assert_blocked()
         self.assertEqual(self.client.calls, [])
         self.config.pop('surprise')
-        for key, value in (('max_calls', True), ('max_calls', 8), ('max_revisions', 2)):
+        for key, value in (('max_calls', True), ('max_calls', 101), ('max_revisions', 2)):
             original = copy.deepcopy(self.config['budget'])
             self.config['budget'][key] = value
             with self.subTest(key=key, value=value):
                 self.assert_blocked('invalid-' + key.replace('_', '-'))
                 self.assertEqual(self.client.calls, [])
             self.config['budget'] = original
+        self.config['budget'].update(max_calls=100, month_max_calls=100)
         self.write_config()
-        self.config_path.write_text(self.config_path.read_text() + '\nbackend: api_key\n')
         insight = importlib.import_module('researchdesk_insight')
+        self.assertEqual(insight.inputs.load_config(self.root, self.config_path)['budget']['max_calls'], 100)
+        self.config_path.write_text(self.config_path.read_text() + '\nbackend: api_key\n')
         with self.assertRaises((store.OfflineError, ValueError, yaml.YAMLError)):
             insight.run(self.root, self.config_path, 'duplicate-key', self.client, fetcher=self.fetcher)
         self.assertEqual(self.client.calls, [])

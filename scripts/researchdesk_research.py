@@ -187,7 +187,7 @@ def run(root, config_path, cycle_id, client=None, profile=None, fail_after=None)
         _verify_summaries(root, batch_base, collection['records'], topic, cycle_id)
         budget = config['budget']
         monthly = batch.membership_monthly_limit(root) or 10
-        per_item = 2 * (budget['max_revisions'] + 1)
+        per_item = budget.get('max_calls_per_item', 2 * (budget['max_revisions'] + 1))
         research_config = {
             'schema_version': 1, 'mode': 'research_batch_test', 'backend': config['backend'],
             'topic': topic, 'topics_file': config['topics_file'],

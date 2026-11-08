@@ -563,8 +563,8 @@ class OfflineWritingLoop(unittest.TestCase):
     def test_invalid_config_fields_and_budget_are_rejected_before_confirmation(self):
         original = copy.deepcopy(self.config)
         changes = [dict(original, mode='production'), dict(original, surprise='unsupported')]
-        for key, value in (('max_calls', True), ('max_calls', 13),
-                           ('max_calls_per_stage', 5), ('max_revisions', 2)):
+        for key, value in (('max_calls', True), ('max_calls', 101),
+                           ('max_calls_per_stage', 101), ('max_revisions', 2)):
             changed = copy.deepcopy(original)
             changed['budget'][key] = value
             changes.append(changed)

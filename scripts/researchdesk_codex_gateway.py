@@ -17,6 +17,9 @@ import researchdesk_batch as shared
 import researchdesk_offline as store
 
 
+DEFAULT_MAX_REQUESTS = 100
+
+
 def _request_events(root):
     root = Path(root).resolve()
     positions = {}
@@ -89,7 +92,7 @@ class _StreamObservation:
 
 class MembershipGateway:
     def __init__(self, root, topic, cycle_id, task_id, allowed_models,
-                 max_requests=3, client=None, phase='codex'):
+                 max_requests=DEFAULT_MAX_REQUESTS, client=None, phase='codex'):
         self.root = Path(root).resolve()
         if any(not isinstance(value, str) or not store.SAFE_ID.fullmatch(value) for value in (topic, cycle_id)):
             raise store.OfflineError('Codex 网关主题或轮次无效')

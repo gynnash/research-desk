@@ -9,10 +9,10 @@ on:
         required: true
         type: string
       max_new_calls:
-        description: 6 for a bounded attempt, 0 to verify and reuse completed checkpoints
+        description: Maximum new model calls, or 0 to verify completed checkpoints
         type: choice
-        default: '6'
-        options: ['0', '6']
+        default: '100'
+        options: ['0', '6', '100']
 
 permissions:
   contents: read

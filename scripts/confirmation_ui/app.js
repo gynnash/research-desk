@@ -485,7 +485,7 @@
         }
         const footerNote = canSync ? '本机记录已保留；同步完成前不会交给写作' :
           formal.status === 'accepted' ? '正式稿已入库；撤回确认不会删除历史稿件' :
-          '每次派发最多新增 6 次会员请求；已完成结果会复用';
+          '每次派发最多新增 100 次会员请求，已完成结果会复用';
         footer.append(element('span', 'small', footerNote), buttons);
         card.append(footer);
       }

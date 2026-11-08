@@ -108,8 +108,12 @@ class WritingSDKBridge(unittest.TestCase):
     def test_hosted_save_without_private_yaml_admits_create_only_formal_writing(self):
         import researchdesk_writing_deployment as deployed
         import researchdesk_writing_admission as formal
+        self.config['writing']['budget'].update(max_calls=100, max_calls_per_stage=100)
+        (self.root / 'config/confirmation-v2.yaml').write_text(yaml.safe_dump(self.config))
         manager, approval = self.approve()
         bundle = inputs.prepare_bundle(self.root, approval)
+        self.assertEqual(bundle['budget']['max_calls'], 100)
+        self.assertEqual(bundle['budget']['max_calls_per_stage'], 100)
         directory = tempfile.TemporaryDirectory(prefix='researchdesk-writing-transfer-')
         self.addCleanup(directory.cleanup)
         artifact, publisher = Path(directory.name) / 'artifact', Path(directory.name) / 'publisher'
@@ -118,13 +122,18 @@ class WritingSDKBridge(unittest.TestCase):
                        'GITHUB_EVENT_NAME': 'workflow_dispatch',
                        'GITHUB_REPOSITORY': 'example/researchdesk-fixture',
                        'RESEARCHDESK_WORKBENCH_ROOT': str(self.root)}
+
+        def run_writer(root, chosen, max_new_calls):
+            self.assertEqual(max_new_calls, 100)
+            return writing.run(root, chosen, client=self.client, refresh=lambda: True,
+                               max_new_calls=max_new_calls)
+
         with patch.object(deployed.deployment, 'sync_system'), patch.object(deployed.workbench, 'apply'), \
              patch.object(deployed.workbench, 'load_effective', return_value={'confirmation': {'topics': ['agent_memory']}}), \
              patch.object(deployed.runtime, 'load_config', return_value={'_venv': Path(sys.prefix)}), \
              patch.object(deployed.writing, 'refresh_origin', return_value=True):
             result = deployed.dispatch(self.root, self.git('rev-parse', 'HEAD'), approval, artifact,
-                environment=environment, writer=lambda root, chosen, max_new_calls: writing.run(
-                    root, chosen, client=self.client, refresh=lambda: True, max_new_calls=max_new_calls))
+                environment=environment, writer=run_writer)
         self.assertEqual(result['status'], 'test_accepted')
         self.assertEqual(len(self.client.calls), 6)
         subprocess.run(['git', 'clone', '--quiet', '--no-hardlinks', str(self.root), str(publisher)],

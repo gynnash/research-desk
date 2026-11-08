@@ -275,6 +275,19 @@ class CodexGateway(unittest.TestCase):
                          {'research': 20, 'insight': 4, 'total': 24})
         self.assertEqual({path: path.read_bytes() for path in proof}, proof)
 
+        extension = (self.root / 'reports/test' / topic / 'automation' / cycle_id /
+                     'research-budget-extension.yaml')
+        original_extension = extension.read_bytes()
+        limits = dict.fromkeys((*budget, 'max_calls_per_item', 'insight_max_requests_per_task'), 100)
+        shared.extend_cycle_model_budget(self.root, topic, cycle_id, limits)
+        self.assertEqual(extension.read_bytes(), original_extension)
+        self.assertEqual({path: path.read_bytes() for path in proof}, proof)
+        self.assertEqual(shared.cycle_request_usage(self.root, topic, cycle_id),
+                         {'research': 20, 'insight': 4, 'total': 24})
+        shared.ensure_cycle_room(self.root, topic, cycle_id, 'insight', 76)
+        with self.assertRaisesRegex(store.OfflineError, '本阶段或整轮'):
+            shared.ensure_cycle_room(self.root, topic, cycle_id, 'insight', 77)
+
     def test_shared_monthly_limit_includes_archived_legacy_and_gateway_requests(self):
         month = shared.now()[:7]
         (self.root / 'config/research_state.yaml').write_text(yaml.safe_dump({

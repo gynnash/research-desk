@@ -168,6 +168,18 @@ class ResearchInsightCycle(unittest.TestCase):
         child = store.checked_yaml(self.root, 'reports/test/custom-topic/cycles/first/configs/insight.yaml')
         self.assertEqual(child['prompts']['version'], 'insight-v2')
 
+    def test_legacy_insight_stays_within_shared_cycle_budget_after_research(self):
+        self.config['budget'].update(max_calls_per_cycle=6, research_max_calls=6, insight_max_calls=6)
+        self.config_path.write_text(yaml.safe_dump(self.config, allow_unicode=True, sort_keys=False))
+        with self.assertRaises(store.SimulatedInterruption):
+            self.run_cycle(fail_after='after_research')
+        result = self.run_cycle()
+        self.assertEqual(result['reserved_calls'], 6)
+        child = store.checked_yaml(self.root, 'reports/test/custom-topic/cycles/first/configs/insight.yaml')
+        self.assertEqual(child['budget']['max_calls'], 2)
+        self.research_run.assert_called_once()
+        self.insight_run.assert_called_once()
+
     def test_interrupted_v1_child_config_is_preserved_after_upgrade(self):
         child_path = 'reports/test/custom-topic/cycles/first/configs/insight.yaml'
         def old_interruption(*args, **kwargs):

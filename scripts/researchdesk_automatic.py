@@ -164,6 +164,32 @@ def _research_limit_increase(effective, context):
     return None
 
 
+def _model_budget_change(effective, context):
+    original = deepcopy(effective)
+    research = effective['research']['budget']
+    frozen_research = context['research_config']['budget']
+    keys = ('max_calls_per_cycle', 'research_max_calls', 'insight_max_calls', 'max_calls_per_item')
+    for key in keys:
+        if key in frozen_research:
+            original['research']['budget'][key] = frozen_research[key]
+        else:
+            original['research']['budget'].pop(key, None)
+    frozen_codex = context['insight_config'].get('codex', {})
+    original_codex = original['insight'].get('codex', {})
+    task_key = 'max_requests_per_task'
+    if task_key in frozen_codex:
+        original_codex[task_key] = frozen_codex[task_key]
+    else:
+        original_codex.pop(task_key, None)
+    if context['config_fingerprint'] not in (_fingerprint(original), _fingerprint(original, selected_only=False)):
+        return None
+    return {
+        **{key: research[key] for key in keys if key != 'max_calls_per_item'},
+        'max_calls_per_item': research.get('max_calls_per_item', 2 * (research['max_revisions'] + 1)),
+        'insight_max_requests_per_task': effective['insight'].get('codex', {}).get(task_key, 100),
+    }
+
+
 def _context(root, effective, topic, identity, base, fingerprint, publisher_context, allow_budget_extension):
     path = root / base / 'context.yaml'
     if path.exists():
@@ -172,10 +198,13 @@ def _context(root, effective, topic, identity, base, fingerprint, publisher_cont
             raise store.OfflineError('冻结上下文不属于当前研究轮次')
         saved_fingerprint = value.get('config_fingerprint')
         research_limit = None
+        model_limits = None
         if saved_fingerprint != fingerprint and saved_fingerprint != _fingerprint(effective, selected_only=False):
             if allow_budget_extension:
                 research_limit = _research_limit_increase(effective, value)
-            if research_limit is None:
+                if research_limit is None:
+                    model_limits = _model_budget_change(effective, value)
+            if research_limit is None and model_limits is None:
                 return None
         private = workbench._read(workbench._path(root, 'config/local/automation/' + identity + '/snapshot.yaml'))
         if private.get('config_fingerprint') != saved_fingerprint:
@@ -193,6 +222,8 @@ def _context(root, effective, topic, identity, base, fingerprint, publisher_cont
                 raise store.OfflineError('冻结配置已被修改，保留现场')
         if research_limit is not None:
             request_budget.extend_cycle_research_budget(root, topic, identity, research_limit)
+        if model_limits is not None:
+            request_budget.extend_cycle_model_budget(root, topic, identity, model_limits)
         return value
     return _freeze(root, effective, topic, identity, base, fingerprint, publisher_context)
 

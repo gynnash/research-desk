@@ -123,14 +123,15 @@ def checkpoint_files(root, value):
     return files
 
 
-def execute(root, state, approval_id, config_path=inputs.confirmation.DEFAULT_CONFIG, max_new_calls=6, fail_after=None):
+def execute(root, state, approval_id, config_path=inputs.confirmation.DEFAULT_CONFIG,
+            max_new_calls=member.MAX_NEW_CALLS, fail_after=None):
     root, state = Path(root).resolve(), Path(state).absolute()
     if (os.environ.get('GITHUB_ACTIONS') == 'true' and
             (os.environ.get('GITHUB_REF') != 'refs/heads/main'
              or os.environ.get('GITHUB_EVENT_NAME') != 'workflow_dispatch')):
         raise JobError('writing_trusted_main_manual_dispatch_required')
-    if type(max_new_calls) is not int or not 0 <= max_new_calls <= 6:
-        raise JobError('writing_small_validation_limit_is_six')
+    if type(max_new_calls) is not int or not 0 <= max_new_calls <= member.MAX_NEW_CALLS:
+        raise JobError('writing_invocation_limit_invalid')
     if state.resolve().is_relative_to(root) or any(path.is_symlink() for path in (state, *state.parents)):
         raise JobError('writing_state_must_be_external_regular_directory')
     _clean_tracked(root)
@@ -440,13 +441,13 @@ def main():
     deployed.add_argument('--base-commit', required=True)
     deployed.add_argument('--artifact', type=Path, required=True)
     deployed.add_argument('--approval-id', required=True)
-    deployed.add_argument('--max-new-calls', type=int, default=6)
+    deployed.add_argument('--max-new-calls', type=int, default=member.MAX_NEW_CALLS)
     deployed.add_argument('--github-output', type=Path)
     run = commands.add_parser('execute')
     run.add_argument('--state', type=Path, required=True)
     run.add_argument('--approval-id', required=True)
     run.add_argument('--config', default=inputs.confirmation.DEFAULT_CONFIG)
-    run.add_argument('--max-new-calls', type=int, default=6)
+    run.add_argument('--max-new-calls', type=int, default=member.MAX_NEW_CALLS)
     run.add_argument('--fail-after', choices=('after_outline', 'after_review', 'after_first_output'))
     pack = commands.add_parser('export')
     pack.add_argument('--state', type=Path, required=True)

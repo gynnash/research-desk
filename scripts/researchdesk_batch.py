@@ -197,12 +197,16 @@ def monthly_budget(root, config):
     return total, cap
 
 
+_CYCLE_CALL_LIMITS = ('max_calls_per_cycle', 'research_max_calls', 'insight_max_calls')
+_MODEL_CALL_LIMITS = (*_CYCLE_CALL_LIMITS, 'max_calls_per_item', 'insight_max_requests_per_task')
+
+
 def _cycle_budget_paths(topic, cycle_id):
     if any(not isinstance(value, str) or not store.SAFE_ID.fullmatch(value)
            for value in (topic, cycle_id)):
         raise store.OfflineError('请求预算的主题或批次无效')
     return ('reports/test/%s/cycles/%s/manifest.yaml' % (topic, cycle_id),
-            'reports/test/%s/automation/%s/research-budget-extension.yaml' % (topic, cycle_id))
+            'reports/test/%s/automation/%s' % (topic, cycle_id))
 
 
 def _cycle_budget(root, topic, cycle_id, relative):
@@ -214,11 +218,9 @@ def _cycle_budget(root, topic, cycle_id, relative):
             or manifest.get('backend') != 'chatgpt_plan'):
         raise store.OfflineError('整轮请求预算的固定清单身份无效')
     budget = manifest.get('config', {}).get('budget', {})
-    fields = ('max_calls_per_cycle', 'research_max_calls', 'insight_max_calls')
-    if (any(type(budget.get(key)) is not int or budget[key] < 1 for key in fields)
-            or budget['research_max_calls'] + budget['insight_max_calls'] > budget['max_calls_per_cycle']):
+    if any(type(budget.get(key)) is not int or budget[key] < 1 for key in _CYCLE_CALL_LIMITS):
         raise store.OfflineError('固定整轮请求预算无效')
-    return {key: budget[key] for key in fields}
+    return {key: budget[key] for key in _CYCLE_CALL_LIMITS}
 
 
 def _research_budget_extension(root, relative, budget, limit):
@@ -231,17 +233,46 @@ def _research_budget_extension(root, relative, budget, limit):
 
 def extend_cycle_research_budget(root, topic, cycle_id, limit):
     """Record the operator's increase without changing any prior binding."""
-    relative, extension = _cycle_budget_paths(topic, cycle_id)
+    relative, directory = _cycle_budget_paths(topic, cycle_id)
     budget = _cycle_budget(root, topic, cycle_id, relative)
     if budget is None:
         raise store.OfflineError('仅能为已有批次追加请求额度')
-    store.save_yaml(root, extension, _research_budget_extension(root, relative, budget, limit))
+    store.save_yaml(root, directory + '/research-budget-extension.yaml',
+                    _research_budget_extension(root, relative, budget, limit))
+
+
+def _model_budget_extension(root, relative, budget, limits):
+    if (not isinstance(limits, dict) or set(limits) != set(_MODEL_CALL_LIMITS)
+            or any(type(limit) is not int or not 1 <= limit <= 1000 for limit in limits.values())
+            or any(limits[key] < budget[key] for key in ('research_max_calls', 'insight_max_calls'))):
+        raise store.OfflineError('追加模型调用额度无效')
+    return {'schema_version': 1, 'cycle_manifest_sha256': store.digest(
+        store.safe_path(root, relative).read_bytes()), 'limits': limits}
+
+
+def extend_cycle_model_budget(root, topic, cycle_id, limits):
+    relative, directory = _cycle_budget_paths(topic, cycle_id)
+    budget = _cycle_budget(root, topic, cycle_id, relative)
+    if budget is None:
+        raise store.OfflineError('仅能为已有批次追加请求额度')
+    store.save_yaml(root, directory + '/model-budget-extension.yaml',
+                    _model_budget_extension(root, relative, budget, limits))
 
 
 def cycle_request_budget(root, topic, cycle_id):
-    """Read the frozen policy and any separately recorded Research increase."""
-    relative, extension = _cycle_budget_paths(topic, cycle_id)
+    """Read the frozen policy and any separately authorized call limits."""
+    relative, directory = _cycle_budget_paths(topic, cycle_id)
     budget = _cycle_budget(root, topic, cycle_id, relative)
+    extension = directory + '/model-budget-extension.yaml'
+    if store.safe_path(root, extension).exists():
+        if budget is None:
+            raise store.OfflineError('追加请求额度缺少原批次清单')
+        record = store.checked_yaml(root, extension)
+        limits = record.get('limits')
+        if record != _model_budget_extension(root, relative, budget, limits):
+            raise store.OfflineError('追加请求额度未绑定原批次清单')
+        return {**limits, 'research_limit_extended': True}
+    extension = directory + '/research-budget-extension.yaml'
     if not store.safe_path(root, extension).exists():
         return budget
     if budget is None:
@@ -390,15 +421,16 @@ def verify_events(root, base, events, manifest):
 def ensure_room(root, config, events, key, count, cycle_id=None):
     budget = config['budget']
     batch_limit = budget['max_calls_per_batch']
+    item_limit = budget['max_calls_per_item']
     cycle_policy = (cycle_request_budget(root, config['topic'], cycle_id)
                     if cycle_id and config['backend'] == 'chatgpt_plan' else None)
     if cycle_policy and cycle_policy.get('research_limit_extended'):
-        batch_limit = min(cycle_policy['research_max_calls'],
-                          budget['max_documents'] * budget['max_calls_per_item'])
+        item_limit = cycle_policy.get('max_calls_per_item', item_limit)
+        batch_limit = min(cycle_policy['research_max_calls'], budget['max_documents'] * item_limit)
     reservations = [e for e in events if e['type'] == 'call_reserved']
     monthly, monthly_cap = monthly_budget(root, config)
     if (len(reservations) + count > batch_limit
-            or sum(e['key'] == key for e in reservations) + count > budget['max_calls_per_item']
+            or sum(e['key'] == key for e in reservations) + count > item_limit
             or monthly + count > monthly_cap):
         raise store.OfflineError('达到单项、批次或共享月度请求上限')
     if cycle_id and config['backend'] == 'chatgpt_plan':

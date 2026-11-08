@@ -93,11 +93,12 @@ def load_config(root, path, snapshot=None):
               'max_input_chars': (1000, 600000), 'max_output_chars': (1000, 24000),
               'timeout_seconds': (1, 300 if config.get('reading', {}).get('mode') == 'full_text_required' else 120),
               'max_revisions': (0, 1)}
+    if 'max_calls_per_item' in config['budget']:
+        ranges['max_calls_per_item'] = (2, 1000)
     common.fields(config['budget'], ranges, '轮次预算')
     for key, (low, high) in ranges.items():
         common.positive(config['budget'][key], low, high, key)
-    if config['budget']['research_max_calls'] + config['budget']['insight_max_calls'] > config['budget']['max_calls_per_cycle']:
-        raise store.OfflineError('子阶段预算之和超过轮次上限')
+    # Stage allowances draw from the same cycle budget and are checked at use.
     common.fields(config['history'], {'max_documents'} |
                   ({'lookback_days'} if 'lookback_days' in config['history'] else set()), '历史选择')
     if 'lookback_days' in config['history']:
@@ -483,11 +484,12 @@ def run(root, config_path, cycle_id, client=None, fetcher=None, fail_after=None)
                 input_hashes[history_path] = store.digest((root/history_path).read_bytes())
                 budget = config['budget']
                 monthly_cap = research.membership_monthly_limit(root) or 10
+                per_item = budget.get('max_calls_per_item', 4)
                 research_cfg = {'schema_version':1, 'mode':'research_batch_test', 'backend':'chatgpt_plan',
                     'topic':config['topic'], 'topics_file':config['topics_file'],
                     'models':{'research':config['models']['research'], 'review':config['models']['review']},
-                    'budget':{'max_documents':len(candidates), 'max_calls_per_item':4,
-                        'max_calls_per_batch':min(budget['research_max_calls'],len(candidates)*4), 'month_max_calls':monthly_cap,
+                    'budget':{'max_documents':len(candidates), 'max_calls_per_item':per_item,
+                        'max_calls_per_batch':min(budget['research_max_calls'],len(candidates)*per_item,monthly_cap), 'month_max_calls':monthly_cap,
                         **{key:budget[key] for key in ('max_input_chars','max_output_chars','timeout_seconds','max_revisions')}},
                     'prompts':{'version':'research-batch-v4' if config.get('reading', {}).get('mode') == 'full_text_required' else
                                         'research-batch-v3' if config.get('presentation') == 'technical_article' else
@@ -529,10 +531,13 @@ def run(root, config_path, cycle_id, client=None, fetcher=None, fail_after=None)
                     if item['status'] not in {'test_accepted','duplicate','rejected','reject','revise'}:
                         source = next(candidate for candidate in candidates if candidate['source']['id']==item['key'])
                         pending.append(dict(source, reason=item.get('reason',item['status'])))
-                if keys:
+                insight_limit = min(budget['insight_max_calls'],
+                                    budget['max_calls_per_cycle'] - research_result['reserved_calls'],
+                                    monthly_cap)
+                if keys and insight_limit >= 2:
                     insight_cfg = {'schema_version':1,'mode':'insight_test','backend':'chatgpt_plan','topic':config['topic'],
                         'topics_file':config['topics_file'],'models':{'generation':config['models']['insight'],'review':config['models']['review']},
-                        'budget':{'max_calls':budget['insight_max_calls'],'month_max_calls':monthly_cap,
+                        'budget':{'max_calls':insight_limit,'month_max_calls':monthly_cap,
                                   **{key:budget[key] for key in ('max_input_chars','max_output_chars','timeout_seconds','max_revisions')}},
                         'prompts':{'version':'insight-v6' if config.get('reading', {}).get('mode') == 'full_text_required' else
                                             'insight-v5' if config.get('presentation') == 'technical_article' else
@@ -565,7 +570,7 @@ def run(root, config_path, cycle_id, client=None, fetcher=None, fail_after=None)
                     status='completed' if insight_result['status']=='test_accepted' else 'insight_blocked'
                     if status=='completed' and snapshot.get('status')!='complete':status='partial'
                 else:
-                    status='no_accepted_research'
+                    status='insight_blocked' if keys else 'no_accepted_research'
         research.verify_notes(root, manifest['protected_notes'])
         store.save_yaml(root,base+'/pending.yaml',{'items':pending})
         receipt={'schema_version':1,'mode':'research_cycle_test','backend':'chatgpt_plan','topic':config['topic'],

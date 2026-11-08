@@ -14,7 +14,7 @@ codex:
   sdk_version: '0.163.0'
   runtime: bundled
   auth_source: researchdesk_siwc
-  max_requests_per_task: 3  # Actual upstream requests, including retries/failures.
+  max_requests_per_task: 100  # Actual upstream requests, including retries/failures.
   timeout_seconds: 240
 review_policy: accuracy_only
 history:
