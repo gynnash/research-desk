@@ -299,13 +299,15 @@ class SetupWizard:
         host = runner.load_config(self.root)
         return MembershipClient(host['_profile'], self.root)
 
-    def check_chatgpt(self):
+    def check_chatgpt(self, *, before_configure=None):
         try:
             client = self.client()
             status = client.status()
             if not status.get('authenticated') or not status.get('plan_permission'):
                 return section('needs_login', '请授权 ResearchDesk 使用你的 ChatGPT 会员用量。')
             catalog = client.models()
+            if before_configure is not None:
+                before_configure()
             with automatic.pipeline_lock(self.root):
                 configure_models(self.root, catalog)
             return section('ready', 'ChatGPT 授权和独立审阅模型已就绪。')
@@ -328,43 +330,74 @@ class SetupWizard:
             schedule=schedule_text(weekly), weekly=weekly,
             automation=value['automation']['enabled'], admission=value['admission']['enabled'],
         ))
+        return value['automation']
+
+    def inspect_section(self, name, check):
+        try:
+            result = check()
+        except Exception:
+            result = section('blocked', '此项检查暂时无法完成，请检查本机环境和网络后重试。')
+        self.update(name, result)
+        return result
 
     def inspect(self):
         with automatic.pipeline_lock(self.root):
             adopt = not workbench._path(self.root, workbench.LOCAL_CONFIG).exists() and any(
                 workbench._path(self.root, name).exists() for name in workbench.generated_config_paths())
             workbench.initialize(self.root, adopt_existing=adopt)
-        self.update_setup()
-        self.update('chatgpt', self.check_chatgpt())
-        self.update('github', self.github.status())
-        self.update('obsidian', self.obsidian.status())
+        automation = self.update_setup()
+        github_done = threading.Event()
+        # GitHub may inspect the working tree. Finish that before writing model config.
+        chatgpt = threading.Thread(target=self.inspect_section, daemon=True, args=(
+            'chatgpt', lambda: self.check_chatgpt(before_configure=github_done.wait),
+        ))
+        obsidian = threading.Thread(target=self.inspect_section, daemon=True, args=('obsidian', self.obsidian.status))
+        chatgpt.start()
+        obsidian.start()
+        try:
+            github = self.inspect_section('github', self.github.status)
+            github_done.set()
+            deployment = None
+            if github['state'] == 'ready' and (chatgpt.is_alive() or self.snapshot()['chatgpt']['state'] == 'ready'):
+                deployment = self.schedule_status(github, automation,
+                                                  observed_workflow_state=github.get('research_workflow_state'))
+            chatgpt.join()
+            self.refresh_schedule(checked=deployment)
+        finally:
+            github_done.set()
+            chatgpt.join()
+            obsidian.join()
 
-    def refresh_schedule(self):
+    def refresh_schedule(self, *, checked=None):
         current = self.snapshot()
         if any(current[key]['state'] != 'ready' for key in ('setup', 'chatgpt', 'github')):
             self.update('deployment', section('needs_setup', '连接 ChatGPT 和 GitHub 后即可创建。'))
             return
-        repo = current['github']['repository']
+        if checked is None:
+            checked = self.schedule_status(current['github'], workbench.load_effective(self.root)['automation'])
+        self.update('deployment', checked)
+
+    def schedule_status(self, github, automation, *, observed_workflow_state=None):
+        repo = github['repository']
         url = f'https://github.com/{repo}/actions/workflows/researchdesk-manual.yml'
-        automation = workbench.load_effective(self.root)['automation']
         if automation['enabled']:
             if 'weekly' in automation:
                 weekly = schedule.weekly(automation)
                 cron, zone = schedule.workflow_cron(weekly), weekly['timezone']
             else:
                 cron, zone = automation['schedule_utc'], 'UTC'
+            check = {'expected_repository': repo}
+            if observed_workflow_state is not None:
+                check['observed_workflow_state'] = observed_workflow_state
             try:
-                if self.github.schedule_matches(cron, zone, expected_repository=repo):
-                    self.update('deployment', section('ready', '定时研究已创建。', url=url, repository=repo))
-                    return
+                if self.github.schedule_matches(cron, zone, **check):
+                    return section('ready', '定时研究已创建。', url=url, repository=repo)
             except GitHubSetupError as exc:
-                self.update('deployment', section('blocked', str(exc), url=exc.url or url))
-                return
-            self.update('deployment', section('needs_setup', '本地日程与 GitHub 不一致，请选择时间并重新创建。'))
-            return
-        message = ('选择运行时间，然后点击「创建定时研究」。' if current['github'].get('workflow_scope') is True
+                return section('blocked', str(exc), url=exc.url or url)
+            return section('needs_setup', '本地日程与 GitHub 不一致，请选择时间并重新创建。')
+        message = ('选择运行时间，然后点击「创建定时研究」。' if github.get('workflow_scope') is True
                    else GITHUB_WORKFLOW_REQUIRED)
-        self.update('deployment', section('needs_setup', message))
+        return section('needs_setup', message)
 
     def create_schedule(self, weekly):
         current = self.snapshot()
@@ -468,6 +501,7 @@ class SetupWizard:
         try:
             if action == 'check':
                 self.inspect()
+                return
             elif action == 'save_topics':
                 stage = 'notice'
                 with automatic.pipeline_lock(self.root):

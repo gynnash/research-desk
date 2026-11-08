@@ -52,6 +52,69 @@ class SetupWizardTest(unittest.TestCase):
         origin.start()
         self.addCleanup(origin.stop)
 
+    def test_startup_overlaps_independent_checks_and_shows_the_schedule_before_the_vault(self):
+        self.wizard.perform('check')
+        self.wizard.perform('create_schedule', WEEKLY)
+        self.wizard.update('deployment', setup.section('idle', '正在检查日程。'))
+        self.wizard.github.status.return_value['research_workflow_state'] = 'active'
+        catalog_started = threading.Event()
+        vault_started = threading.Event()
+        model_write_started = threading.Event()
+        schedule_started = threading.Event()
+        schedule_published = threading.Event()
+        release_vault = threading.Event()
+
+        def catalog():
+            catalog_started.set()
+            return self.chatgpt.models.return_value
+
+        def github_status():
+            self.assertTrue(catalog_started.wait(3))
+            self.assertTrue(vault_started.wait(3))
+            self.assertFalse(model_write_started.is_set())
+            return self.wizard.github.status.return_value
+
+        def vault_status():
+            vault_started.set()
+            self.assertTrue(release_vault.wait(5))
+            return self.wizard.obsidian.status.return_value
+
+        def check_schedule(*args, **kwargs):
+            schedule_started.set()
+            return True
+
+        original_configure = setup.configure_models
+        original_update = self.wizard.update
+
+        def configure(*args):
+            model_write_started.set()
+            self.assertTrue(schedule_started.wait(3))
+            original_configure(*args)
+
+        def update(name, value):
+            original_update(name, value)
+            if name == 'deployment' and value['state'] == 'ready':
+                schedule_published.set()
+
+        self.chatgpt.models.side_effect = catalog
+        self.wizard.github.status.side_effect = github_status
+        self.wizard.github.schedule_matches.side_effect = check_schedule
+        self.wizard.obsidian.status.side_effect = vault_status
+        self.wizard.update = update
+        with mock.patch.object(setup, 'configure_models', side_effect=configure):
+            worker = threading.Thread(target=self.wizard.perform, args=('check',), daemon=True)
+            worker.start()
+            try:
+                self.assertTrue(schedule_published.wait(4))
+                self.assertTrue(worker.is_alive())
+                self.wizard.github.schedule_matches.assert_called_once_with(
+                    '35 9 * * 1,4', WEEKLY['timezone'], expected_repository='fixture/workbench',
+                    observed_workflow_state='active')
+            finally:
+                release_vault.set()
+                worker.join(6)
+        self.assertFalse(worker.is_alive())
+
     def test_creation_is_explicit_and_local_activation_follows_github(self):
         self.chatgpt.status.return_value['plan_permission'] = False
         self.wizard.github.status.return_value = {'state': 'needs_login'}
@@ -748,6 +811,53 @@ class GitHubScheduleTest(unittest.TestCase):
                                                        expected_repository='fixture/workbench'), WORKFLOW_URL)
             scope.assert_called_once()
             api.assert_called_once()
+
+
+class GitHubStartupTest(unittest.TestCase):
+    def test_workflow_checks_overlap_after_policy_validation(self):
+        github = setup.GitHubSetup(workbench.REPOSITORY)
+        repository = 'fixture/workbench'
+        policy_checked = threading.Event()
+        both_started = threading.Barrier(2, timeout=2)
+
+        def check_workflow(repo, name):
+            self.assertEqual(repo, repository)
+            self.assertTrue(policy_checked.is_set())
+            both_started.wait()
+            return 'active' if name == github_setup.RESEARCH_WORKFLOW else 'disabled_manually'
+
+        with (mock.patch.object(github_setup.shutil, 'which', return_value='/mock/tool'),
+              mock.patch.object(github, '_check_auth'),
+              mock.patch.object(github, '_workflow_scope', return_value=True),
+              mock.patch.object(github, '_repository', return_value=repository),
+              mock.patch.object(github, '_api', return_value={
+                  'permissions': {'admin': True}, 'default_branch': 'main', 'private': True,
+              }),
+              mock.patch.object(github, '_check_actions', side_effect=lambda _: policy_checked.set()),
+              mock.patch.object(github, '_workflow_state', side_effect=check_workflow)):
+            result = github.status()
+        self.assertEqual(result['state'], 'ready')
+        self.assertEqual(result['research_workflow_state'], 'active')
+        self.assertIn('将启用', result['message'])
+
+    def test_schedule_match_reuses_workflow_state_but_still_checks_origin_and_file(self):
+        github = setup.GitHubSetup(workbench.REPOSITORY)
+        repository = 'fixture/workbench'
+        cron, timezone = '35 9 * * 1,4', WEEKLY['timezone']
+        source = (f"on:\n  schedule:\n{github_setup.SCHEDULE_MARKER}\n"
+                  f"    - cron: '{cron}'\n      timezone: '{timezone}'\n")
+        with (mock.patch.object(github, '_repository', return_value=repository) as origin,
+              mock.patch.object(github, '_workflow_content', return_value=(source, 'a' * 40)) as content,
+              mock.patch.object(github, '_workflow_state', return_value='disabled_manually') as state):
+            self.assertTrue(github.schedule_matches(cron, timezone, expected_repository=repository,
+                                                   observed_workflow_state='active'))
+            self.assertFalse(github.schedule_matches(cron, timezone, expected_repository=repository,
+                                                    observed_workflow_state='disabled_manually'))
+            state.assert_not_called()
+            self.assertFalse(github.schedule_matches(cron, timezone, expected_repository=repository))
+            state.assert_called_once_with(repository, github_setup.RESEARCH_WORKFLOW)
+            self.assertEqual(origin.call_count, 3)
+            self.assertEqual(content.call_args_list, [mock.call(repository)] * 3)
 
 
 if __name__ == '__main__':

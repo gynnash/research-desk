@@ -1,6 +1,7 @@
 """GitHub authorization and Actions setup for the local wizard."""
 
 import base64
+from concurrent.futures import ThreadPoolExecutor
 from fnmatch import fnmatchcase
 import json
 import os
@@ -295,7 +296,10 @@ class GitHubSetup:
         if type(private) is not bool:
             raise GitHubSetupError('无法确认 GitHub 仓库的可见性。请在仓库设置中检查。', url=url + '/settings')
         self._check_actions(repository)
-        states = {name: self._workflow_state(repository, name) for name in (RESEARCH_WORKFLOW, WRITING_WORKFLOW)}
+        with ThreadPoolExecutor(max_workers=2) as workers:
+            checks = {name: workers.submit(self._workflow_state, repository, name)
+                      for name in (RESEARCH_WORKFLOW, WRITING_WORKFLOW)}
+            states = {name: check.result() for name, check in checks.items()}
         return private, states
 
     def status(self):
@@ -339,7 +343,8 @@ class GitHubSetup:
                    if any(state != 'active' for state in states.values()) else 'GitHub 仓库和工作流已就绪。')
         return {'state': 'ready', 'message': message, 'repository': repository,
                 'private': private, 'can_create': not private and self._can_create(repository),
-                'url': _repo_url(repository), **workflow_status}
+                'url': _repo_url(repository), 'research_workflow_state': states[RESEARCH_WORKFLOW],
+                **workflow_status}
 
     def login(self, notify):
         """Delegate device authorization to gh and expose only its one-time code."""
@@ -479,7 +484,7 @@ class GitHubSetup:
             raise GitHubSetupError('请选择有效的每周运行时间、星期和 IANA 时区。',
                                    code='github_schedule_input', url=_workflow_url(repository)) from None
 
-    def schedule_matches(self, cron, timezone, *, expected_repository):
+    def schedule_matches(self, cron, timezone, *, expected_repository, observed_workflow_state=None):
         """Check that main has the requested managed schedule and it is active."""
         if expected_repository is None:
             raise GitHubSetupError('请先确认 GitHub 仓库。', code='github_repository_required')
@@ -487,8 +492,11 @@ class GitHubSetup:
         self._check_schedule_input(repository, cron, timezone)
         source, _ = self._workflow_content(repository)
         values = _schedule_values(source, _workflow_url(repository))
-        return ([value.value for value in values] == [cron, timezone]
-                and self._workflow_state(repository, RESEARCH_WORKFLOW) == 'active')
+        if [value.value for value in values] != [cron, timezone]:
+            return False
+        if observed_workflow_state is None:
+            observed_workflow_state = self._workflow_state(repository, RESEARCH_WORKFLOW)
+        return observed_workflow_state == 'active'
 
     def configure_schedule(self, cron, timezone, *, expected_repository, require_private=False):
         """Update the single managed GitHub Actions schedule on main."""

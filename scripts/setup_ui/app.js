@@ -677,7 +677,8 @@
 
   async function poll() {
     await refresh();
-    window.setTimeout(poll, isBusy() ? 1500 : 4000);
+    const checking = snapshot?.operation?.action === 'check' || requestedAction === 'check';
+    window.setTimeout(poll, checking ? 500 : isBusy() ? 1500 : 4000);
   }
   document.addEventListener('visibilitychange', () => {
     if (!document.hidden) refresh();
