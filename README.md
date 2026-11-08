@@ -24,7 +24,7 @@ ResearchDesk 是一套可配置的三 Agent 研究工作台框架：采集公开
 
 在「定时研究」选择星期、时间和时区，再点击 **创建**。向导会启动 Mac 执行器、验证健康检查，并在 GitHub 工作流中保存你选择的日程。GitHub 可能要求补充更新工作流所需的授权。创建完成后可点击 **GitHub Action** 查看工作流。首次研究在下一次定时触发时开始，执行期间 Mac 需要开机联网。正式选题回存后，按[选题确认与 Writing](workflows/README.md#选题确认与-writing)打开确认页，亲自确认后可启动 Writing。
 
-向导也会在这台 Mac 上准备独立的 Obsidian 阅读库。首次在 Obsidian 选择「打开文件夹作为仓库」，选中向导显示的目录。Mac 开机联网且执行器在线时，研究和写作结果回存后会自动刷新阅读库。推送到 GitHub `main` 的阅读资料更新也会触发刷新。需要时可在向导点击「从 GitHub 更新资料」。
+向导也会在这台 Mac 上准备独立的 Obsidian 阅读库。首次在 Obsidian 选择「打开文件夹作为仓库」，选中向导显示的目录。创建定时研究后，Mac 执行器在线时会把 GitHub `main` 上的阅读资料更新同步到本机阅读库。
 
 手动部署和已有配置迁移见[初始化说明](workflows/workbench-init.md)和[执行器说明](workflows/self-hosted-worker.md)。
 

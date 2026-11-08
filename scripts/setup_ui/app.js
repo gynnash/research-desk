@@ -16,6 +16,7 @@
     github_workflow_auth: '等待 GitHub 补充授权',
     github_create: '创建私有 GitHub 仓库', create_schedule: '正在配置定时研究',
     obsidian_sync: '更新阅读库', obsidian_open: '打开 Vault 管理器',
+    obsidian_choose_path: '选择阅读库路径',
     save_topics: '正在保存研究方向',
   };
   const problemStates = new Set(['blocked', 'failed', 'error']);
@@ -455,14 +456,17 @@
   }
 
   function renderObsidian(obsidian, github) {
-    const path = valueOf(obsidian.path);
+    const path = typeof obsidian.path === 'string' ? obsidian.path : '';
     const ready = obsidian.state === 'ready';
+    const canChoosePath = obsidian.can_choose_path === true;
     const canSync = github.state === 'ready' && obsidian.can_sync !== false;
     const canOpen = obsidian.can_open === true || (ready && obsidian.can_open !== false && obsidian.installed !== false);
     const showDownload = obsidian.installed === false;
     setSection('obsidian', obsidian, '阅读库就绪');
     setText('obsidian-path', path);
     setVisible('obsidian-path-row', Boolean(path));
+    setButton('obsidian_choose_path', canChoosePath);
+    setVisible('obsidian-path-hint', canChoosePath && Boolean(path));
     setButton('obsidian_sync', canSync, ready ? '从 GitHub 更新资料' : '准备阅读库');
     setButton('obsidian_open', canOpen);
     setVisible('obsidian-download', showDownload);

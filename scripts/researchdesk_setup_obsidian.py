@@ -4,6 +4,7 @@ import argparse
 from contextlib import contextmanager
 import fcntl
 import hashlib
+import json
 import os
 from pathlib import Path
 import re
@@ -15,6 +16,7 @@ import tempfile
 import unicodedata
 from urllib.parse import quote, unquote, urlsplit
 
+import researchdesk_workbench as workbench
 from researchdesk_setup_github import apply_system_github_proxy
 
 
@@ -24,6 +26,17 @@ class ObsidianSetupError(RuntimeError):
 
 _MARKER = 'researchdesk-obsidian'
 _MAIN = 'refs/remotes/origin/main'
+_PATH_CONFIG = 'config/local/obsidian-vault.json'
+_FOLDER_PICKER = '''on run argv
+    set initialFolder to (POSIX file (item 1 of argv)) as alias
+    activate
+    try
+        set selectedFolder to choose folder with prompt "选择阅读库的空文件夹，或此工作台已有的阅读库。" default location initialFolder
+        return POSIX path of selectedFolder
+    on error number -128
+        return ""
+    end try
+end run'''
 _READING_PATTERNS = (
     '/README.md',
     '/研究首页.md',
@@ -115,7 +128,61 @@ class ObsidianSetup:
         self._identity = hashlib.sha256(os.fsencode(self.root)).hexdigest()[:16]
         label = re.sub(r'[^a-z0-9_-]+', '-', self.root.name.lower()).strip('-_')[:40] or 'researchdesk'
         parent = _reading_directory() if vaults_directory is None else Path(vaults_directory).expanduser()
-        self.path = parent.absolute() / (label + '-' + self._identity)
+        self._default_path = parent.absolute() / (label + '-' + self._identity)
+        self.path = self._default_path
+
+    def _saved_path(self):
+        try:
+            config = workbench._path(self.root, _PATH_CONFIG)
+            with config.open(encoding='utf-8') as handle:
+                value = json.loads(handle.read(16384))
+            if not isinstance(value, str) or not Path(value).is_absolute() or any(ord(c) < 32 for c in value):
+                raise ValueError('invalid path')
+            return Path(value)
+        except FileNotFoundError:
+            return self._default_path
+        except (OSError, ValueError, workbench.store.OfflineError):
+            raise ObsidianSetupError('无法读取保存的阅读库路径，请重新选择。') from None
+
+    def _pick_folder(self, initial):
+        if sys.platform != 'darwin':
+            raise ObsidianSetupError('请在 Mac 上打开本机向导选择阅读库路径。')
+        try:
+            result = subprocess.run(['/usr/bin/osascript', '-e', _FOLDER_PICKER, str(initial)],
+                                    stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
+                                    timeout=180, check=False, encoding='utf-8')
+        except subprocess.TimeoutExpired:
+            raise ObsidianSetupError('选择路径超时，请重新打开文件夹选择器。') from None
+        except (OSError, UnicodeError):
+            raise ObsidianSetupError('无法打开 Mac 文件夹选择器，请重试。') from None
+        if result.returncode:
+            raise ObsidianSetupError('无法打开 Mac 文件夹选择器，请重试。')
+        selected = result.stdout.removesuffix('\n')
+        return Path(selected) if selected else None
+
+    def choose_path(self):
+        try:
+            try:
+                current = self._saved_path()
+            except ObsidianSetupError:
+                current = self._default_path
+            initial = next((path for path in (current, *current.parents) if path.is_dir()), Path.home())
+            selected = self._pick_folder(initial)
+            if selected is None:
+                return False
+            self._safe_location(selected)
+            if not selected.is_dir() or selected.is_mount():
+                raise ObsidianSetupError('请选择磁盘中的空文件夹，或此工作台已有的阅读库。')
+            if current.is_dir() and not selected.samefile(current) and self._overlaps(selected, current):
+                raise ObsidianSetupError('请选择与当前阅读库分开的目录。')
+            if any(selected.iterdir()):
+                self._checkout(self._remote(self.root), selected)
+            config = workbench._path(self.root, _PATH_CONFIG)
+            workbench._write(config, (json.dumps(str(selected)) + '\n').encode('utf-8'))
+            self.path = selected
+            return True
+        except (OSError, workbench.store.OfflineError):
+            raise ObsidianSetupError('无法保存阅读库路径，请检查目录访问权限后重试。') from None
 
     def _git(self, root, *args, message='无法读取 Git 仓库，请检查本机 Git 设置。',
              network=False, github_auth=False):
@@ -149,16 +216,30 @@ class ObsidianSetup:
                         message='找不到 Git origin。请先在向导连接自己的 GitHub 仓库。')
         return _normalized_remote(os.fsdecode(raw).removesuffix('\n'), root)
 
-    def _safe_location(self):
-        if ('..' in self.path.parts or self.path.is_relative_to(self.root) or self.root.is_relative_to(self.path)
-                or any(path.is_symlink() for path in (self.path, *self.path.parents))):
-            raise ObsidianSetupError('阅读副本必须位于工作台之外，目录路径不能经过符号链接。')
-        if any(path.exists() and not path.is_dir() for path in (self.path, *self.path.parents)):
-            raise ObsidianSetupError('阅读副本路径已有文件占用，请先处理该路径。')
+    @staticmethod
+    def _overlaps(left, right):
+        for child, parent in ((left, right), (right, left)):
+            if child.is_relative_to(parent) or (parent.exists() and any(
+                    part.exists() and part.samefile(parent) for part in (child, *child.parents))):
+                return True
+        return False
 
-    def _checkout(self, remote):
-        self._safe_location()
-        git_dir = self.path / '.git'
+    def _safe_location(self, path=None):
+        path = self.path if path is None else path
+        if (not path.is_absolute() or '..' in path.parts or any(ord(c) < 32 for c in str(path))
+                or any(part.casefold() in {'.git', '.obsidian'} for part in path.parts)
+                or self._overlaps(path, self.root)
+                or any(part.is_symlink() for part in (path, *path.parents))):
+            raise ObsidianSetupError('阅读副本必须位于工作台之外，目录路径不能经过符号链接。')
+        if any(part.exists() and not part.is_dir() for part in (path, *path.parents)):
+            raise ObsidianSetupError('阅读副本路径已有文件占用，请先处理该路径。')
+        if path != self._default_path and not path.parent.is_dir():
+            raise ObsidianSetupError('所选阅读库的上级目录不可用，请重新连接磁盘或选择路径。')
+
+    def _checkout(self, remote, path=None):
+        path = self.path if path is None else path
+        self._safe_location(path)
+        git_dir = path / '.git'
         marker = git_dir / _MARKER
         conflict = '该目录已被占用，向导只更新自己创建的阅读副本。已有文件已保留。'
         if git_dir.is_symlink() or not git_dir.is_dir() or marker.is_symlink() or not marker.is_file():
@@ -170,11 +251,11 @@ class ObsidianSetup:
                          'commondir', 'info', 'info/exclude', 'info/sparse-checkout'):
             if (git_dir / relative).is_symlink():
                 raise ObsidianSetupError(conflict)
-        top = self._git(self.path, 'rev-parse', '--show-toplevel', message=conflict)
-        if (Path(os.fsdecode(top).removesuffix('\n')) != self.path
-                or _reading_remote(self._remote(self.path)) != _reading_remote(remote)):
+        top = Path(os.fsdecode(self._git(path, 'rev-parse', '--show-toplevel', message=conflict)).removesuffix('\n'))
+        if (not top.is_absolute() or not top.samefile(path)
+                or _reading_remote(self._remote(path)) != _reading_remote(remote)):
             raise ObsidianSetupError('阅读副本的 Git origin 或工作目录已变化，已保留现有文件。')
-        if (self.path / '.obsidian').is_symlink():
+        if (path / '.obsidian').is_symlink():
             raise ObsidianSetupError('阅读副本的 Obsidian 设置目录使用了符号链接，已停止更新。')
 
     def _clean_main(self):
@@ -187,11 +268,14 @@ class ObsidianSetup:
 
     def status(self):
         result = {'state': 'not_ready', 'path': str(self.path), 'can_sync': False, 'can_open': False,
+                  'can_choose_path': sys.platform == 'darwin',
                   'message': '同步后可在 Obsidian 中将此目录打开为仓库。'}
         try:
+            self.path = self._saved_path()
+            result['path'] = str(self.path)
             self._safe_location()
             remote = self._remote(self.root)
-            if self.path.exists():
+            if self.path.exists() and (self.path == self._default_path or any(self.path.iterdir())):
                 self._checkout(remote)
                 result['can_open'] = True
                 self._clean_main()

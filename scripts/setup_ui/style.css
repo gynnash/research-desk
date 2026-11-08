@@ -109,6 +109,8 @@ h1 { font-size: clamp(25px, 4vw, 32px); font-weight: 680; letter-spacing: -.04em
 .path-row { display: flex; align-items: center; justify-content: space-between; gap: 7px 12px; margin-top: 10px; padding: 9px 11px; background: var(--background); border-radius: 7px; }
 .path-row > div { min-width: 0; }
 .path-row code, .detail-label { display: block; }
+.path-row code { white-space: pre-wrap; }
+.path-row .actions { margin-top: 0; flex: none; }
 .path-row .button { flex: none; }
 .device { padding: 8px; border-radius: 7px; background: var(--green-wash); color: var(--green); font-size: 12px; margin-top: 8px; }
 .device-actions { margin-top: 4px; }

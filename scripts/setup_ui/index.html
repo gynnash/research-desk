@@ -179,9 +179,13 @@
           <div class="step-body">
             <p id="obsidian-message" class="message" aria-live="polite">用独立的 Vault 阅读同步到这台 Mac 的研究资料。</p>
             <div id="obsidian-path-row" class="path-row" hidden>
-              <div><span class="detail-label">阅读库路径</span><code id="obsidian-path"></code></div>
-              <button type="button" class="button" id="copy-path">复制路径</button>
+              <div><span class="detail-label">阅读库路径</span><code id="obsidian-path" aria-live="polite"></code></div>
+              <div class="actions">
+                <button type="button" class="button" data-action="obsidian_choose_path" aria-describedby="obsidian-path-hint" hidden>选择路径</button>
+                <button type="button" class="button" id="copy-path">复制路径</button>
+              </div>
             </div>
+            <p id="obsidian-path-hint" class="detail" hidden>可选择空文件夹，或此工作台已有的阅读库。</p>
             <div class="actions" id="obsidian-actions" hidden>
               <button type="button" class="button" data-action="obsidian_sync" hidden>准备阅读库</button>
               <button type="button" class="button" data-action="obsidian_open" hidden>打开 Vault 管理器</button>
@@ -192,9 +196,16 @@
               <summary>分库、GitHub 更新和多设备阅读</summary>
               <div class="guidance-content">
                 <ul>
-                  <li><strong>打开阅读库。</strong> 在独立 Vault 里从研究首页浏览原文、总结、洞察、选题和稿件。个人笔记可放在自己的 Vault 中。<a href="https://obsidian.md/help/vault" target="_blank" rel="noopener noreferrer">打开现有文件夹</a></li>
-                  <li><strong>从 GitHub 更新。</strong> Mac 执行器在线时，研究和写作回存或 GitHub 上的资料更新会自动刷新阅读库。需要时可点「从 GitHub 更新资料」。旧阅读副本会在下次成功同步时原地迁移。遇到本地改动或冲突时，会暂停更新并保留文件。</li>
-                  <li><strong>在其他设备阅读。</strong> 开通官方 Obsidian Sync 后，在 Mac 的阅读库中启用 Sync 核心插件，再到「设置 → Sync」连接或创建远程 Vault。在手机或其他电脑的 Obsidian 中连接同一个远程 Vault。<a href="https://obsidian.md/help/sync/setup" target="_blank" rel="noopener noreferrer">设置 Obsidian Sync</a></li>
+                  <li>
+                    <strong>分库存放。</strong>
+                    <ul>
+                      <li>点击「准备阅读库」后，向导从已连接 GitHub 仓库的 <code>main</code> 分支读取资料。</li>
+                      <li>向导在上方显示的路径准备独立阅读库，放入研究首页、原文、总结、洞察、选题和稿件等 Markdown 文件。</li>
+                      <li>显示「阅读库就绪」后，在 Obsidian 中将该文件夹打开为仓库。</li>
+                    </ul>
+                  </li>
+                  <li><strong>自动更新。</strong> 创建定时研究后，Mac 执行器在线时会把 GitHub <code>main</code> 上的资料更新同步到阅读库。有本地改动或冲突时暂停。</li>
+                  <li><strong>多设备阅读。</strong> 在 Mac 的阅读库启用 Obsidian Sync 并连接远程 Vault，其他设备连接同一个远程 Vault。 <a href="https://obsidian.md/help/sync/setup" target="_blank" rel="noopener noreferrer">设置 Obsidian Sync</a></li>
                 </ul>
               </div>
             </details>
