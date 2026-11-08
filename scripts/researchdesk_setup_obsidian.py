@@ -28,8 +28,8 @@ class ObsidianSetupError(RuntimeError):
 _MARKER = 'researchdesk-obsidian'
 _MAIN = 'refs/remotes/origin/main'
 _PATH_CONFIG = 'config/local/obsidian-vault.json'
-_FOLDER_PICKER = '''activate
-try
+# Standard Additions brings the chooser forward without a separate activation wait.
+_FOLDER_PICKER = '''try
     set selectedFolder to choose folder with prompt "选择阅读库的空文件夹，或此工作台已有的阅读库。"
     return POSIX path of selectedFolder
 on error number -128
