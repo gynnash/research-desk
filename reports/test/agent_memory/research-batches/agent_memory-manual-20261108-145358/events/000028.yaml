@@ -1,0 +1,9 @@
+type: call_reserved
+key: arxiv-1b2c6c25ca02
+reservation_id: arxiv-1b2c6c25ca02:research:0
+role: research
+revision: 0
+model_id: gpt-6.1-sol
+month: 2026-11
+at: '2026-11-08T15:17:48.816461+00:00'
+usage_status: unknown

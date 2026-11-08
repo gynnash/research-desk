@@ -1,0 +1,37 @@
+schema_version: 1
+topic: agent_memory
+cycle_id: agent_memory-manual-20261108-145358
+status: insight_incomplete
+terminal: false
+receipt_path: null
+writing_started: false
+publish_authorized: false
+production_accepted: false
+config_fingerprint: 015c6e25b160d275b5e228009247011f37b5d4ba6ad9fbada14753ddd51642a6
+stages:
+  collection:
+    status: collected
+    count: 5
+  research:
+    status: partial
+    count: 4
+  insight:
+    status: failed
+    receipt_path: null
+collection_count: 5
+summary_count: 4
+context_path: reports/test/agent_memory/automation/agent_memory-manual-20261108-145358/context.yaml
+context_sha256: 86331b88cf9ee1b65e5d51207fd7603893239de3dc891a0b93ce9ce867c9213e
+health:
+  membership_authorized: true
+  configured_models_available: true
+  sdk_live_ready: true
+  model_calls: 0
+research_reserved_calls: 18
+research_completed_calls: 18
+simulation: false
+insight_model_request_count: 3
+reserved_model_requests: 21
+reason: codex_turn_failed
+research_reserved_requests: 18
+attempt: 2

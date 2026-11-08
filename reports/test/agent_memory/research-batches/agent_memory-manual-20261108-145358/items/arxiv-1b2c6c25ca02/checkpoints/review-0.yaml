@@ -1,0 +1,30 @@
+binding: bcd25b99f2618dd36b3beaca24d31c1e200d2115c66dc8b505d537a4908d2b24
+result:
+  text: "{\n  \"decision\": \"pass\",\n  \"coverage_acknowledged\": true,\n  \"issues\"\
+    : [\n    {\n      \"severity\": \"info\",\n      \"location\": \"reading_scope、全文及\
+    \ limitations\",\n      \"reason\": \"已核对提供的 A1–A68 抽取材料，范围覆盖正文、参考文献与附录，未截断。候选明确注明未独立复现实验，并正确保留文本抽取不能验证图像内部信息、版式和公式忠实性的限制；未补写反馈消融图或预算曲线中未提供的逐点数值。\"\
+    ,\n      \"suggestion\": \"保留现有阅读范围及未复现实验说明。\"\n    }\n  ],\n  \"checks\": [\n\
+    \    {\n      \"claim_index\": 0,\n      \"verdict\": \"supported\",\n      \"\
+    evidence_ids\": [\"A4\", \"A5\", \"A6\", \"A10\", \"A11\"]\n    },\n    {\n  \
+    \    \"claim_index\": 1,\n      \"verdict\": \"supported\",\n      \"evidence_ids\"\
+    : [\"A13\", \"A14\", \"A17\"]\n    },\n    {\n      \"claim_index\": 2,\n    \
+    \  \"verdict\": \"supported\",\n      \"evidence_ids\": [\"A15\", \"A53\"]\n \
+    \   },\n    {\n      \"claim_index\": 3,\n      \"verdict\": \"supported\",\n\
+    \      \"evidence_ids\": [\"A17\", \"A18\", \"A19\"]\n    },\n    {\n      \"\
+    claim_index\": 4,\n      \"verdict\": \"supported\",\n      \"evidence_ids\":\
+    \ [\"A17\", \"A18\", \"A20\", \"A24\", \"A67\"]\n    },\n    {\n      \"claim_index\"\
+    : 5,\n      \"verdict\": \"supported\",\n      \"evidence_ids\": [\"A23\", \"\
+    A24\", \"A25\", \"A26\", \"A53\"]\n    },\n    {\n      \"claim_index\": 6,\n\
+    \      \"verdict\": \"supported\",\n      \"evidence_ids\": [\"A23\", \"A25\"\
+    , \"A26\", \"A27\", \"A28\", \"A51\"]\n    },\n    {\n      \"claim_index\": 7,\n\
+    \      \"verdict\": \"supported\",\n      \"evidence_ids\": [\"A31\", \"A32\"\
+    , \"A33\", \"A34\"]\n    },\n    {\n      \"claim_index\": 8,\n      \"verdict\"\
+    : \"supported\",\n      \"evidence_ids\": [\"A35\", \"A36\", \"A54\"]\n    },\n\
+    \    {\n      \"claim_index\": 9,\n      \"verdict\": \"supported\",\n      \"\
+    evidence_ids\": [\"A27\", \"A29\", \"A30\", \"A62\", \"A65\"]\n    }\n  ]\n}"
+  model: gpt-6-astra
+  response_id: resp_04c58aa869cb2b19016af092ef636087d0a60eb2f3294491dd
+  usage:
+    input_tokens: 31278
+    output_tokens: 642
+    total_tokens: 31920

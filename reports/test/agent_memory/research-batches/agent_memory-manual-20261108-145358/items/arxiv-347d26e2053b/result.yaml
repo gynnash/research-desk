@@ -1,0 +1,17 @@
+key: arxiv-347d26e2053b
+status: test_accepted
+source_id: paper-05082adc-98f0-4720-9299-0c7262253b57
+coverage: full_text
+revision_count: 1
+models:
+  research: gpt-6.1-sol
+  review: gpt-6-astra
+actual_models:
+- gpt-6-astra
+- gpt-6.1-sol
+reserved_calls: 4
+completed_calls: 4
+report_path: reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-347d26e2053b/report.md
+report_sha256: c6feb6ffdeffa4efc3e3983d318efdbb1075c10f8ff1c0a3ee19cf9c54f661f7
+finished_at: '2026-11-08T15:22:56.429680+00:00'
+production_accepted: false

@@ -1,0 +1,35 @@
+binding: d28d5632f9e26d48fbcea33ac4393a24a3433cacacb4ab651b27f96c455462bd
+result:
+  text: "{\n  \"decision\": \"pass\",\n  \"coverage_acknowledged\": true,\n  \"issues\"\
+    : [\n    {\n      \"severity\": \"info\",\n      \"location\": \"limitations[2]；reading_scope\"\
+    ,\n      \"reason\": \"已按提供的 A1—A124 抽取材料核对摘要、四个分节、全部十条主张与限制说明。实际范围为所提供的正文、附录及参考文献文本，reading_scope\
+    \ 标记未截断；这不包含图像内容的独立核验或实验复现。候选明确保留了这些范围限制，没有利用缺失图形推算数据。\",\n      \"suggestion\"\
+    : \"保留现有阅读范围与未复现实验声明。\"\n    }\n  ],\n  \"checks\": [\n    {\n      \"claim_index\"\
+    : 0,\n      \"verdict\": \"supported\",\n      \"evidence_ids\": [\"A5\", \"A8\"\
+    , \"A11\", \"A57\", \"A59\"]\n    },\n    {\n      \"claim_index\": 1,\n     \
+    \ \"verdict\": \"supported\",\n      \"evidence_ids\": [\"A17\", \"A39\", \"A65\"\
+    , \"A66\", \"A67\", \"A68\", \"A69\"]\n    },\n    {\n      \"claim_index\": 2,\n\
+    \      \"verdict\": \"supported\",\n      \"evidence_ids\": [\"A17\", \"A70\"\
+    , \"A71\", \"A72\", \"A73\", \"A93\", \"A94\"]\n    },\n    {\n      \"claim_index\"\
+    : 3,\n      \"verdict\": \"supported\",\n      \"evidence_ids\": [\"A14\", \"\
+    A15\", \"A75\", \"A76\", \"A77\", \"A80\"]\n    },\n    {\n      \"claim_index\"\
+    : 4,\n      \"verdict\": \"supported\",\n      \"evidence_ids\": [\"A16\", \"\
+    A17\", \"A78\", \"A79\", \"A80\", \"A81\", \"A82\"]\n    },\n    {\n      \"claim_index\"\
+    : 5,\n      \"verdict\": \"supported\",\n      \"evidence_ids\": [\"A19\", \"\
+    A20\", \"A21\", \"A22\", \"A23\", \"A24\", \"A89\", \"A90\", \"A92\", \"A95\"\
+    ]\n    },\n    {\n      \"claim_index\": 6,\n      \"verdict\": \"supported\"\
+    ,\n      \"evidence_ids\": [\"A17\", \"A18\", \"A25\", \"A26\", \"A60\", \"A61\"\
+    , \"A63\", \"A64\", \"A95\", \"A96\"]\n    },\n    {\n      \"claim_index\": 7,\n\
+    \      \"verdict\": \"supported\",\n      \"evidence_ids\": [\"A27\", \"A28\"\
+    , \"A29\", \"A30\", \"A38\", \"A101\", \"A102\"]\n    },\n    {\n      \"claim_index\"\
+    : 8,\n      \"verdict\": \"supported\",\n      \"evidence_ids\": [\"A30\", \"\
+    A31\", \"A32\", \"A33\", \"A34\", \"A35\"]\n    },\n    {\n      \"claim_index\"\
+    : 9,\n      \"verdict\": \"supported\",\n      \"evidence_ids\": [\"A11\", \"\
+    A17\", \"A38\", \"A39\", \"A70\", \"A71\", \"A82\", \"A96\", \"A100\", \"A101\"\
+    , \"A102\"]\n    }\n  ]\n}"
+  model: gpt-6-astra
+  response_id: resp_05b16c93fc86c18c016af093be4f0887d09af2720dd98e0697
+  usage:
+    input_tokens: 51686
+    output_tokens: 796
+    total_tokens: 52482
