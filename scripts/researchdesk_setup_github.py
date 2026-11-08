@@ -60,8 +60,12 @@ def _environment():
     environment.pop('GH_FORCE_TTY', None)
     environment.pop('GH_DEBUG', None)
     environment.pop('CLICOLOR_FORCE', None)
-    # Go's HTTP client uses proxy environment variables. In a macOS terminal
-    # with no explicit override, use the system proxy already used by browsers.
+    apply_system_github_proxy(environment)
+    return environment
+
+
+def apply_system_github_proxy(environment):
+    """Let GitHub subprocesses use the system proxy unless the caller set one."""
     if not any(name in environment for name in runner.PROXY_NAMES):
         proxies = getproxies()
         for protocol in ('http', 'https'):
@@ -71,7 +75,6 @@ def _environment():
             bypass = [host for host in (HOST, 'api.' + HOST) if proxy_bypass(host)]
             if bypass:
                 environment['NO_PROXY'] = ','.join(bypass)
-    return environment
 
 
 def _uses_environment_token():

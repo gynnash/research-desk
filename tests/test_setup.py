@@ -16,6 +16,7 @@ from unittest import mock
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
 import researchdesk_setup as setup
 import researchdesk_setup_github as github_setup
+import researchdesk_setup_obsidian as obsidian_setup
 import researchdesk_workbench as workbench
 
 
@@ -368,6 +369,33 @@ class SetupSchedulePreviewTest(unittest.TestCase):
             self.assertEqual((status, payload), (200, {'next_run': user['automation']['activated_at']}))
             self.assertEqual(path.read_bytes(), existing)
             wizard.submit.assert_not_called()
+
+
+class ObsidianNetworkTest(unittest.TestCase):
+    def test_github_fetch_uses_system_proxy_with_isolated_git_configuration(self):
+        vault = obsidian_setup.ObsidianSetup(workbench.REPOSITORY)
+        proxy = 'http://proxy.fixture:3128'
+        origin = 'https://github.com/fixture/workbench.git'
+        inherited = {'GIT_DIR': '/ignored', 'GIT_CONFIG_COUNT': '1', 'GIT_CONFIG_KEY_0': 'http.proxy',
+                     'GIT_CONFIG_VALUE_0': 'http://ignored', 'GIT_TRACE': '1', 'GH_TOKEN': 'fixture-token'}
+        with (mock.patch.dict(os.environ, inherited, clear=True),
+              mock.patch.object(github_setup, 'getproxies', return_value={'https': proxy}),
+              mock.patch.object(github_setup, 'proxy_bypass', return_value=False),
+              mock.patch.object(obsidian_setup.subprocess, 'run',
+                                return_value=subprocess.CompletedProcess([], 0, stdout=b'')) as run):
+            vault._git(vault.root, 'fetch', '--', origin, network=True, github_auth=True)
+        command, = run.call_args.args
+        environment = run.call_args.kwargs['env']
+        self.assertEqual(environment['HTTPS_PROXY'], proxy)
+        self.assertEqual(environment['GH_TOKEN'], inherited['GH_TOKEN'])
+        self.assertEqual(environment['GIT_CONFIG_GLOBAL'], os.devnull)
+        self.assertEqual(environment['GIT_CONFIG_NOSYSTEM'], '1')
+        self.assertEqual(environment['GIT_TERMINAL_PROMPT'], '0')
+        self.assertFalse((inherited.keys() - {'GH_TOKEN'}) & environment.keys())
+        self.assertIn('core.hooksPath=/dev/null', command)
+        self.assertIn('protocol.allow=never', command)
+        self.assertIn('credential.https://github.com.helper=!gh auth git-credential', command)
+        self.assertEqual(command[-3:], ['fetch', '--', origin])
 
 
 class GitHubScheduleTest(unittest.TestCase):

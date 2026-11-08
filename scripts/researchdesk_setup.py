@@ -414,6 +414,8 @@ class SetupWizard:
     def obsidian_action(self, action):
         try:
             if action == 'obsidian_sync':
+                self.update('obsidian', {**self.snapshot()['obsidian'], 'state': 'running',
+                                         'message': '正在从 GitHub 同步阅读副本…'})
                 self.obsidian.sync()
             else:
                 self.obsidian.open()

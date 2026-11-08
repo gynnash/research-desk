@@ -14,6 +14,8 @@ import sys
 import tempfile
 from urllib.parse import quote, unquote, urlsplit
 
+from researchdesk_setup_github import apply_system_github_proxy
+
 
 class ObsidianSetupError(RuntimeError):
     """An actionable message that is safe to display in the setup UI."""
@@ -107,11 +109,17 @@ class ObsidianSetup:
             # Apply only to this command, and bypass machine-wide URL rewriting.
             command += ['-c', 'credential.helper=', '-c', 'credential.https://github.com.helper=!gh auth git-credential']
             env.update(GIT_CONFIG_GLOBAL=os.devnull, GIT_CONFIG_NOSYSTEM='1')
+            if network:
+                apply_system_github_proxy(env)
         try:
             result = subprocess.run([*command, *args], stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
                                     stderr=subprocess.DEVNULL, env=env,
                                     timeout=90 if network else 10, check=False)
-        except (OSError, subprocess.TimeoutExpired):
+        except subprocess.TimeoutExpired:
+            if network and github_auth:
+                message = '从 GitHub 同步阅读库超时。请检查网络或代理后重试。'
+            raise ObsidianSetupError(message) from None
+        except OSError:
             raise ObsidianSetupError(message) from None
         if result.returncode:
             raise ObsidianSetupError(message)
