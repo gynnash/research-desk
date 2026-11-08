@@ -45,7 +45,7 @@
   let pendingSchedule = null;
   let previewKey = '';
   let previewTimer;
-  let announcementTimer;
+  let announcementFade;
 
   function setText(id, value) {
     const element = byId(id);
@@ -384,7 +384,6 @@
       .find((item) => /^[A-Z0-9]{4}-[A-Z0-9]{4}$/.test(valueOf(item)));
     setText('github-device-code', valueOf(code));
     setVisible('github-device', Boolean(code));
-    externalLink('github-auth-url', code ? githubDeviceUrl : '');
 
     const githubLogin = github.state === 'needs_login' || github.code === 'github_login_required';
     const needsWorkflowScope = !githubLogin && github.workflow_scope === false;
@@ -566,9 +565,18 @@
       selection?.addRange(range);
       message = '文字已选中，可用系统复制快捷键。';
     }
-    window.clearTimeout(announcementTimer);
+    announcementFade?.cancel();
     setText('announcement', message);
-    announcementTimer = window.setTimeout(() => setText('announcement', ''), 2500);
+    const fade = byId('announcement').animate([{opacity: 1}, {opacity: 0}], {
+      duration: 1000, easing: 'ease-in', fill: 'forwards',
+    });
+    announcementFade = fade;
+    fade.onfinish = () => {
+      if (announcementFade !== fade) return;
+      setText('announcement', '');
+      fade.cancel();
+      announcementFade = null;
+    };
   }
 
   for (const [action, button] of buttons) {
@@ -627,7 +635,11 @@
     scheduleError(error);
     if (!error) return runAction('create_schedule', {schedule: weekly});
   });
-  byId('copy-code').addEventListener('click', () => copyValue('github-device-code', '已复制 GitHub 设备码。'));
+  byId('copy-and-authorize').addEventListener('click', () => {
+    if (!byId('github-device-code').textContent) return;
+    copyValue('github-device-code', '已复制 GitHub 设备码。');
+    window.open(githubDeviceUrl, '_blank', 'noopener,noreferrer');
+  });
   byId('copy-path').addEventListener('click', () => copyValue('obsidian-path', '已复制阅读库路径。'));
 
   async function poll() {

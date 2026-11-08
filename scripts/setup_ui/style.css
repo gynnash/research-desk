@@ -142,13 +142,14 @@ h1 { font-size: clamp(25px, 4vw, 32px); font-weight: 680; letter-spacing: -.04em
 .toast {
   position: fixed;
   z-index: 2;
-  inset-inline-end: 16px;
-  inset-block-end: max(16px, env(safe-area-inset-bottom, 0px));
+  inset-inline: 16px;
+  inset-block-start: 35%;
+  inline-size: max-content;
   max-inline-size: calc(100% - 32px);
+  margin-inline: auto;
   padding: 9px 13px;
-  border: 1px solid var(--line);
   border-radius: 8px;
-  background: var(--paper);
+  background: rgb(197 230 207 / 70%);
   color: var(--green);
   box-shadow: 0 4px 16px #25362c24;
   font-size: 13px;

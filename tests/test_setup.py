@@ -367,8 +367,7 @@ class GitHubScheduleTest(unittest.TestCase):
         with (mock.patch.object(github_setup.subprocess, 'Popen') as spawn,
               mock.patch.object(github_setup.selectors, 'DefaultSelector') as selectors,
               mock.patch.object(github_setup.os, 'read') as read,
-              mock.patch.object(github_setup.time, 'monotonic', return_value=100),
-              mock.patch.object(github_setup.webbrowser, 'open') as browser):
+              mock.patch.object(github_setup.time, 'monotonic', return_value=100)):
             process = spawn.return_value
             selector = selectors.return_value.__enter__.return_value
             process.wait.side_effect = [subprocess.TimeoutExpired('gh', 25), 0]
@@ -389,7 +388,6 @@ class GitHubScheduleTest(unittest.TestCase):
                 github._authorize_in_browser(['login'], mock.Mock(), 'fixture')
             self.assertEqual(unavailable.exception.code, 'github_device_code_unavailable')
             self.assertNotIn('private diagnostics', str(unavailable.exception))
-            browser.assert_not_called()
 
     def test_login_resets_deadline_after_device_code(self):
         github = setup.GitHubSetup(workbench.REPOSITORY)
@@ -399,8 +397,7 @@ class GitHubScheduleTest(unittest.TestCase):
               mock.patch.object(github_setup.os, 'read', side_effect=[
                   b'! First copy your one-time code: ABCD-1234\n', b'',
               ]),
-              mock.patch.object(github_setup.time, 'monotonic', return_value=100),
-              mock.patch.object(github_setup.webbrowser, 'open') as browser):
+              mock.patch.object(github_setup.time, 'monotonic', return_value=100)):
             spawn.return_value.wait.return_value = 0
             spawn.return_value.poll.return_value = 0
             selector = selectors.return_value.__enter__.return_value
@@ -409,7 +406,6 @@ class GitHubScheduleTest(unittest.TestCase):
         self.assertEqual(selector.select.call_args_list, [mock.call(25), mock.call(300)])
         self.assertEqual([call.kwargs['code'] for call in notify.call_args_list if 'code' in call.kwargs],
                          ['ABCD-1234'])
-        browser.assert_called_once_with('https://github.com/login/device', new=2)
 
     def test_first_login_requests_workflow_permission(self):
         github = setup.GitHubSetup(workbench.REPOSITORY)

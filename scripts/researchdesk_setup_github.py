@@ -11,7 +11,6 @@ import shutil
 import subprocess
 import time
 from urllib.request import getproxies, proxy_bypass
-import webbrowser
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 import yaml
@@ -25,7 +24,6 @@ RESEARCH_WORKFLOW_PATH = '.github/workflows/' + RESEARCH_WORKFLOW
 SCHEDULE_MARKER = '    # ResearchDesk managed weekly schedule'
 DISABLED_WORKFLOWS = {'disabled_fork', 'disabled_inactivity', 'disabled_manually'}
 HOST = 'github.com'
-DEVICE_URL = 'https://github.com/login/device'
 CLI_INSTALL_URL = 'https://cli.github.com/'
 DEVICE_CODE_TIMEOUT = 25
 LOGIN_TIMEOUT = 300
@@ -382,11 +380,6 @@ class GitHubSetup:
                             code = match[1].decode('ascii').upper()
                             deadline = time.monotonic() + LOGIN_TIMEOUT
                             notify('在 GitHub 授权页面输入这个一次性设备码。', code=code)
-                            # gh prints the verification URL in a noninteractive pipe.
-                            try:
-                                webbrowser.open(DEVICE_URL, new=2)
-                            except (OSError, webbrowser.Error):
-                                pass
             if process.wait(timeout=max(0, deadline - time.monotonic())) != 0:
                 if code is None:
                     raise GitHubSetupError('GitHub CLI 未能取得设备码。请检查 GitHub 网络连接或代理后重试。',
