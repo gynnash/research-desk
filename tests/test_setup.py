@@ -142,37 +142,46 @@ class SetupWizardTest(unittest.TestCase):
             '35 9 * * 1,4', WEEKLY['timezone'], expected_repository='fixture/workbench', require_private=True)
         self.assertEqual(self.wizard.snapshot()['deployment']['state'], 'ready')
 
-    def test_github_authorization_reopens_wizard_after_status_is_ready(self):
+    def test_chatgpt_authorization_url_is_handed_to_the_existing_wizard(self):
+        url = 'https://auth.openai.com/authorize'
         self.wizard.perform('check')
-        self.wizard.return_url = 'http://127.0.0.1:12345/#accounts-heading'
 
-        def open_wizard(url):
-            snapshot = self.wizard.snapshot()
-            self.assertEqual(url, self.wizard.return_url)
-            self.assertEqual(snapshot['github']['state'], 'ready')
-            self.assertTrue(snapshot['github']['workflow_scope'])
-            self.assertIsNone(snapshot['operation'])
-            return True
+        def login(*, open_authorization):
+            open_authorization(url)
+            self.assertEqual(self.wizard.snapshot()['operation']['url'], url)
 
-        with mock.patch.object(setup.webbrowser, 'open', side_effect=open_wizard) as browser:
-            self.wizard.perform('check')
+        self.chatgpt.login.side_effect = login
+        self.wizard.update('operation', {'action': 'chatgpt_login'})
+        with mock.patch.object(setup.webbrowser, 'open') as browser:
+            self.wizard.perform('chatgpt_login')
+        browser.assert_not_called()
+        self.assertEqual(self.wizard.snapshot()['chatgpt']['state'], 'ready')
+        self.assertIsNone(self.wizard.snapshot()['operation'])
+
+    def test_github_authorization_reports_the_completed_attempt_without_opening_a_wizard(self):
+        with mock.patch.object(setup.webbrowser, 'open') as browser:
+            for action in ('github_login', 'github_workflow_auth'):
+                with self.subTest(action=action):
+                    self.wizard.update('operation', {'action': action, 'attempt': action + '-attempt'})
+                    self.wizard.perform(action)
+                    snapshot = self.wizard.snapshot()
+                    self.assertEqual(snapshot['github']['state'], 'ready')
+                    self.assertTrue(snapshot['github']['workflow_scope'])
+                    self.assertIsNone(snapshot['operation'])
+                    self.assertEqual(snapshot['notice']['state'], 'ready')
+                    self.assertEqual(snapshot['notice']['attempt'], action + '-attempt')
             browser.assert_not_called()
-            for action, previous in (
-                ('github_login', {'state': 'needs_login'}),
-                ('github_workflow_auth', {'state': 'ready', 'workflow_scope': False}),
-            ):
-                self.wizard.update('github', previous)
-                self.wizard.update('operation', {'action': action})
-                self.wizard.perform(action)
-            self.assertEqual(browser.call_count, 2)
 
     def test_failed_github_authorization_keeps_wizard_in_place(self):
-        self.wizard.return_url = 'http://127.0.0.1:12345/#accounts-heading'
+        self.wizard.update('operation', {'action': 'github_login', 'attempt': 'failed-attempt'})
         self.wizard.github.login.side_effect = setup.GitHubSetupError('授权超时。')
         with mock.patch.object(setup.webbrowser, 'open') as browser:
             self.wizard.perform('github_login')
         browser.assert_not_called()
-        self.assertEqual(self.wizard.snapshot()['github']['state'], 'needs_login')
+        snapshot = self.wizard.snapshot()
+        self.assertEqual(snapshot['github']['state'], 'needs_login')
+        self.assertIsNone(snapshot['operation'])
+        self.assertNotIn('attempt', snapshot.get('notice', {}))
 
     def test_revoked_workflow_scope_preserves_the_existing_schedule(self):
         github = self.wizard.github

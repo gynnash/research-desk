@@ -258,7 +258,6 @@ class SetupWizard:
             'obsidian': section('idle', 'GitHub 就绪后准备独立阅读库。'),
             'operation': None,
         }
-        self.return_url = None
         self.confirmation_process = None
         self.confirmation_url = None
 
@@ -270,7 +269,7 @@ class SetupWizard:
         with self.lock:
             self.state[name] = value
 
-    def notify(self, message, code=None):
+    def notify(self, message, code=None, *, url=None):
         with self.lock:
             operation = self.state['operation']
             if operation is not None:
@@ -279,6 +278,8 @@ class SetupWizard:
                     operation['code'] = code
                 else:
                     operation.pop('code', None)
+                if url is not None:
+                    operation['url'] = url
 
     def submit(self, action, payload=None):
         if action not in ACTIONS:
@@ -288,6 +289,8 @@ class SetupWizard:
                 return False
             self.state.pop('notice', None)
             self.state['operation'] = {'action': action, 'message': ACTIONS[action]}
+            if action in ('github_login', 'github_workflow_auth'):
+                self.state['operation']['attempt'] = secrets.token_urlsafe(16)
         threading.Thread(target=self.perform, args=(action, payload), daemon=True).start()
         return True
 
@@ -461,7 +464,6 @@ class SetupWizard:
 
     def perform(self, action, payload=None):
         stage = 'setup'
-        return_to_wizard = False
         try:
             if action == 'check':
                 self.inspect()
@@ -475,15 +477,19 @@ class SetupWizard:
                 return
             elif action == 'chatgpt_login':
                 stage = 'chatgpt'
-                self.client().login(announce=lambda _: self.notify(ACTIONS[action]))
+                self.client().login(open_authorization=lambda url: self.notify(ACTIONS[action], url=url))
                 self.update(stage, self.check_chatgpt())
             elif action in ('github_login', 'github_workflow_auth'):
                 stage = 'github' if action == 'github_login' else 'notice'
                 authorize = self.github.login if action == 'github_login' else self.github.authorize_workflow
                 authorize(self.notify)
                 github = self.github.status()
-                self.update('github', github)
-                return_to_wizard = github['state'] != 'needs_login'
+                with self.lock:
+                    self.state['github'] = github
+                    operation = self.state['operation'] or {}
+                    if github['state'] != 'needs_login' and operation.get('attempt'):
+                        self.state['notice'] = section('ready', 'GitHub 授权成功。', action=action,
+                                                       attempt=operation['attempt'])
             elif action == 'github_create':
                 stage = 'github'
                 github = self.github.status()
@@ -542,11 +548,6 @@ class SetupWizard:
                                 'message': '此步骤暂时无法完成，请检查本机环境和网络后重试。'})
         finally:
             self.update('operation', None)
-            if return_to_wizard and self.return_url:
-                try:
-                    webbrowser.open(self.return_url)
-                except (OSError, webbrowser.Error):
-                    pass
 
 
 def create_server(wizard, port=0):
@@ -666,8 +667,6 @@ def main(argv=None):
         wizard = SetupWizard(root)
         with create_server(wizard) as server:
             url = f'http://127.0.0.1:{server.server_port}'
-            if not args.no_browser:
-                wizard.return_url = f'{url}/#accounts-heading'
             os.ftruncate(fd, 0)
             os.write(fd, url.encode('ascii'))
             print('ResearchDesk 配置向导 ' + url, flush=True)

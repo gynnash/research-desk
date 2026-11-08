@@ -354,10 +354,12 @@ class ManualLoginTests(unittest.TestCase):
     setUp = MembershipTests.setUp
     tearDown = MembershipTests.tearDown
 
-    def exercise(self, interruption=None, timeout=600, error=None):
+    def exercise(self, interruption=None, timeout=600, error=None, *, wizard=False, plan_permission=True):
         self.client._discover = mock.Mock(return_value={})
-        self.client._finish_login = mock.Mock(return_value={"authenticated": True}, side_effect=error)
+        self.client._finish_login = mock.Mock(return_value={"authenticated": True, "plan_permission": plan_permission},
+                                              side_effect=error)
         self.announcements = []
+        self.opened_urls = []
         test = self
 
         class Server:
@@ -375,10 +377,15 @@ class ManualLoginTests(unittest.TestCase):
 
             def handle_request(self):
                 path = test.client.profile / "authorization.json"
-                value = json.loads(path.read_text())
-                test.assertEqual(set(value), {"url", "expires_at"})
-                test.assertEqual(path.stat().st_mode & 0o777, 0o600)
-                params = urllib.parse.parse_qs(urllib.parse.urlsplit(value["url"]).query)
+                if wizard:
+                    test.assertFalse(path.exists())
+                    url, = test.opened_urls
+                else:
+                    value = json.loads(path.read_text())
+                    test.assertEqual(set(value), {"url", "expires_at"})
+                    test.assertEqual(path.stat().st_mode & 0o777, 0o600)
+                    url = value["url"]
+                params = urllib.parse.parse_qs(urllib.parse.urlsplit(url).query)
                 test.assertNotIn("code_verifier", params)
                 test.assertNotIn("id_token_hint", params)
                 test.assertEqual(params["code_challenge_method"], ["S256"])
@@ -391,12 +398,14 @@ class ManualLoginTests(unittest.TestCase):
                 handler.end_headers = mock.Mock()
                 handler.wfile = io.BytesIO()
                 handler.do_GET()
+                test.callback_headers = dict(call.args for call in handler.send_header.call_args_list)
+                test.callback_body = handler.wfile.getvalue()
 
         with mock.patch.object(membership.http.server, "HTTPServer", Server), \
                 mock.patch.object(membership.webbrowser, "open") as browser:
             try:
-                return self.client.login(open_browser=False, timeout_seconds=timeout,
-                                         announce=self.announcements.append)
+                return self.client.login(open_browser=wizard, timeout_seconds=timeout, announce=self.announcements.append,
+                                         open_authorization=self.opened_urls.append if wizard else None)
             finally:
                 browser.assert_not_called()
                 self.assertFalse((self.client.profile / "authorization.json").exists())
@@ -409,6 +418,28 @@ class ManualLoginTests(unittest.TestCase):
                          str(self.client.profile / "authorization.json"))
         self.assertNotIn("https://auth.openai.com", json.dumps(announcement))
         self.client._finish_login.assert_called_once()
+        self.assertEqual(self.callback_headers["Content-Type"], "text/plain; charset=utf-8")
+        self.assertNotIn(b"<script>", self.callback_body)
+
+    def test_wizard_success_can_close_its_tab_after_three_seconds(self):
+        self.assertTrue(self.exercise(wizard=True)["plan_permission"])
+        self.assertEqual(len(self.opened_urls), 1)
+        self.assertTrue(self.opened_urls[0].startswith(membership.AUTHORIZE + "?"))
+        self.assertNotIn(self.opened_urls[0], json.dumps(self.announcements))
+        self.assertEqual(self.callback_headers["Content-Type"], "text/html; charset=utf-8")
+        self.assertEqual(self.callback_headers["Referrer-Policy"], "no-referrer")
+        self.assertIn("手动关闭".encode("utf-8"), self.callback_body)
+        script = self.callback_body.split(b"<script>", 1)[1].split(b"</script>", 1)[0]
+        self.assertIn(b"setTimeout(() => window.close(), 3000)", script)
+        self.assertIn(b"history.replaceState", script)
+        digest = base64.b64encode(hashlib.sha256(script).digest()).decode("ascii")
+        self.assertIn(f"script-src 'sha256-{digest}'", self.callback_headers["Content-Security-Policy"])
+
+    def test_wizard_missing_permission_leaves_the_result_page_open(self):
+        self.assertFalse(self.exercise(wizard=True, plan_permission=False)["plan_permission"])
+        self.assertEqual(self.callback_headers["Content-Type"], "text/plain; charset=utf-8")
+        self.assertIn("缺少 ChatGPT 会员用量授权".encode("utf-8"), self.callback_body)
+        self.assertNotIn(b"<script>", self.callback_body)
 
     def test_manual_request_removed_after_interruption(self):
         with self.assertRaises(KeyboardInterrupt):

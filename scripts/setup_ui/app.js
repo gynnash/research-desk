@@ -46,6 +46,7 @@
   let previewKey = '';
   let previewTimer;
   let announcementFade;
+  let chatgptAuthorizationTab = null;
 
   function setText(id, value) {
     const element = byId(id);
@@ -368,6 +369,10 @@
     const chatgptLink = httpsUrl(chatgptRunning?.url || chatgpt.url, ({hostname}) => (
       hostname === 'chatgpt.com' || hostname === 'openai.com' || hostname.endsWith('.openai.com')
     ));
+    if (chatgptAuthorizationTab && chatgptRunning?.url && chatgptLink) {
+      if (!chatgptAuthorizationTab.closed) chatgptAuthorizationTab.location.replace(chatgptLink);
+      chatgptAuthorizationTab = null;
+    }
     const chatgptLogin = ['needs_login', 'not_ready', 'blocked', 'failed', 'error'].includes(chatgpt.state);
     setButton('chatgpt_login', chatgptLogin);
     externalLink('chatgpt-auth-url', chatgptLink);
@@ -459,6 +464,11 @@
   }
 
   function render() {
+    if (chatgptAuthorizationTab && requestedAction !== 'chatgpt_login'
+        && snapshot?.operation?.action !== 'chatgpt_login') {
+      chatgptAuthorizationTab.close();
+      chatgptAuthorizationTab = null;
+    }
     const issue = connectionIssue || actionIssue;
     setText('connection-error', issue);
     setVisible('connection-error', Boolean(issue));
@@ -520,6 +530,14 @@
     if (!snapshot?.csrf) {
       await refresh();
       return;
+    }
+    if (action === 'chatgpt_login') {
+      chatgptAuthorizationTab = window.open('about:blank', '_blank');
+      if (chatgptAuthorizationTab) {
+        chatgptAuthorizationTab.opener = null;
+        chatgptAuthorizationTab.document.title = 'ResearchDesk · ChatGPT 授权';
+        chatgptAuthorizationTab.document.body.textContent = '正在准备 ChatGPT 授权页面…';
+      }
     }
     requestedAction = action;
     render();

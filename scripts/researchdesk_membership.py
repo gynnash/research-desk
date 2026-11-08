@@ -37,6 +37,17 @@ SCOPES = "openid profile email offline_access resource.invoke " + DIRECT_SCOPE
 DEFAULT_PROFILE = Path.home() / "Library/Application Support/ResearchDesk/chatgpt"
 SAFE_CODE = re.compile(r"^[a-z][a-z0-9_]{0,79}$")
 CLIENT_ID = re.compile(r"^oaiapp_[A-Za-z0-9_-]{1,200}$")
+_CALLBACK_CSP = "default-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'"
+_CLOSE_SCRIPT = ("setTimeout(() => window.close(), 3000);"
+                 "history.replaceState(null, '', '/auth/callback');")
+_CLOSE_SCRIPT_HASH = base64.b64encode(hashlib.sha256(_CLOSE_SCRIPT.encode("utf-8")).digest()).decode("ascii")
+_WIZARD_SUCCESS_HTML = (
+    '<!doctype html><html lang="zh-CN"><head><meta charset="utf-8">'
+    '<meta name="viewport" content="width=device-width, initial-scale=1">'
+    '<title>ChatGPT 授权成功</title></head><body><h1>ChatGPT 授权成功</h1>'
+    '<p>此页面将在 3 秒后关闭。如果页面仍然打开，请手动关闭并返回 ResearchDesk 向导。</p>'
+    f'<script>{_CLOSE_SCRIPT}</script></body></html>'
+).encode("utf-8")
 
 
 class MembershipError(RuntimeError):
@@ -439,13 +450,14 @@ class MembershipClient:
         return {"authenticated": True, "identity_verified": True,
                 "plan_permission": DIRECT_SCOPE in record["scopes"]}
 
-    def login(self, timeout_seconds=600, open_browser=True, announce=None):
+    def login(self, timeout_seconds=600, open_browser=True, announce=None, *, open_authorization=None):
         """Wait for official login; manual mode exposes only a protected request file.
 
         The file contains the public authorization URL and expiry, never the PKCE
         verifier. It is removed on success, failure, timeout, or interruption.
+        The setup wizard can supply a URL handoff to use its own browser tab.
         """
-        announce = announce or (lambda value: print(json.dumps(value), flush=True))
+        wizard_browser = open_authorization is not None
         self._discover()
         with self._lock():
             result = {}
@@ -462,14 +474,26 @@ class MembershipClient:
                     if result:
                         handler.send_error(409)
                         return
+                    content_type = "text/plain; charset=utf-8"
+                    policy = _CALLBACK_CSP
                     try:
-                        result["status"] = self._finish_login(pending, parsed.query)
-                        body = b"ResearchDesk: authorization finished. You may close this tab."
+                        status = self._finish_login(pending, parsed.query)
+                        result["status"] = status
+                        if wizard_browser and status.get("authenticated") is True and status.get("plan_permission") is True:
+                            content_type = "text/html; charset=utf-8"
+                            policy += f"; script-src 'sha256-{_CLOSE_SCRIPT_HASH}'"
+                            body = _WIZARD_SUCCESS_HTML
+                        elif wizard_browser:
+                            body = "缺少 ChatGPT 会员用量授权。请返回 ResearchDesk 向导。".encode("utf-8")
+                        else:
+                            body = b"ResearchDesk: authorization finished. You may close this tab."
                     except MembershipError as exc:
                         result["error"] = exc
                         body = b"ResearchDesk: authorization failed. Return to the local app."
                     handler.send_response(200)
-                    handler.send_header("Content-Type", "text/plain; charset=utf-8")
+                    handler.send_header("Content-Type", content_type)
+                    handler.send_header("Content-Security-Policy", policy)
+                    handler.send_header("X-Content-Type-Options", "nosniff")
                     handler.send_header("Cache-Control", "no-store")
                     handler.send_header("Referrer-Policy", "no-referrer")
                     handler.send_header("Content-Length", str(len(body)))
@@ -484,16 +508,21 @@ class MembershipClient:
                 request_file = self.profile / "authorization.json"
                 manual_request_written = False
                 try:
-                    opened = webbrowser.open(url, new=1) if open_browser else False
+                    if wizard_browser:
+                        open_authorization(url)
+                    opened = webbrowser.open(url, new=1) if open_browser and not wizard_browser else False
                     announcement = {"state": "awaiting_official_browser_login",
                                     "browser_opened": bool(opened), "callback_host": "127.0.0.1",
                                     "timeout_seconds": timeout_seconds}
-                    if not open_browser:
+                    if not open_browser and not wizard_browser:
                         self._write("authorization.json", {"url": url, "expires_at": pending["expires_at"]})
                         manual_request_written = True
                         announcement["authorization_request_file"] = str(request_file)
-                    announce(announcement)
-                    if open_browser and not opened:
+                    if announce is not None:
+                        announce(announcement)
+                    elif not wizard_browser:
+                        print(json.dumps(announcement), flush=True)
+                    if open_browser and not wizard_browser and not opened:
                         raise MembershipError("system_browser_unavailable")
                     while not result and time.monotonic() - started < min(timeout_seconds, 600):
                         server.handle_request()
