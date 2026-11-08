@@ -1,0 +1,664 @@
+schema_version: 2
+mode: codex_insight_admission
+topic: agent_memory
+cycle_id: agent_memory-manual-20261108-145358
+candidate:
+  insights:
+  - body: Memory Tax 显示完整保存与可访问性可以分离；HABIT-Bench 显示相关会话命中不等于恢复候选、确认、替换及有效时间；MemComposer
+      的固定集合重排进一步表明，相同内容的使用效果还取决于组合与顺序。由此推断，单条事实的保留率和相关性不足以描述记忆效用，应增加对当前决策所需关系是否完整的评测。该判断是跨研究综合推断，并非统一实验已经证实的结论。
+    source_ids:
+    - R2
+    - R3
+    - R4
+    title: 记忆优化应关注支持决策的证据关系，而不只关注单条内容
+  - body: 原文检索可补回加工导致的信息损失，但 HABIT-Bench 的理想证据实验说明，补齐原文后仍可能无法恢复有效状态。因此，原文回退与条件关系恢复应分别设计、分别验证。一个可检验方向是让摘要或习惯条目连接来源、用户确认、适用范围、有效时间和例外，再围绕当前问题补齐关系；目前材料尚未验证这一组合架构的端到端收益。
+    source_ids:
+    - R2
+    - R4
+    title: 加工记忆可以作为可修订的决策视图，原始历史承担恢复作用
+  - body: MemSteer 用证据是否保存、能否恢复、是否进入上下文定位修改环节，显式诊断比单纯附加证据更有帮助。然而，HABIT-Bench 中证据已提供仍大量答错，MemComposer
+      中相同集合因顺序改变而产生不同结果，说明证据齐全后的失败还可能涉及状态恢复、有效条件判断与呈现方式。工程上可保留粗粒度诊断用于搜索，再用固定证据、固定集合和目标时间对照区分下游瓶颈，避免把所有问题归为回答模型能力不足。
+    source_ids:
+    - R1
+    - R3
+    - R4
+    title: 阶段诊断适合指导优化，但“回答失败”仍需细分
+  outcome: ready
+  report:
+    body: '长期记忆系统经常把“找到相关历史”当作成功的标志。但智能体真正需要解决的问题是：这些历史能否支持当前答案或行动？用户曾经选择某个方案，不代表今天仍然适用；过去失败的轨迹，也可能包含当前任务需要的正确操作。记忆的价值因此不能只用存储量、摘要质量或单条相关性判断。
+
+
+      本批四项研究共同揭示了一个值得追问的断点：历史经过加工、检索并进入上下文之后，支持决策的关系可能已经消失。Memory Tax 检查加工损失，HABIT-Bench
+      检查有效条件的恢复，MemComposer 学习如何组合经验，MemSteer 则尝试为这些环节建立优化反馈。它们研究的任务与控制条件不同，不能拼成统一排行榜，却可以帮助我们解释：为什么记忆内容看似正确，最终行为仍然错误。
+
+
+      ## 先确认：加工记忆究竟增加了什么
+
+
+      [Memory Tax](https://arxiv.org/abs/2610.34073v1)提出一个必要的参照：直接检索原始历史已经能解决多少问题？论文把记忆答对、单轮
+      RAG 答错的题称为收益，把 RAG 答对、记忆答错的题称为“记忆税”。两者相减才是准确率的净变化。这里的税指正确性损失，并非 token 费用，而且取决于参照系统。
+
+
+      这个参照并不简陋。原始历史按对话轮次切块，不跨会话边界，附带时间；查询结合 BM25、稠密检索和重排。双轮版本还会判断证据是否足够，再提出后续查询。在
+      Qwen3.6-27B 的 LongMemEval-s 实验中，单轮与双轮 RAG 准确率分别为77.6%和81.4%，A-Mem 为79.4%。同一个记忆系统是否“超过
+      RAG”，会随检索参照改变。论文逐题计算收益与税使用单轮参照，不能与主表中的双轮参照混用。
+
+
+      作者进一步用理想证据回放分离两类问题：只提供支撑答案的原始轮次，再只提供对应的加工记忆。如果后者仍然明显较差，就需要检查构建时的信息损失；如果理想记忆表现接近原始证据、正常检索却远低于两者，主要障碍便可能在访问。MAGMA、LightMem
+      出现了后一种现象，说明“保存下来”与“需要时取出来”是不同能力。
+
+
+      人工标注也显示，加工确实可能丢失信息。在跨三个基准抽样的500个原始轮次中，MemoryOS 的信息完全保留比例为98.4%，SimpleMem 为65.6%。但完整保留率本身仍不能保证回答正确：一个轮次拆成多条后，关键部分可能排得很靠后；事实并入长画像后可能被稀释；改写还可能改变查询与证据的匹配关系。
+
+
+      这并不意味着压缩和抽象没有价值。短事实可以减少干扰，跨会话重组可以帮助多跳推理。真正需要检验的是：加工所节省的阅读与推理，是否大于它引入的信息和访问损失。
+
+
+      ## 检索命中的是观察，行动需要的是有效状态
+
+
+      [HABIT-Bench](https://arxiv.org/abs/2610.24520v2)把问题推进了一步：即使找到相关对话，系统能否恢复当时有效、适用于当前情境的用户默认行为？
+
+
+      基准包含114名合成用户、37,152个会话和3,328道四选一行动题，覆盖饮食、金融、软件与旅行。每道题同时规定历史可见截止点和决策目标时间。系统可能看到了2025年的替代流程，却需要回答2023年应该采用什么。金融与软件中的典型结构是：早期会话列出有序候选，较晚回复用序号确认选择，之后另一组列表与确认建立替代流程。只保存“用户选了第二项”，甚至只保存最新方案，都不足以回答历史问题。
+
+
+      这里需要保留的不只是事实内容，还有指代、确认、替换和生效关系。助手提出过的建议不等于用户接受；单次例外不自动改写长期默认；某个环境中的软件处理方法，也不能直接迁移到另一个环境。因此，所谓习惯记忆部分涉及行为归纳，部分涉及跨会话流程状态维护，不能把四个领域都解释为从重复行为统计偏好。
+
+
+      结果说明这些关系尚未被稳定处理。八种记忆方法在 Qwen3-235B-A22B 下的最佳四领域宏平均准确率为33.06%，BM25 为32.50%；GLM-5.3-Flash
+      下分别为33.61%和稠密检索的33.21%。这表明，在论文适配器、共享回答器与预算条件下，更复杂的记忆流水线没有稳定转化为更好的行动选择。
+
+
+      尤其值得注意的是，直接提供标注证据后，Qwen 主模型各领域准确率仍只有39.26%—58.25%。相关材料到场，仍不等于状态已经恢复。另一个提供私有习惯状态的控制达到98%以上，但它同时暴露了所需行动，因此不能把两者差距全部解释成某种记忆表示的收益。
+
+
+      来源追踪进一步揭示了局部命中的误导性：六种可追溯方法的前五条来源会话至少命中一条正证据的比例为37.77%—41.44%，标注证据召回率却只有11.17%—13.89%。找到后来的确认，却漏掉早期候选列表，就是“相关但不充分”的典型情形。这些指标的适用题目集合不同，不能直接相减来分摊错误原因。
+
+
+      ## 上下文组装本身也是决策
+
+
+      即使记忆完整、检索相关，把所有候选按相似度排列也未必最好。[MemComposer](https://arxiv.org/abs/2610.21091v2)研究的是程序性经验：历史轨迹与复盘如何帮助执行器完成多步工具任务。
+
+
+      它先用当前开场请求检索十条候选，组装器联合读取候选摘要，决定选哪些、选多少以及如何排序，允许一条也不选。选中后，完整轨迹与复盘才按指定顺序进入执行器上下文。训练期间，记忆库、检索器和执行器全部冻结，优化的是读取与呈现策略。
+
+
+      训练信号来自完整任务交互。ExPO 对每个输入采样八个组装序列，每个序列运行八次，用平均成功率扣除数量和格式惩罚后进行组内比较。这样，学习目标就从“这条经验像不像当前请求”变成“这一组经验能否改善执行”。互补信息、冗余和相互干扰都可能影响奖励。
+
+
+      在三个客服领域中，Qwen3-4B 执行器的平均成功率达到50.8%，比该指标最强基线高5.9个百分点。更能隔离机制的是固定集合实验：保持选中的记忆完全相同，只改用相似度或长度规则排序，学习顺序领先3.8—8.5个成功率百分点。这说明记忆效用不是集合成员独立分数的简单相加，呈现位置也会改变执行。
+
+
+      不过，每领域只有20—40个测试任务，分执行器看，相对最强基线的成功率增益置信区间仍包含零；组装器也无法选择候选池之外的经验。论文报告执行器记忆 token
+      减少16.9%和4.9%，没有计入组装器读取候选与训练模拟的全部成本。因此，这项工作支持把组装作为独立优化层，尚不能证明端到端成本必然下降，更不能代替持续写入和状态更新。
+
+
+      ## 优化反馈必须知道错误发生在哪里
+
+
+      要改善上述环节，仅有一个最终正确率往往不够。[MemSteer](https://arxiv.org/abs/2610.39276v1)尝试从未标注用户历史生成问题、参考答案与来源证据，让系统既能评分，也能追查失败位置。
+
+
+      生成流程先抽取相互关联的记录，规划答案及每项事实的来源，再生成问题。之后进行语义审计，并让看不到参考答案的盲读器恢复答案、引用所有选定证据。通过检查的监督被划分为互斥训练集与验证集：前者帮助提出修改，后者选择设计。
+
+
+      它的诊断逻辑很直接：答错但所需证据已经完整进入最终上下文，归为回答失败；证据缺失且无法从当前记忆恢复，归为存储失败；仍可恢复却没有进入上下文，归为检索失败。提案器据此修改存储、检索或上下文构造，在固定回答器、提示和最终上下文预算下验证，只有准确率严格上升才接受。
+
+
+      在 ATM-Bench 上，主集 Question Score 从54.9升至68.3。作者还报告，显式阶段诊断比仅补充参考证据带来更大改善。这个发现的意义在于：证据要转化成可操作的故障信息，才更容易指导优化。
+
+
+      但这仍是工程归类，不能当作完备的因果分解。“证据齐全仍答错”可能包含时间状态恢复、有效条件判断或上下文呈现问题。生成监督也没有人工认证；盲答成功只说明答案可恢复，并不证明每条引用都必要。生成题反映历史中容易构造的问题，也不等于用户未来真实需求。
+
+
+      用户差异同样不能忽略。一个六用户共享设计迁移到留出用户 Martin 后，准确率从基础系统的41.2%降至37.7%；再用该用户历史生成监督继续优化，达到44.3%。这支持目标用户反馈的价值，也限制了“一套记忆设计普遍适用”的期待。
+
+
+      ## 新的工程判断：加工记忆应是可回溯、可修订的决策视图
+
+
+      综合这些结果，我们推断：值得优化的单位，可能不是单条摘要或事实，而是“足以支持一次决策的证据关系”。事实保存完整，却漏掉候选与确认的连接，无法恢复选择；默认行为检索正确，却缺少例外与有效时间，仍会错误应用；经验集合相同，呈现顺序不同，也会改变执行结果。
+
+
+      由此可以形成一个待验证的设计：原始记录保留来源和时间；加工层形成便于查询的默认行为或经验，同时连接支持观察、用户确认、适用范围、替换与例外；读取层围绕当前问题补齐缺失关系，再决定组合与顺序。加工结果是随证据修订的决策视图，而原始历史提供恢复路径。
+
+
+      其中，原文回退是 Memory Tax 作者明确提出并进行概念验证的方向；将它与有效条件、证据关系及组装策略结合，是我们的综合推断，四篇论文尚未共同验证这一架构。验证时应固定回答器与总预算，对比纯摘要、摘要加原文回退、关系补全和可训练组装，分别观察证据链完整度、状态判断、行动正确率与延迟。若只提高相关会话命中率，却没有改善后续行动，就不能宣称解决了记忆使用问题。
+
+
+      成本也必须按生命周期核算。HABIT-Bench 的固定32用户子集中，A-MEM 构建累计消耗1.078亿 LLM token，查询为339万；这说明低查询成本可能建立在昂贵预处理之上。是否值得提前加工，取决于记忆会被复用多少次、更新多频繁，以及查询是否集中在可预测需求上。
+
+
+      本批材料呈现出一个共同研究方向：把记忆设计从“如何存更多”推进到“如何证明这些历史支持当前决策，并用失败修订它”。这不是跨时间趋势判断；清单没有可核实的相关历史。上述分析依据已审阅总结与对应原文中的可核对机制和结果，未独立复现实验；合成用户、静态库存、小测试集及不同预算，也都限制了结论向真实长期智能体的外推。'
+    title: Agent 记忆为何“找到了也用不对”：从保存事实到恢复决策依据
+  topics:
+  - angle: 固定回答器与总预算，区分加工损失、证据链缺失和证据到场后的状态判断失败，验证原文回退与关系补全的独立收益。
+    audience: 构建个人助理与长期记忆系统的工程师、评测研究者
+    source_ids:
+    - R1
+    - R2
+    - R4
+    title: 原文回退能修复多少长期记忆错误？
+bundle:
+  topic: agent_memory
+  cycle_id: agent_memory-manual-20261108-145358
+  sources:
+  - title: 'MemSteer: Turning User Histories into Supervision for Agent Memory Optimization'
+    url: https://arxiv.org/abs/2610.39276v1
+    source_id: paper-6b4bfd57-ab17-43ef-9ddf-167dd9640d96
+    summary_path: summary/agent_memory/agent_memory-manual-20261108-145358/arxiv-1b2c6c25ca02.md
+    original_path: collection/agent_memory/agent_memory-manual-20261108-145358/items/arxiv-1b2c6c25ca02/original.md
+    published_at: '2026-10-29'
+    research_date: '2026-11-08'
+    coverage: full_text
+    id: R1
+    role: current
+  - title: 'Memory Tax: Dissecting the Net Value of Agent Memory'
+    url: https://arxiv.org/abs/2610.34073v1
+    source_id: paper-bc2516cd-42b2-41d1-ace2-36b96b38f624
+    summary_path: summary/agent_memory/agent_memory-manual-20261108-145358/arxiv-244ddaafb793.md
+    original_path: collection/agent_memory/agent_memory-manual-20261108-145358/items/arxiv-244ddaafb793/original.md
+    published_at: '2026-10-25'
+    research_date: '2026-11-08'
+    coverage: full_text
+    id: R2
+    role: current
+  - title: 'MemComposer: Learning to Assemble Memories for LLM Agents via Reinforcement
+      Learning'
+    url: https://arxiv.org/abs/2610.21091v2
+    source_id: paper-05082adc-98f0-4720-9299-0c7262253b57
+    summary_path: summary/agent_memory/agent_memory-manual-20261108-145358/arxiv-347d26e2053b.md
+    original_path: collection/agent_memory/agent_memory-manual-20261108-145358/items/arxiv-347d26e2053b/original.md
+    published_at: '2026-10-15'
+    research_date: '2026-11-08'
+    coverage: full_text
+    id: R3
+    role: current
+  - title: 'HABIT-Bench: Evaluating Habit Induction from Longitudinal Weak Evidence
+      in Agent Memory'
+    url: https://arxiv.org/abs/2610.24520v2
+    source_id: paper-42dd1732-5f39-43e7-9c83-e5797c4a0321
+    summary_path: summary/agent_memory/agent_memory-manual-20261108-145358/arxiv-b3ecb03a2b96.md
+    original_path: collection/agent_memory/agent_memory-manual-20261108-145358/items/arxiv-b3ecb03a2b96/original.md
+    published_at: '2026-10-17'
+    research_date: '2026-11-08'
+    coverage: full_text
+    id: R4
+    role: current
+models:
+  generation: gpt-6.1-sol
+  review: gpt-6-astra
+input_hashes:
+  collection/agent_memory/agent_memory-manual-20261108-145358/items/arxiv-1b2c6c25ca02/original.md: 184f29dbeca29fb50909609c5760ecbe48fad3293d79b76370bea3c32d770fa7
+  collection/agent_memory/agent_memory-manual-20261108-145358/items/arxiv-1b2c6c25ca02/original.yaml: 99bddaed0f913a291bb440acf95b67c5bbc58e8cc29fcda2fe2d10d95215e860
+  collection/agent_memory/agent_memory-manual-20261108-145358/items/arxiv-1b2c6c25ca02/original.yaml.sha256: d7f73e18f1d63a11675b403a8e86fc1d574e0b55f4d8e14131fb0a0f17124372
+  collection/agent_memory/agent_memory-manual-20261108-145358/items/arxiv-244ddaafb793/original.md: 4ca3ca50b131b8b4542185625738f146dcc25ebfb109594b2c8e69659817424b
+  collection/agent_memory/agent_memory-manual-20261108-145358/items/arxiv-244ddaafb793/original.yaml: 8ffbff7412ffa25e517c9b0fbda14b1816b93079150d68d50bd6ee202ccc0b26
+  collection/agent_memory/agent_memory-manual-20261108-145358/items/arxiv-244ddaafb793/original.yaml.sha256: c8d4042a0f3aae139b9148c308c42fd6520c85085c04893f1d5c831db947299a
+  collection/agent_memory/agent_memory-manual-20261108-145358/items/arxiv-347d26e2053b/original.md: c44cfc81f946775ff83e0cb9578661ed5eb16a3cd85aacc48afddfd72945c934
+  collection/agent_memory/agent_memory-manual-20261108-145358/items/arxiv-347d26e2053b/original.yaml: d6f37bc9452b071cf50a36db125201d06dd910c38cf99336d0462269d72425ec
+  collection/agent_memory/agent_memory-manual-20261108-145358/items/arxiv-347d26e2053b/original.yaml.sha256: f1b9e53d8589f4c1f9191d5e11c99802ea042af2ca4944d12c7c440e1ca3bfa7
+  collection/agent_memory/agent_memory-manual-20261108-145358/items/arxiv-b3ecb03a2b96/original.md: d5777c631ffb22fd94f4e7c3ef8b1243677809d3ded17e8fa8b9e5e0a127c061
+  collection/agent_memory/agent_memory-manual-20261108-145358/items/arxiv-b3ecb03a2b96/original.yaml: 19ef90be4fe2f10df0c46b0d8abe8d673a2961b6ea2b061b08a13e3036626aa0
+  collection/agent_memory/agent_memory-manual-20261108-145358/items/arxiv-b3ecb03a2b96/original.yaml.sha256: b176e164e6cde41db751f74b08cde5cb4d5eb9314f60eeb627e5d41f1c0b00b5
+  config/local/automation/agent_memory-manual-20261108-145358/topics.yaml: a252b9013b241b2fcf83015269e4c28a9718c0575b62bd6f43b039f2da202c2b
+  reports/test/agent_memory/cycles/agent_memory-manual-20261108-145358/configs/research.yaml: 7c19bca7b305d081c7725c8ce3a7d52515b8f98d0dca449a0423751b8235c170
+  reports/test/agent_memory/cycles/agent_memory-manual-20261108-145358/configs/research.yaml.sha256: bee237d6a0e3b52d153f40a909312b62091cfa840dbef8689f86690942c3d3aa
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000001.yaml: b88ed046b7253c20ea54745f6f932fa716fb953769973f8f6d9b8d7fe1af82eb
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000001.yaml.sha256: 1766a69247cd22f02e913029f7da19f79d085908abac0d426ddcaffefd0fd6bf
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000002.yaml: ec4466799038ee0304df6b575f6d977c436e857e8a90659bc5a2367e8b7daae2
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000002.yaml.sha256: e4b037a1c8268b85ea50acb48d0c2e014d3dab3997fa7688fe9a24c2f8e67b65
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000003.yaml: d57e48ab41b47e2a7dc8cc2f2ba368c04096734e61717853253a2dd57c7de928
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000003.yaml.sha256: 836883a07a7606a9a5087bf7b5154b60d794676b75d0d92b78c495d495f90100
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000004.yaml: 0e3b7ab150f70ff1cbfca8ccbf5fff84b194118118c3cc1f2829c908ce55e424
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000004.yaml.sha256: 24ff062257fdc06a1b4bb3ad4969c5cffa90a1c275799c5c7d04d320577a6221
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000005.yaml: 943a96865bbe0ad3c8d03130609135fda860d48ece8fe6884344a94f09648b59
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000005.yaml.sha256: 45a47d7f504042f3fedc73f6026c2e6b1a48e1dbfa75a5638de66331a8c305b5
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000006.yaml: 944400ae4cddb33302bb9ef8c9446fb414436c8c3b61047406b9d7ecab319e70
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000006.yaml.sha256: 1fd91587552a71f2c196807f990fbbb448e8292fae989106f314ae6af8dbde26
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000007.yaml: 33293c4e84d9c79f2b68c1d3cd589db45e52d582b5093f75ec59f95d6d8913ce
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000007.yaml.sha256: b76bbfb99a892ea38f4d10f125eb78cf42b62d8f8ced434417dde0a6b0fd0491
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000008.yaml: 924950304397a008fd453def1ab39669c3b16f65ecc861b72f9a3d0b5d0c2580
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000008.yaml.sha256: 732786bcd3f6f1232f4e2782b08c7bd2ec61c83de55115da5323a4b7b488cfb8
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000009.yaml: bfa1e8e573da9f05ba0005e9ad1baa4c13e4ba5e6e9a553ec74d1352b5b8ba79
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000009.yaml.sha256: 1011af89636350dc01c602c68b628c6d14bc647b476a1ccbfa05fda619266f8e
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000010.yaml: 5dbaf11530fd9052bdb2036cfcf369de00c967a5f5df3e38f62cb005fc6f5e1b
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000010.yaml.sha256: fe328bea4794019a1bd120f3b60a305916bc0b9bd7cdbeceaa1393564b95779e
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000011.yaml: 981f54a6cfe3a23e72d5b83b1e27b5a712c46c75aa24a0950000cc2fa417cc81
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000011.yaml.sha256: cacf6079d5f2cb274bf43b122d1047fc461c5704a8dd295e119c63f3c642c357
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000012.yaml: 898c4ade23278a8b1e7654302fd841b46ca4a31a30600553352f8873583e98d3
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000012.yaml.sha256: 42b280eaa2c0d32a84e8e08d94e02a05b08e8478231d187764bdbaf7bf3bed6e
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000013.yaml: 44a5988862ffb4441e12c528a1908e25aa8f47a6bff74b7c34844be896e13ca7
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000013.yaml.sha256: 838014b2d3949acd07d4b9e364f4732edc52bd1450a756bb49ae5a4351c967fb
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000014.yaml: 7e772b327800df6e7efecc2405b711e747c27bd47035bfc52cac7d75d2bcd918
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000014.yaml.sha256: 6f485a0b9a545916e133924f86271a3025e9fe7b71a76ea3005a14f6feb832ea
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000015.yaml: f5e37ffcf4123c0dedbd0a5833fb12290d3acec57c7979060b45563442a7f4bb
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000015.yaml.sha256: 3e841f0cfffde8f71a6b4c3b702e9929a283b7ecec07996f15536218a1ce0ce0
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000016.yaml: 78d1479223ecdae4487867d9c3affb8174d31b5335fac1c6363c572141c6c697
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000016.yaml.sha256: b906a03be347909d5bb6450fa7d8a3f9d72c669bb6d5de97ce795440de55f1f0
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000017.yaml: a6b493965dcdf53473029b566b9244545c0642aea49a599bfdbbab3f3b5ab895
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000017.yaml.sha256: 93c09681499566f835ded904361101f5543a9f110fa4f27a235bbf9ae06a9091
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000018.yaml: fc8d68db59bed185420e51b1b238a9ff21e5c4abc180724df29c631fb03f696f
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000018.yaml.sha256: b17b53b8ac45f4976f8a8e716c4fb05d6a9f90cba069be573bacf5aa1c3cb65d
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000019.yaml: ee51eee3af841df85ed1f9394a4c4e8de1b3fa22327e4dc576bb105ab4d6f63b
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000019.yaml.sha256: 46db655af47f9904230da0fbd2b48a4cfc4748582bfd45bd8aa0323518574b2e
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000020.yaml: cfcfad775d7601d5f086e21e1e47b5071925a831d8006998907be3c126b44e70
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000020.yaml.sha256: 1497ad7faddbd457d91a74ad52382cb8c936d740f4a4a035d143a0a8ecd6b261
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000021.yaml: b6da027b98281de9fa56c1c6905861e7802e5d4691cbd8b5c135ba09571d432d
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000021.yaml.sha256: 3cd99fc5d817e710ea8fe64f901a5a96c29c29ad494c4d70ad8b3f0d4e7069c1
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000022.yaml: 36174c9b35be58cf1a81aa49459fe9e1aaf4a6401b713a44293d49f7be40d3b4
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000022.yaml.sha256: be58a1e9849b60743cd485bcc871ebedd5629efbd49ed51416217404008b08f1
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000023.yaml: 9c5f5b49a03861b86893461c12941b5d906158a05deaa2bc3bcd20b59e1adb3f
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000023.yaml.sha256: fb83a8d9a1d03785afaff3b74871ba3427cb55d8d62f3c3c5ac44bae8928e6c2
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000024.yaml: 78c9421eb3332b28cb3c1afffda0a33ae8d46eaa0c1558fb7393d64046bf9c1e
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000024.yaml.sha256: 3e104c64d55dddad6da6065a2add6a04e6fab0111b797705180dffbda8fb23a6
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000025.yaml: 2f6ee47f86dfda25611c9c59ffa1273a7f6fb68bbd442337cfcc8695aa36a968
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000025.yaml.sha256: 0ad36a32ad1883b538c277dab7d6902f65d2fd35371e29cbeda4e6517bd4f289
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000026.yaml: dfced2b545cf022f601d719c49c87201f6b2247f150b6cd2ddcd2ce968041220
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000026.yaml.sha256: ce79085bffb84c9cbad02ed4121ee0a1cf133b68d5f8e95ca4a8afab57e30669
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000027.yaml: ef28905dc23e8eee7967871a228bfc7d6a6eeb62823217cbe8963f8c7f486714
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000027.yaml.sha256: 1dc9d8b2d7529a42b2bc5b6b41fb84247131630773500a86781129ae52b59ef3
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000028.yaml: 166a8aa980af0222a22d21b6d4bc7b7ab38adaa3b46a81f5b0cc0a85be13dc64
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000028.yaml.sha256: fbac3940554e6f250c256480a6f68aec562332fade0efe45f0540eba73908ce7
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000029.yaml: 1483cb8d53044eca5205f815e449cf90f0839d731e40b9064c94bae24fbb0649
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000029.yaml.sha256: 78c5167dbca6c80bb237782d49ee3158934853526bdd994ff58e1a008b261234
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000030.yaml: 3405e6237843f22b962c71cbd909a43ffc3554edba782d82f12367024ba5f4c0
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000030.yaml.sha256: d91d1da2ced0c07a0d1f0d6800b0e0e706e46f424f3e24d33cb197e6c9f94db3
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000031.yaml: 59d2ea6f4e8a2d9304240b8377ea6e406cc4e7d20ebfd9215f9ea2027f7ddea7
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000031.yaml.sha256: 1f458edce676ee63ccd3b2cf4f93a2c5eae998d29fc4dfa1eb9fa909dec1df85
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000032.yaml: 586adcf39f34e00c94012c9c4341f2b76722780e74a2fc5aa1fd795edd88be62
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000032.yaml.sha256: dd7bf283a2221dc1b19ef27a0dc31d853db55f8e3c471538f9dce92929bed904
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000033.yaml: 643fa595f4def0d0941fa814bac388ac4b7da0117a7df9be36e7e880b63235a3
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000033.yaml.sha256: af5ca74bcfb835cfeb4d799ee23ecf35bcec7fc0acedd935e1a86d285a067eeb
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000034.yaml: 0ac2670e17b5da07fa0ee073c13e38dce5549a4b524d77f4efad8980dbb565c5
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000034.yaml.sha256: d9481b9e8959fe272ff67aa0f8b9318a05854d702570c61c8f69e518281714bc
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000035.yaml: 675e2545c85ae8b5f2298e4aa1dfd7f7e6ab7daa28b320429faf7d5be002cd39
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000035.yaml.sha256: 0158e5ac24a67d695c54f1a875964c154cd4b9c505edfaf47fb5d13a8b91324c
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000036.yaml: 0cfd39b9c0434386c80e2ea414e77cf70fc4bc831f1a5da7e8b57f0d3406321c
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000036.yaml.sha256: 9f5fc2c1c90fe5b218dc01078c635ee34a004e4b9da13a56e2ee439328b300dd
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000037.yaml: 3c0e6b87f37711a7246ac37ad266cb672119010daa262bfecee1836f3b8ed3aa
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000037.yaml.sha256: bb69ea91ec63ecbd8627e8c5cf849b3b22f6290d946d6e68e1898050c0808f57
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000038.yaml: 51829c05cd05abc8986a935618f0f983befdcf747e6b1412c383df0e6ca6660b
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000038.yaml.sha256: 8d8b8301845cff26d51475569ee772d55f6741448dbda8d238a276e389480a96
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000039.yaml: 71360a0a58022a8cc1f4f177528cff803da266fead7f2c0032736385f27c86ce
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000039.yaml.sha256: 174730ef07c94abed1ea3dc51a3db54dce8af823893821a36167d6f351e7801d
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000040.yaml: 11152e02df76d27eaccad017ea27d9ad9e9bb97d45abe0fcae861609a42adb69
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000040.yaml.sha256: 38aaf5e55276975db7c900dc5d770a2340ad712ab75afa20e0acc1e660ef6242
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000041.yaml: 4726467f2e0523c6e7bda253c54d3b6e01f51e2f1f53546b49694dda99c5c30e
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000041.yaml.sha256: a6478723d086de8c7adf8d4926850b4f21eba21ff382f46dcb3b70b3ac3f5751
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-1b2c6c25ca02/candidate.yaml: b8f7993db8099fda1a38371529126dacdca57b82f4e789c69547f749076b6a5b
+  ? reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-1b2c6c25ca02/candidate.yaml.sha256
+  : 83b8a58ed312853944de754b155fc6b19b1ea608040d803d4fc0b483e0bef1f1
+  ? reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-1b2c6c25ca02/checkpoints/research-0.yaml
+  : d258d965291727f68ff671dd988aa2a0bdd299914e485b6f45699dc4080a6aa5
+  ? reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-1b2c6c25ca02/checkpoints/research-0.yaml.sha256
+  : 39f1215e2c67ec389907b716843042d707904fe012437c860e19718700ab91b7
+  ? reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-1b2c6c25ca02/checkpoints/review-0.yaml
+  : 416a49bc81b37b25fdeee1f1ad1b0d0e9b4823d2c5b206a004a925751899b36b
+  ? reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-1b2c6c25ca02/checkpoints/review-0.yaml.sha256
+  : 2ef2763b2fbd7071fcc869805a54bc8815275402a0500235b4707c28ca92e827
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-1b2c6c25ca02/report.md: 87c712a70c3403b12f3c4576914de9daa3946a4c6fa88d3016bcca980f799bc3
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-1b2c6c25ca02/result.yaml: 3197ad5e241bf09a7183cd7d3656186ba9b9a6e354b4e4116eca011b595c0357
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-1b2c6c25ca02/result.yaml.sha256: acd97474ba8c3f77cee0aa8eb5ded95b0b79fc2c68023ce45d8283480fff00cb
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-1b2c6c25ca02/summary.yaml: 6db4589f92712a0699528416d0989306c2a20a13c2170663b96b53454a2476a2
+  ? reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-1b2c6c25ca02/summary.yaml.sha256
+  : b6fbbaefbb3af2c7aa063db2131d6f7cd0bbe83aaf5bd22303adf0d71798a8a6
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-244ddaafb793/candidate.yaml: 9671e206ee30c89ed68a916f1a702e12e931107750a832dce024cc477f29d6a9
+  ? reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-244ddaafb793/candidate.yaml.sha256
+  : d144a06fb3d798b5c1058dfd194b624cd1166bbdcc52de552e129ddc5668d084
+  ? reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-244ddaafb793/checkpoints/research-0.yaml
+  : ff785b525d38cd2a91851b07440f26dc31458f4bcc35d04fa45622c7a78bb1c4
+  ? reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-244ddaafb793/checkpoints/research-0.yaml.sha256
+  : 972e1a263e20c192b9c666fa864ac5ab43d3b8f1d92c6103cbb239716eb5f12e
+  ? reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-244ddaafb793/checkpoints/research-1.yaml
+  : e8929d18525b30667a55994d9888fdbe6dff005167a91b448524ee8a2dd70eb1
+  ? reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-244ddaafb793/checkpoints/research-1.yaml.sha256
+  : 30def7a1850a0c2f258d05dbae2c0ad306ff296b324f8fffee8c9c1ff1c1aaa6
+  ? reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-244ddaafb793/checkpoints/review-0.yaml
+  : 63a57944fb94ce907badeb74ebf9ecbe3a760aa4ec18eb3642de42667d74f081
+  ? reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-244ddaafb793/checkpoints/review-0.yaml.sha256
+  : 2554922761c57a8e495952377bc82c300b1e47fc3266ffbeb06b2420f98ebe3d
+  ? reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-244ddaafb793/checkpoints/review-1.yaml
+  : 3a1a0dd8c1c3a0fb762a2a2e3cafa58e52238218b53afbf483f48f0dc39b85b6
+  ? reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-244ddaafb793/checkpoints/review-1.yaml.sha256
+  : 796c91968088a7cb41153f0d020d6850d148a776605ed006c0e6a22506c8736d
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-244ddaafb793/report.md: a42c424986e7fde6e131e238cb616cacd6a0b874289ba533df3fc975c92a2c5f
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-244ddaafb793/result.yaml: 8b1f24b5ecdc72515ff8f51019b4a2667f7dd9bf6e454f3d363caa35838830e4
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-244ddaafb793/result.yaml.sha256: bc781d5d340fa4f401c15cc3ce912fe8ccfab48be6b650d962fd17e177efbc91
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-244ddaafb793/summary.yaml: 2f2db13d06411a6f9a3229e2be19f60ba848279c13d63201ae8dfc23b9d8f5a4
+  ? reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-244ddaafb793/summary.yaml.sha256
+  : cbb991ceb494ffcd7c853f1bb6a710ca9de78d34b2a5d41998b29a1391acfc6a
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-347d26e2053b/candidate.yaml: b88644f1ee51029cf15bbc5eb84aca5312bd4b8b12501abd9ae9bdda4a606dd6
+  ? reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-347d26e2053b/candidate.yaml.sha256
+  : 6a350a676604895dd5196580f201f8e51872c2c6f96a87b5f37859f69a66ff08
+  ? reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-347d26e2053b/checkpoints/research-0.yaml
+  : 930a41881a1360c2e9206c35cb553aac6eae0b822f9a1dedf84c952a6ecd1ebd
+  ? reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-347d26e2053b/checkpoints/research-0.yaml.sha256
+  : e56452e90f94ebd746633afe1ed4563ba833e15ed2223284b4af34fcbe844d24
+  ? reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-347d26e2053b/checkpoints/research-1.yaml
+  : 8438919c9f1f054651ed84a6357e25a0ac8e8026d1f368c351fd154c3bdf4758
+  ? reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-347d26e2053b/checkpoints/research-1.yaml.sha256
+  : c026d94af9f195ef313d6ea619f967944903557517194325092f6435053c8e43
+  ? reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-347d26e2053b/checkpoints/review-0.yaml
+  : ceb71e0911f70151c18a81bc73d8cb745166f223e80df34ddf4378e373a4ba57
+  ? reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-347d26e2053b/checkpoints/review-0.yaml.sha256
+  : a44bc411adeb4de2dd88e2226c9e040bba0adad175ac7d3e7ad43fa43c80e500
+  ? reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-347d26e2053b/checkpoints/review-1.yaml
+  : bdd3855d999323653e99522756f4048b357a7df818eed15781ad3d0725f2f40a
+  ? reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-347d26e2053b/checkpoints/review-1.yaml.sha256
+  : 33089c9529f904df110fdc5d48a3fec16455ec708c24dd6c3acf8aece79d5dde
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-347d26e2053b/report.md: c6feb6ffdeffa4efc3e3983d318efdbb1075c10f8ff1c0a3ee19cf9c54f661f7
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-347d26e2053b/result.yaml: 1a56658d7d53e7df9d6c6b4cec68d707e708e92105c5e1770f1f259d2f080fa2
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-347d26e2053b/result.yaml.sha256: 96bc3802100e25896186ebde042749798ba618c88cadc1ff12c530ff983f6790
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-347d26e2053b/summary.yaml: 4801d2c506a6e4ebfbc235b2a4838a02853462b30ab251dc33a030bbdf38aa56
+  ? reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-347d26e2053b/summary.yaml.sha256
+  : a42125cac5586fac4223a7695a20815a8695842c776fc71a9b1ff9eccf9c13e6
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-b3ecb03a2b96/candidate.yaml: c572a0f96dd664e4acc5774db29a6a8117ff70a1d1744780e698edf4fb7c4218
+  ? reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-b3ecb03a2b96/candidate.yaml.sha256
+  : 13526a82f3705b3b8d60024e883a8944b94a80191e3e14019f929f984e281dcc
+  ? reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-b3ecb03a2b96/checkpoints/research-0.yaml
+  : addf52cca12eea6fd7270e3eb354ef98e41de3835dc1fae7db5160725a693c55
+  ? reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-b3ecb03a2b96/checkpoints/research-0.yaml.sha256
+  : 8b1007770a443be9c97408e69d7ea0b280080a3599c46cb71661e467bd6ff970
+  ? reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-b3ecb03a2b96/checkpoints/research-1.yaml
+  : 9acc0945d613890775df7d6c98008862081bb430e5fb20ec0602fcfdb0b7c20a
+  ? reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-b3ecb03a2b96/checkpoints/research-1.yaml.sha256
+  : 5df1ac1694dd36f11f331e98f713177ea4772327a2cad07b1b9709849f7d92a0
+  ? reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-b3ecb03a2b96/checkpoints/review-0.yaml
+  : 38bd5516d0cadafa07e3bc6919e09a8d99a7fad43b3774e3c6e80c00624e7e96
+  ? reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-b3ecb03a2b96/checkpoints/review-0.yaml.sha256
+  : 22b0141e8e85bdabb4ea6d556c78ec6720edc2168f93d2a1d65976efbd5e3d44
+  ? reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-b3ecb03a2b96/checkpoints/review-1.yaml
+  : 71ae40fea208caa9b8f253ce6e33dac1828e024c20516c89596160e1b5cf4ebe
+  ? reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-b3ecb03a2b96/checkpoints/review-1.yaml.sha256
+  : b5e895ff32ddbd0d8194bb7403476f94b82e9013086d5d0e3e969380921bb369
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-b3ecb03a2b96/report.md: e98b48cf9fa624351692e2d563ea609631f1b1635e2f99e7f1cff566dc03baff
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-b3ecb03a2b96/result.yaml: d51c7d4ea9293e31da0d2016369ffbe9a282c314d242aa750c24ce743cbcdda2
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-b3ecb03a2b96/result.yaml.sha256: 610caaf391fe4a27fd46b53c5e9c74c0294cd7ddbdc7c19848ac1df155ae39ee
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-b3ecb03a2b96/summary.yaml: f0606e12332940e70217564240d8854d2a3a1e5a3deb041468530b7c56a0c810
+  ? reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-b3ecb03a2b96/summary.yaml.sha256
+  : d6fd0e1880ca3f49b322c8a182f872d9f227885f3feabef75c99f6b4d1bdee68
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/manifest.yaml: e0d30f3a2e42e6dcde4750838f74207231a29df01d09f6d340c3beb18d1ea54c
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/manifest.yaml.sha256: f094438afa3cfd05bdb719a2681e58061f1bb91e9d62739c0747c84e80aceb22
+  summary/agent_memory/agent_memory-manual-20261108-145358/arxiv-1b2c6c25ca02.md: 6213ad55eeff0f5a516fac950622b72d099bf33e315207a165eb0f7b7e9be768
+  summary/agent_memory/agent_memory-manual-20261108-145358/arxiv-244ddaafb793.md: 4ba341d5da201718d7b04bd979c2809403367b18b4a9c0d0f049a16c07f4b7de
+  summary/agent_memory/agent_memory-manual-20261108-145358/arxiv-347d26e2053b.md: 8104f7235fc4c4e71b99cd33b2205facaaf90aa5f14e697a769c889a7224c49d
+  summary/agent_memory/agent_memory-manual-20261108-145358/arxiv-b3ecb03a2b96.md: 0373fc7619ecc41ec2602aa864835f353d289cee04a262a4123fd918ed75ddd0
+sdk_output_hashes:
+  articles/test/agent_memory/agent_memory-manual-20261108-145358/topic-1.md: c3a8c5b4055888e24ec0f4a54efd1b79346deb4f158f09ddf4cbca34e4aeb652
+  insights/test/agent_memory/agent_memory-manual-20261108-145358/report.md: 02f524355fdaa9490bd92249c16d5e89dc4b2757df883dad15c71ebf729cf6d9
+  reports/test/agent_memory/codex-insight/agent_memory-manual-20261108-145358/candidate.yaml: 31b88b306ea0770ad67449c60351ff4c8107606ea3ba02645a6e4927f0f4da08
+  reports/test/agent_memory/codex-insight/agent_memory-manual-20261108-145358/review.yaml: 9a3d3e4b51946d2e7d3cd333a04b819d5fad0491f21dac34cd68fd18750ce5a7
+configuration_snapshots:
+  config/local/automation/agent_memory-manual-20261108-145358/topics.yaml: "schema_version:\
+    \ 1\ntopics:\n  agent_memory:\n    name: Agent Memory\n    enabled: true\n   \
+    \ description: 研究 AI Agent 如何形成、检索、更新和使用记忆，解释具体机制、实验结果、工程取舍与适用边界。\n    scope:\n\
+    \    - 长期与短期记忆、情景与语义记忆、跨会话状态及个性化。\n    - 记忆写入、压缩、检索、更新、遗忘与冲突处理，以及这些机制与上下文管理和 RAG\
+    \ 的区别与联系。\n    - 基于原文分析方法、实现、实验设置、评测指标、基线和失败案例，区分作者结论与我们的推断。\n    - 优先原始论文和有实质技术细节的博客；排除无技术内容的产品宣传及仅凭摘要的全文研究。\n\
+    \    keywords:\n    - agent memory\n    - long-term agent memory\n    - episodic\
+    \ agent memory\n    - memory-augmented agent\n    - conversational agent memory\n\
+    \    - 智能体记忆\n    - 大模型长期记忆\n"
+sdk_accepted_path: reports/test/agent_memory/codex-insight/agent_memory-manual-20261108-145358/accepted.yaml
+sdk_proof_paths:
+- reports/test/agent_memory/codex-insight/agent_memory-manual-20261108-145358/accepted.yaml
+- reports/test/agent_memory/codex-insight/agent_memory-manual-20261108-145358/accepted.yaml.sha256
+- reports/test/agent_memory/codex-insight/agent_memory-manual-20261108-145358/candidate.yaml
+- reports/test/agent_memory/codex-insight/agent_memory-manual-20261108-145358/review.yaml
+files:
+  insights/agent_memory/agent_memory-manual-20261108-145358/report.md: '---
+
+    schema_version: 2
+
+    topic: agent_memory
+
+    topics:
+
+    - agent_memory
+
+    cycle_id: agent_memory-manual-20261108-145358
+
+    backend: codex
+
+    review_status: passed
+
+    review_policy: accuracy_only
+
+    production_accepted: true
+
+    created_at: ''2026-11-08''
+
+    kind: insight_report
+
+    title: Agent 记忆为何“找到了也用不对”：从保存事实到恢复决策依据
+
+    outcome: ready
+
+    ---
+
+
+    # Agent 记忆为何“找到了也用不对”：从保存事实到恢复决策依据
+
+
+    长期记忆系统经常把“找到相关历史”当作成功的标志。但智能体真正需要解决的问题是：这些历史能否支持当前答案或行动？用户曾经选择某个方案，不代表今天仍然适用；过去失败的轨迹，也可能包含当前任务需要的正确操作。记忆的价值因此不能只用存储量、摘要质量或单条相关性判断。
+
+
+    本批四项研究共同揭示了一个值得追问的断点：历史经过加工、检索并进入上下文之后，支持决策的关系可能已经消失。Memory Tax 检查加工损失，HABIT-Bench
+    检查有效条件的恢复，MemComposer 学习如何组合经验，MemSteer 则尝试为这些环节建立优化反馈。它们研究的任务与控制条件不同，不能拼成统一排行榜，却可以帮助我们解释：为什么记忆内容看似正确，最终行为仍然错误。
+
+
+    ## 先确认：加工记忆究竟增加了什么
+
+
+    [Memory Tax](https://arxiv.org/abs/2610.34073v1)提出一个必要的参照：直接检索原始历史已经能解决多少问题？论文把记忆答对、单轮
+    RAG 答错的题称为收益，把 RAG 答对、记忆答错的题称为“记忆税”。两者相减才是准确率的净变化。这里的税指正确性损失，并非 token 费用，而且取决于参照系统。
+
+
+    这个参照并不简陋。原始历史按对话轮次切块，不跨会话边界，附带时间；查询结合 BM25、稠密检索和重排。双轮版本还会判断证据是否足够，再提出后续查询。在 Qwen3.6-27B
+    的 LongMemEval-s 实验中，单轮与双轮 RAG 准确率分别为77.6%和81.4%，A-Mem 为79.4%。同一个记忆系统是否“超过 RAG”，会随检索参照改变。论文逐题计算收益与税使用单轮参照，不能与主表中的双轮参照混用。
+
+
+    作者进一步用理想证据回放分离两类问题：只提供支撑答案的原始轮次，再只提供对应的加工记忆。如果后者仍然明显较差，就需要检查构建时的信息损失；如果理想记忆表现接近原始证据、正常检索却远低于两者，主要障碍便可能在访问。MAGMA、LightMem
+    出现了后一种现象，说明“保存下来”与“需要时取出来”是不同能力。
+
+
+    人工标注也显示，加工确实可能丢失信息。在跨三个基准抽样的500个原始轮次中，MemoryOS 的信息完全保留比例为98.4%，SimpleMem 为65.6%。但完整保留率本身仍不能保证回答正确：一个轮次拆成多条后，关键部分可能排得很靠后；事实并入长画像后可能被稀释；改写还可能改变查询与证据的匹配关系。
+
+
+    这并不意味着压缩和抽象没有价值。短事实可以减少干扰，跨会话重组可以帮助多跳推理。真正需要检验的是：加工所节省的阅读与推理，是否大于它引入的信息和访问损失。
+
+
+    ## 检索命中的是观察，行动需要的是有效状态
+
+
+    [HABIT-Bench](https://arxiv.org/abs/2610.24520v2)把问题推进了一步：即使找到相关对话，系统能否恢复当时有效、适用于当前情境的用户默认行为？
+
+
+    基准包含114名合成用户、37,152个会话和3,328道四选一行动题，覆盖饮食、金融、软件与旅行。每道题同时规定历史可见截止点和决策目标时间。系统可能看到了2025年的替代流程，却需要回答2023年应该采用什么。金融与软件中的典型结构是：早期会话列出有序候选，较晚回复用序号确认选择，之后另一组列表与确认建立替代流程。只保存“用户选了第二项”，甚至只保存最新方案，都不足以回答历史问题。
+
+
+    这里需要保留的不只是事实内容，还有指代、确认、替换和生效关系。助手提出过的建议不等于用户接受；单次例外不自动改写长期默认；某个环境中的软件处理方法，也不能直接迁移到另一个环境。因此，所谓习惯记忆部分涉及行为归纳，部分涉及跨会话流程状态维护，不能把四个领域都解释为从重复行为统计偏好。
+
+
+    结果说明这些关系尚未被稳定处理。八种记忆方法在 Qwen3-235B-A22B 下的最佳四领域宏平均准确率为33.06%，BM25 为32.50%；GLM-5.3-Flash
+    下分别为33.61%和稠密检索的33.21%。这表明，在论文适配器、共享回答器与预算条件下，更复杂的记忆流水线没有稳定转化为更好的行动选择。
+
+
+    尤其值得注意的是，直接提供标注证据后，Qwen 主模型各领域准确率仍只有39.26%—58.25%。相关材料到场，仍不等于状态已经恢复。另一个提供私有习惯状态的控制达到98%以上，但它同时暴露了所需行动，因此不能把两者差距全部解释成某种记忆表示的收益。
+
+
+    来源追踪进一步揭示了局部命中的误导性：六种可追溯方法的前五条来源会话至少命中一条正证据的比例为37.77%—41.44%，标注证据召回率却只有11.17%—13.89%。找到后来的确认，却漏掉早期候选列表，就是“相关但不充分”的典型情形。这些指标的适用题目集合不同，不能直接相减来分摊错误原因。
+
+
+    ## 上下文组装本身也是决策
+
+
+    即使记忆完整、检索相关，把所有候选按相似度排列也未必最好。[MemComposer](https://arxiv.org/abs/2610.21091v2)研究的是程序性经验：历史轨迹与复盘如何帮助执行器完成多步工具任务。
+
+
+    它先用当前开场请求检索十条候选，组装器联合读取候选摘要，决定选哪些、选多少以及如何排序，允许一条也不选。选中后，完整轨迹与复盘才按指定顺序进入执行器上下文。训练期间，记忆库、检索器和执行器全部冻结，优化的是读取与呈现策略。
+
+
+    训练信号来自完整任务交互。ExPO 对每个输入采样八个组装序列，每个序列运行八次，用平均成功率扣除数量和格式惩罚后进行组内比较。这样，学习目标就从“这条经验像不像当前请求”变成“这一组经验能否改善执行”。互补信息、冗余和相互干扰都可能影响奖励。
+
+
+    在三个客服领域中，Qwen3-4B 执行器的平均成功率达到50.8%，比该指标最强基线高5.9个百分点。更能隔离机制的是固定集合实验：保持选中的记忆完全相同，只改用相似度或长度规则排序，学习顺序领先3.8—8.5个成功率百分点。这说明记忆效用不是集合成员独立分数的简单相加，呈现位置也会改变执行。
+
+
+    不过，每领域只有20—40个测试任务，分执行器看，相对最强基线的成功率增益置信区间仍包含零；组装器也无法选择候选池之外的经验。论文报告执行器记忆 token
+    减少16.9%和4.9%，没有计入组装器读取候选与训练模拟的全部成本。因此，这项工作支持把组装作为独立优化层，尚不能证明端到端成本必然下降，更不能代替持续写入和状态更新。
+
+
+    ## 优化反馈必须知道错误发生在哪里
+
+
+    要改善上述环节，仅有一个最终正确率往往不够。[MemSteer](https://arxiv.org/abs/2610.39276v1)尝试从未标注用户历史生成问题、参考答案与来源证据，让系统既能评分，也能追查失败位置。
+
+
+    生成流程先抽取相互关联的记录，规划答案及每项事实的来源，再生成问题。之后进行语义审计，并让看不到参考答案的盲读器恢复答案、引用所有选定证据。通过检查的监督被划分为互斥训练集与验证集：前者帮助提出修改，后者选择设计。
+
+
+    它的诊断逻辑很直接：答错但所需证据已经完整进入最终上下文，归为回答失败；证据缺失且无法从当前记忆恢复，归为存储失败；仍可恢复却没有进入上下文，归为检索失败。提案器据此修改存储、检索或上下文构造，在固定回答器、提示和最终上下文预算下验证，只有准确率严格上升才接受。
+
+
+    在 ATM-Bench 上，主集 Question Score 从54.9升至68.3。作者还报告，显式阶段诊断比仅补充参考证据带来更大改善。这个发现的意义在于：证据要转化成可操作的故障信息，才更容易指导优化。
+
+
+    但这仍是工程归类，不能当作完备的因果分解。“证据齐全仍答错”可能包含时间状态恢复、有效条件判断或上下文呈现问题。生成监督也没有人工认证；盲答成功只说明答案可恢复，并不证明每条引用都必要。生成题反映历史中容易构造的问题，也不等于用户未来真实需求。
+
+
+    用户差异同样不能忽略。一个六用户共享设计迁移到留出用户 Martin 后，准确率从基础系统的41.2%降至37.7%；再用该用户历史生成监督继续优化，达到44.3%。这支持目标用户反馈的价值，也限制了“一套记忆设计普遍适用”的期待。
+
+
+    ## 新的工程判断：加工记忆应是可回溯、可修订的决策视图
+
+
+    综合这些结果，我们推断：值得优化的单位，可能不是单条摘要或事实，而是“足以支持一次决策的证据关系”。事实保存完整，却漏掉候选与确认的连接，无法恢复选择；默认行为检索正确，却缺少例外与有效时间，仍会错误应用；经验集合相同，呈现顺序不同，也会改变执行结果。
+
+
+    由此可以形成一个待验证的设计：原始记录保留来源和时间；加工层形成便于查询的默认行为或经验，同时连接支持观察、用户确认、适用范围、替换与例外；读取层围绕当前问题补齐缺失关系，再决定组合与顺序。加工结果是随证据修订的决策视图，而原始历史提供恢复路径。
+
+
+    其中，原文回退是 Memory Tax 作者明确提出并进行概念验证的方向；将它与有效条件、证据关系及组装策略结合，是我们的综合推断，四篇论文尚未共同验证这一架构。验证时应固定回答器与总预算，对比纯摘要、摘要加原文回退、关系补全和可训练组装，分别观察证据链完整度、状态判断、行动正确率与延迟。若只提高相关会话命中率，却没有改善后续行动，就不能宣称解决了记忆使用问题。
+
+
+    成本也必须按生命周期核算。HABIT-Bench 的固定32用户子集中，A-MEM 构建累计消耗1.078亿 LLM token，查询为339万；这说明低查询成本可能建立在昂贵预处理之上。是否值得提前加工，取决于记忆会被复用多少次、更新多频繁，以及查询是否集中在可预测需求上。
+
+
+    本批材料呈现出一个共同研究方向：把记忆设计从“如何存更多”推进到“如何证明这些历史支持当前决策，并用失败修订它”。这不是跨时间趋势判断；清单没有可核实的相关历史。上述分析依据已审阅总结与对应原文中的可核对机制和结果，未独立复现实验；合成用户、静态库存、小测试集及不同预算，也都限制了结论向真实长期智能体的外推。
+
+
+    ## 记忆优化应关注支持决策的证据关系，而不只关注单条内容
+
+
+    Memory Tax 显示完整保存与可访问性可以分离；HABIT-Bench 显示相关会话命中不等于恢复候选、确认、替换及有效时间；MemComposer
+    的固定集合重排进一步表明，相同内容的使用效果还取决于组合与顺序。由此推断，单条事实的保留率和相关性不足以描述记忆效用，应增加对当前决策所需关系是否完整的评测。该判断是跨研究综合推断，并非统一实验已经证实的结论。
+
+
+    ## 加工记忆可以作为可修订的决策视图，原始历史承担恢复作用
+
+
+    原文检索可补回加工导致的信息损失，但 HABIT-Bench 的理想证据实验说明，补齐原文后仍可能无法恢复有效状态。因此，原文回退与条件关系恢复应分别设计、分别验证。一个可检验方向是让摘要或习惯条目连接来源、用户确认、适用范围、有效时间和例外，再围绕当前问题补齐关系；目前材料尚未验证这一组合架构的端到端收益。
+
+
+    ## 阶段诊断适合指导优化，但“回答失败”仍需细分
+
+
+    MemSteer 用证据是否保存、能否恢复、是否进入上下文定位修改环节，显式诊断比单纯附加证据更有帮助。然而，HABIT-Bench 中证据已提供仍大量答错，MemComposer
+    中相同集合因顺序改变而产生不同结果，说明证据齐全后的失败还可能涉及状态恢复、有效条件判断与呈现方式。工程上可保留粗粒度诊断用于搜索，再用固定证据、固定集合和目标时间对照区分下游瓶颈，避免把所有问题归为回答模型能力不足。
+
+
+    ## 参考资料
+
+
+    - [MemSteer: Turning User Histories into Supervision for Agent Memory Optimization](https://arxiv.org/abs/2610.39276v1)
+    · [已采集原文](../../../collection/agent_memory/agent_memory-manual-20261108-145358/items/arxiv-1b2c6c25ca02/original.md)
+
+    - [Memory Tax: Dissecting the Net Value of Agent Memory](https://arxiv.org/abs/2610.34073v1)
+    · [已采集原文](../../../collection/agent_memory/agent_memory-manual-20261108-145358/items/arxiv-244ddaafb793/original.md)
+
+    - [MemComposer: Learning to Assemble Memories for LLM Agents via Reinforcement
+    Learning](https://arxiv.org/abs/2610.21091v2) · [已采集原文](../../../collection/agent_memory/agent_memory-manual-20261108-145358/items/arxiv-347d26e2053b/original.md)
+
+    - [HABIT-Bench: Evaluating Habit Induction from Longitudinal Weak Evidence in
+    Agent Memory](https://arxiv.org/abs/2610.24520v2) · [已采集原文](../../../collection/agent_memory/agent_memory-manual-20261108-145358/items/arxiv-b3ecb03a2b96/original.md)
+
+    '
+  articles/agent_memory/agent_memory-manual-20261108-145358-topic-1.md: '---
+
+    schema_version: 2
+
+    topic: agent_memory
+
+    topics:
+
+    - agent_memory
+
+    cycle_id: agent_memory-manual-20261108-145358
+
+    backend: codex
+
+    review_status: passed
+
+    review_policy: accuracy_only
+
+    production_accepted: true
+
+    created_at: ''2026-11-08''
+
+    kind: topic_proposal
+
+    id: formal-topic-agent_memory-agent_memory-manual-20261108-145358-1
+
+    title: 原文回退能修复多少长期记忆错误？
+
+    status: proposed
+
+    evidence_ids:
+
+    - R1
+
+    - R2
+
+    - R4
+
+    approval_required: true
+
+    writing_started: false
+
+    publish_authorized: false
+
+    ---
+
+
+    # 原文回退能修复多少长期记忆错误？
+
+
+    固定回答器与总预算，区分加工损失、证据链缺失和证据到场后的状态判断失败，验证原文回退与关系补全的独立收益。
+
+
+    目标读者：构建个人助理与长期记忆系统的工程师、评测研究者
+
+
+    ## 参考资料
+
+
+    - [MemSteer: Turning User Histories into Supervision for Agent Memory Optimization](https://arxiv.org/abs/2610.39276v1)
+    · [已采集原文](../../collection/agent_memory/agent_memory-manual-20261108-145358/items/arxiv-1b2c6c25ca02/original.md)
+
+    - [Memory Tax: Dissecting the Net Value of Agent Memory](https://arxiv.org/abs/2610.34073v1)
+    · [已采集原文](../../collection/agent_memory/agent_memory-manual-20261108-145358/items/arxiv-244ddaafb793/original.md)
+
+    - [HABIT-Bench: Evaluating Habit Induction from Longitudinal Weak Evidence in
+    Agent Memory](https://arxiv.org/abs/2610.24520v2) · [已采集原文](../../collection/agent_memory/agent_memory-manual-20261108-145358/items/arxiv-b3ecb03a2b96/original.md)
+
+    '
+output_hashes:
+  insights/agent_memory/agent_memory-manual-20261108-145358/report.md: bb83e1ce9e9d1943f8d1124c2ad6dd6d5be69f5865c75ff7f1a106819316543c
+  articles/agent_memory/agent_memory-manual-20261108-145358-topic-1.md: 7f590b2c625a09dd4c79937037044f3e350b6b19d8eb135be8ed79bd53bf8218
+proof_hashes:
+  reports/test/agent_memory/codex-insight/agent_memory-manual-20261108-145358/accepted.yaml: 9d88a651bcba78eb4b5dad5d74c360805ccd720b3fd7b368ae21997047fcd2eb
+  reports/test/agent_memory/codex-insight/agent_memory-manual-20261108-145358/accepted.yaml.sha256: 01f44e1cc0af0d98d01f343f2f6ac098b3bcf2e81b33b1c6c34d9f14d74c23b5
+  reports/test/agent_memory/codex-insight/agent_memory-manual-20261108-145358/candidate.yaml: 31b88b306ea0770ad67449c60351ff4c8107606ea3ba02645a6e4927f0f4da08
+  reports/test/agent_memory/codex-insight/agent_memory-manual-20261108-145358/review.yaml: 9a3d3e4b51946d2e7d3cd333a04b819d5fad0491f21dac34cd68fd18750ce5a7

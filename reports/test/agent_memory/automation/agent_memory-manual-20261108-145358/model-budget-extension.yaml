@@ -1,0 +1,8 @@
+schema_version: 1
+cycle_manifest_sha256: fce9bc1549a95f0b09da9d89fbf3af97caca493d9ae4691a9f8c365016cae856
+limits:
+  max_calls_per_cycle: 100
+  research_max_calls: 100
+  insight_max_calls: 100
+  max_calls_per_item: 100
+  insight_max_requests_per_task: 100

@@ -1,0 +1,10 @@
+candidate_sha256: bf1ad99c9e3c761ea1eb7411813eebe062adc187de83ac7e9e5d09b55c2bc2a9
+observed_model: gpt-6-astra
+policy: accuracy_only
+requested_model: gpt-6-astra
+response_sha256: 7a4d3b12f47c8a390d6448c593633ee475b13d6c5713098e9551c507746b8beb
+review:
+  decision: pass
+  issues: []
+thread_id: 01a1bbce-5284-7fe2-b0fe-c82fe7fcb242
+turn_id: 01a1bbce-52d5-7663-9892-17436a09b2c7

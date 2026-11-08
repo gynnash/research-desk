@@ -1,0 +1,261 @@
+backend: codex
+config_fingerprint: 13f256963fa508f4f6e19971f7f5ce6464ad8ad424f269a78e0c8f508ad15679
+cycle_id: agent_memory-manual-20261108-145358
+failed_retry_count: 1
+input_hashes:
+  collection/agent_memory/agent_memory-manual-20261108-145358/items/arxiv-1b2c6c25ca02/original.md: 184f29dbeca29fb50909609c5760ecbe48fad3293d79b76370bea3c32d770fa7
+  collection/agent_memory/agent_memory-manual-20261108-145358/items/arxiv-1b2c6c25ca02/original.yaml: 99bddaed0f913a291bb440acf95b67c5bbc58e8cc29fcda2fe2d10d95215e860
+  collection/agent_memory/agent_memory-manual-20261108-145358/items/arxiv-1b2c6c25ca02/original.yaml.sha256: d7f73e18f1d63a11675b403a8e86fc1d574e0b55f4d8e14131fb0a0f17124372
+  collection/agent_memory/agent_memory-manual-20261108-145358/items/arxiv-244ddaafb793/original.md: 4ca3ca50b131b8b4542185625738f146dcc25ebfb109594b2c8e69659817424b
+  collection/agent_memory/agent_memory-manual-20261108-145358/items/arxiv-244ddaafb793/original.yaml: 8ffbff7412ffa25e517c9b0fbda14b1816b93079150d68d50bd6ee202ccc0b26
+  collection/agent_memory/agent_memory-manual-20261108-145358/items/arxiv-244ddaafb793/original.yaml.sha256: c8d4042a0f3aae139b9148c308c42fd6520c85085c04893f1d5c831db947299a
+  collection/agent_memory/agent_memory-manual-20261108-145358/items/arxiv-347d26e2053b/original.md: c44cfc81f946775ff83e0cb9578661ed5eb16a3cd85aacc48afddfd72945c934
+  collection/agent_memory/agent_memory-manual-20261108-145358/items/arxiv-347d26e2053b/original.yaml: d6f37bc9452b071cf50a36db125201d06dd910c38cf99336d0462269d72425ec
+  collection/agent_memory/agent_memory-manual-20261108-145358/items/arxiv-347d26e2053b/original.yaml.sha256: f1b9e53d8589f4c1f9191d5e11c99802ea042af2ca4944d12c7c440e1ca3bfa7
+  collection/agent_memory/agent_memory-manual-20261108-145358/items/arxiv-b3ecb03a2b96/original.md: d5777c631ffb22fd94f4e7c3ef8b1243677809d3ded17e8fa8b9e5e0a127c061
+  collection/agent_memory/agent_memory-manual-20261108-145358/items/arxiv-b3ecb03a2b96/original.yaml: 19ef90be4fe2f10df0c46b0d8abe8d673a2961b6ea2b061b08a13e3036626aa0
+  collection/agent_memory/agent_memory-manual-20261108-145358/items/arxiv-b3ecb03a2b96/original.yaml.sha256: b176e164e6cde41db751f74b08cde5cb4d5eb9314f60eeb627e5d41f1c0b00b5
+  config/local/automation/agent_memory-manual-20261108-145358/topics.yaml: a252b9013b241b2fcf83015269e4c28a9718c0575b62bd6f43b039f2da202c2b
+  reports/test/agent_memory/cycles/agent_memory-manual-20261108-145358/configs/research.yaml: 7c19bca7b305d081c7725c8ce3a7d52515b8f98d0dca449a0423751b8235c170
+  reports/test/agent_memory/cycles/agent_memory-manual-20261108-145358/configs/research.yaml.sha256: bee237d6a0e3b52d153f40a909312b62091cfa840dbef8689f86690942c3d3aa
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000001.yaml: b88ed046b7253c20ea54745f6f932fa716fb953769973f8f6d9b8d7fe1af82eb
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000001.yaml.sha256: 1766a69247cd22f02e913029f7da19f79d085908abac0d426ddcaffefd0fd6bf
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000002.yaml: ec4466799038ee0304df6b575f6d977c436e857e8a90659bc5a2367e8b7daae2
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000002.yaml.sha256: e4b037a1c8268b85ea50acb48d0c2e014d3dab3997fa7688fe9a24c2f8e67b65
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000003.yaml: d57e48ab41b47e2a7dc8cc2f2ba368c04096734e61717853253a2dd57c7de928
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000003.yaml.sha256: 836883a07a7606a9a5087bf7b5154b60d794676b75d0d92b78c495d495f90100
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000004.yaml: 0e3b7ab150f70ff1cbfca8ccbf5fff84b194118118c3cc1f2829c908ce55e424
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000004.yaml.sha256: 24ff062257fdc06a1b4bb3ad4969c5cffa90a1c275799c5c7d04d320577a6221
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000005.yaml: 943a96865bbe0ad3c8d03130609135fda860d48ece8fe6884344a94f09648b59
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000005.yaml.sha256: 45a47d7f504042f3fedc73f6026c2e6b1a48e1dbfa75a5638de66331a8c305b5
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000006.yaml: 944400ae4cddb33302bb9ef8c9446fb414436c8c3b61047406b9d7ecab319e70
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000006.yaml.sha256: 1fd91587552a71f2c196807f990fbbb448e8292fae989106f314ae6af8dbde26
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000007.yaml: 33293c4e84d9c79f2b68c1d3cd589db45e52d582b5093f75ec59f95d6d8913ce
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000007.yaml.sha256: b76bbfb99a892ea38f4d10f125eb78cf42b62d8f8ced434417dde0a6b0fd0491
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000008.yaml: 924950304397a008fd453def1ab39669c3b16f65ecc861b72f9a3d0b5d0c2580
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000008.yaml.sha256: 732786bcd3f6f1232f4e2782b08c7bd2ec61c83de55115da5323a4b7b488cfb8
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000009.yaml: bfa1e8e573da9f05ba0005e9ad1baa4c13e4ba5e6e9a553ec74d1352b5b8ba79
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000009.yaml.sha256: 1011af89636350dc01c602c68b628c6d14bc647b476a1ccbfa05fda619266f8e
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000010.yaml: 5dbaf11530fd9052bdb2036cfcf369de00c967a5f5df3e38f62cb005fc6f5e1b
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000010.yaml.sha256: fe328bea4794019a1bd120f3b60a305916bc0b9bd7cdbeceaa1393564b95779e
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000011.yaml: 981f54a6cfe3a23e72d5b83b1e27b5a712c46c75aa24a0950000cc2fa417cc81
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000011.yaml.sha256: cacf6079d5f2cb274bf43b122d1047fc461c5704a8dd295e119c63f3c642c357
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000012.yaml: 898c4ade23278a8b1e7654302fd841b46ca4a31a30600553352f8873583e98d3
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000012.yaml.sha256: 42b280eaa2c0d32a84e8e08d94e02a05b08e8478231d187764bdbaf7bf3bed6e
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000013.yaml: 44a5988862ffb4441e12c528a1908e25aa8f47a6bff74b7c34844be896e13ca7
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000013.yaml.sha256: 838014b2d3949acd07d4b9e364f4732edc52bd1450a756bb49ae5a4351c967fb
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000014.yaml: 7e772b327800df6e7efecc2405b711e747c27bd47035bfc52cac7d75d2bcd918
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000014.yaml.sha256: 6f485a0b9a545916e133924f86271a3025e9fe7b71a76ea3005a14f6feb832ea
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000015.yaml: f5e37ffcf4123c0dedbd0a5833fb12290d3acec57c7979060b45563442a7f4bb
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000015.yaml.sha256: 3e841f0cfffde8f71a6b4c3b702e9929a283b7ecec07996f15536218a1ce0ce0
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000016.yaml: 78d1479223ecdae4487867d9c3affb8174d31b5335fac1c6363c572141c6c697
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000016.yaml.sha256: b906a03be347909d5bb6450fa7d8a3f9d72c669bb6d5de97ce795440de55f1f0
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000017.yaml: a6b493965dcdf53473029b566b9244545c0642aea49a599bfdbbab3f3b5ab895
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000017.yaml.sha256: 93c09681499566f835ded904361101f5543a9f110fa4f27a235bbf9ae06a9091
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000018.yaml: fc8d68db59bed185420e51b1b238a9ff21e5c4abc180724df29c631fb03f696f
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000018.yaml.sha256: b17b53b8ac45f4976f8a8e716c4fb05d6a9f90cba069be573bacf5aa1c3cb65d
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000019.yaml: ee51eee3af841df85ed1f9394a4c4e8de1b3fa22327e4dc576bb105ab4d6f63b
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000019.yaml.sha256: 46db655af47f9904230da0fbd2b48a4cfc4748582bfd45bd8aa0323518574b2e
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000020.yaml: cfcfad775d7601d5f086e21e1e47b5071925a831d8006998907be3c126b44e70
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000020.yaml.sha256: 1497ad7faddbd457d91a74ad52382cb8c936d740f4a4a035d143a0a8ecd6b261
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000021.yaml: b6da027b98281de9fa56c1c6905861e7802e5d4691cbd8b5c135ba09571d432d
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000021.yaml.sha256: 3cd99fc5d817e710ea8fe64f901a5a96c29c29ad494c4d70ad8b3f0d4e7069c1
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000022.yaml: 36174c9b35be58cf1a81aa49459fe9e1aaf4a6401b713a44293d49f7be40d3b4
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000022.yaml.sha256: be58a1e9849b60743cd485bcc871ebedd5629efbd49ed51416217404008b08f1
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000023.yaml: 9c5f5b49a03861b86893461c12941b5d906158a05deaa2bc3bcd20b59e1adb3f
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000023.yaml.sha256: fb83a8d9a1d03785afaff3b74871ba3427cb55d8d62f3c3c5ac44bae8928e6c2
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000024.yaml: 78c9421eb3332b28cb3c1afffda0a33ae8d46eaa0c1558fb7393d64046bf9c1e
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000024.yaml.sha256: 3e104c64d55dddad6da6065a2add6a04e6fab0111b797705180dffbda8fb23a6
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000025.yaml: 2f6ee47f86dfda25611c9c59ffa1273a7f6fb68bbd442337cfcc8695aa36a968
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000025.yaml.sha256: 0ad36a32ad1883b538c277dab7d6902f65d2fd35371e29cbeda4e6517bd4f289
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000026.yaml: dfced2b545cf022f601d719c49c87201f6b2247f150b6cd2ddcd2ce968041220
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000026.yaml.sha256: ce79085bffb84c9cbad02ed4121ee0a1cf133b68d5f8e95ca4a8afab57e30669
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000027.yaml: ef28905dc23e8eee7967871a228bfc7d6a6eeb62823217cbe8963f8c7f486714
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000027.yaml.sha256: 1dc9d8b2d7529a42b2bc5b6b41fb84247131630773500a86781129ae52b59ef3
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000028.yaml: 166a8aa980af0222a22d21b6d4bc7b7ab38adaa3b46a81f5b0cc0a85be13dc64
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000028.yaml.sha256: fbac3940554e6f250c256480a6f68aec562332fade0efe45f0540eba73908ce7
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000029.yaml: 1483cb8d53044eca5205f815e449cf90f0839d731e40b9064c94bae24fbb0649
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000029.yaml.sha256: 78c5167dbca6c80bb237782d49ee3158934853526bdd994ff58e1a008b261234
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000030.yaml: 3405e6237843f22b962c71cbd909a43ffc3554edba782d82f12367024ba5f4c0
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000030.yaml.sha256: d91d1da2ced0c07a0d1f0d6800b0e0e706e46f424f3e24d33cb197e6c9f94db3
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000031.yaml: 59d2ea6f4e8a2d9304240b8377ea6e406cc4e7d20ebfd9215f9ea2027f7ddea7
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000031.yaml.sha256: 1f458edce676ee63ccd3b2cf4f93a2c5eae998d29fc4dfa1eb9fa909dec1df85
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000032.yaml: 586adcf39f34e00c94012c9c4341f2b76722780e74a2fc5aa1fd795edd88be62
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000032.yaml.sha256: dd7bf283a2221dc1b19ef27a0dc31d853db55f8e3c471538f9dce92929bed904
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000033.yaml: 643fa595f4def0d0941fa814bac388ac4b7da0117a7df9be36e7e880b63235a3
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000033.yaml.sha256: af5ca74bcfb835cfeb4d799ee23ecf35bcec7fc0acedd935e1a86d285a067eeb
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000034.yaml: 0ac2670e17b5da07fa0ee073c13e38dce5549a4b524d77f4efad8980dbb565c5
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000034.yaml.sha256: d9481b9e8959fe272ff67aa0f8b9318a05854d702570c61c8f69e518281714bc
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000035.yaml: 675e2545c85ae8b5f2298e4aa1dfd7f7e6ab7daa28b320429faf7d5be002cd39
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000035.yaml.sha256: 0158e5ac24a67d695c54f1a875964c154cd4b9c505edfaf47fb5d13a8b91324c
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000036.yaml: 0cfd39b9c0434386c80e2ea414e77cf70fc4bc831f1a5da7e8b57f0d3406321c
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000036.yaml.sha256: 9f5fc2c1c90fe5b218dc01078c635ee34a004e4b9da13a56e2ee439328b300dd
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000037.yaml: 3c0e6b87f37711a7246ac37ad266cb672119010daa262bfecee1836f3b8ed3aa
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000037.yaml.sha256: bb69ea91ec63ecbd8627e8c5cf849b3b22f6290d946d6e68e1898050c0808f57
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000038.yaml: 51829c05cd05abc8986a935618f0f983befdcf747e6b1412c383df0e6ca6660b
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000038.yaml.sha256: 8d8b8301845cff26d51475569ee772d55f6741448dbda8d238a276e389480a96
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000039.yaml: 71360a0a58022a8cc1f4f177528cff803da266fead7f2c0032736385f27c86ce
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000039.yaml.sha256: 174730ef07c94abed1ea3dc51a3db54dce8af823893821a36167d6f351e7801d
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000040.yaml: 11152e02df76d27eaccad017ea27d9ad9e9bb97d45abe0fcae861609a42adb69
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000040.yaml.sha256: 38aaf5e55276975db7c900dc5d770a2340ad712ab75afa20e0acc1e660ef6242
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000041.yaml: 4726467f2e0523c6e7bda253c54d3b6e01f51e2f1f53546b49694dda99c5c30e
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/events/000041.yaml.sha256: a6478723d086de8c7adf8d4926850b4f21eba21ff382f46dcb3b70b3ac3f5751
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-1b2c6c25ca02/candidate.yaml: b8f7993db8099fda1a38371529126dacdca57b82f4e789c69547f749076b6a5b
+  ? reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-1b2c6c25ca02/candidate.yaml.sha256
+  : 83b8a58ed312853944de754b155fc6b19b1ea608040d803d4fc0b483e0bef1f1
+  ? reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-1b2c6c25ca02/checkpoints/research-0.yaml
+  : d258d965291727f68ff671dd988aa2a0bdd299914e485b6f45699dc4080a6aa5
+  ? reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-1b2c6c25ca02/checkpoints/research-0.yaml.sha256
+  : 39f1215e2c67ec389907b716843042d707904fe012437c860e19718700ab91b7
+  ? reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-1b2c6c25ca02/checkpoints/review-0.yaml
+  : 416a49bc81b37b25fdeee1f1ad1b0d0e9b4823d2c5b206a004a925751899b36b
+  ? reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-1b2c6c25ca02/checkpoints/review-0.yaml.sha256
+  : 2ef2763b2fbd7071fcc869805a54bc8815275402a0500235b4707c28ca92e827
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-1b2c6c25ca02/report.md: 87c712a70c3403b12f3c4576914de9daa3946a4c6fa88d3016bcca980f799bc3
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-1b2c6c25ca02/result.yaml: 3197ad5e241bf09a7183cd7d3656186ba9b9a6e354b4e4116eca011b595c0357
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-1b2c6c25ca02/result.yaml.sha256: acd97474ba8c3f77cee0aa8eb5ded95b0b79fc2c68023ce45d8283480fff00cb
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-1b2c6c25ca02/summary.yaml: 6db4589f92712a0699528416d0989306c2a20a13c2170663b96b53454a2476a2
+  ? reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-1b2c6c25ca02/summary.yaml.sha256
+  : b6fbbaefbb3af2c7aa063db2131d6f7cd0bbe83aaf5bd22303adf0d71798a8a6
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-244ddaafb793/candidate.yaml: 9671e206ee30c89ed68a916f1a702e12e931107750a832dce024cc477f29d6a9
+  ? reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-244ddaafb793/candidate.yaml.sha256
+  : d144a06fb3d798b5c1058dfd194b624cd1166bbdcc52de552e129ddc5668d084
+  ? reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-244ddaafb793/checkpoints/research-0.yaml
+  : ff785b525d38cd2a91851b07440f26dc31458f4bcc35d04fa45622c7a78bb1c4
+  ? reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-244ddaafb793/checkpoints/research-0.yaml.sha256
+  : 972e1a263e20c192b9c666fa864ac5ab43d3b8f1d92c6103cbb239716eb5f12e
+  ? reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-244ddaafb793/checkpoints/research-1.yaml
+  : e8929d18525b30667a55994d9888fdbe6dff005167a91b448524ee8a2dd70eb1
+  ? reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-244ddaafb793/checkpoints/research-1.yaml.sha256
+  : 30def7a1850a0c2f258d05dbae2c0ad306ff296b324f8fffee8c9c1ff1c1aaa6
+  ? reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-244ddaafb793/checkpoints/review-0.yaml
+  : 63a57944fb94ce907badeb74ebf9ecbe3a760aa4ec18eb3642de42667d74f081
+  ? reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-244ddaafb793/checkpoints/review-0.yaml.sha256
+  : 2554922761c57a8e495952377bc82c300b1e47fc3266ffbeb06b2420f98ebe3d
+  ? reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-244ddaafb793/checkpoints/review-1.yaml
+  : 3a1a0dd8c1c3a0fb762a2a2e3cafa58e52238218b53afbf483f48f0dc39b85b6
+  ? reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-244ddaafb793/checkpoints/review-1.yaml.sha256
+  : 796c91968088a7cb41153f0d020d6850d148a776605ed006c0e6a22506c8736d
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-244ddaafb793/report.md: a42c424986e7fde6e131e238cb616cacd6a0b874289ba533df3fc975c92a2c5f
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-244ddaafb793/result.yaml: 8b1f24b5ecdc72515ff8f51019b4a2667f7dd9bf6e454f3d363caa35838830e4
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-244ddaafb793/result.yaml.sha256: bc781d5d340fa4f401c15cc3ce912fe8ccfab48be6b650d962fd17e177efbc91
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-244ddaafb793/summary.yaml: 2f2db13d06411a6f9a3229e2be19f60ba848279c13d63201ae8dfc23b9d8f5a4
+  ? reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-244ddaafb793/summary.yaml.sha256
+  : cbb991ceb494ffcd7c853f1bb6a710ca9de78d34b2a5d41998b29a1391acfc6a
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-347d26e2053b/candidate.yaml: b88644f1ee51029cf15bbc5eb84aca5312bd4b8b12501abd9ae9bdda4a606dd6
+  ? reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-347d26e2053b/candidate.yaml.sha256
+  : 6a350a676604895dd5196580f201f8e51872c2c6f96a87b5f37859f69a66ff08
+  ? reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-347d26e2053b/checkpoints/research-0.yaml
+  : 930a41881a1360c2e9206c35cb553aac6eae0b822f9a1dedf84c952a6ecd1ebd
+  ? reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-347d26e2053b/checkpoints/research-0.yaml.sha256
+  : e56452e90f94ebd746633afe1ed4563ba833e15ed2223284b4af34fcbe844d24
+  ? reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-347d26e2053b/checkpoints/research-1.yaml
+  : 8438919c9f1f054651ed84a6357e25a0ac8e8026d1f368c351fd154c3bdf4758
+  ? reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-347d26e2053b/checkpoints/research-1.yaml.sha256
+  : c026d94af9f195ef313d6ea619f967944903557517194325092f6435053c8e43
+  ? reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-347d26e2053b/checkpoints/review-0.yaml
+  : ceb71e0911f70151c18a81bc73d8cb745166f223e80df34ddf4378e373a4ba57
+  ? reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-347d26e2053b/checkpoints/review-0.yaml.sha256
+  : a44bc411adeb4de2dd88e2226c9e040bba0adad175ac7d3e7ad43fa43c80e500
+  ? reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-347d26e2053b/checkpoints/review-1.yaml
+  : bdd3855d999323653e99522756f4048b357a7df818eed15781ad3d0725f2f40a
+  ? reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-347d26e2053b/checkpoints/review-1.yaml.sha256
+  : 33089c9529f904df110fdc5d48a3fec16455ec708c24dd6c3acf8aece79d5dde
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-347d26e2053b/report.md: c6feb6ffdeffa4efc3e3983d318efdbb1075c10f8ff1c0a3ee19cf9c54f661f7
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-347d26e2053b/result.yaml: 1a56658d7d53e7df9d6c6b4cec68d707e708e92105c5e1770f1f259d2f080fa2
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-347d26e2053b/result.yaml.sha256: 96bc3802100e25896186ebde042749798ba618c88cadc1ff12c530ff983f6790
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-347d26e2053b/summary.yaml: 4801d2c506a6e4ebfbc235b2a4838a02853462b30ab251dc33a030bbdf38aa56
+  ? reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-347d26e2053b/summary.yaml.sha256
+  : a42125cac5586fac4223a7695a20815a8695842c776fc71a9b1ff9eccf9c13e6
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-b3ecb03a2b96/candidate.yaml: c572a0f96dd664e4acc5774db29a6a8117ff70a1d1744780e698edf4fb7c4218
+  ? reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-b3ecb03a2b96/candidate.yaml.sha256
+  : 13526a82f3705b3b8d60024e883a8944b94a80191e3e14019f929f984e281dcc
+  ? reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-b3ecb03a2b96/checkpoints/research-0.yaml
+  : addf52cca12eea6fd7270e3eb354ef98e41de3835dc1fae7db5160725a693c55
+  ? reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-b3ecb03a2b96/checkpoints/research-0.yaml.sha256
+  : 8b1007770a443be9c97408e69d7ea0b280080a3599c46cb71661e467bd6ff970
+  ? reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-b3ecb03a2b96/checkpoints/research-1.yaml
+  : 9acc0945d613890775df7d6c98008862081bb430e5fb20ec0602fcfdb0b7c20a
+  ? reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-b3ecb03a2b96/checkpoints/research-1.yaml.sha256
+  : 5df1ac1694dd36f11f331e98f713177ea4772327a2cad07b1b9709849f7d92a0
+  ? reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-b3ecb03a2b96/checkpoints/review-0.yaml
+  : 38bd5516d0cadafa07e3bc6919e09a8d99a7fad43b3774e3c6e80c00624e7e96
+  ? reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-b3ecb03a2b96/checkpoints/review-0.yaml.sha256
+  : 22b0141e8e85bdabb4ea6d556c78ec6720edc2168f93d2a1d65976efbd5e3d44
+  ? reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-b3ecb03a2b96/checkpoints/review-1.yaml
+  : 71ae40fea208caa9b8f253ce6e33dac1828e024c20516c89596160e1b5cf4ebe
+  ? reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-b3ecb03a2b96/checkpoints/review-1.yaml.sha256
+  : b5e895ff32ddbd0d8194bb7403476f94b82e9013086d5d0e3e969380921bb369
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-b3ecb03a2b96/report.md: e98b48cf9fa624351692e2d563ea609631f1b1635e2f99e7f1cff566dc03baff
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-b3ecb03a2b96/result.yaml: d51c7d4ea9293e31da0d2016369ffbe9a282c314d242aa750c24ce743cbcdda2
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-b3ecb03a2b96/result.yaml.sha256: 610caaf391fe4a27fd46b53c5e9c74c0294cd7ddbdc7c19848ac1df155ae39ee
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-b3ecb03a2b96/summary.yaml: f0606e12332940e70217564240d8854d2a3a1e5a3deb041468530b7c56a0c810
+  ? reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-b3ecb03a2b96/summary.yaml.sha256
+  : d6fd0e1880ca3f49b322c8a182f872d9f227885f3feabef75c99f6b4d1bdee68
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/manifest.yaml: e0d30f3a2e42e6dcde4750838f74207231a29df01d09f6d340c3beb18d1ea54c
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/manifest.yaml.sha256: f094438afa3cfd05bdb719a2681e58061f1bb91e9d62739c0747c84e80aceb22
+  summary/agent_memory/agent_memory-manual-20261108-145358/arxiv-1b2c6c25ca02.md: 6213ad55eeff0f5a516fac950622b72d099bf33e315207a165eb0f7b7e9be768
+  summary/agent_memory/agent_memory-manual-20261108-145358/arxiv-244ddaafb793.md: 4ba341d5da201718d7b04bd979c2809403367b18b4a9c0d0f049a16c07f4b7de
+  summary/agent_memory/agent_memory-manual-20261108-145358/arxiv-347d26e2053b.md: 8104f7235fc4c4e71b99cd33b2205facaaf90aa5f14e697a769c889a7224c49d
+  summary/agent_memory/agent_memory-manual-20261108-145358/arxiv-b3ecb03a2b96.md: 0373fc7619ecc41ec2602aa864835f353d289cee04a262a4123fd918ed75ddd0
+model_request_count: 20
+models:
+  generation:
+    observed_model: gpt-6.1-sol
+    requested_model: gpt-6.1-sol
+  review:
+    observed_model: gpt-6-astra
+    requested_model: gpt-6-astra
+output_hashes:
+  articles/test/agent_memory/agent_memory-manual-20261108-145358/topic-1.md: c3a8c5b4055888e24ec0f4a54efd1b79346deb4f158f09ddf4cbca34e4aeb652
+  insights/test/agent_memory/agent_memory-manual-20261108-145358/report.md: 02f524355fdaa9490bd92249c16d5e89dc4b2757df883dad15c71ebf729cf6d9
+  reports/test/agent_memory/codex-insight/agent_memory-manual-20261108-145358/candidate.yaml: 31b88b306ea0770ad67449c60351ff4c8107606ea3ba02645a6e4927f0f4da08
+  reports/test/agent_memory/codex-insight/agent_memory-manual-20261108-145358/review.yaml: 9a3d3e4b51946d2e7d3cd333a04b819d5fad0491f21dac34cd68fd18750ce5a7
+outputs:
+- insights/test/agent_memory/agent_memory-manual-20261108-145358/report.md
+- articles/test/agent_memory/agent_memory-manual-20261108-145358/topic-1.md
+- reports/test/agent_memory/codex-insight/agent_memory-manual-20261108-145358/candidate.yaml
+- reports/test/agent_memory/codex-insight/agent_memory-manual-20261108-145358/review.yaml
+production_accepted: false
+reserved_turn_count: 3
+review_decision: pass
+review_policy: accuracy_only
+simulation: false
+status: complete
+task_count: 3
+topic: agent_memory
+turn_count: 3
+usage:
+  generation:
+    last:
+      cacheWriteInputTokens: 0
+      cachedInputTokens: 9088
+      inputTokens: 57081
+      outputTokens: 3593
+      reasoningOutputTokens: 0
+      totalTokens: 60674
+    modelContextWindow: 258400
+    total:
+      cacheWriteInputTokens: 0
+      cachedInputTokens: 72704
+      inputTokens: 273921
+      outputTokens: 4746
+      reasoningOutputTokens: 88
+      totalTokens: 278667
+  review:
+    last:
+      cacheWriteInputTokens: 0
+      cachedInputTokens: 9088
+      inputTokens: 56383
+      outputTokens: 12
+      reasoningOutputTokens: 0
+      totalTokens: 56395
+    modelContextWindow: 258400
+    total:
+      cacheWriteInputTokens: 0
+      cachedInputTokens: 88704
+      inputTokens: 311411
+      outputTokens: 1011
+      reasoningOutputTokens: 23
+      totalTokens: 312422
+writing_started: false
