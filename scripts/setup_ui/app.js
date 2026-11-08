@@ -16,7 +16,6 @@
     github_workflow_auth: '等待 GitHub 补充授权',
     github_create: '创建私有 GitHub 仓库', create_schedule: '正在配置定时研究',
     obsidian_sync: '更新阅读库', obsidian_open: '打开 Vault 管理器',
-    obsidian_choose_path: '选择阅读库路径',
     save_topics: '正在保存研究方向',
   };
   const problemStates = new Set(['blocked', 'failed', 'error']);
@@ -507,7 +506,7 @@
     const activeAction = snapshot?.operation?.action || requestedAction;
     const activeMessage = valueOf(snapshot?.operation?.message) || actionLabels[activeAction] || '正在处理当前步骤…';
     setText('operation-message', activeMessage);
-    setVisible('operation', isBusy());
+    setVisible('operation', isBusy() && activeAction !== 'obsidian_choose_path');
     for (const [action, button] of buttons) {
       button.disabled = isBusy() || (!snapshot?.csrf && action !== 'check')
         || (action === 'github_workflow_auth' && snapshot?.github?.can_authorize_workflow === false);

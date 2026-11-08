@@ -28,16 +28,13 @@ class ObsidianSetupError(RuntimeError):
 _MARKER = 'researchdesk-obsidian'
 _MAIN = 'refs/remotes/origin/main'
 _PATH_CONFIG = 'config/local/obsidian-vault.json'
-_FOLDER_PICKER = '''on run argv
-    set initialFolder to (POSIX file (item 1 of argv)) as alias
-    activate
-    try
-        set selectedFolder to choose folder with prompt "选择阅读库的空文件夹，或此工作台已有的阅读库。" default location initialFolder
-        return POSIX path of selectedFolder
-    on error number -128
-        return ""
-    end try
-end run'''
+_FOLDER_PICKER = '''activate
+try
+    set selectedFolder to choose folder with prompt "选择阅读库的空文件夹，或此工作台已有的阅读库。"
+    return POSIX path of selectedFolder
+on error number -128
+    return ""
+end try'''
 _READING_PATTERNS = (
     '/README.md',
     '/研究首页.md',
@@ -148,11 +145,11 @@ class ObsidianSetup:
         except (OSError, ValueError, OfflineError):
             raise ObsidianSetupError('无法读取保存的阅读库路径，请重新选择。') from None
 
-    def _pick_folder(self, initial):
+    def _pick_folder(self):
         if sys.platform != 'darwin':
             raise ObsidianSetupError('请在 Mac 上打开本机向导选择阅读库路径。')
         try:
-            result = subprocess.run(['/usr/bin/osascript', '-e', _FOLDER_PICKER, str(initial)],
+            result = subprocess.run(['/usr/bin/osascript', '-e', _FOLDER_PICKER],
                                     stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
                                     timeout=180, check=False, encoding='utf-8')
         except subprocess.TimeoutExpired:
@@ -166,15 +163,14 @@ class ObsidianSetup:
 
     def choose_path(self):
         try:
+            selected = self._pick_folder()
+            if selected is None:
+                return False
             try:
                 current = self._saved_path()
                 self._safe_location(current)
             except (OSError, ObsidianSetupError):
                 current = self._default_path
-            initial = next((path for path in (current, *current.parents) if path.is_dir()), Path.home())
-            selected = self._pick_folder(initial)
-            if selected is None:
-                return False
             self._safe_location(selected)
             if not selected.is_dir() or selected.is_mount():
                 raise ObsidianSetupError('请选择磁盘中的空文件夹，或此工作台已有的阅读库。')
