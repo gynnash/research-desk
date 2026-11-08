@@ -24,7 +24,7 @@ ResearchDesk 是一套可配置的三 Agent 研究工作台框架：采集公开
 
 在「定时研究」选择星期、时间和时区，再点击 **创建**。向导会启动 Mac 执行器、验证健康检查，并在 GitHub 工作流中保存你选择的日程。GitHub 可能要求补充更新工作流所需的授权。创建完成后可点击 **GitHub Action** 查看工作流。首次研究在下一次定时触发时开始，执行期间 Mac 需要开机联网。正式选题回存后，从向导打开确认页，亲自确认后可启动 Writing。
 
-向导也会准备独立的 Obsidian 阅读副本。首次在 Obsidian 选择「打开文件夹作为仓库」，使用向导显示的目录。新版研究和写作工作流回存后会刷新该副本。其他 GitHub 更新可在向导手动拉取。Obsidian 多端同步从该阅读库单独设置，运行目录和个人 Vault 分开使用。
+向导也会在这台 Mac 上准备独立的 Obsidian 阅读库。首次在 Obsidian 选择「打开文件夹作为仓库」，选中向导显示的目录。Mac 开机联网且执行器在线时，研究和写作结果回存后会自动刷新阅读库。推送到 GitHub `main` 的阅读资料更新也会触发刷新。需要时可在向导点击「从 GitHub 更新资料」。
 
 手动部署和已有配置迁移见[初始化说明](workflows/workbench-init.md)和[执行器说明](workflows/self-hosted-worker.md)。
 
@@ -50,7 +50,7 @@ ResearchDesk 是一套可配置的三 Agent 研究工作台框架：采集公开
 | `insights/<主题>/`     | 正式综合文章、洞察、趋势线索与后续研究方向                 |
 | `articles/<主题>/`     | 待确认选题，以及人工确认后生成的大纲、初稿和候选稿             |
 
-四个资料目录都按研究方向分组。新版正式综合文章在 `insights/<主题>/<批次>/report.md`，待确认选题在 `articles/<主题>/<批次>-topic-N.md`。`insights/test/`、`articles/test/` 和 `reports/` 中保留原始运行结果、准确性审阅及准入证明；它们供恢复和核验使用。模拟结果始终留在测试区，不能正式入库。已有三 Agent 全轮次及旧准入保持兼容，旧资料不自动迁移。Obsidian 可打开向导准备的阅读副本。
+四个资料目录都按研究方向分组。新版正式综合文章在 `insights/<主题>/<批次>/report.md`，待确认选题在 `articles/<主题>/<批次>-topic-N.md`。`insights/test/`、`articles/test/` 和 `reports/` 中保留原始运行结果、准确性审阅及准入证明；它们供恢复和核验使用。模拟结果始终留在测试区，不能正式入库。已有三 Agent 全轮次及旧准入保持兼容，旧资料不自动迁移。
 
 当前框架支持 arXiv、Letta、LangChain、Hugging Face Blog、美团技术团队和阮一峰博客等公开来源适配器；来源和研究范围由 YAML 配置。[知乎官方 API](workflows/zhihu-api.md)提供独立额度查询与搜索候选验证入口，搜索摘要尚未接入全文研究。X、Reddit、Quora 未接入。关注度排序只反映实际扫描和可观测信号。
 
@@ -72,6 +72,10 @@ SDK 明确失败后的重试需要显式授权；补跑 `catchup` 使用受限�
 PYTHONPATH=tests .venv-membership/bin/python -B -m unittest test_research_depth test_insight_depth test_fulltext_required test_usage_archive
 ```
 
-GitHub 用于保存代码、公共配置模板和用户后续产生的资料版本。个人设置、用量归档及真实 SDK 请求账本只留在本机；新用户不会继承维护者的用量或测试回执。Markdown 可以在 GitHub 或 Obsidian 阅读。用 Obsidian Sync 多端阅读时，选择独立阅读库作为同步对象。
+GitHub 用于保存代码、公共配置模板和用户后续产生的资料版本。个人设置、用量归档及真实 SDK 请求账本只留在本机；新用户不会继承维护者的用量或测试回执。
+
+独立阅读库包含 README 指南，以及 `collection/`、`summary/`、`insights/` 和 `articles/` 下的普通 Markdown 文件，跳过隐藏路径和名为 `test` 的路径。已有干净的阅读副本会在下次成功同步时原地迁移。遇到本地改动或冲突时，向导会暂停更新并保留文件。
+
+多设备阅读请在 Mac 的阅读库中启用官方 Obsidian Sync，再在手机或其他电脑上连接同一个远程 Vault。Mac 上运行中的 Obsidian 会把阅读库更新同步到远程 Vault。个人笔记可放在自己的 Vault 中。[设置 Obsidian Sync](https://obsidian.md/help/sync/setup)
 
 `.gitignore` 排除本地工作台配置、凭据、API Key、缓存和 Obsidian 本地配置。已有本机文件保留，旧 Git 历史不改写；`.gitignore` 不控制 Obsidian Sync 的同步范围。配置映射、迁移和可复现检查见[工作台初始化](workflows/workbench-init.md)。

@@ -398,6 +398,105 @@ class ObsidianNetworkTest(unittest.TestCase):
         self.assertEqual(command[-3:], ['fetch', '--', origin])
 
 
+class ObsidianReadingVaultTest(unittest.TestCase):
+    def setUp(self):
+        temporary = tempfile.TemporaryDirectory(prefix='researchdesk-reading-vault-')
+        self.addCleanup(temporary.cleanup)
+        root = Path(temporary.name).resolve()
+        self.source = root / 'source'
+        workbench_root = root / 'workbench'
+        for directory in (self.source, workbench_root):
+            directory.mkdir()
+            self.git(directory, 'init', '-b', 'main')
+        self.git(workbench_root, 'remote', 'add', 'origin', str(self.source))
+        self.vault = obsidian_setup.ObsidianSetup(workbench_root, root / 'vaults')
+        self.reading = {
+            'README.md': '阅读指南',
+            'collection/agents/week/items/paper/original.md': '论文原文',
+            'summary/agents/week/paper.md': '逐篇总结',
+            'insights/agents/week/report.md': '综合洞察',
+            'articles/agents/week-topic-1.md': '待确认选题',
+        }
+        other = {
+            '.gitignore': '/.obsidian/\n',
+            'scripts/tool.py': '# code',
+            'config/README.md': '配置说明',
+            'reports/proof.md': '运行证明',
+            'summary/agents/week/data.yaml': 'private: false',
+            'summary/agents/week/.draft.md': '隐藏草稿',
+            'collection/agents/.hidden/notes.md': '隐藏目录',
+            'insights/test/fixture/report.md': '测试洞察',
+            'articles/agents/test/fixture.md': '测试稿件',
+        }
+        for path, content in {**self.reading, **other}.items():
+            self.write(self.source, path, content)
+        self.commit()
+
+    @staticmethod
+    def git(root, *args):
+        result = subprocess.run(
+            ['git', '-C', str(root), '-c', 'core.hooksPath=/dev/null', '-c', 'commit.gpgsign=false',
+             '-c', 'user.name=ResearchDesk Test', '-c', 'user.email=test@example.invalid', *args],
+            capture_output=True, text=True, check=True,
+        )
+        return result.stdout.strip()
+
+    @staticmethod
+    def write(root, relative, content):
+        path = root / relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(content, encoding='utf-8')
+
+    def commit(self):
+        self.git(self.source, 'add', '--all')
+        self.git(self.source, 'commit', '-m', 'Update reading fixture')
+
+    def visible_files(self):
+        return {path.relative_to(self.vault.path).as_posix() for path in self.vault.path.rglob('*')
+                if path.is_file() and '.git' not in path.relative_to(self.vault.path).parts}
+
+    def test_initial_copy_and_automatic_refresh_only_show_reading_files(self):
+        self.vault.sync()
+        self.assertEqual(self.visible_files(), self.reading.keys())
+        summary = 'summary/agents/week/paper.md'
+        removed = 'collection/agents/week/items/paper/original.md'
+        added = 'articles/agents/week-draft.md'
+        self.write(self.vault.path, '.obsidian/app.json', '{}')
+        self.write(self.source, summary, '更新后的总结')
+        self.write(self.source, added, '新稿件')
+        self.write(self.source, 'scripts/new.py', '# new code')
+        (self.source / removed).unlink()
+        self.commit()
+
+        with (mock.patch.object(obsidian_setup, '_github_repo', return_value='fixture/workbench'),
+              mock.patch.object(obsidian_setup, '_reading_remote', side_effect=lambda remote: (remote, False))):
+            self.assertTrue(self.vault.refresh_existing('fixture/workbench'))
+
+        self.assertEqual(self.visible_files(),
+                         (self.reading.keys() - {removed}) | {added, '.obsidian/app.json'})
+        self.assertEqual((self.vault.path / summary).read_text(encoding='utf-8'), '更新后的总结')
+        self.assertEqual((self.vault.path / '.obsidian/app.json').read_text(encoding='utf-8'), '{}')
+        self.assertEqual(self.vault.status()['state'], 'ready')
+
+    def test_legacy_copy_migrates_in_place_and_protects_local_edits(self):
+        self.vault.path.parent.mkdir()
+        self.git(self.source, 'clone', '--no-local', '--single-branch', '--branch', 'main',
+                 str(self.source), str(self.vault.path))
+        self.write(self.vault.path, '.git/researchdesk-obsidian', self.vault._identity + '\n')
+        self.write(self.vault.path, '.obsidian/app.json', '{"theme":"local"}')
+        old_code = 'scripts/tool.py'
+        self.write(self.vault.path, old_code, '本地修改')
+        with self.assertRaisesRegex(obsidian_setup.ObsidianSetupError, '本地改动'):
+            self.vault.sync()
+        self.assertEqual((self.vault.path / old_code).read_text(encoding='utf-8'), '本地修改')
+
+        self.git(self.vault.path, 'restore', '--', old_code)
+        self.vault.sync()
+        self.assertEqual(self.visible_files(), self.reading.keys() | {'.obsidian/app.json'})
+        self.assertEqual((self.vault.path / '.obsidian/app.json').read_text(encoding='utf-8'), '{"theme":"local"}')
+        self.assertEqual(self.vault.status()['state'], 'ready')
+
+
 class GitHubScheduleTest(unittest.TestCase):
     def test_github_environment_uses_system_proxy_and_preserves_bypass(self):
         proxies = {'http': 'http://proxy.fixture:3128', 'https': 'http://proxy.fixture:3129'}

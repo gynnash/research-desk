@@ -1,4 +1,4 @@
-"""Keep a separate local Obsidian reading copy of the workbench's origin/main."""
+"""Keep a separate Obsidian projection of the workbench's origin/main."""
 
 import argparse
 from contextlib import contextmanager
@@ -23,6 +23,17 @@ class ObsidianSetupError(RuntimeError):
 
 _MARKER = 'researchdesk-obsidian'
 _MAIN = 'refs/remotes/origin/main'
+_READING_PATTERNS = (
+    '/README.md',
+    '/collection/**/*.md',
+    '/summary/**/*.md',
+    '/insights/**/*.md',
+    '/articles/**/*.md',
+    '!**/test/**',
+    '!**/.*/**',
+    '!**/.*',
+)
+_OBSIDIAN_EXCLUDE = b'/.obsidian/'
 _GITHUB_REPO = re.compile(r'[A-Za-z0-9-]+/[A-Za-z0-9_.-]+')
 _GIT_OVERRIDE = {
     'GIT_DIR', 'GIT_WORK_TREE', 'GIT_COMMON_DIR', 'GIT_INDEX_FILE', 'GIT_NAMESPACE',
@@ -147,7 +158,8 @@ class ObsidianSetup:
         with marker.open('rb') as handle:
             if handle.read(64) != (self._identity + '\n').encode():
                 raise ObsidianSetupError(conflict)
-        for relative in ('config', 'HEAD', 'index', 'refs', 'packed-refs', 'objects', 'commondir'):
+        for relative in ('config', 'config.worktree', 'HEAD', 'index', 'refs', 'packed-refs', 'objects',
+                         'commondir', 'info', 'info/exclude', 'info/sparse-checkout'):
             if (git_dir / relative).is_symlink():
                 raise ObsidianSetupError(conflict)
         top = self._git(self.path, 'rev-parse', '--show-toplevel', message=conflict)
@@ -160,7 +172,9 @@ class ObsidianSetup:
     def _clean_main(self):
         if self._git(self.path, 'branch', '--show-current').strip() != b'main':
             raise ObsidianSetupError('阅读副本当前不在 main，已保留现有文件。')
-        if self._git(self.path, 'status', '--porcelain', '--untracked-files=all'):
+        changes = self._git(self.path, 'status', '--porcelain', '-z', '--untracked-files=all')
+        # Older copies can lack the local exclude until the next successful sync.
+        if any(entry and not entry.startswith(b'?? .obsidian/') for entry in changes.split(b'\0')):
             raise ObsidianSetupError('阅读副本有本地改动，请先保存或移出这些文件，再刷新 GitHub 内容。')
 
     def status(self):
@@ -207,6 +221,23 @@ class ObsidianSetup:
                     or path.split(b'/', 1)[0].lower() == b'.obsidian'):
                 raise ObsidianSetupError('GitHub 的 main 包含符号链接、子模块或 Obsidian 本地设置，已停止更新阅读副本。')
 
+    def _project(self, checkout):
+        info = checkout / '.git' / 'info'
+        if info.is_symlink():
+            raise ObsidianSetupError('阅读副本的 Git 设置目录使用了符号链接，已停止更新。')
+        info.mkdir(mode=0o700, exist_ok=True)
+        fd = os.open(info / 'exclude', os.O_CREAT | os.O_RDWR | os.O_NOFOLLOW | os.O_NONBLOCK, 0o600)
+        with os.fdopen(fd, 'r+b') as handle:
+            if not stat.S_ISREG(os.fstat(handle.fileno()).st_mode):
+                raise ObsidianSetupError('阅读副本的 Git 忽略文件位置已被占用。')
+            existing = handle.read()
+            if _OBSIDIAN_EXCLUDE not in existing.splitlines():
+                if existing and not existing.endswith(b'\n'):
+                    handle.write(b'\n')
+                handle.write(_OBSIDIAN_EXCLUDE + b'\n')
+        self._git(checkout, 'sparse-checkout', 'set', '--no-cone', '--', *_READING_PATTERNS,
+                  message='无法设置阅读文件范围，请检查本机 Git 和阅读副本后重试。')
+
     def _clone(self, remote):
         source, github_auth = _reading_remote(remote)
         with tempfile.TemporaryDirectory(prefix='.researchdesk-clone-', dir=self.path.parent) as scratch:
@@ -215,6 +246,7 @@ class ObsidianSetup:
                       '--no-tags', '--', source, str(staged), network=True, github_auth=github_auth,
                       message='无法克隆 GitHub 的 main。请检查网络、仓库权限和向导的 GitHub 登录。')
             self._validate_tree(staged)
+            self._project(staged)
             self._git(staged, 'checkout', 'main', message='无法准备 main 的阅读文件。')
             (staged / '.git' / _MARKER).write_text(self._identity + '\n', encoding='ascii')
             staged.chmod(0o700)
@@ -248,6 +280,7 @@ class ObsidianSetup:
         self._clean_main()
         self._git(self.path, 'merge-base', '--is-ancestor', 'HEAD', _MAIN,
                   message='阅读副本与 GitHub 的 main 已分叉或本地有独有提交，现有文件已保留。')
+        self._project(self.path)
         self._git(self.path, 'merge', '--ff-only', '--no-overwrite-ignore', _MAIN,
                   message='无法安全快进更新。请先处理阅读副本中的冲突文件。')
 

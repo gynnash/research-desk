@@ -100,25 +100,6 @@ jobs:
   refresh-obsidian:
     needs: save-checkpoints
     if: ${{ !cancelled() && github.ref == 'refs/heads/main' && vars.RESEARCHDESK_DEPLOYED == 'true' && needs.save-checkpoints.result == 'success' }}
-    runs-on: [self-hosted, macOS, researchdesk]
-    timeout-minutes: 5
-    continue-on-error: true
+    uses: ./.github/workflows/researchdesk-obsidian.yml
     permissions:
       contents: read
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          ref: main
-          path: researchdesk-code
-          persist-credentials: false
-      - name: Refresh the local Obsidian reading copy if configured
-        env:
-          GH_TOKEN: ${{ github.token }}
-          EXPECTED_REPO: ${{ github.repository }}
-        run: |
-          if [ ! -x "${RESEARCHDESK_RUNTIME_PYTHON:-}" ] || [ -z "${RESEARCHDESK_WORKBENCH_ROOT:-}" ]; then
-            echo '::warning::The runner is not bound to a local ResearchDesk workbench.'
-            exit 1
-          fi
-          "$RESEARCHDESK_RUNTIME_PYTHON" researchdesk-code/scripts/researchdesk_setup_obsidian.py \
-            --refresh-existing --root "$RESEARCHDESK_WORKBENCH_ROOT" --expected-repo "$EXPECTED_REPO"
