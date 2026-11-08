@@ -488,6 +488,7 @@ class SetupWizard:
                     self.state['github'] = github
                     operation = self.state['operation'] or {}
                     if github['state'] != 'needs_login' and operation.get('attempt'):
+                        operation.pop('code', None)
                         self.state['notice'] = section('ready', 'GitHub 授权成功。', action=action,
                                                        attempt=operation['attempt'])
             elif action == 'github_create':
@@ -554,7 +555,9 @@ def create_server(wizard, port=0):
     assets = Path(__file__).resolve().parent / 'setup_ui'
     routes = {'/': ('index.html', 'text/html; charset=utf-8'),
               '/style.css': ('style.css', 'text/css; charset=utf-8'),
-              '/app.js': ('app.js', 'text/javascript; charset=utf-8')}
+              '/app.js': ('app.js', 'text/javascript; charset=utf-8'),
+              '/github-auth.html': ('github-auth.html', 'text/html; charset=utf-8'),
+              '/github-auth.js': ('github-auth.js', 'text/javascript; charset=utf-8')}
     token = secrets.token_urlsafe(32)
 
     class Handler(BaseHTTPRequestHandler):
@@ -565,7 +568,7 @@ def create_server(wizard, port=0):
             super().setup()
             self.connection.settimeout(10)
 
-        def reply(self, status, payload, content_type='application/json; charset=utf-8'):
+        def reply(self, status, payload, content_type='application/json; charset=utf-8', *, allow_same_origin_frame=False):
             if isinstance(payload, dict):
                 payload = json.dumps(payload, ensure_ascii=False).encode('utf-8')
             self.send_response(status)
@@ -573,10 +576,11 @@ def create_server(wizard, port=0):
             self.send_header('Content-Length', str(len(payload)))
             self.send_header('Cache-Control', 'no-store')
             self.send_header('X-Content-Type-Options', 'nosniff')
-            self.send_header('X-Frame-Options', 'DENY')
+            self.send_header('X-Frame-Options', 'SAMEORIGIN' if allow_same_origin_frame else 'DENY')
             self.send_header('Referrer-Policy', 'no-referrer')
+            ancestors = "'self'" if allow_same_origin_frame else "'none'"
             self.send_header('Content-Security-Policy',
-                             "default-src 'self'; frame-ancestors 'none'; base-uri 'none'; object-src 'none'")
+                             f"default-src 'self'; frame-ancestors {ancestors}; base-uri 'none'; object-src 'none'")
             self.end_headers()
             self.wfile.write(payload)
 
@@ -606,7 +610,8 @@ def create_server(wizard, port=0):
             if path not in routes:
                 return self.reply(404, {'error': '未找到此页面。'})
             name, content_type = routes[path]
-            self.reply(200, (assets / name).read_bytes(), content_type)
+            self.reply(200, (assets / name).read_bytes(), content_type,
+                       allow_same_origin_frame=path == '/github-auth.html')
 
         def do_POST(self):
             if not self.trusted(mutation=True):

@@ -21,7 +21,6 @@
   const problemStates = new Set(['blocked', 'failed', 'error']);
   const defaultSchedule = {weekdays: [2, 5], time: '03:00', timezone: 'Asia/Shanghai'};
   const weekdayNames = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
-  const githubDeviceUrl = 'https://github.com/login/device';
   const maxTopics = 8;
   const maxTopicLength = 80;
   const topicInput = byId('topic-input');
@@ -30,6 +29,7 @@
   const scheduleDays = Array.from(scheduleEditor.querySelectorAll('input[name="weekday"]'));
   const scheduleClock = byId('schedule-clock');
   const scheduleZone = byId('schedule-zone');
+  const githubAuthorizationWindow = byId('github-auth-window');
   let snapshot = null;
   let loadingStatus = null;
   let requestedAction = null;
@@ -364,14 +364,23 @@
     }
   }
 
+  function takeChatgptAuthorizationTab() {
+    const tab = chatgptAuthorizationTab;
+    chatgptAuthorizationTab = null;
+    try {
+      return tab && !tab.closed && tab.location.href === 'about:blank' ? tab : null;
+    } catch {
+      return null;
+    }
+  }
+
   function renderAccounts(chatgpt, github, operation) {
     const chatgptRunning = operation?.action === 'chatgpt_login' ? operation : null;
     const chatgptLink = httpsUrl(chatgptRunning?.url || chatgpt.url, ({hostname}) => (
       hostname === 'chatgpt.com' || hostname === 'openai.com' || hostname.endsWith('.openai.com')
     ));
     if (chatgptAuthorizationTab && chatgptRunning?.url && chatgptLink) {
-      if (!chatgptAuthorizationTab.closed) chatgptAuthorizationTab.location.replace(chatgptLink);
-      chatgptAuthorizationTab = null;
+      takeChatgptAuthorizationTab()?.location.replace(chatgptLink);
     }
     const chatgptLogin = ['needs_login', 'not_ready', 'blocked', 'failed', 'error'].includes(chatgpt.state);
     setButton('chatgpt_login', chatgptLogin);
@@ -465,14 +474,16 @@
 
   function render() {
     if (chatgptAuthorizationTab && requestedAction !== 'chatgpt_login'
-        && snapshot?.operation?.action !== 'chatgpt_login') {
-      chatgptAuthorizationTab.close();
-      chatgptAuthorizationTab = null;
+        && (snapshot || actionIssue) && snapshot?.operation?.action !== 'chatgpt_login') {
+      takeChatgptAuthorizationTab()?.close();
     }
     const issue = connectionIssue || actionIssue;
     setText('connection-error', issue);
     setVisible('connection-error', Boolean(issue));
     const notice = snapshot?.notice;
+    if (notice?.state === 'ready' && notice.attempt) {
+      githubAuthorizationWindow.contentWindow?.finishGitHubAuthorization?.(notice.attempt);
+    }
     const scheduleReady = notice?.action === 'create_schedule' && notice.state === 'ready'
       && snapshot?.deployment?.state === 'ready';
     const showNotice = Boolean(valueOf(notice?.message)) && !isBusy() && !scheduleReady;
@@ -654,9 +665,12 @@
     if (!error) return runAction('create_schedule', {schedule: weekly});
   });
   byId('copy-and-authorize').addEventListener('click', () => {
-    if (!byId('github-device-code').textContent) return;
+    const attempt = snapshot?.operation?.attempt;
+    if (!attempt || !byId('github-device-code').textContent) return;
     copyValue('github-device-code', '已复制 GitHub 设备码。');
-    window.open(githubDeviceUrl, '_blank', 'noopener,noreferrer');
+    const opened = githubAuthorizationWindow.contentWindow?.openGitHubAuthorization?.(attempt);
+    actionIssue = opened ? '' : '无法打开 GitHub 授权页。请允许向导打开新标签页后重试。';
+    render();
   });
   byId('copy-path').addEventListener('click', () => copyValue('obsidian-path', '已复制阅读库路径。'));
 
