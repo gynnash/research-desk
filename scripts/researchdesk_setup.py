@@ -258,6 +258,7 @@ class SetupWizard:
             'obsidian': section('idle', 'GitHub 就绪后准备独立阅读库。'),
             'operation': None,
         }
+        self.return_url = None
         self.confirmation_process = None
         self.confirmation_url = None
 
@@ -458,6 +459,7 @@ class SetupWizard:
 
     def perform(self, action, payload=None):
         stage = 'setup'
+        return_to_wizard = False
         try:
             if action == 'check':
                 self.inspect()
@@ -473,14 +475,13 @@ class SetupWizard:
                 stage = 'chatgpt'
                 self.client().login(announce=lambda _: self.notify(ACTIONS[action]))
                 self.update(stage, self.check_chatgpt())
-            elif action == 'github_login':
-                stage = 'github'
-                self.github.login(self.notify)
-                self.update(stage, self.github.status())
-            elif action == 'github_workflow_auth':
-                stage = 'notice'
-                self.github.authorize_workflow(self.notify)
-                self.update('github', self.github.status())
+            elif action in ('github_login', 'github_workflow_auth'):
+                stage = 'github' if action == 'github_login' else 'notice'
+                authorize = self.github.login if action == 'github_login' else self.github.authorize_workflow
+                authorize(self.notify)
+                github = self.github.status()
+                self.update('github', github)
+                return_to_wizard = github['state'] != 'needs_login'
             elif action == 'github_create':
                 stage = 'github'
                 github = self.github.status()
@@ -539,6 +540,11 @@ class SetupWizard:
                                 'message': '此步骤暂时无法完成，请检查本机环境和网络后重试。'})
         finally:
             self.update('operation', None)
+            if return_to_wizard and self.return_url:
+                try:
+                    webbrowser.open(self.return_url)
+                except (OSError, webbrowser.Error):
+                    pass
 
 
 def create_server(wizard, port=0):
@@ -658,6 +664,8 @@ def main(argv=None):
         wizard = SetupWizard(root)
         with create_server(wizard) as server:
             url = f'http://127.0.0.1:{server.server_port}'
+            if not args.no_browser:
+                wizard.return_url = f'{url}/#accounts-heading'
             os.ftruncate(fd, 0)
             os.write(fd, url.encode('ascii'))
             print('ResearchDesk 配置向导 ' + url, flush=True)

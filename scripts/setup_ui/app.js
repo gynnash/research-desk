@@ -646,6 +646,9 @@
     await refresh();
     window.setTimeout(poll, isBusy() ? 1500 : 4000);
   }
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) refresh();
+  });
   populateTimezones();
   poll();
 })();
