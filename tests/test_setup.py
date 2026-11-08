@@ -492,6 +492,60 @@ class ObsidianReadingVaultTest(unittest.TestCase):
         self.assertEqual((self.vault.path / '.obsidian/app.json').read_text(encoding='utf-8'), '{}')
         self.assertEqual(self.vault.status()['state'], 'ready')
 
+    def test_selected_empty_path_is_saved_and_used_for_automatic_refresh(self):
+        self.vault.sync()
+        previous = self.vault.path
+        selected = self.source.parent / '自选 阅读库 '
+        selected.mkdir()
+        with mock.patch.object(self.vault, '_pick_folder', return_value=selected):
+            self.assertTrue(self.vault.choose_path())
+        self.assertEqual(list(selected.iterdir()), [])
+
+        reopened = obsidian_setup.ObsidianSetup(self.vault.root)
+        status = reopened.status()
+        self.assertEqual(status['path'], str(selected))
+        self.assertEqual(status['state'], 'not_ready')
+        reopened.sync()
+        self.assertEqual(reopened.status()['state'], 'ready')
+        self.assertEqual((selected / 'README.md').read_text(encoding='utf-8'), self.reading['README.md'])
+        self.assertFalse((selected / 'scripts/tool.py').exists())
+
+        self.write(self.source, 'README.md', '更新后的阅读指南')
+        self.commit()
+        with (mock.patch.object(obsidian_setup, '_github_repo', return_value='fixture/workbench'),
+              mock.patch.object(obsidian_setup, '_reading_remote', side_effect=lambda remote: (remote, False))):
+            runner_vault = obsidian_setup.ObsidianSetup(self.vault.root)
+            self.assertTrue(runner_vault.refresh_existing('fixture/workbench'))
+
+        self.assertEqual((selected / 'README.md').read_text(encoding='utf-8'), '更新后的阅读指南')
+        self.assertEqual((previous / 'README.md').read_text(encoding='utf-8'), self.reading['README.md'])
+
+    def test_cancel_and_invalid_folder_leave_the_existing_selection_intact(self):
+        selected = self.source.parent / '已有阅读库'
+        selected.mkdir()
+        with mock.patch.object(self.vault, '_pick_folder', return_value=selected):
+            self.assertTrue(self.vault.choose_path())
+        self.vault.sync()
+        self.write(selected, '.obsidian/app.json', '{"theme":"local"}')
+
+        with mock.patch.object(self.vault, '_pick_folder', return_value=None):
+            self.assertFalse(self.vault.choose_path())
+        unrelated = self.source.parent / '个人笔记'
+        self.write(unrelated, '笔记.md', '保留笔记')
+        inside_workbench = self.vault.root / '阅读库'
+        inside_workbench.mkdir()
+        for invalid in (unrelated, inside_workbench):
+            with (self.subTest(folder=invalid), mock.patch.object(self.vault, '_pick_folder', return_value=invalid),
+                  self.assertRaises(obsidian_setup.ObsidianSetupError)):
+                self.vault.choose_path()
+
+        reopened = obsidian_setup.ObsidianSetup(self.vault.root)
+        status = reopened.status()
+        self.assertEqual(status['path'], str(selected))
+        self.assertEqual(status['state'], 'ready')
+        self.assertEqual((selected / '.obsidian/app.json').read_text(encoding='utf-8'), '{"theme":"local"}')
+        self.assertEqual((unrelated / '笔记.md').read_text(encoding='utf-8'), '保留笔记')
+
     def test_legacy_copy_migrates_in_place_and_protects_local_edits(self):
         self.vault.path.parent.mkdir()
         self.git(self.source, 'clone', '--no-local', '--single-branch', '--branch', 'main',

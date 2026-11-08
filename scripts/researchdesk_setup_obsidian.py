@@ -17,6 +17,7 @@ import unicodedata
 from urllib.parse import quote, unquote, urlsplit
 
 import researchdesk_workbench as workbench
+from researchdesk_offline import OfflineError
 from researchdesk_setup_github import apply_system_github_proxy
 
 
@@ -134,14 +135,17 @@ class ObsidianSetup:
     def _saved_path(self):
         try:
             config = workbench._path(self.root, _PATH_CONFIG)
-            with config.open(encoding='utf-8') as handle:
+            fd = os.open(config, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+            with os.fdopen(fd, encoding='utf-8') as handle:
+                if not stat.S_ISREG(os.fstat(handle.fileno()).st_mode):
+                    raise ValueError('invalid configuration file')
                 value = json.loads(handle.read(16384))
             if not isinstance(value, str) or not Path(value).is_absolute() or any(ord(c) < 32 for c in value):
                 raise ValueError('invalid path')
             return Path(value)
         except FileNotFoundError:
             return self._default_path
-        except (OSError, ValueError, workbench.store.OfflineError):
+        except (OSError, ValueError, OfflineError):
             raise ObsidianSetupError('无法读取保存的阅读库路径，请重新选择。') from None
 
     def _pick_folder(self, initial):
@@ -164,7 +168,8 @@ class ObsidianSetup:
         try:
             try:
                 current = self._saved_path()
-            except ObsidianSetupError:
+                self._safe_location(current)
+            except (OSError, ObsidianSetupError):
                 current = self._default_path
             initial = next((path for path in (current, *current.parents) if path.is_dir()), Path.home())
             selected = self._pick_folder(initial)
@@ -181,7 +186,7 @@ class ObsidianSetup:
             workbench._write(config, (json.dumps(str(selected)) + '\n').encode('utf-8'))
             self.path = selected
             return True
-        except (OSError, workbench.store.OfflineError):
+        except (OSError, OfflineError):
             raise ObsidianSetupError('无法保存阅读库路径，请检查目录访问权限后重试。') from None
 
     def _git(self, root, *args, message='无法读取 Git 仓库，请检查本机 Git 设置。',
@@ -275,7 +280,7 @@ class ObsidianSetup:
             result['path'] = str(self.path)
             self._safe_location()
             remote = self._remote(self.root)
-            if self.path.exists() and (self.path == self._default_path or any(self.path.iterdir())):
+            if self.path.exists() and any(self.path.iterdir()):
                 self._checkout(remote)
                 result['can_open'] = True
                 self._clean_main()
@@ -351,6 +356,10 @@ class ObsidianSetup:
             raise ObsidianSetupError('GitHub 的新阅读文件与阅读副本中的本地文件冲突，已保留现有文件。')
 
     def _clone(self, remote):
+        occupied = '阅读目录已被占用，已保留现有文件。'
+        original = self.path.lstat() if self.path.exists() else None
+        if original and (not stat.S_ISDIR(original.st_mode) or any(self.path.iterdir())):
+            raise ObsidianSetupError(occupied)
         source, github_auth = _reading_remote(remote)
         with tempfile.TemporaryDirectory(prefix='.researchdesk-clone-', dir=self.path.parent) as scratch:
             staged = Path(scratch) / 'vault'
@@ -363,18 +372,21 @@ class ObsidianSetup:
             (staged / '.git' / _MARKER).write_text(self._identity + '\n', encoding='ascii')
             staged.chmod(0o700)
             self._safe_location()
-            try:
-                self.path.mkdir(mode=0o700)
-            except FileExistsError:
-                raise ObsidianSetupError('阅读目录已被占用，已保留现有文件。') from None
+            if original is None:
+                try:
+                    self.path.mkdir(mode=0o700)
+                except FileExistsError:
+                    raise ObsidianSetupError(occupied) from None
             reservation = self.path.lstat()
+            if original and (not os.path.samestat(original, reservation) or any(self.path.iterdir())):
+                raise ObsidianSetupError(occupied)
             try:
                 os.rename(staged, self.path)
             except OSError:
-                current = self.path.lstat()
-                if (current.st_dev, current.st_ino) == (reservation.st_dev, reservation.st_ino):
+                if original is None:
                     try:
-                        self.path.rmdir()
+                        if os.path.samestat(self.path.lstat(), reservation):
+                            self.path.rmdir()
                     except OSError:
                         pass
                 raise
@@ -399,9 +411,10 @@ class ObsidianSetup:
 
     def sync(self):
         try:
+            self.path = self._saved_path()
             with self._lock():
                 remote = self._remote(self.root)
-                if self.path.exists():
+                if self.path.exists() and any(self.path.iterdir()):
                     self._update(remote)
                 else:
                     self._clone(remote)
@@ -413,8 +426,9 @@ class ObsidianSetup:
         if not _GITHUB_REPO.fullmatch(expected_repo):
             raise ObsidianSetupError('GitHub 仓库标识无效，已跳过自动刷新。')
         try:
+            self.path = self._saved_path()
             self._safe_location()
-            if not self.path.exists():
+            if not self.path.exists() or not any(self.path.iterdir()):
                 return False
             with self._lock():
                 remote = self._remote(self.root)

@@ -39,6 +39,7 @@ ACTIONS = {
     'github_workflow_auth': '请在浏览器中补充 GitHub Actions 授权…',
     'github_create': '正在准备你的私有 GitHub 仓库…',
     'create_schedule': '正在检查 GitHub Actions…',
+    'obsidian_choose_path': '请在 Mac 的文件夹选择器中选择阅读库路径…',
     'obsidian_sync': '正在从 GitHub 更新独立阅读库…',
     'obsidian_open': '正在打开 Obsidian…',
     'confirmation_open': '正在准备选题确认页…',
@@ -502,6 +503,12 @@ class SetupWizard:
                     return
                 self.github.create_repository()
                 self.update(stage, self.github.status())
+            elif action == 'obsidian_choose_path':
+                stage = 'notice'
+                if self.obsidian.choose_path():
+                    self.update('obsidian', self.obsidian.status())
+                    self.update(stage, section('ready', '已保存阅读库路径。'))
+                return
             elif action in {'obsidian_sync', 'obsidian_open'}:
                 stage = 'obsidian'
                 self.obsidian_action(action)
