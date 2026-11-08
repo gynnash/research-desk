@@ -412,16 +412,21 @@ class ObsidianReadingVaultTest(unittest.TestCase):
         self.vault = obsidian_setup.ObsidianSetup(workbench_root, root / 'vaults')
         self.reading = {
             'README.md': '阅读指南',
+            '研究首页.md': '研究目录',
             'collection/agents/week/items/paper/original.md': '论文原文',
             'summary/agents/week/paper.md': '逐篇总结',
             'insights/agents/week/report.md': '综合洞察',
             'articles/agents/week-topic-1.md': '待确认选题',
+            'sources/originals/agents/paper.md': '历史原文',
+            'reports/agents/week-research-paper.md': '历史总结',
+            'reports/agents/解读/week/paper.md': '历史解读',
         }
         other = {
             '.gitignore': '/.obsidian/\n',
             'scripts/tool.py': '# code',
             'config/README.md': '配置说明',
             'reports/proof.md': '运行证明',
+            'reports/agents/admissions/week/proof.md': '准入证明',
             'summary/agents/week/data.yaml': 'private: false',
             'summary/agents/week/.draft.md': '隐藏草稿',
             'collection/agents/.hidden/notes.md': '隐藏目录',
@@ -495,6 +500,21 @@ class ObsidianReadingVaultTest(unittest.TestCase):
         self.assertEqual(self.visible_files(), self.reading.keys() | {'.obsidian/app.json'})
         self.assertEqual((self.vault.path / '.obsidian/app.json').read_text(encoding='utf-8'), '{"theme":"local"}')
         self.assertEqual(self.vault.status()['state'], 'ready')
+
+    def test_new_remote_note_cannot_overwrite_an_ignored_local_file(self):
+        self.vault.sync()
+        relative = 'summary/agents/week/local.md'
+        with (self.vault.path / '.git/info/exclude').open('a', encoding='utf-8') as exclude:
+            exclude.write('/' + relative + '\n')
+        self.write(self.vault.path, relative, '本地笔记')
+        self.assertEqual(self.git(self.vault.path, 'status', '--porcelain'), '')
+        self.write(self.source, relative, '远端新笔记')
+        self.commit()
+
+        with self.assertRaisesRegex(obsidian_setup.ObsidianSetupError, '本地'):
+            self.vault.sync()
+
+        self.assertEqual((self.vault.path / relative).read_text(encoding='utf-8'), '本地笔记')
 
 
 class GitHubScheduleTest(unittest.TestCase):

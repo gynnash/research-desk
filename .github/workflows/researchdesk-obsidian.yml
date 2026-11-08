@@ -6,10 +6,17 @@ on:
     branches: [main]
     paths:
       - README.md
+      - 研究首页.md
       - 'collection/**/*.md'
       - 'summary/**/*.md'
       - 'insights/**/*.md'
       - 'articles/**/*.md'
+      - 'sources/papers/**/*.md'
+      - 'sources/blogs/**/*.md'
+      - 'sources/originals/**/*.md'
+      - 'reports/*/*.md'
+      - 'reports/*/解读/**/*.md'
+      - 'reports/*/reading/**/*.md'
 
 permissions:
   contents: read

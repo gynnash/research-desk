@@ -74,7 +74,7 @@ PYTHONPATH=tests .venv-membership/bin/python -B -m unittest test_research_depth 
 
 GitHub 用于保存代码、公共配置模板和用户后续产生的资料版本。个人设置、用量归档及真实 SDK 请求账本只留在本机；新用户不会继承维护者的用量或测试回执。
 
-独立阅读库包含 README 指南，以及 `collection/`、`summary/`、`insights/` 和 `articles/` 下的普通 Markdown 文件，跳过隐藏路径和名为 `test` 的路径。已有干净的阅读副本会在下次成功同步时原地迁移。遇到本地改动或冲突时，向导会暂停更新并保留文件。
+独立阅读库包含 README 指南、研究首页，以及 `collection/`、`summary/`、`insights/` 和 `articles/` 下的 Markdown 文件。已有的来源卡、原文归档和历史解读也会保留，隐藏路径和 `test` 目录会跳过。已有干净的阅读副本会在下次同步时原地升级。遇到本地改动或冲突时，同步会暂停并保留文件。
 
 多设备阅读请在 Mac 的阅读库中启用官方 Obsidian Sync，再在手机或其他电脑上连接同一个远程 Vault。Mac 上运行中的 Obsidian 会把阅读库更新同步到远程 Vault。个人笔记可放在自己的 Vault 中。[设置 Obsidian Sync](https://obsidian.md/help/sync/setup)
 

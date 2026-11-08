@@ -12,6 +12,7 @@ import stat
 import subprocess
 import sys
 import tempfile
+import unicodedata
 from urllib.parse import quote, unquote, urlsplit
 
 from researchdesk_setup_github import apply_system_github_proxy
@@ -25,10 +26,17 @@ _MARKER = 'researchdesk-obsidian'
 _MAIN = 'refs/remotes/origin/main'
 _READING_PATTERNS = (
     '/README.md',
+    '/研究首页.md',
     '/collection/**/*.md',
     '/summary/**/*.md',
     '/insights/**/*.md',
     '/articles/**/*.md',
+    '/sources/papers/**/*.md',
+    '/sources/blogs/**/*.md',
+    '/sources/originals/**/*.md',
+    '/reports/*/*.md',
+    '/reports/*/解读/**/*.md',
+    '/reports/*/reading/**/*.md',
     '!**/test/**',
     '!**/.*/**',
     '!**/.*',
@@ -238,6 +246,26 @@ class ObsidianSetup:
         self._git(checkout, 'sparse-checkout', 'set', '--no-cone', '--', *_READING_PATTERNS,
                   message='无法设置阅读文件范围，请检查本机 Git 和阅读副本后重试。')
 
+    def _check_projection_conflicts(self):
+        # A sparse fast-forward can overwrite ignored files even with --no-overwrite-ignore.
+        ignored = self._git(self.path, 'ls-files', '--others', '--ignored', '--exclude-standard', '-z',
+                            '--', ':(exclude,top).obsidian')
+        if not ignored:
+            return
+        pathspec = [':(top,glob,icase)' + pattern[1:] for pattern in _READING_PATTERNS if pattern.startswith('/')]
+        pathspec.extend(':(top,glob,exclude)' + pattern[1:] for pattern in _READING_PATTERNS if pattern.startswith('!'))
+        incoming = self._git(self.path, 'diff', '--name-only', '--diff-filter=A', '--no-renames', '-z',
+                             'HEAD', _MAIN, '--', *pathspec)
+
+        def names(data):
+            return [unicodedata.normalize('NFC', os.fsdecode(path)).casefold()
+                    for path in data.split(b'\0') if path]
+
+        local = names(ignored)
+        if any(path == existing or path.startswith(existing + '/') or existing.startswith(path + '/')
+               for path in names(incoming) for existing in local):
+            raise ObsidianSetupError('GitHub 的新阅读文件与阅读副本中的本地文件冲突，已保留现有文件。')
+
     def _clone(self, remote):
         source, github_auth = _reading_remote(remote)
         with tempfile.TemporaryDirectory(prefix='.researchdesk-clone-', dir=self.path.parent) as scratch:
@@ -280,6 +308,7 @@ class ObsidianSetup:
         self._clean_main()
         self._git(self.path, 'merge-base', '--is-ancestor', 'HEAD', _MAIN,
                   message='阅读副本与 GitHub 的 main 已分叉或本地有独有提交，现有文件已保留。')
+        self._check_projection_conflicts()
         self._project(self.path)
         self._git(self.path, 'merge', '--ff-only', '--no-overwrite-ignore', _MAIN,
                   message='无法安全快进更新。请先处理阅读副本中的冲突文件。')
@@ -320,10 +349,12 @@ class ObsidianSetup:
             raise ObsidianSetupError('请复制阅读目录路径，在本机 Obsidian 中打开该文件夹。')
         if not finder:
             uri = 'obsidian://choose-vault'
-            config = self.path / '.obsidian'
-            readme = self.path / 'README.md'
-            if config.is_dir() and readme.is_file() and not readme.is_symlink():
-                uri = 'obsidian://open?path=' + quote(str(readme), safe='')
+            if (self.path / '.obsidian').is_dir():
+                for name in ('研究首页.md', 'README.md'):
+                    note = self.path / name
+                    if note.is_file() and not note.is_symlink():
+                        uri = 'obsidian://open?path=' + quote(str(note), safe='')
+                        break
             if self._launch(uri):
                 return
         if not self._launch('-R', str(self.path)):
