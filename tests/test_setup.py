@@ -6,6 +6,7 @@ import http.client
 import json
 import os
 from pathlib import Path
+import subprocess
 import sys
 import tempfile
 import threading
@@ -14,6 +15,7 @@ from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
 import researchdesk_setup as setup
+import researchdesk_setup_github as github_setup
 import researchdesk_workbench as workbench
 
 
@@ -337,6 +339,78 @@ class SetupSchedulePreviewTest(unittest.TestCase):
 
 
 class GitHubScheduleTest(unittest.TestCase):
+    def test_github_environment_uses_system_proxy_and_preserves_bypass(self):
+        proxies = {'http': 'http://proxy.fixture:3128', 'https': 'http://proxy.fixture:3129'}
+        with (mock.patch.dict(os.environ, {'CLICOLOR_FORCE': '1'}, clear=True),
+              mock.patch.object(github_setup, 'getproxies', return_value=proxies),
+              mock.patch.object(github_setup, 'proxy_bypass', side_effect=lambda host: host == 'api.github.com')):
+            environment = github_setup._environment()
+        self.assertEqual(environment['HTTP_PROXY'], proxies['http'])
+        self.assertEqual(environment['HTTPS_PROXY'], proxies['https'])
+        self.assertIn('api.github.com', environment['NO_PROXY'].split(','))
+        self.assertNotIn('github.com', environment['NO_PROXY'].split(','))
+        self.assertEqual(environment['NO_COLOR'], '1')
+        self.assertIn(environment.get('CLICOLOR_FORCE'), (None, '0'))
+
+    def test_github_environment_preserves_explicit_proxy_configuration(self):
+        for explicit in ({'https_proxy': 'http://proxy.fixture:3128', 'NO_PROXY': 'github.com'},
+                         {'HTTPS_PROXY': ''}, {'no_proxy': 'github.com'}):
+            with (self.subTest(explicit=explicit), mock.patch.dict(os.environ, explicit, clear=True),
+                  mock.patch.object(github_setup, 'getproxies') as system):
+                environment = github_setup._environment()
+                system.assert_not_called()
+                self.assertEqual({name: environment[name] for name in setup.runner.PROXY_NAMES
+                                  if name in environment}, explicit)
+
+    def test_login_fails_distinctly_when_no_device_code_arrives(self):
+        github = setup.GitHubSetup(workbench.REPOSITORY)
+        with (mock.patch.object(github_setup.subprocess, 'Popen') as spawn,
+              mock.patch.object(github_setup.selectors, 'DefaultSelector') as selectors,
+              mock.patch.object(github_setup.os, 'read') as read,
+              mock.patch.object(github_setup.time, 'monotonic', return_value=100),
+              mock.patch.object(github_setup.webbrowser, 'open') as browser):
+            process = spawn.return_value
+            selector = selectors.return_value.__enter__.return_value
+            process.wait.side_effect = [subprocess.TimeoutExpired('gh', 25), 0]
+            process.poll.return_value = None
+            selector.select.return_value = []
+            with self.assertRaises(setup.GitHubSetupError) as timed_out:
+                github._authorize_in_browser(['login'], mock.Mock(), 'fixture')
+            self.assertEqual(timed_out.exception.code, 'github_device_code_timeout')
+            selector.select.assert_called_once_with(25)
+            process.terminate.assert_called_once()
+
+            process.wait.side_effect = None
+            process.wait.return_value = 1
+            process.poll.return_value = 1
+            selector.select.return_value = [mock.sentinel.ready]
+            read.side_effect = [b'network error with private diagnostics', b'']
+            with self.assertRaises(setup.GitHubSetupError) as unavailable:
+                github._authorize_in_browser(['login'], mock.Mock(), 'fixture')
+            self.assertEqual(unavailable.exception.code, 'github_device_code_unavailable')
+            self.assertNotIn('private diagnostics', str(unavailable.exception))
+            browser.assert_not_called()
+
+    def test_login_resets_deadline_after_device_code(self):
+        github = setup.GitHubSetup(workbench.REPOSITORY)
+        notify = mock.Mock()
+        with (mock.patch.object(github_setup.subprocess, 'Popen') as spawn,
+              mock.patch.object(github_setup.selectors, 'DefaultSelector') as selectors,
+              mock.patch.object(github_setup.os, 'read', side_effect=[
+                  b'! First copy your one-time code: ABCD-1234\n', b'',
+              ]),
+              mock.patch.object(github_setup.time, 'monotonic', return_value=100),
+              mock.patch.object(github_setup.webbrowser, 'open') as browser):
+            spawn.return_value.wait.return_value = 0
+            spawn.return_value.poll.return_value = 0
+            selector = selectors.return_value.__enter__.return_value
+            selector.select.return_value = [mock.sentinel.ready]
+            github._authorize_in_browser(['login'], notify, 'fixture')
+        self.assertEqual(selector.select.call_args_list, [mock.call(25), mock.call(300)])
+        self.assertEqual([call.kwargs['code'] for call in notify.call_args_list if 'code' in call.kwargs],
+                         ['ABCD-1234'])
+        browser.assert_called_once_with('https://github.com/login/device', new=2)
+
     def test_first_login_requests_workflow_permission(self):
         github = setup.GitHubSetup(workbench.REPOSITORY)
         missing = setup.GitHubSetupError('需要登录', code='github_login_required')

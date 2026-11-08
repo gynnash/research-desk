@@ -10,6 +10,7 @@ import selectors
 import shutil
 import subprocess
 import time
+from urllib.request import getproxies, proxy_bypass
 import webbrowser
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
@@ -26,6 +27,7 @@ DISABLED_WORKFLOWS = {'disabled_fork', 'disabled_inactivity', 'disabled_manually
 HOST = 'github.com'
 DEVICE_URL = 'https://github.com/login/device'
 CLI_INSTALL_URL = 'https://cli.github.com/'
+DEVICE_CODE_TIMEOUT = 25
 LOGIN_TIMEOUT = 300
 HEALTH_TIMEOUT = 240
 HEALTH_STEP = 'Reload configuration and run the registered workbench'
@@ -59,6 +61,18 @@ def _environment():
                        GIT_ASKPASS='/usr/bin/false', NO_COLOR='1')
     environment.pop('GH_FORCE_TTY', None)
     environment.pop('GH_DEBUG', None)
+    environment.pop('CLICOLOR_FORCE', None)
+    # Go's HTTP client uses proxy environment variables. In a macOS terminal
+    # with no explicit override, use the system proxy already used by browsers.
+    if not any(name in environment for name in runner.PROXY_NAMES):
+        proxies = getproxies()
+        for protocol in ('http', 'https'):
+            if proxies.get(protocol):
+                environment[protocol.upper() + '_PROXY'] = proxies[protocol]
+        if 'HTTP_PROXY' in environment or 'HTTPS_PROXY' in environment:
+            bypass = [host for host in (HOST, 'api.' + HOST) if proxy_bypass(host)]
+            if bypass:
+                environment['NO_PROXY'] = ','.join(bypass)
     return environment
 
 
@@ -349,9 +363,9 @@ class GitHubSetup:
             )
         except OSError:
             raise GitHubSetupError('无法启动 GitHub CLI 的浏览器登录。') from None
-        deadline = time.monotonic() + LOGIN_TIMEOUT
+        deadline = time.monotonic() + DEVICE_CODE_TIMEOUT
+        code = None
         try:
-            code = None
             tail = b''
             with process.stdout, selectors.DefaultSelector() as selector:
                 selector.register(process.stdout, selectors.EVENT_READ)
@@ -366,6 +380,7 @@ class GitHubSetup:
                         match = _DEVICE_CODE.search(tail)
                         if match:
                             code = match[1].decode('ascii').upper()
+                            deadline = time.monotonic() + LOGIN_TIMEOUT
                             notify('在 GitHub 授权页面输入这个一次性设备码。', code=code)
                             # gh prints the verification URL in a noninteractive pipe.
                             try:
@@ -373,8 +388,14 @@ class GitHubSetup:
                             except (OSError, webbrowser.Error):
                                 pass
             if process.wait(timeout=max(0, deadline - time.monotonic())) != 0:
+                if code is None:
+                    raise GitHubSetupError('GitHub CLI 未能取得设备码。请检查 GitHub 网络连接或代理后重试。',
+                                           code='github_device_code_unavailable')
                 raise GitHubSetupError('GitHub 登录未完成。请检查浏览器中的授权结果后重试。')
         except subprocess.TimeoutExpired:
+            if code is None:
+                raise GitHubSetupError('请求 GitHub 设备码超时。请检查网络或代理后重试。',
+                                       code='github_device_code_timeout') from None
             raise GitHubSetupError('等待 GitHub 浏览器授权超时，请重新登录。', code='github_login_timeout') from None
         except OSError:
             raise GitHubSetupError('读取 GitHub 授权进度失败，请重新登录。') from None

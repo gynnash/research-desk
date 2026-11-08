@@ -45,6 +45,7 @@
   let pendingSchedule = null;
   let previewKey = '';
   let previewTimer;
+  let announcementTimer;
 
   function setText(id, value) {
     const element = byId(id);
@@ -554,18 +555,20 @@
     const element = byId(id);
     const value = element.textContent;
     if (!value) return;
-    setText('announcement', '');
+    let message = copied;
     try {
       await navigator.clipboard.writeText(value);
-      setText('announcement', copied);
     } catch {
       const selection = window.getSelection();
       const range = document.createRange();
       range.selectNodeContents(element);
       selection?.removeAllRanges();
       selection?.addRange(range);
-      setText('announcement', '文字已选中，可用系统复制快捷键。');
+      message = '文字已选中，可用系统复制快捷键。';
     }
+    window.clearTimeout(announcementTimer);
+    setText('announcement', message);
+    announcementTimer = window.setTimeout(() => setText('announcement', ''), 2500);
   }
 
   for (const [action, button] of buttons) {

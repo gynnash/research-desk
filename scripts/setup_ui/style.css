@@ -139,6 +139,23 @@ h1 { font-size: clamp(25px, 4vw, 32px); font-weight: 680; letter-spacing: -.04em
 .notice.operation { display: flex; align-items: baseline; gap: 7px; color: var(--green); background: var(--green-wash); }
 .notice.operation.error { color: var(--red); background: var(--red-wash); }
 .status-dot { flex: none; width: 7px; height: 7px; border-radius: 50%; background: #559275; }
+.toast {
+  position: fixed;
+  z-index: 2;
+  inset-inline-end: 16px;
+  inset-block-end: max(16px, env(safe-area-inset-bottom, 0px));
+  max-inline-size: calc(100% - 32px);
+  padding: 9px 13px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--paper);
+  color: var(--green);
+  box-shadow: 0 4px 16px #25362c24;
+  font-size: 13px;
+  font-weight: 650;
+  pointer-events: none;
+}
+.toast:empty { opacity: 0; }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 
 @media (max-width: 560px) {
