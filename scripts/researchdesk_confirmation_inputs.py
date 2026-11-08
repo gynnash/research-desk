@@ -8,6 +8,7 @@ The confirmation service owns sessions, one-time nonces, Git and event writes.
 from pathlib import Path
 import re
 
+import researchdesk_note_paths as note_paths
 import researchdesk_offline as store
 import researchdesk_admission as admission
 
@@ -354,8 +355,10 @@ def _sdk_evidence(root, value, selected, writing_v2=False):
         original = _path(root, item['original_path'], formal=True)
         if summary.read_text(encoding='utf-8') != item['summary_text'] or original.read_text(encoding='utf-8') != item['original_text']:
             raise store.OfflineError('已审阅原文或总结发生变化')
-        parts = Path(item['summary_path']).parts
-        research_base = 'reports/test/%s/research-batches/%s/items/%s' % (value['topic'], parts[2], Path(parts[-1]).stem)
+        summary_identity = note_paths.summary_ids(item['summary_path'])
+        if summary_identity is None or summary_identity[0] != value['topic']:
+            raise store.OfflineError('总结未绑定有效的研究批次')
+        research_base = 'reports/test/%s/research-batches/%s/items/%s' % summary_identity
         research_result = store.checked_yaml(root, research_base + '/result.yaml')
         from researchdesk_batch import parse_result
         research = parse_result(store.checked_yaml(root, research_base + '/checkpoints/research-%s.yaml' % research_result['revision_count'])['result']['text'])
@@ -399,8 +402,11 @@ def _sdk_preview(root, config, topic_id, choices=None, frozen=None):
         from researchdesk_writing_style import validate_profile
         validate_profile(profile)
         hashes[profile['path']] = profile['sha256']
-    insights = [dict(item, id='formal-insight-%s-%s-%s' % (topic, cycle_id, number),
-                     path='insights/%s/%s/report.md' % (topic, cycle_id))
+    reports = [path for path in value['output_hashes']
+               if note_paths.insight_ids(path) == (topic, cycle_id)]
+    if len(reports) != 1:
+        raise store.OfflineError('选题缺少已准入的洞察报告')
+    insights = [dict(item, id='formal-insight-%s-%s-%s' % (topic, cycle_id, number), path=reports[0])
                 for number, item in enumerate(value['candidate']['insights'], 1)]
     coverage_note = '基于已采集正文、独立审阅通过的逐篇总结及实际历史资料；未复现实验，不把研究线索写成已成立趋势。'
     result = {'schema_version': 1, 'mode': 'real_topic_preview', 'admission_mode': value['mode'],

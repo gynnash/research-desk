@@ -224,6 +224,9 @@ class CodexHarnessAcceptance(unittest.TestCase):
         self.assertEqual(backend.calls, [('start', 'generation'), ('start', 'generation')])
 
     def test_completed_generation_is_reused_after_interruption(self):
+        config = yaml.safe_load(self.config.read_text(encoding='utf-8'))
+        config.pop('prompts', None)
+        self.config.write_text(yaml.safe_dump(config), encoding='utf-8')
         backend = RecordingBackend()
         self.run_harness(backend, fail_after='generation')
         # The next day/new history must not change an already frozen task.
@@ -231,6 +234,8 @@ class CodexHarnessAcceptance(unittest.TestCase):
                           side_effect=AssertionError('Resume must use its frozen corpus')):
             self.assertEqual(self.run_harness(backend)['status'], 'complete')
         self.assertEqual(backend.calls.count(('start', 'generation')), 1)
+        tasks = {task.phase: task for task in backend.tasks.values()}
+        self.assertTrue(tasks['review'].instructions.startswith(harness.ACCURACY_REVIEW + '\n候选：'))
 
     def test_export_retry_reuses_review(self):
         backend = RecordingBackend()
@@ -252,6 +257,10 @@ class CodexHarnessAcceptance(unittest.TestCase):
         self.assertEqual(backend.calls, [('start', 'generation'), ('start', 'review')])
 
     def test_one_accuracy_revision_then_review_in_a_new_thread(self):
+        config = yaml.safe_load(self.config.read_text(encoding='utf-8'))
+        config['prompts'] = {'version': harness.CONCISE_PROMPT_VERSION}
+        config['generation']['target_words'] = list(harness.CONCISE_TARGET_WORDS)
+        self.config.write_text(yaml.safe_dump(config), encoding='utf-8')
         backend = RecordingBackend(scripts={
             'generation': candidate(1),
             'review': {'decision': 'revise', 'issues': [
@@ -265,6 +274,13 @@ class CodexHarnessAcceptance(unittest.TestCase):
             ('start', 'generation'), ('start', 'review'),
             ('continue_turn', 'revision'), ('start', 'review_revision'),
         ])
+        tasks = {task.phase: task for task in backend.tasks.values()}
+        self.assertIn('正文和洞察合计参考 700–1200 字', tasks['generation'].instructions)
+        self.assertIn('只保留会改变判断或验证方法的细节', tasks['generation'].instructions)
+        self.assertIn('自然、合乎语法的现代中文', tasks['generation'].instructions)
+        for phase in ('review', 'review_revision'):
+            self.assertIn('中文若因语序、指代或修饰关系不明', tasks[phase].instructions)
+        self.assertIn('用自然、合乎语法的中文消除歧义', tasks['revision'].instructions)
         self.assertEqual(self.run_harness(backend)['status'], 'complete')
         self.assertEqual(len(backend.calls), 4)
 

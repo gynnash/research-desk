@@ -81,7 +81,10 @@ class InsightAdmission(unittest.TestCase):
         value = admission.load(self.root, 'agent_memory', 'first')
         self.assertEqual(value['mode'], admission.MODE)
         self.assertEqual(value['models']['review'], 'fixture-independent-reviewer')
-        report = (self.root / 'insights/agent_memory/first/report.md').read_text()
+        self.assertEqual(value['path_scheme'], admission.PATH_SCHEME)
+        report_path = 'insights/agent_memory/观察0~first/写入与使用之间.md'
+        self.assertIn(report_path, result['outputs'])
+        report = (self.root / report_path).read_text()
         self.assertNotIn('> TEST', report)
         self.assertIn('## 参考资料', report)
         topic_path = self.root / 'articles/agent_memory/first-topic-1.md'
@@ -96,6 +99,17 @@ class InsightAdmission(unittest.TestCase):
         self.assertNotIn('original_text', stored['bundle']['sources'][0])
         self.assertEqual((self.root / 'insights/test/agent_memory/first/report.md').read_bytes(), original_test)
         self.assertTrue(admission.admit(self.root, 'agent_memory', 'first')['cached'])
+        self.assert_no_new_calls()
+
+    def test_interrupted_legacy_plan_keeps_its_original_paths(self):
+        plan_path = admission.base_path('agent_memory', 'first') + '/plan.yaml'
+        legacy_plan = admission._plan(self.root, 'agent_memory', 'first', path_scheme=None)
+        admission.legacy._save(self.root, plan_path, legacy_plan)
+        before = (self.root / plan_path).read_bytes()
+        report_path = 'insights/agent_memory/first/report.md'
+        self.assertIn(report_path, admission.admit(self.root, 'agent_memory', 'first')['outputs'])
+        self.assertIn(report_path, admission.load(self.root, 'agent_memory', 'first')['output_hashes'])
+        self.assertEqual((self.root / plan_path).read_bytes(), before)
         self.assert_no_new_calls()
 
     def test_clean_checkout_without_private_configuration_verifies_and_does_not_write(self):
@@ -177,7 +191,7 @@ class InsightAdmission(unittest.TestCase):
         with self.assertRaises(store.OfflineError):
             admission.load(self.root, 'agent_memory', 'first')
         original.write_text(before)
-        formal = self.root / 'insights/agent_memory/first/report.md'
+        formal = self.root / next(path for path in value['output_hashes'] if path.startswith('insights/'))
         formal.write_text(formal.read_text() + '\n我的研究笔记。\n')
         with self.assertRaisesRegex(store.OfflineError, '发生变化'):
             admission.admit(self.root, 'agent_memory', 'first')

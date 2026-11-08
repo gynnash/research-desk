@@ -190,6 +190,22 @@ def _model_budget_change(effective, context):
     }
 
 
+def _compare_frozen_insight_defaults(effective, frozen):
+    """Keep old batches on their pinned prompts after a default upgrade."""
+    if ('prompts' in frozen or effective['insight'].get('prompts')
+            != {'version': harness.CONCISE_PROMPT_VERSION}):
+        return effective
+    comparison = deepcopy(effective)
+    insight = comparison['insight']
+    insight.pop('prompts')
+    frozen_targets = frozen.get('generation', {}).get('target_words')
+    generation = insight.get('generation', {})
+    if (frozen_targets == [3000, 4500]
+            and generation.get('target_words') == list(harness.CONCISE_TARGET_WORDS)):
+        generation['target_words'] = frozen_targets
+    return comparison
+
+
 def _context(root, effective, topic, identity, base, fingerprint, publisher_context, allow_budget_extension):
     path = root / base / 'context.yaml'
     if path.exists():
@@ -200,12 +216,14 @@ def _context(root, effective, topic, identity, base, fingerprint, publisher_cont
         research_limit = None
         model_limits = None
         if saved_fingerprint != fingerprint and saved_fingerprint != _fingerprint(effective, selected_only=False):
-            if allow_budget_extension:
-                research_limit = _research_limit_increase(effective, value)
-                if research_limit is None:
-                    model_limits = _model_budget_change(effective, value)
-            if research_limit is None and model_limits is None:
-                return None
+            comparison = _compare_frozen_insight_defaults(effective, value['insight_config'])
+            if saved_fingerprint not in (_fingerprint(comparison), _fingerprint(comparison, selected_only=False)):
+                if allow_budget_extension:
+                    research_limit = _research_limit_increase(comparison, value)
+                    if research_limit is None:
+                        model_limits = _model_budget_change(comparison, value)
+                if research_limit is None and model_limits is None:
+                    return None
         private = workbench._read(workbench._path(root, 'config/local/automation/' + identity + '/snapshot.yaml'))
         if private.get('config_fingerprint') != saved_fingerprint:
             raise store.OfflineError('冻结配置标识已变化')

@@ -30,7 +30,7 @@ PYTHONPATH=tests python3 -B -m unittest test_codex_adapter test_codex_inputs tes
 
 `offline-demo` 验证生成、三条洞察、独立审阅、审阅后中断恢复和幂等导出；临时 Vault 退出后删除。完整验收另覆盖一次准确性修订、纯文风意见不拒收、未知请求不重发、人工笔记保护与历史去重。虚构响应只能验证流程，不能证明真实模型的研究准确性。
 
-新入口读取本人生成的 `config/local/codex-insight.yaml`，公开字段可参考[示例](../config/examples/codex-insight.yaml)。`insight --config config/local/codex-insight.yaml --cycle-id <已完成逐篇研究的批次>` 会读取 `summary/<主题>/<批次>/` 及其原文与通过回执；没有本批资料时返回 `empty`，未安装 SDK 或不支持当前隔离平台时返回 `blocked`。原始通过结果新增到 `insights/test/<主题>/<批次>/report.md`、`articles/test/<主题>/<批次>/topic-N.md`，候选、准确性审阅和回执在 `reports/test/<主题>/codex-insight/<批次>/`。
+新入口读取本人生成的 `config/local/codex-insight.yaml`，公开字段可参考[示例](../config/examples/codex-insight.yaml)。`insight --config config/local/codex-insight.yaml --cycle-id <已完成逐篇研究的批次>` 会读取该批在 `summary/<主题>/` 下的总结及其原文与通过回执。没有本批资料时返回 `empty`，未安装 SDK 或不支持当前隔离平台时返回 `blocked`。原始通过结果新增到 `insights/test/<主题>/<批次>/report.md`、`articles/test/<主题>/<批次>/topic-N.md`，候选、准确性审阅和回执在 `reports/test/<主题>/codex-insight/<批次>/`。
 
 真实且已通过独立准确性审阅的结果可以零模型调用正式准入；模拟结果不能准入：
 
@@ -39,7 +39,7 @@ python3 -B scripts/researchdesk_insight_admission.py admit --topic agent_memory 
 python3 -B scripts/researchdesk_insight_admission.py check --topic agent_memory --cycle-id '<已通过审阅的批次>'
 ```
 
-正式综合文章在 `insights/<主题>/<批次>/report.md`，选题在 `articles/<主题>/<批次>-topic-N.md`；原 test 文件保留。准入使用版本 2 的 `reports/<主题>/admissions/<批次>/plan.yaml`、`accepted.yaml` 及配对散列，绑定固定原文、Research 与 SDK 独立审阅证明，不要求把当前私人配置提交到 GitHub。正式选题可以进入已有确认页面及 Writing，旧版选题仍保持兼容。
+新生成的正式综合文章在 `insights/<主题>/<核心发现>~<批次ID>/<报告短标题>.md`，选题在 `articles/<主题>/<批次>-topic-N.md`。原 test 文件和旧正式文件保留原路径。准入使用版本 2 的 `reports/<主题>/admissions/<批次>/plan.yaml`、`accepted.yaml` 及配对散列，绑定固定原文、Research 与 SDK 独立审阅证明，不要求把当前私人配置提交到 GitHub。正式选题可以进入已有确认页面及 Writing，旧版选题仍保持兼容。
 
 新旧入口分开：旧 Research/Insight/Writing 的历史提示词和校验仍保持兼容。真实 SDK 目前只验收 macOS；其他平台明确阻塞，旧后端的本地/远程能力保留。安装与显式运行方式如下，需要 Python 3.10+ 及本人已有的[官方会员授权](local-membership-analysis.md)：
 

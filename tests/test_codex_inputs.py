@@ -1,6 +1,7 @@
 """Verified local inputs for the Codex path; no network or member clients."""
 
 from copy import deepcopy
+import os
 from pathlib import Path
 import sys
 import unittest
@@ -10,6 +11,7 @@ import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
 import researchdesk_insight_inputs as inputs
+from researchdesk_note_paths import summary_ids
 import researchdesk_offline as store
 import test_research_entry as entry_fixtures
 
@@ -80,7 +82,11 @@ class CodexInputs(unittest.TestCase):
 
     def test_historical_research_date_window_uses_saved_receipt_instead_of_file_mtime(self):
         self.prepared()
-        result = self.bundle('next')
+        current = self.bundle()['sources']
+        for item in current:
+            os.utime(self.root / item['summary_path'], (946684800, 946684800))
+        research_date = max(item['research_date'] for item in current)
+        result = inputs.prepare_codex_bundle(self.root, 'agent_memory', 'next', as_of=research_date)
         self.assertEqual([item['id'] for item in result['sources']], ['H1', 'H2'])
         self.assertTrue(all(item['research_date'] for item in result['sources']))
         old = inputs.prepare_codex_bundle(self.root, 'agent_memory', 'next', as_of='2027-06-01')
@@ -94,7 +100,9 @@ class CodexInputs(unittest.TestCase):
         with self.assertRaisesRegex(store.OfflineError, '当前批次输入未通过验证'):
             self.bundle()
         path.write_bytes(saved)
-        binding = store.checked_yaml(self.root, 'reports/test/agent_memory/research-batches/first/items/' + path.stem + '/candidate.yaml')
+        topic, cycle, key = summary_ids(prepared['summary_paths'][0])
+        binding = store.checked_yaml(self.root, 'reports/test/%s/research-batches/%s/items/%s/candidate.yaml' %
+                                     (topic, cycle, key))
         original = self.root / binding['candidate']['archive']['markdown_path']
         original.write_text(original.read_text() + '\nchanged original\n')
         with self.assertRaisesRegex(store.OfflineError, '当前批次输入未通过验证'):

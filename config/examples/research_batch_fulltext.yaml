@@ -17,7 +17,7 @@ budget:
   timeout_seconds: 240
   max_revisions: 1
 prompts:
-  version: research-batch-v4
+  version: research-batch-v5
 sources:
 - id: example-deep-reading
   adapter: arxiv

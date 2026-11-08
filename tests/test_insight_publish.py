@@ -11,6 +11,7 @@ import yaml
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'scripts'))
 import researchdesk_insight_admission as admission
+import researchdesk_note_paths as notes
 import researchdesk_offline as store
 import researchdesk_publish as publish
 from test_insight_admission import prepare_cycle
@@ -57,7 +58,7 @@ class InsightPublication(unittest.TestCase):
         exported = self.export()
         self.assertTrue(exported['production_accepted'])
         manifest = json.loads((self.artifact / 'manifest.json').read_text())
-        required = {'insights/agent_memory/first/report.md',
+        required = {'insights/agent_memory/观察0~first/写入与使用之间.md',
                     'articles/agent_memory/first-topic-1.md',
                     'reports/agent_memory/admissions/first/plan.yaml',
                     'reports/agent_memory/admissions/first/plan.yaml.sha256',
@@ -83,13 +84,32 @@ class InsightPublication(unittest.TestCase):
     def test_existing_formal_annotation_blocks_transfer_without_overwriting(self):
         self.prepare()
         self.export()
-        target = self.publisher / 'insights/agent_memory/first/report.md'
+        target = self.publisher / self.formal_report()
         target.parent.mkdir(parents=True)
         target.write_text('# 我的人工研究笔记\n')
         before = self.snapshot(self.publisher)
         with self.assertRaisesRegex(publish.PublishError, 'conflict'):
             publish.apply(self.publisher, self.artifact)
         self.assertEqual(self.snapshot(self.publisher), before)
+        self.assert_no_new_calls()
+
+    def formal_report(self):
+        files = admission.load(self.root, 'agent_memory', 'first')['output_hashes']
+        return next(relative for relative in files if notes.insight_ids(relative))
+
+    def test_named_report_path_cannot_add_unbound_insight(self):
+        self.prepare()
+        self.export()
+        manifest_path = self.artifact / 'manifest.json'
+        manifest = json.loads(manifest_path.read_text())
+        relative = (Path(self.formal_report()).parent / '伪造观点.md').as_posix()
+        payload = '# 未通过审阅的洞察\n'.encode()
+        (self.artifact / 'payload' / relative).write_bytes(payload)
+        manifest['files'][relative] = store.digest(payload)
+        manifest_path.write_text(json.dumps(manifest))
+        with self.assertRaisesRegex(publish.PublishError, 'formal_insight_has_no_accepted_binding'):
+            publish.apply(self.publisher, self.artifact)
+        self.assertEqual(self.snapshot(self.publisher), {})
         self.assert_no_new_calls()
 
     def test_unadmitted_test_export_remains_usable_without_creating_formal_outputs(self):

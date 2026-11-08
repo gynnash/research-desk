@@ -16,7 +16,11 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import researchdesk_archive as archive
 import researchdesk_batch as batch
 import researchdesk_cycle as cycle
+import researchdesk_note_paths as notes
 import researchdesk_offline as store
+
+
+SUMMARY_PROMPT_VERSION = 'research-batch-v5'
 
 
 class _NoSourceFetching:
@@ -104,48 +108,98 @@ def _collection(root, config_path, config, cycle_id):
     return config, receipt, sources
 
 
-def _summary_path(topic, cycle_id, key):
-    return 'summary/%s/%s/%s.md' % (topic, cycle_id, key)
+def _summary_path(topic, folder, key, label=None):
+    filename = notes.named_component(label, key) if label else key
+    return 'summary/%s/%s/%s.md' % (topic, folder, filename)
+
+
+def _summary_label(candidate, research):
+    headings = (line[3:] for claim in research['claims'] for line in claim['text'].splitlines()
+                if line.startswith('## '))
+    return notes.note_label(next(headings, ''), research['summary'], candidate['metadata']['title'], '研究总结')
+
+
+def _approved_material(root, batch_base, result):
+    prefix = '%s/items/%s/' % (batch_base, result['key'])
+    revision = result['revision_count']
+    candidate = store.checked_yaml(root, prefix + 'candidate.yaml')['candidate']
+    research = batch.parse_result(store.checked_yaml(root,
+        prefix + 'checkpoints/research-%s.yaml' % revision)['result']['text'])
+    review = batch.parse_result(store.checked_yaml(root,
+        prefix + 'checkpoints/review-%s.yaml' % revision)['result']['text'])
+    return candidate, research, review
+
+
+def _summary_folder(root, batch_base, cycle_id, events):
+    # The first accepted event is stable even if a previously deferred source
+    # is accepted earlier in selection order when the batch resumes.
+    first = next(event for event in events if event['type'] == 'item_finished'
+                 and event['status'] == 'test_accepted')
+    result = store.checked_yaml(root, first['result_path'])
+    candidate, research, _ = _approved_material(root, batch_base, result)
+    return notes.named_component(_summary_label(candidate, research), cycle_id)
 
 
 def _verify_summaries(root, batch_base, records, topic, cycle_id):
     """Protect prior published summaries before even constructing the client."""
+    keys = {record['key'] for record in records}
+    existing = {}
+    directory = store.safe_path(root, 'summary/' + topic)
+    for folder in sorted(directory.glob('*')):
+        if notes.component_identity(folder.name) != cycle_id:
+            continue
+        store.safe_path(root, folder.relative_to(root).as_posix())
+        if not folder.is_dir():
+            raise store.OfflineError('总结目录已有人工文件，保留内容并停止: ' + folder.name)
+        for path in sorted(folder.glob('*.md')):
+            relative = path.relative_to(root).as_posix()
+            identity = notes.summary_ids(relative)
+            if identity and identity[2] in keys:
+                key = identity[2]
+                if key in existing:
+                    raise store.OfflineError('同一资料存在多个总结，保留文件并停止: ' + relative)
+                existing[key] = relative
+
+    manifest = None
     for record in records:
-        binding_path = '%s/items/%s/summary.yaml' % (batch_base, record['key'])
-        expected_path = _summary_path(topic, cycle_id, record['key'])
+        key = record['key']
+        prefix = '%s/items/%s/' % (batch_base, key)
+        binding_path = prefix + 'summary.yaml'
         if store.safe_path(root, binding_path).exists():
             binding = store.checked_yaml(root, binding_path)
-            if binding.get('path') != expected_path:
+            bound_path = binding.get('path')
+            if (notes.summary_ids(bound_path) != (topic, cycle_id, key)
+                    or existing.get(key, bound_path) != bound_path):
                 raise store.OfflineError('总结输出绑定不属于当前资料')
-            _verify_hashes(root, {expected_path: binding.get('sha256')})
-        elif store.safe_path(root, expected_path).exists():
+            _verify_hashes(root, {bound_path: binding.get('sha256')})
+            existing[key] = bound_path
+        elif key in existing:
             # A process may stop between writing Markdown and its binding.
-            # Reconstruct the exact completed result before allowing another
-            # item to spend model budget; existence of result.yaml is not proof
-            # that this unbound Markdown remains unmodified.
-            prefix = '%s/items/%s/' % (batch_base, record['key'])
+            # Reconstruct the approved file before spending further budget.
+            path = existing[key]
             result_path = prefix + 'result.yaml'
             if not store.safe_path(root, result_path).is_file():
-                raise store.OfflineError('总结位置已有人工文件，保留内容并停止: ' + expected_path)
-            manifest = store.checked_yaml(root, batch_base + '/manifest.yaml')
-            events = store.read_events(root, batch_base)
-            batch.verify_events(root, batch_base, events, manifest)
+                raise store.OfflineError('总结位置已有人工文件，保留内容并停止: ' + path)
+            if manifest is None:
+                manifest = store.checked_yaml(root, batch_base + '/manifest.yaml')
+                events = store.read_events(root, batch_base)
+                batch.verify_events(root, batch_base, events, manifest)
             finished = [event for event in events
-                        if event.get('type') == 'item_finished' and event.get('key') == record['key']]
+                        if event.get('type') == 'item_finished' and event.get('key') == key]
             result = store.checked_yaml(root, result_path)
             if (len(finished) != 1 or finished[0].get('result_path') != result_path
                     or result.get('status') != 'test_accepted'):
                 raise store.OfflineError('未绑定总结缺少审阅通过的完成记录，保留内容并停止')
-            revision = result['revision_count']
-            candidate = store.checked_yaml(root, prefix + 'candidate.yaml')['candidate']
-            research = batch.parse_result(store.checked_yaml(root,
-                prefix + 'checkpoints/research-%s.yaml' % revision)['result']['text'])
-            review = batch.parse_result(store.checked_yaml(root,
-                prefix + 'checkpoints/review-%s.yaml' % revision)['result']['text'])
+            candidate, research, review = _approved_material(root, batch_base, result)
+            if path != _summary_path(topic, cycle_id, key):
+                folder = _summary_folder(root, batch_base, cycle_id, events)
+                if path != _summary_path(topic, folder, key, _summary_label(candidate, research)):
+                    raise store.OfflineError('未绑定总结文件名与审阅结果不一致，保留内容并停止: ' + path)
             expected = _render_summary(manifest, candidate, research, review, result,
                                        record['original_markdown_path'], cycle_id)
-            if store.safe_path(root, expected_path).read_bytes() != expected.encode('utf-8'):
-                raise store.OfflineError('未绑定总结已被人工修改，保留内容并停止: ' + expected_path)
+            if store.safe_path(root, path).read_bytes() != expected.encode('utf-8'):
+                raise store.OfflineError('未绑定总结已被人工修改，保留内容并停止: ' + path)
+    return existing
 
 
 def _render_summary(manifest, candidate, research, review, result, original_path, cycle_id):
@@ -184,10 +238,21 @@ def run(root, config_path, cycle_id, client=None, profile=None, fail_after=None)
                     'discovery_status': collection.get('discovery_status'),
                     'insight_started': False, 'writing_started': False, 'summary_paths': []}
         batch_base = 'reports/test/%s/research-batches/%s' % (topic, cycle_id)
-        _verify_summaries(root, batch_base, collection['records'], topic, cycle_id)
+        existing = _verify_summaries(root, batch_base, collection['records'], topic, cycle_id)
+        legacy = any(path == _summary_path(topic, cycle_id, key) for key, path in existing.items())
         budget = config['budget']
         monthly = batch.membership_monthly_limit(root) or 10
         per_item = budget.get('max_calls_per_item', 2 * (budget['max_revisions'] + 1))
+        research_path = cycle.base_path(config, cycle_id) + '/configs/research.yaml'
+        existing_config = store.safe_path(root, research_path)
+        version = SUMMARY_PROMPT_VERSION
+        if existing_config.exists():
+            # Reconstruct the frozen YAML with its original prompt version.
+            # save_yaml verifies both bytes and digest before any model access.
+            prompts = store.load_yaml(existing_config).get('prompts')
+            version = prompts.get('version') if isinstance(prompts, dict) else None
+            if not isinstance(version, str) or version not in batch.SECTIONED_PROMPT_VERSIONS:
+                raise store.OfflineError('已有批次的逐篇研究提示词版本无效')
         research_config = {
             'schema_version': 1, 'mode': 'research_batch_test', 'backend': config['backend'],
             'topic': topic, 'topics_file': config['topics_file'],
@@ -197,9 +262,8 @@ def run(root, config_path, cycle_id, client=None, profile=None, fail_after=None)
                        'month_max_calls': monthly,
                        **{key: budget[key] for key in (
                            'max_input_chars', 'max_output_chars', 'timeout_seconds', 'max_revisions')}},
-            'prompts': {'version': 'research-batch-v4'}, 'sources': sources,
+            'prompts': {'version': version}, 'sources': sources,
         }
-        research_path = cycle.base_path(config, cycle_id) + '/configs/research.yaml'
         store.save_yaml(root, research_path, research_config)
         if client is None:
             from researchdesk_membership import MembershipClient, DEFAULT_PROFILE
@@ -211,17 +275,20 @@ def run(root, config_path, cycle_id, client=None, profile=None, fail_after=None)
         manifest = store.checked_yaml(root, batch_base + '/manifest.yaml')
         records = {record['key']: record for record in collection['records']}
         items, paths = [], []
+        folder = None
         for result in receipt['items']:
             item = dict(result)
             if result['status'] == 'test_accepted':
-                key, revision = result['key'], result['revision_count']
+                key = result['key']
                 prefix = '%s/items/%s/' % (batch_base, key)
-                candidate = store.checked_yaml(root, prefix + 'candidate.yaml')['candidate']
-                research = batch.parse_result(store.checked_yaml(root,
-                    prefix + 'checkpoints/research-%s.yaml' % revision)['result']['text'])
-                review = batch.parse_result(store.checked_yaml(root,
-                    prefix + 'checkpoints/review-%s.yaml' % revision)['result']['text'])
-                path = _summary_path(topic, cycle_id, key)
+                candidate, research, review = _approved_material(root, batch_base, result)
+                path = existing.get(key)
+                if path is None and legacy:
+                    path = _summary_path(topic, cycle_id, key)
+                elif path is None:
+                    if folder is None:
+                        folder = _summary_folder(root, batch_base, cycle_id, store.read_events(root, batch_base))
+                    path = _summary_path(topic, folder, key, _summary_label(candidate, research))
                 text = _render_summary(manifest, candidate, research, review, result,
                                        records[key]['original_markdown_path'], cycle_id)
                 sha = store.create(root, path, text)

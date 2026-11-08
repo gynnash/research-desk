@@ -19,6 +19,7 @@ import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from workflows.validate import UniqueKeyLoader, canonical_url
+from scripts.researchdesk_note_paths import IDENTITY as SAFE_ID, component_identity, summary_ids
 
 
 class OfflineError(ValueError):
@@ -31,7 +32,6 @@ class SimulatedInterruption(RuntimeError):
 
 NOTICE = '> TEST：离线虚构样例，不可作为正式研究证据。'
 REAL_NOTICE = '> TEST：真实来源采集，分析与审阅均为模拟，不可作为正式研究结论。'
-SAFE_ID = re.compile(r'[a-z0-9][a-z0-9_-]{0,100}\Z')
 TERMINAL = {'test_accepted', 'update_proposed', 'rejected', 'blocked', 'duplicate'}
 
 
@@ -68,9 +68,10 @@ def safe_path(root, relative):
             len(parts) == 4 and parts[3] in {'items', 'manifest.yaml', 'manifest.yaml.sha256'}) or (
             len(parts) in {5, 6} and parts[3] == 'items' and SAFE_ID.fullmatch(parts[4])
             and (len(parts) == 5 or parts[5] in {'original.yaml', 'original.yaml.sha256', 'original.md'}))
-    if scoped and parts[0] == 'summary':
-        allowed = allowed or len(parts) in {2, 3} or (
-            len(parts) == 4 and bool(re.fullmatch(r'[a-z0-9][a-z0-9_-]{0,100}\.md(?:\.sha256)?', parts[3])))
+    if len(parts) >= 2 and parts[0] == 'summary' and SAFE_ID.fullmatch(parts[1]):
+        allowed = allowed or len(parts) == 2 or (
+            len(parts) == 3 and component_identity(parts[2]) is not None) or (
+            len(parts) == 4 and summary_ids(str(relative).removesuffix('.sha256')) is not None)
     if not allowed:
         raise OfflineError('writer 仅允许受限运行记录、采集原文与逐篇总结路径: %s' % relative)
     current = root

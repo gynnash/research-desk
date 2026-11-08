@@ -70,6 +70,9 @@ def canonical_url(value):
 
 def check_workspace(root, topics, fail, frontmatter):
     """Check the two public reading trees against their existing fixed receipts."""
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
+    from researchdesk_note_paths import summary_ids
+
     identity = re.compile(r'[a-z0-9][a-z0-9_-]{0,100}\Z')
     digest = lambda payload: hashlib.sha256(payload).hexdigest()
     originals, summary_count = {}, 0
@@ -181,10 +184,9 @@ def check_workspace(root, topics, fail, frontmatter):
         relative = path.relative_to(root).as_posix()
         summary_count += 1
         try:
-            parts = path.relative_to(root).parts
-            require(len(parts) == 4 and parts[1] in topics and identity.fullmatch(parts[2])
-                    and identity.fullmatch(path.stem), '总结必须位于 summary/<已配置主题>/<批次>/<来源>.md')
-            topic, cycle_id, key = parts[1], parts[2], path.stem
+            note = summary_ids(relative)
+            require(note is not None and note[0] in topics, '总结必须位于 summary/<已配置主题>/<批次>/<来源>.md')
+            topic, cycle_id, key = note
             text = safe(relative).read_text(encoding='utf-8')
             data = frontmatter(text, relative)
             require(type(data.get('schema_version')) is int and data.get('schema_version') == 1 and data.get('kind') == 'research_summary'

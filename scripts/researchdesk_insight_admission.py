@@ -18,10 +18,12 @@ import researchdesk_admission as legacy
 import researchdesk_archive as archive
 import researchdesk_harness as harness
 import researchdesk_insight_inputs as inputs
+import researchdesk_note_paths as note_paths
 import researchdesk_offline as store
 
 
 MODE = 'codex_insight_admission'
+PATH_SCHEME = 'descriptive-v1'
 HASH = re.compile(r'[0-9a-f]{64}\Z')
 CONFIG = re.compile(r'config/(?:research_topics\.yaml|local/automation/[a-z0-9_-]+/topics\.yaml)\Z')
 
@@ -124,7 +126,7 @@ def _verify_sdk(root, topic, cycle_id, supplied_snapshots=None):
             if any(input_hashes.get(path) != value for path, value in proof.items()):
                 raise store.OfflineError('Research 证明未纳入 Insight 固定输入')
             source.pop('_identities', None)
-            (current if Path(relative).parent.name == cycle_id else historical).append(source)
+            (current if note_paths.summary_ids(relative)[1] == cycle_id else historical).append(source)
     if not current:
         raise store.OfflineError('Insight 没有本批已独立审阅的 Research 输入')
     historical.sort(key=lambda item: (item['research_date'], item['summary_path']), reverse=True)
@@ -161,8 +163,14 @@ def _render(value):
     def markdown(metadata, body):
         return '---\n' + yaml.safe_dump(metadata, allow_unicode=True, sort_keys=False) + '---\n\n' + body.rstrip() + '\n'
 
-    report_path = 'insights/%s/%s/report.md' % (topic, cycle)
     report = candidate['report']
+    if value.get('path_scheme') == PATH_SCHEME:
+        heading = candidate['insights'][0]['title'] if candidate['insights'] else report['title']
+        folder = note_paths.named_component(note_paths.note_label(heading, report['title'], '研究洞察'), cycle)
+        name = note_paths.note_label(report['title'], heading, '综合洞察')
+        report_path = 'insights/%s/%s/%s.md' % (topic, folder, name)
+    else:
+        report_path = 'insights/%s/%s/report.md' % (topic, cycle)
     body = '# ' + report['title'] + '\n\n' + report['body']
     for insight in candidate['insights']:
         body += '\n\n## ' + insight['title'] + '\n\n' + insight['body']
@@ -184,7 +192,9 @@ def _render(value):
     return files
 
 
-def _plan(root, topic, cycle_id, configuration_snapshots=None):
+def _plan(root, topic, cycle_id, configuration_snapshots=None, *, path_scheme=PATH_SCHEME):
+    if path_scheme not in (None, PATH_SCHEME):
+        raise store.OfflineError('无法识别正式洞察文件命名方式')
     verified = _verify_sdk(root, topic, cycle_id, configuration_snapshots)
     # Originals already have a single canonical home in collection/. Keep the
     # portable plan small instead of duplicating six months of full text here.
@@ -192,6 +202,8 @@ def _plan(root, topic, cycle_id, configuration_snapshots=None):
                                      if key not in {'summary_text', 'original_text'}}
                                     for source in verified['bundle']['sources']]
     value = {'schema_version': 2, 'mode': MODE, 'topic': topic, 'cycle_id': cycle_id, **verified}
+    if path_scheme is not None:
+        value['path_scheme'] = path_scheme
     files = _render(value)
     value['files'] = files
     value['output_hashes'] = {relative: store.digest(text.encode()) for relative, text in files.items()}
@@ -217,7 +229,8 @@ def load(root, topic, cycle_id):
     saved = _checked(root, plan_path)
     if saved.get('mode') != MODE or saved.get('schema_version') != 2:
         raise store.OfflineError('不是新版 Codex Insight 准入')
-    expected = _plan(root, topic, cycle_id, saved.get('configuration_snapshots'))
+    expected = _plan(root, topic, cycle_id, saved.get('configuration_snapshots'),
+                     path_scheme=saved.get('path_scheme'))
     if saved != expected:
         raise store.OfflineError('正式准入计划与固定原文、候选或独立审阅不一致')
     expected_receipt = _receipt(saved, plan_path, store.digest(_read(root, plan_path)))
@@ -253,9 +266,13 @@ def admit(root, topic, cycle_id):
         old_plan = (_checked(root, plan_path)
                     if legacy._location(root, plan_path + '.sha256').exists()
                     else store.load_yaml(legacy._location(root, plan_path)))
-    plan = _plan(root, topic, cycle_id, old_plan.get('configuration_snapshots') if old_plan else None)
-    if old_plan is not None and old_plan != plan:
-        raise store.OfflineError('未完成准入计划已有变化，保留现场')
+    if old_plan is None:
+        plan = _plan(root, topic, cycle_id)
+    else:
+        plan = _plan(root, topic, cycle_id, old_plan.get('configuration_snapshots'),
+                     path_scheme=old_plan.get('path_scheme'))
+        if old_plan != plan:
+            raise store.OfflineError('未完成准入计划已有变化，保留现场')
     plan_text = yaml.safe_dump(plan, allow_unicode=True, sort_keys=False)
     plan_sha = store.digest(plan_text.encode())
     receipt_text = yaml.safe_dump(_receipt(plan, plan_path, plan_sha), allow_unicode=True, sort_keys=False)

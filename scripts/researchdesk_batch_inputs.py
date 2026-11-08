@@ -17,6 +17,9 @@ from researchdesk_sources import (SourceError, SOURCE_HOSTS, SafeFetcher, valida
                                  parse_arxiv_feed, parse_arxiv_abstract, parse_blog_article)
 
 
+FULLTEXT_PROMPT_VERSIONS = {'research-batch-v2', 'research-batch-v3', 'research-batch-v4', 'research-batch-v5'}
+
+
 def config_path(root, relative):
     root = Path(root).resolve()
     path = Path(relative)
@@ -82,9 +85,14 @@ def load_config(root, path):
         raise store.OfflineError('模型必须是明确的目录 slug')
     if config['models']['research'] == config['models']['review']:
         raise store.OfflineError('研究与独立审阅必须使用不同模型')
+    fields(config['prompts'], {'version'}, '提示词配置')
+    version = config['prompts']['version']
+    if not isinstance(version, str) or version not in {'research-batch-v1', *FULLTEXT_PROMPT_VERSIONS}:
+        raise store.OfflineError('未知提示词版本')
+    max_timeout = 300 if version in {'research-batch-v4', 'research-batch-v5'} else 120
     ranges = {'max_documents': (1, 10), 'max_calls_per_item': (2, 1000), 'max_calls_per_batch': (2, 1000),
               'month_max_calls': (2, 1000), 'max_input_chars': (1000, 600000),
-              'max_output_chars': (1000, 24000), 'timeout_seconds': (1, 300 if config.get('prompts', {}).get('version') == 'research-batch-v4' else 120), 'max_revisions': (0, 1)}
+              'max_output_chars': (1000, 24000), 'timeout_seconds': (1, max_timeout), 'max_revisions': (0, 1)}
     fields(config['budget'], ranges, '预算配置')
     for name, (low, high) in ranges.items():
         positive(config['budget'][name], low, high, name)
@@ -92,9 +100,6 @@ def load_config(root, path):
         raise store.OfflineError('批次请求上限超过单项与资料数的乘积')
     if config['budget']['max_calls_per_batch'] > config['budget']['month_max_calls']:
         raise store.OfflineError('批次请求上限不可超过月度上限')
-    fields(config['prompts'], {'version'}, '提示词配置')
-    if config['prompts']['version'] not in {'research-batch-v1', 'research-batch-v2', 'research-batch-v3', 'research-batch-v4'}:
-        raise store.OfflineError('未知提示词版本')
     sources = config['sources']
     if not isinstance(sources, list) or not 1 <= len(sources) <= config['budget']['max_documents']:
         raise store.OfflineError('来源数须在 max_documents 范围内')
@@ -112,8 +117,8 @@ def load_config(root, path):
             reading_mode = source['reading']['mode']
             if (reading_mode not in {'full_text_preferred', 'full_text_required'}
                     or (reading_mode == 'full_text_preferred' and source['adapter'] != 'arxiv')
-                    or config['prompts']['version'] not in {'research-batch-v2', 'research-batch-v3', 'research-batch-v4'}):
-                raise store.OfflineError('全文阅读需要已支持的正文模式与 research-batch-v2/v3/v4')
+                    or version not in FULLTEXT_PROMPT_VERSIONS):
+                raise store.OfflineError('全文阅读需要已支持的正文模式与全文研究提示词')
             if reading_mode == 'full_text_required' and source.get('archive') is not True:
                 raise store.OfflineError('必须阅读全文的来源须同时启用原文归档 archive: true')
         if not isinstance(source['id'], str) or not store.SAFE_ID.fullmatch(source['id']) or source['id'] in ids:

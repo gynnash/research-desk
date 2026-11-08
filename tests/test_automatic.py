@@ -129,6 +129,28 @@ class ScheduledPipeline(unittest.TestCase):
         self.researcher.assert_not_called()
         self.insight.assert_not_called()
 
+    def test_default_insight_prompt_upgrade_preserves_an_existing_cycle(self):
+        system = self.root / workbench.SYSTEM_CONFIG
+        current = system.read_bytes()
+        previous = workbench._read(system)
+        previous['insight'].pop('prompts')
+        previous['insight']['generation']['target_words'] = [3000, 4500]
+        workbench._write(system, workbench._yaml(previous))
+
+        cycle_id = 'older-insight-prompt'
+        first = self.run_pipeline(event='manual', operation='collect', cycle_id=cycle_id)
+        self.assertEqual(first['status'], 'collected')
+        context_path = self.root / first['context_path']
+        frozen_path = self.root / 'config' / 'local' / 'automation' / cycle_id / 'insight.yaml'
+        saved_context, saved_prompt = context_path.read_bytes(), frozen_path.read_bytes()
+
+        workbench._write(system, current)
+        resumed = self.run_pipeline(event='manual', operation='run', cycle_id=cycle_id)
+        self.assertEqual(resumed['status'], 'complete')
+        self.assertEqual(self.root / self.insight.call_args.args[1], frozen_path)
+        self.assertEqual(context_path.read_bytes(), saved_context)
+        self.assertEqual(frozen_path.read_bytes(), saved_prompt)
+
     def test_latest_slot_runs_once_and_freezes_selected_topic_without_private_configuration(self):
         private_profile = str(self.root.parent / 'private-member-profile')
         self.update({'automation': {'enabled': True},

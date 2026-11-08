@@ -236,7 +236,7 @@ python3 -B scripts/researchdesk_harness.py preflight --config config/local/codex
 python3 -B scripts/researchdesk_harness.py insight --config config/local/codex-insight.yaml --cycle-id '<已完成逐篇研究的批次>'
 ```
 
-`preflight` 不推理，`insight` 会执行真实任务。公开[示例](../config/examples/codex-insight.yaml)供参考，默认旧批次不变。以下为原总体配置草案，具体可执行字段以统一模板和示例为准；旧 cycle loader 不接受 `backend: codex`：
+`preflight` 不推理，`insight` 会执行真实任务。新批次使用 `codex-insight-v2`，报告和洞察合计参考 700–1200 字，通常提炼 1–3 条证据最充分的发现。只保留影响判断的机制、数据和适用条件，用自然、指代清楚的中文表达。已有批次沿用固定提示词。公开[示例](../config/examples/codex-insight.yaml)列出了可执行字段。以下为原总体配置草案，旧 cycle loader 不接受 `backend: codex`：
 
 ```yaml
 backend: codex
@@ -263,8 +263,8 @@ insight:
 
 ```text
 collection/<topic>/<cycle>/...    # 采集原文
-summary/<topic>/<cycle>/...       # 已审阅逐篇总结
-insights/<topic>/<cycle>/report.md
+summary/<topic>/<批次观点>~<cycle>/<论文观点>~<来源ID>.md
+insights/<topic>/<核心发现>~<cycle>/<报告短标题>.md
 articles/<topic>/<cycle>/topic-N.md
 ```
 

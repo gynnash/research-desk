@@ -538,9 +538,15 @@ class ObsidianReadingVaultTest(unittest.TestCase):
         summary = 'summary/agents/week/paper.md'
         removed = 'collection/agents/week/items/paper/original.md'
         added = 'articles/agents/week-draft.md'
+        named_notes = {
+            'summary/agents/长期记忆~next/核对事实~paper.md': '新命名总结',
+            'insights/agents/检索需要核实~next/长期记忆为何失效.md': '新命名洞察',
+        }
         self.write(self.vault.path, '.obsidian/app.json', '{}')
         self.write(self.source, summary, '更新后的总结')
         self.write(self.source, added, '新稿件')
+        for path, content in named_notes.items():
+            self.write(self.source, path, content)
         self.write(self.source, 'scripts/new.py', '# new code')
         (self.source / removed).unlink()
         self.commit()
@@ -550,7 +556,9 @@ class ObsidianReadingVaultTest(unittest.TestCase):
             self.assertTrue(self.vault.refresh_existing('fixture/workbench'))
 
         self.assertEqual(self.visible_files(),
-                         (self.reading.keys() - {removed}) | {added, '.obsidian/app.json'})
+                         (self.reading.keys() - {removed}) | named_notes.keys() | {added, '.obsidian/app.json'})
+        for path, content in named_notes.items():
+            self.assertEqual((self.vault.path / path).read_text(encoding='utf-8'), content)
         self.assertEqual((self.vault.path / summary).read_text(encoding='utf-8'), '更新后的总结')
         self.assertEqual((self.vault.path / '.obsidian/app.json').read_text(encoding='utf-8'), '{}')
         self.assertEqual(self.vault.status()['state'], 'ready')

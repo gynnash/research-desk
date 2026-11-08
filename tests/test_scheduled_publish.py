@@ -15,6 +15,7 @@ import yaml
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'scripts'))
 import researchdesk_harness as harness
+import researchdesk_note_paths as notes
 import researchdesk_offline as store
 import researchdesk_publish as publish
 import test_codex_harness as codex_fixtures
@@ -94,6 +95,25 @@ class ScheduledPublication(unittest.TestCase):
         self.assertEqual(self.snapshot(self.publisher), before)
         self.assert_no_new_calls()
 
+    def test_named_summaries_are_staged_and_pushed_to_a_local_origin(self):
+        def git(*args):
+            return subprocess.run(['git', *args], cwd=self.publisher, check=True,
+                                  capture_output=True, text=True).stdout.strip()
+
+        remote = self.publisher.parent / 'origin.git'
+        git('init', '--bare', str(remote))
+        git('init', '-b', 'main')
+        git('-c', 'user.name=Offline fixture', '-c', 'user.email=fixture@example.org',
+            'commit', '--allow-empty', '-m', 'Initial offline publisher')
+        self.base = git('rev-parse', 'HEAD')
+        git('remote', 'add', 'origin', str(remote))
+        self.export()
+        self.assertTrue(publish.apply(self.publisher, self.artifact, push=True)['pushed'])
+        paths = git('--git-dir=' + str(remote), 'ls-tree', '-rz', '--name-only', 'refs/heads/main').split('\0')
+        self.assertTrue(set(self.result['summary_paths']).issubset(paths))
+        self.assertTrue(all('~' in path and not path.isascii() for path in self.result['summary_paths']))
+        self.assert_no_new_calls()
+
     def test_human_note_conflict_stops_all_writes(self):
         self.export()
         path = self.publisher / self.result['summary_paths'][0]
@@ -139,6 +159,7 @@ class ScheduledPublication(unittest.TestCase):
         for path in ('config/local/workbench.yaml',
                      'reports/test/agent_memory/codex-requests/first/events/000001.yaml',
                      'summary/agent_memory/another-cycle/manual.md',
+                     'summary/agent_memory/有标题~another-cycle/有观点~manual.md',
                      '../outside.md'):
             with self.subTest(path=path):
                 manifest = deepcopy(original)
@@ -257,8 +278,9 @@ class AutomaticPublishIntegration(unittest.TestCase):
             self.assertEqual(second['status'], 'complete', second)
             accepted = store.checked_yaml(root,
                 'reports/test/agent_memory/codex-insight/auto-second/accepted.yaml')
-            self.assertTrue(any(path.startswith('summary/agent_memory/auto-first/')
-                                for path in accepted['input_hashes']))
+            history = [path for path in accepted['input_hashes']
+                       if (notes.summary_ids(path) or ())[:2] == ('agent_memory', 'auto-first')]
+            self.assertTrue(history)
             # Exercise explicit old snapshot references too: only the public
             # first-round context in Git can restore this ignored host file.
             old_context = store.checked_yaml(root, first['context_path'])
@@ -277,8 +299,10 @@ class AutomaticPublishIntegration(unittest.TestCase):
             publish.apply(publisher, artifact_two)
             self.assertFalse((publisher / 'config').exists())
             self.assertEqual((len(fixture.client.calls), len(backend.calls)), calls)
-            self.assertTrue((publisher / 'summary/agent_memory/auto-first').is_dir())
-            self.assertTrue((publisher / 'summary/agent_memory/auto-second').is_dir())
+            current = [path for path in manifest['files']
+                       if (notes.summary_ids(path) or ())[:2] == ('agent_memory', 'auto-second')]
+            self.assertTrue(current)
+            self.assertTrue(all((publisher / path).is_file() for path in history + current))
             # A missing/corrupt historical public context cannot be replaced
             # with the maintainer's local ignored configuration.
             historical = publisher / first['context_path']

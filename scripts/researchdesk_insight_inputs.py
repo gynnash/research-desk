@@ -17,6 +17,7 @@ from uuid import UUID
 import researchdesk_offline as store
 import researchdesk_batch as batch
 import researchdesk_batch_inputs as research_inputs
+from researchdesk_note_paths import component_identity, summary_ids
 
 
 HASH = re.compile(r'[0-9a-f]{64}\Z')
@@ -690,12 +691,10 @@ def _codex_summary(root, relative, topic, hashes):
     from researchdesk_archive import load as load_archive
 
     path = _relative(root, relative, '逐篇总结')
-    parts = Path(relative).parts
-    if (len(parts) != 4 or parts[:2] != ('summary', topic)
-            or not store.SAFE_ID.fullmatch(parts[2])
-            or path.suffix != '.md' or not store.SAFE_ID.fullmatch(path.stem)):
+    identity = summary_ids(relative)
+    if identity is None or identity[0] != topic:
         raise store.OfflineError('总结必须属于同一主题的明确轮次')
-    cycle_id, key = parts[2], path.stem
+    _, cycle_id, key = identity
     base = 'reports/test/%s/research-batches/%s' % (topic, cycle_id)
     prefix = base + '/items/' + key
     binding = _codex_checked(root, prefix + '/summary.yaml', hashes)
@@ -826,7 +825,7 @@ def prepare_codex_bundle(root, topic, cycle_id, as_of=None, lookback_days=180,
         if path.name == 'README.md':
             continue
         relative = path.relative_to(root).as_posix()
-        is_current = path.parent.name == cycle_id
+        is_current = component_identity(path.parent.name) == cycle_id
         proof = {}
         try:
             item = _codex_summary(root, relative, topic, proof)

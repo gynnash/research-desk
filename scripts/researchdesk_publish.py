@@ -23,6 +23,7 @@ import yaml
 import researchdesk_archive as archive
 import researchdesk_harness as harness
 import researchdesk_insight_inputs as inputs
+import researchdesk_note_paths as notes
 import researchdesk_offline as store
 from researchdesk_schedule import MAX_TOPICS
 
@@ -61,15 +62,35 @@ def _safe(root, relative):
 
 
 def _prefixes(topic, cycle):
-    return [('collection', topic, cycle), ('summary', topic, cycle),
+    return [('collection', topic, cycle),
             ('insights', 'test', topic, cycle), ('articles', 'test', topic, cycle),
-            ('insights', topic, cycle), ('reports', topic, 'admissions', cycle)] + [
+            ('reports', topic, 'admissions', cycle)] + [
         ('reports', 'test', topic, stage, cycle)
         for stage in ('cycles', 'research-batches', 'codex-insight', 'automation')]
 
 
+def _reading_prefixes(root, family, topic, cycle):
+    parent = _safe(root, family + '/' + topic)
+    if parent.is_dir():
+        for path in sorted(parent.iterdir()):
+            if notes.component_identity(path.name) == cycle:
+                yield family, topic, path.name
+
+
+def _workspace_prefixes(root, topic, cycle):
+    yield from _prefixes(topic, cycle)
+    for family in ('summary', 'insights'):
+        yield from _reading_prefixes(root, family, topic, cycle)
+
+
 def allowed(relative, topic, cycle):
     parts = Path(relative).parts
+    summary = notes.summary_ids(relative)
+    if summary is not None:
+        return summary[:2] == (topic, cycle)
+    insight = notes.insight_ids(relative)
+    if insight is not None:
+        return insight == (topic, cycle)
     if (Path(relative).as_posix() == relative and len(parts) == 3 and parts[:2] == ('articles', topic)
             and re.fullmatch(re.escape(cycle) + r'-topic-[1-9][0-9]*\.md', parts[-1])):
         return True
@@ -82,11 +103,8 @@ def allowed(relative, topic, cycle):
     if parts[0] == 'collection':
         tail = '/'.join(parts[3:])
         return bool(re.fullmatch(r'manifest\.yaml(?:\.sha256)?|items/[a-z0-9_-]+/original\.(?:md|yaml(?:\.sha256)?)', tail))
-    if parts[0] == 'summary':
-        return len(parts) == 4 and parts[-1].endswith('.md')
     if parts[0] == 'insights':
-        return ((len(parts) == 5 and parts[1] == 'test')
-                or (len(parts) == 4 and parts[1] == topic)) and parts[-1] == 'report.md'
+        return len(parts) == 5 and parts[1] == 'test' and parts[-1] == 'report.md'
     if parts[0] == 'articles':
         return len(parts) == 5 and bool(re.fullmatch(r'topic-[1-9][0-9]*\.md', parts[-1]))
     if parts[:4] == ('reports', topic, 'admissions', cycle):
@@ -195,9 +213,10 @@ def _restore_context(root, context, topic, cycle):
     public_insight = context.get('insight_config')
     allowed_insight = {'schema_version', 'mode', 'backend', 'topic', 'topics_file', 'models', 'codex',
                        'review_policy', 'history', 'generation', 'limits'}
-    if (not isinstance(public_insight, dict) or set(public_insight) != allowed_insight
+    if (not isinstance(public_insight, dict) or set(public_insight) - {'prompts'} != allowed_insight
             or public_insight.get('topic') != topic):
         raise PublishError('frozen_context_insight_fields_invalid')
+    harness._prompt_version(public_insight)
     if 'selected_topic' in context and context['selected_topic'] != restored['topics']:
         raise PublishError('frozen_context_direction_invalid')
     if 'research_config' in context and context['research_config'] != restored['research_config']:
@@ -233,8 +252,8 @@ def _restore_historical_contexts(root, topic, cycle):
         if frozen and frozen[1] != cycle:
             required.add(frozen[1])
             explicit.add(frozen[1])
-        summary = re.fullmatch(r'summary/' + re.escape(topic) + r'/([a-z0-9_-]+)/[a-z0-9_-]+\.md', relative)
-        if summary and summary[1] != cycle:
+        summary = notes.summary_ids(relative)
+        if summary and summary[0] == topic and summary[1] != cycle:
             required.add(summary[1])
     import researchdesk_cycle as research_cycle
     for previous in sorted(required):
@@ -272,15 +291,16 @@ def _validate_workspace(root, topic, cycle, topics):
     # unrelated historical handwritten notes are never regraded or modified.
     with tempfile.TemporaryDirectory(prefix='researchdesk-reading-proof-') as temporary:
         current = Path(temporary).resolve()
-        for prefix in _prefixes(topic, cycle):
+        for prefix in _workspace_prefixes(root, topic, cycle):
             source = root.joinpath(*prefix)
             if source.is_dir() and prefix[0] in {'collection', 'summary', 'reports'}:
                 shutil.copytree(source, current.joinpath(*prefix), dirs_exist_ok=True)
         validate.check_workspace(current, topics, fail, frontmatter)
     if errors:
         raise PublishError('collection_or_summary_proof_invalid: ' + errors[0])
-    for path in sorted((root / 'summary' / topic / cycle).glob('*.md')):
-        inputs._codex_summary(root, path.relative_to(root).as_posix(), topic, {})
+    for prefix in _reading_prefixes(root, 'summary', topic, cycle):
+        for path in sorted(root.joinpath(*prefix).glob('*.md')):
+            inputs._codex_summary(root, path.relative_to(root).as_posix(), topic, {})
 
 
 def _verify_insight(root, context, topic, cycle):
@@ -308,7 +328,7 @@ def _verify_insight(root, context, topic, cycle):
         if relative.startswith('summary/' + topic + '/') and relative.endswith('.md'):
             source = inputs._codex_summary(root, relative, topic, {})
             source.pop('_identities', None)
-            (current if Path(relative).parent.name == cycle else history).append(source)
+            (current if notes.summary_ids(relative)[1] == cycle else history).append(source)
     if not current:
         raise PublishError('insight_missing_current_research')
     history.sort(key=lambda item: (item['research_date'], item['summary_path']), reverse=True)
@@ -368,10 +388,13 @@ def _overlay(root, files, topic, cycle):
         _verify_insight(overlay, context, topic, cycle)
         formal = 'reports/%s/admissions/%s/accepted.yaml' % (topic, cycle)
         if (_safe(overlay, formal).exists()
-                or (overlay / 'insights' / topic / cycle).exists()
+                or any(_reading_prefixes(overlay, 'insights', topic, cycle))
                 or any((overlay / 'articles' / topic).glob(cycle + '-topic-*.md'))):
             import researchdesk_insight_admission as admission
-            admission.load(overlay, topic, cycle)
+            accepted = admission.load(overlay, topic, cycle)
+            formal_insights = {relative for relative in files if notes.insight_ids(relative) == (topic, cycle)}
+            if formal_insights - accepted['output_hashes'].keys():
+                raise PublishError('formal_insight_has_no_accepted_binding')
         yield overlay
 
 
@@ -400,8 +423,8 @@ def export(root, destination, topic, cycle_id, base_commit):
     collection_complete = _safe(root, 'collection/%s/%s/manifest.yaml' % (topic, cycle_id)).is_file()
     insight_complete = _safe(root, 'reports/test/%s/codex-insight/%s/accepted.yaml' % (topic, cycle_id)).is_file()
     formal_complete = _safe(root, 'reports/%s/admissions/%s/accepted.yaml' % (topic, cycle_id)).is_file()
-    for prefix in _prefixes(topic, cycle_id):
-        is_formal = prefix in {('insights', topic, cycle_id), ('reports', topic, 'admissions', cycle_id)}
+    for prefix in _workspace_prefixes(root, topic, cycle_id):
+        is_formal = prefix[:2] == ('insights', topic) or prefix == ('reports', topic, 'admissions', cycle_id)
         if is_formal and not formal_complete:
             continue
         if prefix[0] in {'collection', 'summary'} and not collection_complete:
@@ -538,8 +561,8 @@ def _apply_one(root, artifact, manifest, push):
     pushed = False
     if push and files:
         _git(root, 'add', '--', *sorted(files))
-        staged = _git(root, 'diff', '--cached', '--name-only').splitlines()
-        if set(staged) - set(files):
+        staged = set(_git(root, 'diff', '--cached', '--name-only', '-z').split('\0')) - {''}
+        if staged - files.keys():
             raise PublishError('unexpected_staged_changes')
         if staged:
             _git(root, '-c', 'user.name=github-actions[bot]', '-c',

@@ -111,12 +111,14 @@ insight:
     max_requests_per_task: 100
     timeout_seconds: 240
   review_policy: accuracy_only
+  prompts:
+    version: codex-insight-v2
   history:
     lookback_days: 180
   generation:
     target_words:
-    - 3000
-    - 4500
+    - 700
+    - 1200
     min_insights: 1
   limits:
     max_agent_turns: 4
