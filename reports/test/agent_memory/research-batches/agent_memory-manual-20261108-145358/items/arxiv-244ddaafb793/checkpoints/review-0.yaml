@@ -1,0 +1,42 @@
+binding: d9182f782033f0c068e98d4cc8343ba670df75373a0d29c0dc81edcba271898d
+result:
+  text: "{\n  \"decision\": \"revise\",\n  \"coverage_acknowledged\": true,\n  \"\
+    issues\": [\n    {\n      \"severity\": \"info\",\n      \"location\": \"limitations[0]；全文阅读范围\"\
+    ,\n      \"reason\": \"已按 full_text 范围核对所提供的 A1–A110 抽取文本。reading_scope 标记未截断，但不保证图像、布局和公式的忠实呈现。候选明确注明未复现实验，并正确限制了图中案例、提示正文和设计改进结果表的可验证范围；summary\
+    \ 与四个分节总体形成了连贯的技术解读。\",\n      \"suggestion\": \"保留现有阅读范围、未复现实验及抽取限制说明。\"\n  \
+    \  },\n    {\n      \"severity\": \"error\",\n      \"location\": \"claims[7]：LoCoMo\
+    \ 与 MINT-Eval 的分数及基准难度解释\",\n      \"reason\": \"75.3%、58.8% 和 28.6% 均与 A84 一致，但该段遗漏了影响解释的重要比较条件。A87\
+    \ 明确说明 LoCoMo 排除了第 5 类对抗性／拒答问题，仅评估其余四类；这些结果还采用本文的统一裁判协议，而不一定等同各基准官方评测。直接写成在 LoCoMo\
+    \ 上取得的分数并以“同一设置”承接，容易使读者将其理解为完整官方基准成绩，或把跨数据集分差视为同尺度难度比较。\",\n      \"suggestion\"\
+    : \"在该段注明 LoCoMo 排除第 5 类、MINT-Eval 使用分层子集且采用本文统一裁判协议。将跨基准解释限定为作者在各自评测设置下观察到的检索表现差异，不将分差解释为严格可比的任务难度量尺。\"\
+    \n    },\n    {\n      \"severity\": \"warning\",\n      \"location\": \"claims[8]：世界模型实验的任务与样本条件\"\
+    ,\n      \"reason\": \"I3DM 与 MagicWorld 的数值和非全胜结论受 A94–A95 支持，但正文直接引入 MemoBench\
+    \ 的指标，未说明该实验究竟测什么、用了多少样本。A93 已提供关键条件：目标物体经历物理变化后离开视野，再出现时应保持更新后的状态；评测仅使用 25%、即\
+    \ 90 个样本。作为完整技术解读，缺少这些条件会使读者无法判断这里的“一致性”与对话问答或经验任务成功率有什么区别。\",\n      \"suggestion\"\
+    : \"补充 MemoBench 的离开视野后状态保持任务、90 个样本的子集范围，并注明 SSIM 与 1−LPIPS 均为越高越好的一致性指标。保留现有不同系统比较不足以单独归因于记忆操作的限制。\"\
+    \n    }\n  ],\n  \"checks\": [\n    {\n      \"claim_index\": 0,\n      \"verdict\"\
+    : \"supported\",\n      \"evidence_ids\": [\"A6\", \"A13\", \"A74\"]\n    },\n\
+    \    {\n      \"claim_index\": 1,\n      \"verdict\": \"supported\",\n      \"\
+    evidence_ids\": [\"A15\", \"A56\", \"A98\", \"A101\", \"A102\"]\n    },\n    {\n\
+    \      \"claim_index\": 2,\n      \"verdict\": \"supported\",\n      \"evidence_ids\"\
+    : [\"A55\", \"A65\", \"A66\", \"A67\"]\n    },\n    {\n      \"claim_index\":\
+    \ 3,\n      \"verdict\": \"supported\",\n      \"evidence_ids\": [\"A9\", \"A10\"\
+    , \"A51\", \"A52\", \"A53\", \"A58\", \"A60\", \"A61\", \"A71\"]\n    },\n   \
+    \ {\n      \"claim_index\": 4,\n      \"verdict\": \"supported\",\n      \"evidence_ids\"\
+    : [\"A7\", \"A8\", \"A13\", \"A59\", \"A105\"]\n    },\n    {\n      \"claim_index\"\
+    : 5,\n      \"verdict\": \"supported\",\n      \"evidence_ids\": [\"A14\", \"\
+    A15\", \"A75\", \"A76\", \"A77\", \"A79\"]\n    },\n    {\n      \"claim_index\"\
+    : 6,\n      \"verdict\": \"supported\",\n      \"evidence_ids\": [\"A17\", \"\
+    A78\", \"A81\", \"A82\", \"A101\"]\n    },\n    {\n      \"claim_index\": 7,\n\
+    \      \"verdict\": \"unsupported\",\n      \"evidence_ids\": [\"A19\", \"A20\"\
+    , \"A21\", \"A83\", \"A84\", \"A86\", \"A87\"]\n    },\n    {\n      \"claim_index\"\
+    : 8,\n      \"verdict\": \"supported\",\n      \"evidence_ids\": [\"A23\", \"\
+    A88\", \"A90\", \"A91\", \"A92\", \"A93\", \"A94\", \"A95\"]\n    },\n    {\n\
+    \      \"claim_index\": 9,\n      \"verdict\": \"supported\",\n      \"evidence_ids\"\
+    : [\"A26\", \"A27\", \"A28\"]\n    }\n  ]\n}"
+  model: gpt-6-astra
+  response_id: resp_0af3496cc16afb14016af08f46ffc487d08799a00b4b5b8ba4
+  usage:
+    input_tokens: 47681
+    output_tokens: 1339
+    total_tokens: 49020

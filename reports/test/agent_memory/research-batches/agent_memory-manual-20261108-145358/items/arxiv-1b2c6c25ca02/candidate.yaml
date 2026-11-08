@@ -1,0 +1,610 @@
+candidate:
+  key: arxiv-1b2c6c25ca02
+  kind: paper
+  topic: agent_memory
+  metadata:
+    title: 'MemSteer: Turning User Histories into Supervision for Agent Memory Optimization'
+    source: arXiv
+    source_url: https://arxiv.org/abs/2610.39276
+    authors:
+    - Huang, Jie
+    - Lan, Cuiling
+    - Yu, Qize
+    - Peng, Xiulian
+    - Lu, Yan
+    published_at: '2026-10-29'
+    arxiv_id: '2610.39276'
+    source_version: v1
+  evidence:
+    coverage: full_text
+    extraction_coverage: full_text
+    source_url: https://arxiv.org/abs/2610.39276
+    source_version: v1
+    content_hash: f846d4f5eece0b9e9ccba31c4b7c432675b635613e748f5e0559d6d635024f68
+    evidence_sha256: 995e18bf1a4e047f8416cfb1e8b0889ebe1c54d4ec043509b2244977f0f5439c
+    locators:
+    - id: A1
+      section_id: S1
+      location: https://arxiv.org/html/2610.39276v1; chars 1-320
+      text_sha256: 1dcb89844c5269cb36865bb3a9eccef826377712c0f855fd525a3c2b1bc47f60
+      quote: 'Jie Huang ††thanks: Work done during an internship at MSRA. Affiliation:
+        Peking University Affiliation: Microsoft Research Asia Cuiling Lan Affiliation:
+        Microsoft Research Asia Qize Yu'
+    - id: A2
+      section_id: S2
+      location: https://arxiv.org/html/2610.39276v1#abstract1; chars 1-1382
+      text_sha256: a5838904a036ec481ce44571df1b4f987663d7569642654da633c88790556e85
+      quote: ''
+    - id: A3
+      section_id: S2
+      location: https://arxiv.org/html/2610.39276v1#abstract1; chars 1383-1506
+      text_sha256: c663f4459a60ff94482d7463c87465ce3477af8166cd9fce057dcfb4e8d85f3d
+      quote: ''
+    - id: A4
+      section_id: S3
+      location: https://arxiv.org/html/2610.39276v1#S1; chars 1-1321
+      text_sha256: 2ccb1db7f8b3652793ffdbb221511fd634d6fed55fea61ff1b909b8ad621608d
+      quote: ''
+    - id: A5
+      section_id: S3
+      location: https://arxiv.org/html/2610.39276v1#S1; chars 1322-2657
+      text_sha256: 5421f41592f7a90b2c4ae77a25840187e47742160af96814df5d5cb8d1298351
+      quote: ''
+    - id: A6
+      section_id: S3
+      location: https://arxiv.org/html/2610.39276v1#S1; chars 2658-4039
+      text_sha256: c5ddf7b6dbd00003bd7b80687a9361e3cfa2ede366c7e6bba6785933fe6c87c2
+      quote: ''
+    - id: A7
+      section_id: S3
+      location: https://arxiv.org/html/2610.39276v1#S1; chars 4040-4382
+      text_sha256: a2640ab122561f3fd372e5bd34e65284b67870ac60b7b7352693d04fd056c329
+      quote: ''
+    - id: A8
+      section_id: S4
+      location: https://arxiv.org/html/2610.39276v1#S2.SS0.SSS0.Px1; chars 1-1268
+      text_sha256: 0705876799e8c5e5f274dbfbb888d2440687d1cad4ccb95064916c7d995f33cd
+      quote: ''
+    - id: A9
+      section_id: S5
+      location: https://arxiv.org/html/2610.39276v1#S2.SS0.SSS0.Px2; chars 1-1165
+      text_sha256: 4965013d5f7357351a82b872faf766728732f9e4e75ba8bddcb25e8d19091578
+      quote: ''
+    - id: A10
+      section_id: S6
+      location: https://arxiv.org/html/2610.39276v1#S2.SS0.SSS0.Px3; chars 1-1315
+      text_sha256: 3fdc7a6353f7168d4d4736f53c6c12d24e4ac6a2d67932b22135aba78d8344e2
+      quote: ''
+    - id: A11
+      section_id: S7
+      location: https://arxiv.org/html/2610.39276v1#S3.SS1; chars 1-1180
+      text_sha256: 80b11584f1b43659b8b4301e2d61a7431f43d51b0adcc20c32180eb0a5ba4b81
+      quote: ''
+    - id: A12
+      section_id: S8
+      location: https://arxiv.org/html/2610.39276v1#S3.SS2; chars 1-187
+      text_sha256: 7a0d4f1c4e2690aa18c99bdc4d434677461ca885139055fbb16ff18c6fff8de1
+      quote: ''
+    - id: A13
+      section_id: S9
+      location: https://arxiv.org/html/2610.39276v1#S3.SS2.SSS0.Px1; chars 1-515
+      text_sha256: b341b890a79d79d85c81f4f1be5198895e217f5dac8091d115e6bbd5511582da
+      quote: ''
+    - id: A14
+      section_id: S10
+      location: https://arxiv.org/html/2610.39276v1#S3.SS2.SSS0.Px2; chars 1-561
+      text_sha256: 97e701c5f63410a062afeeaf38f96b8bc3a43cdb4bc97c377cdc7513d175b339
+      quote: ''
+    - id: A15
+      section_id: S11
+      location: https://arxiv.org/html/2610.39276v1#S3.SS2.SSS0.Px3; chars 1-1079
+      text_sha256: 130ae1b13ee99cb62dd034675b8fd3e5a182feb244d901f0121ef5a54235c4ce
+      quote: ''
+    - id: A16
+      section_id: S12
+      location: https://arxiv.org/html/2610.39276v1#S3.SS3; chars 1-149
+      text_sha256: b889c2b6eb8b712d14c652214322073b7757461bcad54251a8bf3aedeac74f28
+      quote: ''
+    - id: A17
+      section_id: S13
+      location: https://arxiv.org/html/2610.39276v1#S3.SS3.SSS0.Px1; chars 1-1358
+      text_sha256: a58e33f19e72d8e3f7c1a98440527157c6d70283d83c264f5f3feef430ca84d7
+      quote: ''
+    - id: A18
+      section_id: S13
+      location: https://arxiv.org/html/2610.39276v1#S3.SS3.SSS0.Px1; chars 1359-1408
+      text_sha256: 806266626403d89c6caea5c17f3c72af483daeb7758229541264f69e1fc8f439
+      quote: ''
+    - id: A19
+      section_id: S14
+      location: https://arxiv.org/html/2610.39276v1#S3.SS3.SSS0.Px2; chars 1-1130
+      text_sha256: 736d4fdb992742f81087175a056e8899d65bdce1ecd833a55555e635c6fcfc3b
+      quote: ''
+    - id: A20
+      section_id: S15
+      location: https://arxiv.org/html/2610.39276v1#S3.SS3.SSS0.Px3; chars 1-618
+      text_sha256: 205f26bd355ee9161f8b20313d39b2eb0d2b1efef3e04b06c2e8c565aaab0095
+      quote: ''
+    - id: A21
+      section_id: S16
+      location: https://arxiv.org/html/2610.39276v1#S3.SS3.SSS0.Px4; chars 1-420
+      text_sha256: ba3a6c5798ea29068623c460af0a755a1d864eceb7e6d6a822f249f11c54720f
+      quote: ''
+    - id: A22
+      section_id: S17
+      location: https://arxiv.org/html/2610.39276v1#S4; chars 1-282
+      text_sha256: a54b028f6cff49bdd262b90af53f37c0c32bae43941de9eb109fe2d20170a4e3
+      quote: ''
+    - id: A23
+      section_id: S18
+      location: https://arxiv.org/html/2610.39276v1#S4.SS1.SSS0.Px1; chars 1-539
+      text_sha256: 95d769f5b54a0a3718074444b32f3191161a80de30779002ba9c7441629230a2
+      quote: ''
+    - id: A24
+      section_id: S19
+      location: https://arxiv.org/html/2610.39276v1#S4.SS1.SSS0.Px2; chars 1-655
+      text_sha256: 16dc6699e8bc9642876cb00d2633296be7b6be7e4dcc395b3b3eac5ed1d2c71d
+      quote: ''
+    - id: A25
+      section_id: S20
+      location: https://arxiv.org/html/2610.39276v1#S4.SS1.SSS0.Px3; chars 1-649
+      text_sha256: 87e8bb26c84bd75857a911df88f84c57dc8a110a72b95a9f90976334bd07700c
+      quote: ''
+    - id: A26
+      section_id: S21
+      location: https://arxiv.org/html/2610.39276v1#S4.SS2; chars 1-1389
+      text_sha256: 5d8957b282be080e3a7eea0e77ad5a27af39beea9af922751e950899b20c0c9d
+      quote: ''
+    - id: A27
+      section_id: S21
+      location: https://arxiv.org/html/2610.39276v1#S4.SS2; chars 1390-2754
+      text_sha256: fe5008af3fbee072b726430f08bea17585b8f3a61b460cce61738789349c1d84
+      quote: ''
+    - id: A28
+      section_id: S21
+      location: https://arxiv.org/html/2610.39276v1#S4.SS2; chars 2755-4104
+      text_sha256: f88a3e9c299dcc8277bacf0fb96c12a8c3403e0834c7a37cd8e589637fe2b4e5
+      quote: ''
+    - id: A29
+      section_id: S22
+      location: https://arxiv.org/html/2610.39276v1#S4.SS3; chars 1-1360
+      text_sha256: ed05771a329fdd0a13e37b4ed3a30de77006eacca59a7f16b9034ea2439be685
+      quote: ''
+    - id: A30
+      section_id: S22
+      location: https://arxiv.org/html/2610.39276v1#S4.SS3; chars 1361-1846
+      text_sha256: 3fbfb4113e70dbe0b00aad5f919b6035f555d493f7fac108591f0a9dde37edda
+      quote: ''
+    - id: A31
+      section_id: S23
+      location: https://arxiv.org/html/2610.39276v1#S4.SS4; chars 1-1378
+      text_sha256: 4598c5de7e22b2e890aa074f531256c2907f584a1fe69d68f5a2991a44740ca9
+      quote: ''
+    - id: A32
+      section_id: S23
+      location: https://arxiv.org/html/2610.39276v1#S4.SS4; chars 1379-2707
+      text_sha256: 6b8c17bdd4605602851dcf339e33353a07202c640502fb2892a0bb46138869b6
+      quote: ''
+    - id: A33
+      section_id: S23
+      location: https://arxiv.org/html/2610.39276v1#S4.SS4; chars 2708-4025
+      text_sha256: f46084fe1bc42d17ed1920d656b11f2eaebdce9cee7e0e1cb4846dc1a1becefe
+      quote: ''
+    - id: A34
+      section_id: S23
+      location: https://arxiv.org/html/2610.39276v1#S4.SS4; chars 4026-4419
+      text_sha256: 4815b6ed8c7a6c9f53c3ae0d5aae4b8b904bca7cbeadcaaab169e6fa3b8c964b
+      quote: ''
+    - id: A35
+      section_id: S24
+      location: https://arxiv.org/html/2610.39276v1#S4.SS5; chars 1-1394
+      text_sha256: eed683d1f064abf3f2509845e580de1455a44fbf20d34b14921f8612e89aa5a4
+      quote: ''
+    - id: A36
+      section_id: S24
+      location: https://arxiv.org/html/2610.39276v1#S4.SS5; chars 1395-1829
+      text_sha256: 3c65e4968de4b2966c928d485a9ae10642018829f5b7254d1294f251cbaf3cfa
+      quote: ''
+    - id: A37
+      section_id: S25
+      location: https://arxiv.org/html/2610.39276v1#S5; chars 1-879
+      text_sha256: c18e9b38917c3f2aba07f419370fb8735ad646e940461480313f73da823bbe67
+      quote: ''
+    - id: A38
+      section_id: S26
+      location: https://arxiv.org/html/2610.39276v1#Sx1; chars 1-509
+      text_sha256: 8a241553766a9f0c3c774b9c5554d7c82eca5ea758e8bf45b647bf5593a6f22a
+      quote: ''
+    - id: A39
+      section_id: S27
+      location: https://arxiv.org/html/2610.39276v1#Sx2; chars 1-749
+      text_sha256: fa24e8521adf57570c9a42445a3becea8171bba612886507918580acceff2bc5
+      quote: ''
+    - id: A40
+      section_id: S28
+      location: https://arxiv.org/html/2610.39276v1#Sx3; chars 1-577
+      text_sha256: 0d32e75e8b33361eaadaaeef530b7e7a6407c8be4b7e17bafa39d59b59177532
+      quote: ''
+    - id: A41
+      section_id: S29
+      location: https://arxiv.org/html/2610.39276v1#bib; chars 1-1382
+      text_sha256: 26436c3f73699b03d393b1427bb29c87e06a04b896a0087ee330e14ca7a8477a
+      quote: ''
+    - id: A42
+      section_id: S29
+      location: https://arxiv.org/html/2610.39276v1#bib; chars 1383-2782
+      text_sha256: d5bf69c82d4ac53b256d7b5defd10afa650e8143725d8f04d292bd814a5c7505
+      quote: ''
+    - id: A43
+      section_id: S29
+      location: https://arxiv.org/html/2610.39276v1#bib; chars 2783-4172
+      text_sha256: 1aca3f078c570dc2706c778e5e93e64a8ac6134e59d873d66b8f92bccd00dc99
+      quote: ''
+    - id: A44
+      section_id: S29
+      location: https://arxiv.org/html/2610.39276v1#bib; chars 4173-5568
+      text_sha256: 6a0fd00c351af103a9370b822fd094daaaad127712567b333bfdd2c5615e8740
+      quote: ''
+    - id: A45
+      section_id: S29
+      location: https://arxiv.org/html/2610.39276v1#bib; chars 5569-6907
+      text_sha256: 413c440872cea4fc707c96d5bc6b1c8b6fb5c03ab3c74db8ef9c5500cafa573d
+      quote: ''
+    - id: A46
+      section_id: S29
+      location: https://arxiv.org/html/2610.39276v1#bib; chars 6908-8272
+      text_sha256: 7a13d8b326137e7c621a8de33bec5b353bc2b33543e939da6bd22b6df2be84f8
+      quote: ''
+    - id: A47
+      section_id: S29
+      location: https://arxiv.org/html/2610.39276v1#bib; chars 8273-9649
+      text_sha256: f24b3520167d8cc37110fef7ced66600ca5a0c12658356eb6a23c9917a3ef863
+      quote: ''
+    - id: A48
+      section_id: S29
+      location: https://arxiv.org/html/2610.39276v1#bib; chars 9650-10362
+      text_sha256: 7b16c32a88624c360cd5a6d74b8c621b772b4348e47d2c2f06b55ff53493ce41
+      quote: ''
+    - id: A49
+      section_id: S30
+      location: https://arxiv.org/html/2610.39276v1#A1.SS1; chars 1-443
+      text_sha256: 3b9a4a34526373de06c5173da465dfda4e3fcd03574917536edabea35c68b3e7
+      quote: ''
+    - id: A50
+      section_id: S31
+      location: https://arxiv.org/html/2610.39276v1#A1.SS2; chars 1-1188
+      text_sha256: 7dcd901f6e7b4ec87dde81a12fee1efaff3140157a63a91e1af4224cfe380227
+      quote: ''
+    - id: A51
+      section_id: S32
+      location: https://arxiv.org/html/2610.39276v1#A1.SS3; chars 1-1369
+      text_sha256: 570a17ce8a06be500fbde9d34481f4caca09fd10ea716c348eb701d27889c01d
+      quote: ''
+    - id: A52
+      section_id: S32
+      location: https://arxiv.org/html/2610.39276v1#A1.SS3; chars 1370-1814
+      text_sha256: c2a6901c65646f3c625207d38da641fd5091d1d12912d61c186d51e08415aefc
+      quote: ''
+    - id: A53
+      section_id: S33
+      location: https://arxiv.org/html/2610.39276v1#A1.SS4; chars 1-1083
+      text_sha256: abc2f0d57b66e1d2590835ceb325cbe298428b23b3153b765027173fb2cc2e0a
+      quote: ''
+    - id: A54
+      section_id: S34
+      location: https://arxiv.org/html/2610.39276v1#A1.SS5; chars 1-813
+      text_sha256: db80bebdf6fb8c6a534fce1b813ac7f936cce68245cef8bfb71be7897c4d02c8
+      quote: ''
+    - id: A55
+      section_id: S35
+      location: https://arxiv.org/html/2610.39276v1#A2.SS1; chars 1-1396
+      text_sha256: 46a5c9d0eff0f7f9e0d01eabdedf08ed9ed24b737f564e608371e1090c625508
+      quote: ''
+    - id: A56
+      section_id: S35
+      location: https://arxiv.org/html/2610.39276v1#A2.SS1; chars 1397-2754
+      text_sha256: 832138a058f83909c407c3ac57969b81d4a0f6a2f82912838624e4c7f0a71476
+      quote: ''
+    - id: A57
+      section_id: S35
+      location: https://arxiv.org/html/2610.39276v1#A2.SS1; chars 2755-4038
+      text_sha256: 7956ead5036b6a682b93b554062c8b818353528b37f89f83d5751b760213778a
+      quote: ''
+    - id: A58
+      section_id: S36
+      location: https://arxiv.org/html/2610.39276v1#A2.SS2; chars 1-1356
+      text_sha256: 989b1523aff144d46e9d2a1bdc78781f149a3cf0997253ab062a2c3baac908b4
+      quote: ''
+    - id: A59
+      section_id: S36
+      location: https://arxiv.org/html/2610.39276v1#A2.SS2; chars 1357-2756
+      text_sha256: 2cbb4b2148c4cc22c638cb0b895afb14720cea32888ccb02eb9cfc1dc49e2077
+      quote: ''
+    - id: A60
+      section_id: S36
+      location: https://arxiv.org/html/2610.39276v1#A2.SS2; chars 2757-4156
+      text_sha256: 5556202b0c0e573bf4ffe9bc06d19ef434471b5b38ac1e42a610736c6b0f9078
+      quote: ''
+    - id: A61
+      section_id: S36
+      location: https://arxiv.org/html/2610.39276v1#A2.SS2; chars 4157-5549
+      text_sha256: 9421f537816ae0ea893033e021b136996f963c6b573a9cdbee138501c51205df
+      quote: ''
+    - id: A62
+      section_id: S36
+      location: https://arxiv.org/html/2610.39276v1#A2.SS2; chars 5550-6828
+      text_sha256: 6bdd9c615c15d2b9c0071700ab427fe030b00ecab586cbcf3b1633bce21437c2
+      quote: ''
+    - id: A63
+      section_id: S37
+      location: https://arxiv.org/html/2610.39276v1#A2.SS3; chars 1-264
+      text_sha256: 1f52d4a4317568a471e9bd61ffdaa809c63417e1b10c78487fdee160385bc1eb
+      quote: ''
+    - id: A64
+      section_id: S38
+      location: https://arxiv.org/html/2610.39276v1#A2.SS4; chars 1-601
+      text_sha256: d66ad6405526cb0ee504d1533f4333410697246d5e84d47d4aa776453f79c628
+      quote: ''
+    - id: A65
+      section_id: S39
+      location: https://arxiv.org/html/2610.39276v1#A2.SS4.SSS0.Px1; chars 1-435
+      text_sha256: ca01753dc282162137a618c76fc0dfa68cec6dc7dc8d7f3bde47fc3c1de0c591
+      quote: ''
+    - id: A66
+      section_id: S40
+      location: https://arxiv.org/html/2610.39276v1#A2.SS4.SSS0.Px2; chars 1-530
+      text_sha256: e526d3f02ec9e25f0438aaa7fef448cc126291fcafe5eb70e10c739292d3706d
+      quote: ''
+    - id: A67
+      section_id: S41
+      location: https://arxiv.org/html/2610.39276v1#A2.SS5; chars 1-847
+      text_sha256: f4f864cd428a90914b3208127e161fa5d1c8c167add60847372407e22ec1ac21
+      quote: ''
+    - id: A68
+      section_id: S42
+      location: https://arxiv.org/html/2610.39276v1#A3; chars 1-777
+      text_sha256: f6a57b6804841c43f8a325b07d77697440201d17dafcf2f13364a12be68daa3b
+      quote: ''
+    abstract_content_hash: 411de243c564fe6d12e6d2cf7f1951403b55e260fdd64c3d93c7c66b334b3da0
+    reading_profile: arxiv-fulltext-v1
+    format: html
+    document_url: https://arxiv.org/html/2610.39276v1
+    sections:
+    - id: S1
+      title: 'MemSteer: Turning User Histories into Supervision for Agent Memory Optimization'
+      location: https://arxiv.org/html/2610.39276v1
+      total_chars: 320
+      selected_chars: 320
+    - id: S2
+      title: Abstract
+      location: https://arxiv.org/html/2610.39276v1#abstract1
+      total_chars: 1506
+      selected_chars: 1506
+    - id: S3
+      title: 1 Introduction
+      location: https://arxiv.org/html/2610.39276v1#S1
+      total_chars: 4382
+      selected_chars: 4382
+    - id: S4
+      title: Memory-design optimization.
+      location: https://arxiv.org/html/2610.39276v1#S2.SS0.SSS0.Px1
+      total_chars: 1268
+      selected_chars: 1268
+    - id: S5
+      title: Synthetic queries and QA for training and evaluation.
+      location: https://arxiv.org/html/2610.39276v1#S2.SS0.SSS0.Px2
+      total_chars: 1165
+      selected_chars: 1165
+    - id: S6
+      title: Synthetic supervision for agent memory.
+      location: https://arxiv.org/html/2610.39276v1#S2.SS0.SSS0.Px3
+      total_chars: 1315
+      selected_chars: 1315
+    - id: S7
+      title: 3.1 Overview
+      location: https://arxiv.org/html/2610.39276v1#S3.SS1
+      total_chars: 1180
+      selected_chars: 1180
+    - id: S8
+      title: 3.2 Constructing QA–evidence supervision
+      location: https://arxiv.org/html/2610.39276v1#S3.SS2
+      total_chars: 187
+      selected_chars: 187
+    - id: S9
+      title: Graph-guided material preparation.
+      location: https://arxiv.org/html/2610.39276v1#S3.SS2.SSS0.Px1
+      total_chars: 515
+      selected_chars: 515
+    - id: S10
+      title: Evidence-grounded answer planning and question generation.
+      location: https://arxiv.org/html/2610.39276v1#S3.SS2.SSS0.Px2
+      total_chars: 561
+      selected_chars: 561
+    - id: S11
+      title: Source-grounded verification.
+      location: https://arxiv.org/html/2610.39276v1#S3.SS2.SSS0.Px3
+      total_chars: 1079
+      selected_chars: 1079
+    - id: S12
+      title: '3.3 MemSteer-Opt: evidence-guided memory-design optimization'
+      location: https://arxiv.org/html/2610.39276v1#S3.SS3
+      total_chars: 149
+      selected_chars: 149
+    - id: S13
+      title: Design space and evaluation.
+      location: https://arxiv.org/html/2610.39276v1#S3.SS3.SSS0.Px1
+      total_chars: 1408
+      selected_chars: 1408
+    - id: S14
+      title: Evidence-guided diagnosis and sampling.
+      location: https://arxiv.org/html/2610.39276v1#S3.SS3.SSS0.Px2
+      total_chars: 1130
+      selected_chars: 1130
+    - id: S15
+      title: Feedback-guided revision and selection.
+      location: https://arxiv.org/html/2610.39276v1#S3.SS3.SSS0.Px3
+      total_chars: 618
+      selected_chars: 618
+    - id: S16
+      title: Supervision for existing memory-design optimizers.
+      location: https://arxiv.org/html/2610.39276v1#S3.SS3.SSS0.Px4
+      total_chars: 420
+      selected_chars: 420
+    - id: S17
+      title: 4 Experiments
+      location: https://arxiv.org/html/2610.39276v1#S4
+      total_chars: 282
+      selected_chars: 282
+    - id: S18
+      title: Benchmarks and evaluation.
+      location: https://arxiv.org/html/2610.39276v1#S4.SS1.SSS0.Px1
+      total_chars: 539
+      selected_chars: 539
+    - id: S19
+      title: Optimizers and protocol.
+      location: https://arxiv.org/html/2610.39276v1#S4.SS1.SSS0.Px2
+      total_chars: 655
+      selected_chars: 655
+    - id: S20
+      title: Models and metrics.
+      location: https://arxiv.org/html/2610.39276v1#S4.SS1.SSS0.Px3
+      total_chars: 649
+      selected_chars: 649
+    - id: S21
+      title: 4.2 Can Generated Supervision Guide Memory-Design Optimization?
+      location: https://arxiv.org/html/2610.39276v1#S4.SS2
+      total_chars: 4104
+      selected_chars: 4104
+    - id: S22
+      title: 4.3 Can Optimized Memory Designs Transfer and Adapt?
+      location: https://arxiv.org/html/2610.39276v1#S4.SS3
+      total_chars: 1846
+      selected_chars: 1846
+    - id: S23
+      title: 4.4 What Makes QA–Evidence Supervision Effective?
+      location: https://arxiv.org/html/2610.39276v1#S4.SS4
+      total_chars: 4419
+      selected_chars: 4419
+    - id: S24
+      title: 4.5 Does Evidence-Guided Feedback Improve Optimization?
+      location: https://arxiv.org/html/2610.39276v1#S4.SS5
+      total_chars: 1829
+      selected_chars: 1829
+    - id: S25
+      title: 5 Conclusion
+      location: https://arxiv.org/html/2610.39276v1#S5
+      total_chars: 879
+      selected_chars: 879
+    - id: S26
+      title: Ethics Statement
+      location: https://arxiv.org/html/2610.39276v1#Sx1
+      total_chars: 509
+      selected_chars: 509
+    - id: S27
+      title: Reproducibility Statement
+      location: https://arxiv.org/html/2610.39276v1#Sx2
+      total_chars: 749
+      selected_chars: 749
+    - id: S28
+      title: LLM Usage
+      location: https://arxiv.org/html/2610.39276v1#Sx3
+      total_chars: 577
+      selected_chars: 577
+    - id: S29
+      title: References
+      location: https://arxiv.org/html/2610.39276v1#bib
+      total_chars: 10362
+      selected_chars: 10362
+    - id: S30
+      title: A.1 Benchmark Selection
+      location: https://arxiv.org/html/2610.39276v1#A1.SS1
+      total_chars: 443
+      selected_chars: 443
+    - id: S31
+      title: A.2 Reference Systems
+      location: https://arxiv.org/html/2610.39276v1#A1.SS2
+      total_chars: 1188
+      selected_chars: 1188
+    - id: S32
+      title: A.3 Evaluation populations
+      location: https://arxiv.org/html/2610.39276v1#A1.SS3
+      total_chars: 1814
+      selected_chars: 1814
+    - id: S33
+      title: A.4 Evaluation Metrics
+      location: https://arxiv.org/html/2610.39276v1#A1.SS4
+      total_chars: 1083
+      selected_chars: 1083
+    - id: S34
+      title: A.5 Feedback inputs
+      location: https://arxiv.org/html/2610.39276v1#A1.SS5
+      total_chars: 813
+      selected_chars: 813
+    - id: S35
+      title: B.1 ATM-Bench reference and optimization results
+      location: https://arxiv.org/html/2610.39276v1#A2.SS1
+      total_chars: 4038
+      selected_chars: 4038
+    - id: S36
+      title: B.2 Effect of supervision budget
+      location: https://arxiv.org/html/2610.39276v1#A2.SS2
+      total_chars: 6828
+      selected_chars: 6828
+    - id: S37
+      title: B.3 Full RHELM results
+      location: https://arxiv.org/html/2610.39276v1#A2.SS3
+      total_chars: 264
+      selected_chars: 264
+    - id: S38
+      title: B.4 Per-persona results
+      location: https://arxiv.org/html/2610.39276v1#A2.SS4
+      total_chars: 601
+      selected_chars: 601
+    - id: S39
+      title: Transfer of the six-user shared design.
+      location: https://arxiv.org/html/2610.39276v1#A2.SS4.SSS0.Px1
+      total_chars: 435
+      selected_chars: 435
+    - id: S40
+      title: Generated versus official supervision in the ten-user setting.
+      location: https://arxiv.org/html/2610.39276v1#A2.SS4.SSS0.Px2
+      total_chars: 530
+      selected_chars: 530
+    - id: S41
+      title: B.5 Example accepted architecture trajectory
+      location: https://arxiv.org/html/2610.39276v1#A2.SS5
+      total_chars: 847
+      selected_chars: 847
+    - id: S42
+      title: Appendix C Limitations
+      location: https://arxiv.org/html/2610.39276v1#A3
+      total_chars: 777
+      selected_chars: 777
+    total_chars: 64263
+    selected_chars: 64263
+    truncated: false
+    extraction_scope: complete extracted document text including available references
+    limitations:
+    - Text extraction does not verify figures, layout, or faithful mathematical rendering.
+  identity_keys:
+  - arxiv:2610.39276
+  - url:https://arxiv.org/abs/2610.39276
+  source_id: paper-6b4bfd57-ab17-43ef-9ddf-167dd9640d96
+  existing_source_path: null
+  existing_source_metadata: null
+  content_hash: f846d4f5eece0b9e9ccba31c4b7c432675b635613e748f5e0559d6d635024f68
+  metadata_hash: 3cf9d8c43749874924c4bdc8467c22b38d72efc1aa0606f356c6ebfcd823a105
+  upstream_updated_at: '2026-10-29'
+  acquisition_attempts:
+  - format: html
+    url: https://arxiv.org/html/2610.39276v1
+    status: success
+    reason: extracted
+  archive:
+    path: collection/agent_memory/agent_memory-manual-20261108-145358/items/arxiv-1b2c6c25ca02/original.yaml
+    sha256: 99bddaed0f913a291bb440acf95b67c5bbc58e8cc29fcda2fe2d10d95215e860
+    markdown_path: collection/agent_memory/agent_memory-manual-20261108-145358/items/arxiv-1b2c6c25ca02/original.md
+    markdown_sha256: 184f29dbeca29fb50909609c5760ecbe48fad3293d79b76370bea3c32d770fa7
+material_sha256: 995e18bf1a4e047f8416cfb1e8b0889ebe1c54d4ec043509b2244977f0f5439c
+action: research
+reason: no_completed_real_research

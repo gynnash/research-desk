@@ -1,0 +1,54 @@
+schema_version: 1
+mode: collection_index
+topic: agent_memory
+cycle_id: agent_memory-manual-20261108-145358
+receipt_path: reports/test/agent_memory/cycles/agent_memory-manual-20261108-145358/collection.yaml
+receipt_sha256: b11cf140ca442a6b71fcccc6135e0167ab636d1ae0844214b294fe759a8a5118
+records:
+- key: arxiv-b3ecb03a2b96
+  title: 'HABIT-Bench: Evaluating Habit Induction from Longitudinal Weak Evidence
+    in Agent Memory'
+  source_url: https://arxiv.org/abs/2610.24520
+  source_id: paper-42dd1732-5f39-43e7-9c83-e5797c4a0321
+  candidate_path: reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-b3ecb03a2b96/candidate.yaml
+  original_path: collection/agent_memory/agent_memory-manual-20261108-145358/items/arxiv-b3ecb03a2b96/original.yaml
+  original_markdown_path: collection/agent_memory/agent_memory-manual-20261108-145358/items/arxiv-b3ecb03a2b96/original.md
+  coverage: full_text
+  content_hash: 294c4d9185197fcd1c064c4342fa383315d21e7a9c44803f1946bafd6326dbd9
+- key: arxiv-244ddaafb793
+  title: 'Memory Tax: Dissecting the Net Value of Agent Memory'
+  source_url: https://arxiv.org/abs/2610.34073
+  source_id: paper-bc2516cd-42b2-41d1-ace2-36b96b38f624
+  candidate_path: reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-244ddaafb793/candidate.yaml
+  original_path: collection/agent_memory/agent_memory-manual-20261108-145358/items/arxiv-244ddaafb793/original.yaml
+  original_markdown_path: collection/agent_memory/agent_memory-manual-20261108-145358/items/arxiv-244ddaafb793/original.md
+  coverage: full_text
+  content_hash: 41b43bc8086cf03fbb3b6c52b817dde1302c1963d4831a6ba248a0319958e765
+- key: arxiv-310b98d3c9bc
+  title: Memory-Centric Continual Learning for AI Agents
+  source_url: https://arxiv.org/abs/2610.29357
+  source_id: paper-55a0904c-ffd5-4457-8da4-d531a9025945
+  candidate_path: reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-310b98d3c9bc/candidate.yaml
+  original_path: collection/agent_memory/agent_memory-manual-20261108-145358/items/arxiv-310b98d3c9bc/original.yaml
+  original_markdown_path: collection/agent_memory/agent_memory-manual-20261108-145358/items/arxiv-310b98d3c9bc/original.md
+  coverage: full_text
+  content_hash: fb8d0ff5574bb2c9f020fa3d8d20e46e8816afd5e81f6ae3634f743228f7539e
+- key: arxiv-1b2c6c25ca02
+  title: 'MemSteer: Turning User Histories into Supervision for Agent Memory Optimization'
+  source_url: https://arxiv.org/abs/2610.39276
+  source_id: paper-6b4bfd57-ab17-43ef-9ddf-167dd9640d96
+  candidate_path: reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-1b2c6c25ca02/candidate.yaml
+  original_path: collection/agent_memory/agent_memory-manual-20261108-145358/items/arxiv-1b2c6c25ca02/original.yaml
+  original_markdown_path: collection/agent_memory/agent_memory-manual-20261108-145358/items/arxiv-1b2c6c25ca02/original.md
+  coverage: full_text
+  content_hash: f846d4f5eece0b9e9ccba31c4b7c432675b635613e748f5e0559d6d635024f68
+- key: arxiv-347d26e2053b
+  title: 'MemComposer: Learning to Assemble Memories for LLM Agents via Reinforcement
+    Learning'
+  source_url: https://arxiv.org/abs/2610.21091
+  source_id: paper-05082adc-98f0-4720-9299-0c7262253b57
+  candidate_path: reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-347d26e2053b/candidate.yaml
+  original_path: collection/agent_memory/agent_memory-manual-20261108-145358/items/arxiv-347d26e2053b/original.yaml
+  original_markdown_path: collection/agent_memory/agent_memory-manual-20261108-145358/items/arxiv-347d26e2053b/original.md
+  coverage: full_text
+  content_hash: df0c952b785946151437933f182766172592a7d3f3b3ee3053fa8104ee3c805f

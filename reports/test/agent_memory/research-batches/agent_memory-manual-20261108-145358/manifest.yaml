@@ -1,0 +1,55 @@
+schema_version: 1
+mode: research_batch_test
+production_accepted: false
+backend: chatgpt_plan
+topic: agent_memory
+batch_id: agent_memory-manual-20261108-145358
+created_at: '2026-11-08T14:59:02.206561+00:00'
+fingerprint: 29a2932c0f36ae8a16c4dcff9ae9a26509990dd309121467f44b94513d901593
+config_sha256: 7c19bca7b305d081c7725c8ce3a7d52515b8f98d0dca449a0423751b8235c170
+topics_sha256: a252b9013b241b2fcf83015269e4c28a9718c0575b62bd6f43b039f2da202c2b
+models:
+  research: gpt-6.1-sol
+  review: gpt-6-astra
+budget:
+  max_documents: 5
+  max_calls_per_item: 4
+  max_calls_per_batch: 12
+  month_max_calls: 100
+  max_input_chars: 600000
+  max_output_chars: 24000
+  timeout_seconds: 240
+  max_revisions: 1
+authorization:
+  authenticated: true
+  plan_permission: true
+  authorization: official_chatgpt_oauth
+  account_fingerprint: 4be5bc45c39fc32a
+catalog:
+- slug: gpt-6.1-sol
+  display_name: GPT-6.1-Sol
+- slug: gpt-6-astra
+  display_name: GPT-6-Astra
+- slug: gpt-6.1-terra
+  display_name: GPT-6.1 Terra
+- slug: gpt-6-sol
+  display_name: GPT-6-Sol
+- slug: gpt-6-luna
+  display_name: GPT-6-Luna
+- slug: gpt-5.6-sol
+  display_name: GPT-5.6-Sol
+- slug: gpt-5.6-terra
+  display_name: GPT-5.6-Terra
+- slug: gpt-5.6-luna
+  display_name: GPT-5.6-Luna
+prompt_version: research-batch-v4
+protected_notes:
+  collection/README.md: 6b28ec414625172e2b04864f463ed732671cc939f34dd9bd902e8cefd34e1710
+  collection/agent_memory/README.md: ccf55c9a7f47fe66a2376cf2541708610c13807847d61e1f17f7a531590d205a
+  collection/agent_memory/agent_memory-manual-20261108-145358/items/arxiv-310b98d3c9bc/original.md: d831abb5105ac3921fe1bddd3e2c5326ad2a8d1bc73bb13f98b956ce1fce8bd6
+  collection/agent_memory/agent_memory-manual-20261108-145358/items/arxiv-244ddaafb793/original.md: 4ca3ca50b131b8b4542185625738f146dcc25ebfb109594b2c8e69659817424b
+  collection/agent_memory/agent_memory-manual-20261108-145358/items/arxiv-1b2c6c25ca02/original.md: 184f29dbeca29fb50909609c5760ecbe48fad3293d79b76370bea3c32d770fa7
+  collection/agent_memory/agent_memory-manual-20261108-145358/items/arxiv-b3ecb03a2b96/original.md: d5777c631ffb22fd94f4e7c3ef8b1243677809d3ded17e8fa8b9e5e0a127c061
+  collection/agent_memory/agent_memory-manual-20261108-145358/items/arxiv-347d26e2053b/original.md: c44cfc81f946775ff83e0cb9578661ed5eb16a3cd85aacc48afddfd72945c934
+  summary/README.md: 7f028a3170b0f754c6be7deb8a2c6936ff0f0f045196fbf0a106d9b0ed55b5fd
+  summary/agent_memory/README.md: 327df676215679f716588f4438892a3597cbf64e9fc34cfe1063dce49b1d391c

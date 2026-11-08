@@ -1,0 +1,50 @@
+binding: 6a9a33332ee3407bf56aedf5768545a4c13c5ddd85d33201a807a36a6ea0b544
+result:
+  text: "{\n  \"decision\": \"revise\",\n  \"coverage_acknowledged\": true,\n  \"\
+    issues\": [\n    {\n      \"severity\": \"info\",\n      \"location\": \"reading_scope；limitations[0]；全文\"\
+    ,\n      \"reason\": \"已按提供的 A1–A166 抽取材料核对。reading_scope 标明各节全部选取、无截断，范围包含正文、可用图表文字、参考文献和作者信息，但不含对图像、版式、数学渲染的独立验证。候选明确注明未复现实验，也没有把被引用论文当作已独立阅读全文。五节结构及段落承接基本成立，未出现内部证据编号或运行信息。\"\
+    ,\n      \"suggestion\": \"保留现有阅读范围和未复现声明；后续补充内容继续区分本论文实测、作者转述的外部研究与理论假说。\"\n\
+    \    },\n    {\n      \"severity\": \"error\",\n      \"location\": \"claims[0]–claims[2]：三轴分类与资产机制\"\
+    ,\n      \"reason\": \"存储介质及双循环解释充分，但另外两条核心分类轴介绍不完整：情景、语义、程序性资产基本仅列名称，没有直接说明各自保存什么、如何复用及其分类由使用方式而非存储形式决定；预设、运行时审议、学习型控制也未清楚区分。claims[1]\
+    \ 的三种反馈层级不是这三种控制类型的替代分类。原文第2.2–2.3节的这些区分是统一框架的核心，而不是可省略的方法名称。\",\n      \"suggestion\"\
+    : \"在第一节增加紧凑的机制说明：情景保留带条件的经历，语义抽取事实和约束，程序性资产规定条件下如何行动；同一文本可按用途归入不同资产，短期状态只有跨任务持久可复用才算资产。再说明预设规则、LLM逐例审议与反馈训练控制器的差异，并明确这些控制类型可组合、与离线训练或在线演化是不同维度。依据\
+    \ A20–A31、A56。\"\n    },\n    {\n      \"severity\": \"error\",\n      \"location\"\
+    : \"claims[8]–claims[9]：参数记忆实验比较\",\n      \"reason\": \"现有容量、等秩写入方法和 GradMem\
+    \ 比较数值准确，但完整技术解读遗漏了原文关键的写入时机实验，以及顺序写入与批量写入的协议边界。原文 A104 显示写入阈值存在任务相关的非单调最优区间，这直接限制当前“增加写入计算可补偿容量”的解释；A100–A102\
+    \ 则专门警告更新次数不等于同时保留的历史事实数量。仅在 limitations 泛称协议不同，不能替代对这些关键比较的实质分析。\",\n      \"\
+    suggestion\": \"在第五节补入 TMEM 的条件与结果：Qwen3-4B 上 LoCoMo 的 F1 在4K-token触发阈值为25.72，LongMemEval-S\
+    \ 在12K为41.24，两侧下降；明确阈值更大表示写入更少，而非计算更多，碎片化解释只是作者的合理推测。另简述同一 GPT-J 6B 上顺序 MEMIT\
+    \ 约1,400次编辑后的遗忘与单批10,000事实的协议差别；若提及 MEMORYLLM 的650,000次更新，必须保留近期上下文、随机槽替换与非全历史同时保留的限制。\"\
+    \n    },\n    {\n      \"severity\": \"warning\",\n      \"location\": \"claims[6]–claims[7]：非参数实验设置\"\
+    ,\n      \"reason\": \"结果、单位及主要比较条件均与原文相符，但没有交代容量扫描使用冻结记忆库子集、连续任务才在线更新，容易让读者把\
+    \ LoCoMo 的存储—读取互补直接理解为持续学习证据。LoCoMo 的1,540题使用类别1–4，区间为聚类自助法区间，这些已有的范围和统计条件也宜明确。\"\
+    ,\n      \"suggestion\": \"在容量扫描段补充冻结子集、LoCoMo类别1–4及cluster-bootstrap 95%区间；与下一段在线更新实验形成明确对照。读取成本段可顺带补全\
+    \ Search 对照的225.68 tokens、0.154秒和4.29% F1，以区分检索本身与查询时摘要的成本。依据 A82、A85、A90。\"\n\
+    \    }\n  ],\n  \"checks\": [\n    {\n      \"claim_index\": 0,\n      \"verdict\"\
+    : \"supported\",\n      \"evidence_ids\": [\"A3\", \"A9\", \"A10\", \"A11\", \"\
+    A12\", \"A13\", \"A14\", \"A15\", \"A17\"]\n    },\n    {\n      \"claim_index\"\
+    : 1,\n      \"verdict\": \"supported\",\n      \"evidence_ids\": [\"A33\", \"\
+    A34\", \"A35\", \"A36\", \"A56\", \"A57\"]\n    },\n    {\n      \"claim_index\"\
+    : 2,\n      \"verdict\": \"supported\",\n      \"evidence_ids\": [\"A27\", \"\
+    A38\", \"A39\", \"A40\", \"A41\", \"A42\", \"A43\", \"A44\", \"A45\"]\n    },\n\
+    \    {\n      \"claim_index\": 3,\n      \"verdict\": \"supported\",\n      \"\
+    evidence_ids\": [\"A47\", \"A48\", \"A49\", \"A51\", \"A52\", \"A53\", \"A54\"\
+    ]\n    },\n    {\n      \"claim_index\": 4,\n      \"verdict\": \"supported\"\
+    ,\n      \"evidence_ids\": [\"A49\", \"A65\", \"A73\", \"A74\", \"A76\"]\n   \
+    \ },\n    {\n      \"claim_index\": 5,\n      \"verdict\": \"supported\",\n  \
+    \    \"evidence_ids\": [\"A66\", \"A67\", \"A68\", \"A69\", \"A70\", \"A71\",\
+    \ \"A72\", \"A75\", \"A76\", \"A77\"]\n    },\n    {\n      \"claim_index\": 6,\n\
+    \      \"verdict\": \"supported\",\n      \"evidence_ids\": [\"A78\", \"A79\"\
+    , \"A80\", \"A81\", \"A82\", \"A83\", \"A85\"]\n    },\n    {\n      \"claim_index\"\
+    : 7,\n      \"verdict\": \"supported\",\n      \"evidence_ids\": [\"A85\", \"\
+    A87\", \"A88\", \"A89\", \"A90\"]\n    },\n    {\n      \"claim_index\": 8,\n\
+    \      \"verdict\": \"supported\",\n      \"evidence_ids\": [\"A92\", \"A93\"\
+    , \"A94\", \"A95\", \"A96\", \"A101\", \"A105\"]\n    },\n    {\n      \"claim_index\"\
+    : 9,\n      \"verdict\": \"supported\",\n      \"evidence_ids\": [\"A98\", \"\
+    A99\", \"A105\", \"A126\", \"A127\"]\n    }\n  ]\n}"
+  model: gpt-6-astra
+  response_id: resp_032f683f178d2bfe016af0909542a887d0a6c100b5d7126603
+  usage:
+    input_tokens: 70905
+    output_tokens: 1746
+    total_tokens: 72651

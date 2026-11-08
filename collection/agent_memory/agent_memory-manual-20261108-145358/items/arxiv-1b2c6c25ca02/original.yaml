@@ -1,0 +1,7375 @@
+schema_version: 1
+mode: extracted_original
+source:
+  id: arxiv-1b2c6c25ca02
+  adapter: arxiv
+  kind: paper
+  url: https://arxiv.org/abs/2610.39276v1
+  evidence_max_chars: 200000
+  reading:
+    mode: full_text_required
+  archive: true
+candidate:
+  key: arxiv-1b2c6c25ca02
+  kind: paper
+  topic: agent_memory
+  metadata:
+    title: 'MemSteer: Turning User Histories into Supervision for Agent Memory Optimization'
+    source: arXiv
+    source_url: https://arxiv.org/abs/2610.39276
+    authors:
+    - Huang, Jie
+    - Lan, Cuiling
+    - Yu, Qize
+    - Peng, Xiulian
+    - Lu, Yan
+    published_at: '2026-10-29'
+    arxiv_id: '2610.39276'
+    source_version: v1
+  evidence:
+    coverage: full_text
+    extraction_coverage: full_text
+    source_url: https://arxiv.org/abs/2610.39276
+    source_version: v1
+    content_hash: f846d4f5eece0b9e9ccba31c4b7c432675b635613e748f5e0559d6d635024f68
+    evidence_sha256: 995e18bf1a4e047f8416cfb1e8b0889ebe1c54d4ec043509b2244977f0f5439c
+    locators:
+    - id: A1
+      section_id: S1
+      location: https://arxiv.org/html/2610.39276v1; chars 1-320
+      text_sha256: 1dcb89844c5269cb36865bb3a9eccef826377712c0f855fd525a3c2b1bc47f60
+      quote: 'Jie Huang ††thanks: Work done during an internship at MSRA. Affiliation:
+        Peking University Affiliation: Microsoft Research Asia Cuiling Lan Affiliation:
+        Microsoft Research Asia Qize Yu'
+    - id: A2
+      section_id: S2
+      location: https://arxiv.org/html/2610.39276v1#abstract1; chars 1-1382
+      text_sha256: a5838904a036ec481ce44571df1b4f987663d7569642654da633c88790556e85
+      quote: ''
+    - id: A3
+      section_id: S2
+      location: https://arxiv.org/html/2610.39276v1#abstract1; chars 1383-1506
+      text_sha256: c663f4459a60ff94482d7463c87465ce3477af8166cd9fce057dcfb4e8d85f3d
+      quote: ''
+    - id: A4
+      section_id: S3
+      location: https://arxiv.org/html/2610.39276v1#S1; chars 1-1321
+      text_sha256: 2ccb1db7f8b3652793ffdbb221511fd634d6fed55fea61ff1b909b8ad621608d
+      quote: ''
+    - id: A5
+      section_id: S3
+      location: https://arxiv.org/html/2610.39276v1#S1; chars 1322-2657
+      text_sha256: 5421f41592f7a90b2c4ae77a25840187e47742160af96814df5d5cb8d1298351
+      quote: ''
+    - id: A6
+      section_id: S3
+      location: https://arxiv.org/html/2610.39276v1#S1; chars 2658-4039
+      text_sha256: c5ddf7b6dbd00003bd7b80687a9361e3cfa2ede366c7e6bba6785933fe6c87c2
+      quote: ''
+    - id: A7
+      section_id: S3
+      location: https://arxiv.org/html/2610.39276v1#S1; chars 4040-4382
+      text_sha256: a2640ab122561f3fd372e5bd34e65284b67870ac60b7b7352693d04fd056c329
+      quote: ''
+    - id: A8
+      section_id: S4
+      location: https://arxiv.org/html/2610.39276v1#S2.SS0.SSS0.Px1; chars 1-1268
+      text_sha256: 0705876799e8c5e5f274dbfbb888d2440687d1cad4ccb95064916c7d995f33cd
+      quote: ''
+    - id: A9
+      section_id: S5
+      location: https://arxiv.org/html/2610.39276v1#S2.SS0.SSS0.Px2; chars 1-1165
+      text_sha256: 4965013d5f7357351a82b872faf766728732f9e4e75ba8bddcb25e8d19091578
+      quote: ''
+    - id: A10
+      section_id: S6
+      location: https://arxiv.org/html/2610.39276v1#S2.SS0.SSS0.Px3; chars 1-1315
+      text_sha256: 3fdc7a6353f7168d4d4736f53c6c12d24e4ac6a2d67932b22135aba78d8344e2
+      quote: ''
+    - id: A11
+      section_id: S7
+      location: https://arxiv.org/html/2610.39276v1#S3.SS1; chars 1-1180
+      text_sha256: 80b11584f1b43659b8b4301e2d61a7431f43d51b0adcc20c32180eb0a5ba4b81
+      quote: ''
+    - id: A12
+      section_id: S8
+      location: https://arxiv.org/html/2610.39276v1#S3.SS2; chars 1-187
+      text_sha256: 7a0d4f1c4e2690aa18c99bdc4d434677461ca885139055fbb16ff18c6fff8de1
+      quote: ''
+    - id: A13
+      section_id: S9
+      location: https://arxiv.org/html/2610.39276v1#S3.SS2.SSS0.Px1; chars 1-515
+      text_sha256: b341b890a79d79d85c81f4f1be5198895e217f5dac8091d115e6bbd5511582da
+      quote: ''
+    - id: A14
+      section_id: S10
+      location: https://arxiv.org/html/2610.39276v1#S3.SS2.SSS0.Px2; chars 1-561
+      text_sha256: 97e701c5f63410a062afeeaf38f96b8bc3a43cdb4bc97c377cdc7513d175b339
+      quote: ''
+    - id: A15
+      section_id: S11
+      location: https://arxiv.org/html/2610.39276v1#S3.SS2.SSS0.Px3; chars 1-1079
+      text_sha256: 130ae1b13ee99cb62dd034675b8fd3e5a182feb244d901f0121ef5a54235c4ce
+      quote: ''
+    - id: A16
+      section_id: S12
+      location: https://arxiv.org/html/2610.39276v1#S3.SS3; chars 1-149
+      text_sha256: b889c2b6eb8b712d14c652214322073b7757461bcad54251a8bf3aedeac74f28
+      quote: ''
+    - id: A17
+      section_id: S13
+      location: https://arxiv.org/html/2610.39276v1#S3.SS3.SSS0.Px1; chars 1-1358
+      text_sha256: a58e33f19e72d8e3f7c1a98440527157c6d70283d83c264f5f3feef430ca84d7
+      quote: ''
+    - id: A18
+      section_id: S13
+      location: https://arxiv.org/html/2610.39276v1#S3.SS3.SSS0.Px1; chars 1359-1408
+      text_sha256: 806266626403d89c6caea5c17f3c72af483daeb7758229541264f69e1fc8f439
+      quote: ''
+    - id: A19
+      section_id: S14
+      location: https://arxiv.org/html/2610.39276v1#S3.SS3.SSS0.Px2; chars 1-1130
+      text_sha256: 736d4fdb992742f81087175a056e8899d65bdce1ecd833a55555e635c6fcfc3b
+      quote: ''
+    - id: A20
+      section_id: S15
+      location: https://arxiv.org/html/2610.39276v1#S3.SS3.SSS0.Px3; chars 1-618
+      text_sha256: 205f26bd355ee9161f8b20313d39b2eb0d2b1efef3e04b06c2e8c565aaab0095
+      quote: ''
+    - id: A21
+      section_id: S16
+      location: https://arxiv.org/html/2610.39276v1#S3.SS3.SSS0.Px4; chars 1-420
+      text_sha256: ba3a6c5798ea29068623c460af0a755a1d864eceb7e6d6a822f249f11c54720f
+      quote: ''
+    - id: A22
+      section_id: S17
+      location: https://arxiv.org/html/2610.39276v1#S4; chars 1-282
+      text_sha256: a54b028f6cff49bdd262b90af53f37c0c32bae43941de9eb109fe2d20170a4e3
+      quote: ''
+    - id: A23
+      section_id: S18
+      location: https://arxiv.org/html/2610.39276v1#S4.SS1.SSS0.Px1; chars 1-539
+      text_sha256: 95d769f5b54a0a3718074444b32f3191161a80de30779002ba9c7441629230a2
+      quote: ''
+    - id: A24
+      section_id: S19
+      location: https://arxiv.org/html/2610.39276v1#S4.SS1.SSS0.Px2; chars 1-655
+      text_sha256: 16dc6699e8bc9642876cb00d2633296be7b6be7e4dcc395b3b3eac5ed1d2c71d
+      quote: ''
+    - id: A25
+      section_id: S20
+      location: https://arxiv.org/html/2610.39276v1#S4.SS1.SSS0.Px3; chars 1-649
+      text_sha256: 87e8bb26c84bd75857a911df88f84c57dc8a110a72b95a9f90976334bd07700c
+      quote: ''
+    - id: A26
+      section_id: S21
+      location: https://arxiv.org/html/2610.39276v1#S4.SS2; chars 1-1389
+      text_sha256: 5d8957b282be080e3a7eea0e77ad5a27af39beea9af922751e950899b20c0c9d
+      quote: ''
+    - id: A27
+      section_id: S21
+      location: https://arxiv.org/html/2610.39276v1#S4.SS2; chars 1390-2754
+      text_sha256: fe5008af3fbee072b726430f08bea17585b8f3a61b460cce61738789349c1d84
+      quote: ''
+    - id: A28
+      section_id: S21
+      location: https://arxiv.org/html/2610.39276v1#S4.SS2; chars 2755-4104
+      text_sha256: f88a3e9c299dcc8277bacf0fb96c12a8c3403e0834c7a37cd8e589637fe2b4e5
+      quote: ''
+    - id: A29
+      section_id: S22
+      location: https://arxiv.org/html/2610.39276v1#S4.SS3; chars 1-1360
+      text_sha256: ed05771a329fdd0a13e37b4ed3a30de77006eacca59a7f16b9034ea2439be685
+      quote: ''
+    - id: A30
+      section_id: S22
+      location: https://arxiv.org/html/2610.39276v1#S4.SS3; chars 1361-1846
+      text_sha256: 3fbfb4113e70dbe0b00aad5f919b6035f555d493f7fac108591f0a9dde37edda
+      quote: ''
+    - id: A31
+      section_id: S23
+      location: https://arxiv.org/html/2610.39276v1#S4.SS4; chars 1-1378
+      text_sha256: 4598c5de7e22b2e890aa074f531256c2907f584a1fe69d68f5a2991a44740ca9
+      quote: ''
+    - id: A32
+      section_id: S23
+      location: https://arxiv.org/html/2610.39276v1#S4.SS4; chars 1379-2707
+      text_sha256: 6b8c17bdd4605602851dcf339e33353a07202c640502fb2892a0bb46138869b6
+      quote: ''
+    - id: A33
+      section_id: S23
+      location: https://arxiv.org/html/2610.39276v1#S4.SS4; chars 2708-4025
+      text_sha256: f46084fe1bc42d17ed1920d656b11f2eaebdce9cee7e0e1cb4846dc1a1becefe
+      quote: ''
+    - id: A34
+      section_id: S23
+      location: https://arxiv.org/html/2610.39276v1#S4.SS4; chars 4026-4419
+      text_sha256: 4815b6ed8c7a6c9f53c3ae0d5aae4b8b904bca7cbeadcaaab169e6fa3b8c964b
+      quote: ''
+    - id: A35
+      section_id: S24
+      location: https://arxiv.org/html/2610.39276v1#S4.SS5; chars 1-1394
+      text_sha256: eed683d1f064abf3f2509845e580de1455a44fbf20d34b14921f8612e89aa5a4
+      quote: ''
+    - id: A36
+      section_id: S24
+      location: https://arxiv.org/html/2610.39276v1#S4.SS5; chars 1395-1829
+      text_sha256: 3c65e4968de4b2966c928d485a9ae10642018829f5b7254d1294f251cbaf3cfa
+      quote: ''
+    - id: A37
+      section_id: S25
+      location: https://arxiv.org/html/2610.39276v1#S5; chars 1-879
+      text_sha256: c18e9b38917c3f2aba07f419370fb8735ad646e940461480313f73da823bbe67
+      quote: ''
+    - id: A38
+      section_id: S26
+      location: https://arxiv.org/html/2610.39276v1#Sx1; chars 1-509
+      text_sha256: 8a241553766a9f0c3c774b9c5554d7c82eca5ea758e8bf45b647bf5593a6f22a
+      quote: ''
+    - id: A39
+      section_id: S27
+      location: https://arxiv.org/html/2610.39276v1#Sx2; chars 1-749
+      text_sha256: fa24e8521adf57570c9a42445a3becea8171bba612886507918580acceff2bc5
+      quote: ''
+    - id: A40
+      section_id: S28
+      location: https://arxiv.org/html/2610.39276v1#Sx3; chars 1-577
+      text_sha256: 0d32e75e8b33361eaadaaeef530b7e7a6407c8be4b7e17bafa39d59b59177532
+      quote: ''
+    - id: A41
+      section_id: S29
+      location: https://arxiv.org/html/2610.39276v1#bib; chars 1-1382
+      text_sha256: 26436c3f73699b03d393b1427bb29c87e06a04b896a0087ee330e14ca7a8477a
+      quote: ''
+    - id: A42
+      section_id: S29
+      location: https://arxiv.org/html/2610.39276v1#bib; chars 1383-2782
+      text_sha256: d5bf69c82d4ac53b256d7b5defd10afa650e8143725d8f04d292bd814a5c7505
+      quote: ''
+    - id: A43
+      section_id: S29
+      location: https://arxiv.org/html/2610.39276v1#bib; chars 2783-4172
+      text_sha256: 1aca3f078c570dc2706c778e5e93e64a8ac6134e59d873d66b8f92bccd00dc99
+      quote: ''
+    - id: A44
+      section_id: S29
+      location: https://arxiv.org/html/2610.39276v1#bib; chars 4173-5568
+      text_sha256: 6a0fd00c351af103a9370b822fd094daaaad127712567b333bfdd2c5615e8740
+      quote: ''
+    - id: A45
+      section_id: S29
+      location: https://arxiv.org/html/2610.39276v1#bib; chars 5569-6907
+      text_sha256: 413c440872cea4fc707c96d5bc6b1c8b6fb5c03ab3c74db8ef9c5500cafa573d
+      quote: ''
+    - id: A46
+      section_id: S29
+      location: https://arxiv.org/html/2610.39276v1#bib; chars 6908-8272
+      text_sha256: 7a13d8b326137e7c621a8de33bec5b353bc2b33543e939da6bd22b6df2be84f8
+      quote: ''
+    - id: A47
+      section_id: S29
+      location: https://arxiv.org/html/2610.39276v1#bib; chars 8273-9649
+      text_sha256: f24b3520167d8cc37110fef7ced66600ca5a0c12658356eb6a23c9917a3ef863
+      quote: ''
+    - id: A48
+      section_id: S29
+      location: https://arxiv.org/html/2610.39276v1#bib; chars 9650-10362
+      text_sha256: 7b16c32a88624c360cd5a6d74b8c621b772b4348e47d2c2f06b55ff53493ce41
+      quote: ''
+    - id: A49
+      section_id: S30
+      location: https://arxiv.org/html/2610.39276v1#A1.SS1; chars 1-443
+      text_sha256: 3b9a4a34526373de06c5173da465dfda4e3fcd03574917536edabea35c68b3e7
+      quote: ''
+    - id: A50
+      section_id: S31
+      location: https://arxiv.org/html/2610.39276v1#A1.SS2; chars 1-1188
+      text_sha256: 7dcd901f6e7b4ec87dde81a12fee1efaff3140157a63a91e1af4224cfe380227
+      quote: ''
+    - id: A51
+      section_id: S32
+      location: https://arxiv.org/html/2610.39276v1#A1.SS3; chars 1-1369
+      text_sha256: 570a17ce8a06be500fbde9d34481f4caca09fd10ea716c348eb701d27889c01d
+      quote: ''
+    - id: A52
+      section_id: S32
+      location: https://arxiv.org/html/2610.39276v1#A1.SS3; chars 1370-1814
+      text_sha256: c2a6901c65646f3c625207d38da641fd5091d1d12912d61c186d51e08415aefc
+      quote: ''
+    - id: A53
+      section_id: S33
+      location: https://arxiv.org/html/2610.39276v1#A1.SS4; chars 1-1083
+      text_sha256: abc2f0d57b66e1d2590835ceb325cbe298428b23b3153b765027173fb2cc2e0a
+      quote: ''
+    - id: A54
+      section_id: S34
+      location: https://arxiv.org/html/2610.39276v1#A1.SS5; chars 1-813
+      text_sha256: db80bebdf6fb8c6a534fce1b813ac7f936cce68245cef8bfb71be7897c4d02c8
+      quote: ''
+    - id: A55
+      section_id: S35
+      location: https://arxiv.org/html/2610.39276v1#A2.SS1; chars 1-1396
+      text_sha256: 46a5c9d0eff0f7f9e0d01eabdedf08ed9ed24b737f564e608371e1090c625508
+      quote: ''
+    - id: A56
+      section_id: S35
+      location: https://arxiv.org/html/2610.39276v1#A2.SS1; chars 1397-2754
+      text_sha256: 832138a058f83909c407c3ac57969b81d4a0f6a2f82912838624e4c7f0a71476
+      quote: ''
+    - id: A57
+      section_id: S35
+      location: https://arxiv.org/html/2610.39276v1#A2.SS1; chars 2755-4038
+      text_sha256: 7956ead5036b6a682b93b554062c8b818353528b37f89f83d5751b760213778a
+      quote: ''
+    - id: A58
+      section_id: S36
+      location: https://arxiv.org/html/2610.39276v1#A2.SS2; chars 1-1356
+      text_sha256: 989b1523aff144d46e9d2a1bdc78781f149a3cf0997253ab062a2c3baac908b4
+      quote: ''
+    - id: A59
+      section_id: S36
+      location: https://arxiv.org/html/2610.39276v1#A2.SS2; chars 1357-2756
+      text_sha256: 2cbb4b2148c4cc22c638cb0b895afb14720cea32888ccb02eb9cfc1dc49e2077
+      quote: ''
+    - id: A60
+      section_id: S36
+      location: https://arxiv.org/html/2610.39276v1#A2.SS2; chars 2757-4156
+      text_sha256: 5556202b0c0e573bf4ffe9bc06d19ef434471b5b38ac1e42a610736c6b0f9078
+      quote: ''
+    - id: A61
+      section_id: S36
+      location: https://arxiv.org/html/2610.39276v1#A2.SS2; chars 4157-5549
+      text_sha256: 9421f537816ae0ea893033e021b136996f963c6b573a9cdbee138501c51205df
+      quote: ''
+    - id: A62
+      section_id: S36
+      location: https://arxiv.org/html/2610.39276v1#A2.SS2; chars 5550-6828
+      text_sha256: 6bdd9c615c15d2b9c0071700ab427fe030b00ecab586cbcf3b1633bce21437c2
+      quote: ''
+    - id: A63
+      section_id: S37
+      location: https://arxiv.org/html/2610.39276v1#A2.SS3; chars 1-264
+      text_sha256: 1f52d4a4317568a471e9bd61ffdaa809c63417e1b10c78487fdee160385bc1eb
+      quote: ''
+    - id: A64
+      section_id: S38
+      location: https://arxiv.org/html/2610.39276v1#A2.SS4; chars 1-601
+      text_sha256: d66ad6405526cb0ee504d1533f4333410697246d5e84d47d4aa776453f79c628
+      quote: ''
+    - id: A65
+      section_id: S39
+      location: https://arxiv.org/html/2610.39276v1#A2.SS4.SSS0.Px1; chars 1-435
+      text_sha256: ca01753dc282162137a618c76fc0dfa68cec6dc7dc8d7f3bde47fc3c1de0c591
+      quote: ''
+    - id: A66
+      section_id: S40
+      location: https://arxiv.org/html/2610.39276v1#A2.SS4.SSS0.Px2; chars 1-530
+      text_sha256: e526d3f02ec9e25f0438aaa7fef448cc126291fcafe5eb70e10c739292d3706d
+      quote: ''
+    - id: A67
+      section_id: S41
+      location: https://arxiv.org/html/2610.39276v1#A2.SS5; chars 1-847
+      text_sha256: f4f864cd428a90914b3208127e161fa5d1c8c167add60847372407e22ec1ac21
+      quote: ''
+    - id: A68
+      section_id: S42
+      location: https://arxiv.org/html/2610.39276v1#A3; chars 1-777
+      text_sha256: f6a57b6804841c43f8a325b07d77697440201d17dafcf2f13364a12be68daa3b
+      quote: ''
+    abstract_content_hash: 411de243c564fe6d12e6d2cf7f1951403b55e260fdd64c3d93c7c66b334b3da0
+    reading_profile: arxiv-fulltext-v1
+    format: html
+    document_url: https://arxiv.org/html/2610.39276v1
+    sections:
+    - id: S1
+      title: 'MemSteer: Turning User Histories into Supervision for Agent Memory Optimization'
+      location: https://arxiv.org/html/2610.39276v1
+      total_chars: 320
+      selected_chars: 320
+    - id: S2
+      title: Abstract
+      location: https://arxiv.org/html/2610.39276v1#abstract1
+      total_chars: 1506
+      selected_chars: 1506
+    - id: S3
+      title: 1 Introduction
+      location: https://arxiv.org/html/2610.39276v1#S1
+      total_chars: 4382
+      selected_chars: 4382
+    - id: S4
+      title: Memory-design optimization.
+      location: https://arxiv.org/html/2610.39276v1#S2.SS0.SSS0.Px1
+      total_chars: 1268
+      selected_chars: 1268
+    - id: S5
+      title: Synthetic queries and QA for training and evaluation.
+      location: https://arxiv.org/html/2610.39276v1#S2.SS0.SSS0.Px2
+      total_chars: 1165
+      selected_chars: 1165
+    - id: S6
+      title: Synthetic supervision for agent memory.
+      location: https://arxiv.org/html/2610.39276v1#S2.SS0.SSS0.Px3
+      total_chars: 1315
+      selected_chars: 1315
+    - id: S7
+      title: 3.1 Overview
+      location: https://arxiv.org/html/2610.39276v1#S3.SS1
+      total_chars: 1180
+      selected_chars: 1180
+    - id: S8
+      title: 3.2 Constructing QA–evidence supervision
+      location: https://arxiv.org/html/2610.39276v1#S3.SS2
+      total_chars: 187
+      selected_chars: 187
+    - id: S9
+      title: Graph-guided material preparation.
+      location: https://arxiv.org/html/2610.39276v1#S3.SS2.SSS0.Px1
+      total_chars: 515
+      selected_chars: 515
+    - id: S10
+      title: Evidence-grounded answer planning and question generation.
+      location: https://arxiv.org/html/2610.39276v1#S3.SS2.SSS0.Px2
+      total_chars: 561
+      selected_chars: 561
+    - id: S11
+      title: Source-grounded verification.
+      location: https://arxiv.org/html/2610.39276v1#S3.SS2.SSS0.Px3
+      total_chars: 1079
+      selected_chars: 1079
+    - id: S12
+      title: '3.3 MemSteer-Opt: evidence-guided memory-design optimization'
+      location: https://arxiv.org/html/2610.39276v1#S3.SS3
+      total_chars: 149
+      selected_chars: 149
+    - id: S13
+      title: Design space and evaluation.
+      location: https://arxiv.org/html/2610.39276v1#S3.SS3.SSS0.Px1
+      total_chars: 1408
+      selected_chars: 1408
+    - id: S14
+      title: Evidence-guided diagnosis and sampling.
+      location: https://arxiv.org/html/2610.39276v1#S3.SS3.SSS0.Px2
+      total_chars: 1130
+      selected_chars: 1130
+    - id: S15
+      title: Feedback-guided revision and selection.
+      location: https://arxiv.org/html/2610.39276v1#S3.SS3.SSS0.Px3
+      total_chars: 618
+      selected_chars: 618
+    - id: S16
+      title: Supervision for existing memory-design optimizers.
+      location: https://arxiv.org/html/2610.39276v1#S3.SS3.SSS0.Px4
+      total_chars: 420
+      selected_chars: 420
+    - id: S17
+      title: 4 Experiments
+      location: https://arxiv.org/html/2610.39276v1#S4
+      total_chars: 282
+      selected_chars: 282
+    - id: S18
+      title: Benchmarks and evaluation.
+      location: https://arxiv.org/html/2610.39276v1#S4.SS1.SSS0.Px1
+      total_chars: 539
+      selected_chars: 539
+    - id: S19
+      title: Optimizers and protocol.
+      location: https://arxiv.org/html/2610.39276v1#S4.SS1.SSS0.Px2
+      total_chars: 655
+      selected_chars: 655
+    - id: S20
+      title: Models and metrics.
+      location: https://arxiv.org/html/2610.39276v1#S4.SS1.SSS0.Px3
+      total_chars: 649
+      selected_chars: 649
+    - id: S21
+      title: 4.2 Can Generated Supervision Guide Memory-Design Optimization?
+      location: https://arxiv.org/html/2610.39276v1#S4.SS2
+      total_chars: 4104
+      selected_chars: 4104
+    - id: S22
+      title: 4.3 Can Optimized Memory Designs Transfer and Adapt?
+      location: https://arxiv.org/html/2610.39276v1#S4.SS3
+      total_chars: 1846
+      selected_chars: 1846
+    - id: S23
+      title: 4.4 What Makes QA–Evidence Supervision Effective?
+      location: https://arxiv.org/html/2610.39276v1#S4.SS4
+      total_chars: 4419
+      selected_chars: 4419
+    - id: S24
+      title: 4.5 Does Evidence-Guided Feedback Improve Optimization?
+      location: https://arxiv.org/html/2610.39276v1#S4.SS5
+      total_chars: 1829
+      selected_chars: 1829
+    - id: S25
+      title: 5 Conclusion
+      location: https://arxiv.org/html/2610.39276v1#S5
+      total_chars: 879
+      selected_chars: 879
+    - id: S26
+      title: Ethics Statement
+      location: https://arxiv.org/html/2610.39276v1#Sx1
+      total_chars: 509
+      selected_chars: 509
+    - id: S27
+      title: Reproducibility Statement
+      location: https://arxiv.org/html/2610.39276v1#Sx2
+      total_chars: 749
+      selected_chars: 749
+    - id: S28
+      title: LLM Usage
+      location: https://arxiv.org/html/2610.39276v1#Sx3
+      total_chars: 577
+      selected_chars: 577
+    - id: S29
+      title: References
+      location: https://arxiv.org/html/2610.39276v1#bib
+      total_chars: 10362
+      selected_chars: 10362
+    - id: S30
+      title: A.1 Benchmark Selection
+      location: https://arxiv.org/html/2610.39276v1#A1.SS1
+      total_chars: 443
+      selected_chars: 443
+    - id: S31
+      title: A.2 Reference Systems
+      location: https://arxiv.org/html/2610.39276v1#A1.SS2
+      total_chars: 1188
+      selected_chars: 1188
+    - id: S32
+      title: A.3 Evaluation populations
+      location: https://arxiv.org/html/2610.39276v1#A1.SS3
+      total_chars: 1814
+      selected_chars: 1814
+    - id: S33
+      title: A.4 Evaluation Metrics
+      location: https://arxiv.org/html/2610.39276v1#A1.SS4
+      total_chars: 1083
+      selected_chars: 1083
+    - id: S34
+      title: A.5 Feedback inputs
+      location: https://arxiv.org/html/2610.39276v1#A1.SS5
+      total_chars: 813
+      selected_chars: 813
+    - id: S35
+      title: B.1 ATM-Bench reference and optimization results
+      location: https://arxiv.org/html/2610.39276v1#A2.SS1
+      total_chars: 4038
+      selected_chars: 4038
+    - id: S36
+      title: B.2 Effect of supervision budget
+      location: https://arxiv.org/html/2610.39276v1#A2.SS2
+      total_chars: 6828
+      selected_chars: 6828
+    - id: S37
+      title: B.3 Full RHELM results
+      location: https://arxiv.org/html/2610.39276v1#A2.SS3
+      total_chars: 264
+      selected_chars: 264
+    - id: S38
+      title: B.4 Per-persona results
+      location: https://arxiv.org/html/2610.39276v1#A2.SS4
+      total_chars: 601
+      selected_chars: 601
+    - id: S39
+      title: Transfer of the six-user shared design.
+      location: https://arxiv.org/html/2610.39276v1#A2.SS4.SSS0.Px1
+      total_chars: 435
+      selected_chars: 435
+    - id: S40
+      title: Generated versus official supervision in the ten-user setting.
+      location: https://arxiv.org/html/2610.39276v1#A2.SS4.SSS0.Px2
+      total_chars: 530
+      selected_chars: 530
+    - id: S41
+      title: B.5 Example accepted architecture trajectory
+      location: https://arxiv.org/html/2610.39276v1#A2.SS5
+      total_chars: 847
+      selected_chars: 847
+    - id: S42
+      title: Appendix C Limitations
+      location: https://arxiv.org/html/2610.39276v1#A3
+      total_chars: 777
+      selected_chars: 777
+    total_chars: 64263
+    selected_chars: 64263
+    truncated: false
+    extraction_scope: complete extracted document text including available references
+    limitations:
+    - Text extraction does not verify figures, layout, or faithful mathematical rendering.
+  identity_keys:
+  - arxiv:2610.39276
+  - url:https://arxiv.org/abs/2610.39276
+  source_id: paper-6b4bfd57-ab17-43ef-9ddf-167dd9640d96
+  existing_source_path: null
+  existing_source_metadata: null
+  content_hash: f846d4f5eece0b9e9ccba31c4b7c432675b635613e748f5e0559d6d635024f68
+  metadata_hash: 3cf9d8c43749874924c4bdc8467c22b38d72efc1aa0606f356c6ebfcd823a105
+  upstream_updated_at: '2026-10-29'
+  acquisition_attempts:
+  - format: html
+    url: https://arxiv.org/html/2610.39276v1
+    status: success
+    reason: extracted
+material: "[S1] MemSteer: Turning User Histories into Supervision for Agent Memory\
+  \ Optimization (https://arxiv.org/html/2610.39276v1)\nA1: Jie Huang\n\n††thanks:\
+  \ Work done during an internship at MSRA.\n\nAffiliation: Peking University\n\n\
+  Affiliation: Microsoft Research Asia\n\nCuiling Lan\n\nAffiliation: Microsoft Research\
+  \ Asia\n\nQize Yu\n\nAffiliation: Peking University\n\nXiulian Peng\n\nAffiliation:\
+  \ Microsoft Research Asia\n\nYan Lu\n\nAffiliation: Microsoft Research Asia\n[S2]\
+  \ Abstract (https://arxiv.org/html/2610.39276v1#abstract1)\nA2: An effective agent\
+  \ memory system should adapt to a user’s history and task requirements.\n\nHuman-annotated\
+  \ supervision can guide this adaptation by providing feedback\n\nfor evaluating\
+  \ and improving memory designs.\n\nYet suitable labels are rarely available for\
+  \ new user histories,\n\nand manually constructing QA pairs and supporting evidence\
+  \ is costly.\n\nWe introduce MemSteer, which turns unlabeled user histories into\
+  \ question–answer\n\n(QA) supervision with supporting evidence for memory-design\
+  \ optimization.\n\nMemSteer constructs an evidence-grounded answer plan that specifies\
+  \ how facts\n\nacross related records jointly support a reference answer.\n\nThe\
+  \ plan guides question generation, while source-grounded auditing and blind\n\n\
+  answer recovery check the resulting annotations.\n\nTo study the utility of this\
+  \ supervision, we develop MemSteer-Opt,\n\nwhich combines QA-based design evaluation\
+  \ with evidence-guided failure diagnosis\n\nto revise memory store, retrieval, and\
+  \ context construction without updating\n\nmodel parameters.\n\nExperiments on ATM-Bench\
+  \ and RHELM show that this supervision is competitive\n\nwith official-QA-guided\
+  \ optimization.\n\nRelative to Base-BM25, MemSteer-Opt improves ATM-Bench Question\
+  \ Score by 13.4 points\n\nand RHELM accuracy by 4.1 and 6.6 points without and with\
+  \ external data, respectively.\n\nThe supervision also benefits two existing optimizers\
+  \ on ATM-Bench,\n\n\nA3: while new-user experiments demonstrate continued design\
+  \ optimization using\n\nsupervision generated from the target histories.\n[S3] 1\
+  \ Introduction (https://arxiv.org/html/2610.39276v1#S1)\nA4: Figure 1: Motivation\
+  \ for MemSteer.\n\nUser histories vary in data characteristics, so one memory design\
+  \ may not suit every user.\n\nAutomatic design adaptation through iterative optimization\
+  \ requires feedback on memory performance.\n\nMemSteer supports this optimization\
+  \ by automatically generating QA–evidence supervision from unlabeled histories,\
+  \ avoiding labor-intensive manual labeling.\n\nAgents that assist users over time\
+  \ need to draw on information accumulated\n\nacross conversations, emails, and documents.\n\
+  \nAn external memory system supports this process by storing and organizing\n\n\
+  the user’s history and retrieving relevant context for the agent.\n\nStorage granularity,\
+  \ retrieval strategy, and answer-context construction\n\nshape how effectively the\
+  \ agent can use that history.\n\nUser histories differ in their content, modalities,\
+  \ and organization,\n\nso a memory design effective for one user may be less suitable\
+  \ for another.\n\nThis motivates adapting memory designs to user histories.\n\n\
+  Recent methods such as MemEvolve, ALMA, and M^{\\star} optimize memory designs\n\
+  \nusing downstream task feedback (Zhang et al., 2025; Xiong et al., 2026; Pan et\
+  \ al., 2026).\n\nWhile executable tasks can provide feedback through their outcomes,\
+  \ personal\n\nrecords and interactions often lack an explicit signal for assessing\
+  \ memory quality.\n\n\nA5: Annotated question–answer (QA) pairs can supply this\
+  \ signal (Pan et al., 2026),\n\nbut constructing questions, reference answers, and\
+  \ supporting evidence for each\n\nnew history is costly.\n\nThis motivates our question\
+  \ (Figure 1):\n\nCan unlabeled user histories guide memory-design optimization?\n\
+  \nGenerating QA from the history itself offers a potential source of this feedback.\n\
+  \nWithin agent memory, MemBuilder uses synthetic QA rewards to train\n\nmemory-construction\
+  \ policies (Shen et al., 2026), while MemMA uses QA probes\n\nto repair stored memories\
+  \ (Lin et al., 2026).\n\nWe instead investigate whether history-derived QA can provide\
+  \ reliable feedback\n\nfor evaluating and improving memory-system designs.\n\nFor\
+  \ memory-design optimization, reference answers determine how candidate designs\n\
+  \nare evaluated, while source evidence can help diagnose unsuccessful responses.\n\
+  \nUnsupported answers or mismatched evidence can misdirect design selection\n\n\
+  and later revisions.\n\nWe propose MemSteer, a framework that turns unlabeled user\
+  \ histories\n\ninto source-grounded QA–evidence supervision for memory-design optimization\n\
+  \n(Figure 2).\n\nIt brings together related source records and specifies how their\
+  \ facts\n\njointly support a reference answer. The resulting evidence-grounded answer\
+  \ plan\n\nguides question generation. Source-grounded auditing checks\n\n\nA6: the\
+  \ generated QA for evidence support and consistency, while blind answer\n\nrecovery\
+  \ assesses whether the reference answer can be recovered from\n\nthe sampled records.\n\
+  \nTo investigate the utility of MemSteer’s generated supervision,\n\nwe develop\
+  \ MemSteer-Opt, an evidence-guided memory-design optimizer.\n\nIt uses source evidence\
+  \ and execution traces to identify whether\n\nincorrect responses stem from storage,\
+  \ retrieval, or answer generation,\n\nthen proposes targeted design revisions and\
+  \ evaluates them using QA performance.\n\nStarting from a basic memory system, we\
+  \ use MemSteer-Opt to optimize\n\nmemory representations, retrieval strategies,\
+  \ and context construction.\n\nWe further supply the generated QA to M⋆ and MemEvolve\n\
+  \n(Pan et al., 2026; Zhang et al., 2025),\n\nallowing each framework to optimize\
+  \ within its own design space.\n\nOur contributions are threefold:\n\n•\n\nMemory-design\
+  \ optimization from unlabeled histories.\n\nMemSteer constructs QA–evidence supervision\
+  \ from unlabeled user histories\n\nfor evaluating and improving memory designs without\
+  \ updating model parameters.\n\n•\n\nEvidence-grounded answer planning and verification.\n\
+  \nWe construct answer plans that make explicit how source facts jointly\n\nsupport\
+  \ a reference answer for question generation.\n\nSource-grounded verification checks\
+  \ the resulting annotations.\n\n•\n\nEmpirical validation across optimizers and\
+  \ user histories.\n\n\nA7: Experiments with MemSteer-Opt on ATM-Bench and RHELM\n\
+  \n(Mei et al., 2026b; Zhang et al., 2026) show that generated\n\nsupervision improves\
+  \ memory designs and is competitive with the\n\nOfficial-QA reference. Further experiments\
+  \ demonstrate its utility for\n\ntwo existing optimizers on ATM-Bench and for continued\
+  \ optimization\n\non new user histories.\n[S4] Memory-design optimization. (https://arxiv.org/html/2610.39276v1#S2.SS0.SSS0.Px1)\n\
+  A8: Applications differ in what agents need to remember and how they use\n\npast\
+  \ information, making memory design an application-specific\n\nengineering challenge\
+  \ (Xiong et al., 2026; Pan et al., 2026).\n\nRecent work therefore explores automatic\
+  \ memory-design optimization\n\nto accommodate these requirements while reducing\
+  \ reliance on manual design.\n\nALMA searches over code-based memory designs using\
+  \ task success\n\nand interaction logs as feedback (Xiong et al., 2026).\n\nMemEvolve\
+  \ introduces a dual-level process that evolves both\n\nexperience memory and its\
+  \ underlying architecture (Zhang et al., 2025).\n\nM^{\\star} searches over memory\
+  \ programs by jointly refining their\n\nschema, logic, and instructions through\
+  \ task feedback and reflective\n\ncode evolution (Pan et al., 2026).\n\nAt a narrower\
+  \ level, CluE refines memory-extraction prompts\n\nusing downstream feedback across\
+  \ heterogeneous tasks (Yang et al., 2026).\n\nThese methods optimize memory designs\
+  \ using feedback from downstream tasks.\n\nIn many personal-memory applications,\
+  \ however, user records and everyday\n\ninteractions do not naturally yield success-or-failure\
+  \ signals\n\nto guide memory-design optimization.\n\nWe therefore investigate how\
+  \ these histories can be turned into supervision\n\nfor memory-design optimization.\n\
+  [S5] Synthetic queries and QA for training and evaluation. (https://arxiv.org/html/2610.39276v1#S2.SS0.SSS0.Px2)\n\
+  A9: Outside agent memory, synthetic data has been used to reduce\n\nannotation requirements\
+  \ for model training and system evaluation.\n\nPromptagator generates query–document\
+  \ pairs to train task-specific\n\ndense retrievers (Dai et al., 2022).\n\nAlberti\
+  \ et al. (2019) generate QA by selecting answers,\n\nformulating questions, and\
+  \ filtering pairs through answer-recovery\n\nconsistency before training reading-comprehension\
+  \ models.\n\nFor structured synthesis, GraphGen samples knowledge-graph subgraphs\n\
+  \nto construct atomic, aggregated, and multi-hop QA for supervised\n\nfine-tuning\
+  \ (Chen et al., 2025).\n\nFor evaluation, DataMorgana constructs corpus-specific\
+  \ RAG benchmarks\n\nwith configurable user and question categories (Filice et al.,\
+  \ 2025),\n\nwhile Ragas uses graph relationships to synthesize multi-hop\n\ntest\
+  \ questions (Ragas, 2026).\n\nThe usefulness of synthetic questions has also been\
+  \ studied directly:\n\nYue et al. (2022) learn a question value estimator to select\
+  \ examples\n\nthat improve target-domain QA performance, rather than relying only\n\
+  \non generation or answer-model scores.\n\nWe ask whether synthetic QA can provide\
+  \ effective feedback\n\nfor memory-design optimization.\n[S6] Synthetic supervision\
+  \ for agent memory. (https://arxiv.org/html/2610.39276v1#S2.SS0.SSS0.Px3)\nA10:\
+  \ Generated QA has also been incorporated into memory learning\n\nand refinement.\n\
+  \nMemBuilder and CMI-Mem generate QA pairs from current sessions\n\nand retrieved\
+  \ memories, then use answering accuracy as a reward signal\n\nto train LLMs to construct\
+  \ and update memories via reinforcement\n\nlearning (Shen et al., 2026; Wang et\
+  \ al., 2026).\n\nMemMA generates QA probes from each session and its historical\
+  \ context,\n\nthen uses answering failures to repair the memory bank (Lin et al.,\
+  \ 2026).\n\nMemMA also examines how the choice of probe generator affects repair\
+  \ outcomes.\n\nMemSteer instead uses generated QA pairs with source-grounded evidence\n\
+  \nto guide memory-design optimization, rather than to train memory models\n\nor\
+  \ repair stored memories.\n\nThis turns user histories into a source of feedback\
+  \ for memory-design\n\noptimization without requiring manually annotated QA for\
+  \ the target history.\n\nFigure 2: Overview of MemSteer.\n\n(a) MemSteer turns unlabeled\
+  \ user histories into QA–evidence supervision\n\nthrough evidence-grounded answer\
+  \ planning, question generation,\n\nand source-grounded verification.\n\n(b) The\
+  \ resulting supervision supports the evaluation and refinement\n\nof memory designs\
+  \ with either MemSteer-Opt, our evidence-guided optimizer,\n\nor existing memory-design\
+  \ optimizers.\n\nDashed E denotes optional evidence input.\n[S7] 3.1 Overview (https://arxiv.org/html/2610.39276v1#S3.SS1)\n\
+  A11: Histories from different users vary in content and structure,\n\nso a memory\
+  \ design effective for one user may be less suitable for another.\n\nGiven unlabeled\
+  \ user histories H , our goal is to improve agent\n\nmemory designs without manually\
+  \ annotating QA pairs for those histories.\n\nTo this end, MemSteer constructs QA–evidence\
+  \ supervision:\n\n\\mathcal{D}_{H}=\\{(q_{i},a_{i},E_{i})\\}_{i=1}^{N},\n\n(1)\n\
+  \nwhere q_{i} is a question about the history,\n\na_{i} is its reference answer,\n\
+  \nand E_{i} identifies the selected source records, with source-span citations\n\
+  \nproviding provenance for the supporting facts.\n\nReference answers provide a\
+  \ criterion for evaluating memory designs,\n\nwhile evidence annotations support\
+  \ the diagnosis of unsuccessful responses.\n\nWe describe the supervision construction\
+  \ process\n\nin Section 3.2.\n\nTo assess the effectiveness of this supervision\
+  \ for\n\nmemory-design optimization, we develop MemSteer-Opt,\n\nwhich evaluates\
+  \ candidate designs and uses evidence-guided feedback\n\nto propose iterative revisions\
+  \ (Section 3.3).\n\nThe generated supervision can also be supplied to existing optimizers,\n\
+  \nallowing each to retain its own design space and optimization procedure.\n[S8]\
+  \ 3.2 Constructing QA–evidence supervision (https://arxiv.org/html/2610.39276v1#S3.SS2)\n\
+  A12: MemSteer constructs QA–evidence annotations by selecting related source records,\n\
+  \nestablishing how their facts support an answer,\n\nand generating and verifying\
+  \ the corresponding question.\n[S9] Graph-guided material preparation. (https://arxiv.org/html/2610.39276v1#S3.SS2.SSS0.Px1)\n\
+  A13: We organize each user’s history as a graph of source records, preserving original\n\
+  \ntext, identifiers, and source-provided structural metadata. Edges connect records\n\
+  \nsharing a conversation, occupying adjacent document sections, explicitly\n\nreferencing\
+  \ one another, or having sufficient lexical overlap.\n\nPath-based expansion from\
+  \ a seed samples a connected subgraph, whose records form\n\na context-budgeted\
+  \ material bundle B with source-span references for identifying\n\njointly supporting\
+  \ facts and evidence records.\n[S10] Evidence-grounded answer planning and question\
+  \ generation. (https://arxiv.org/html/2610.39276v1#S3.SS2.SSS0.Px2)\nA14: Given\
+  \ a material bundle B , an LLM-based planner constructs\n\nan evidence-grounded\
+  \ answer plan that specifies what the question should ask\n\nand its reference answer\
+  \ a , identifies supporting facts with source-span\n\ncitations, and describes each\
+  \ selected evidence record’s contribution\n\nand operations needed to combine facts.\n\
+  \nAnswer plans that fail programmatic checks of structural consistency\n\nand provenance\
+  \ coverage are rejected before question generation.\n\nGiven the answer plan and\
+  \ material bundle B ,\n\na question generator produces a standalone question.\n\
+  [S11] Source-grounded verification. (https://arxiv.org/html/2610.39276v1#S3.SS2.SSS0.Px3)\n\
+  A15: We verify each candidate through a semantic audit followed by blind\n\nanswer\
+  \ recovery.\n\nGiven the material bundle B , the answer plan, and the generated\n\
+  \nquestion, an LLM reviewer returns structured verification judgments\n\nwith supporting\
+  \ rationales.\n\nThese judgments assess answer support and question–plan\n\nconsistency,\
+  \ with separate assessments of each fact’s source support\n\nand each evidence record’s\
+  \ stated contribution.\n\nA candidate proceeds only if all required judgments are\
+  \ supported.\n\nGiven only the question, its answer type, and the source records\
+  \ in B ,\n\nan LLM-based blind reader returns an answer with source citations.\n\
+  \nA candidate passes only if the reader declares the question answerable,\n\nits\
+  \ answer exactly matches the reference after type-specific normalization,\n\nand\
+  \ its citations cover every selected evidence record.\n\nNormalization rules are\
+  \ detailed in Appendix A.4.\n\nWe partition the generated QA–evidence annotations\
+  \ into disjoint\n\ntraining and validation sets, using the former to generate revision\
+  \ proposals\n\nand the latter to select memory designs.\n[S12] 3.3 MemSteer-Opt:\
+  \ evidence-guided memory-design optimization (https://arxiv.org/html/2610.39276v1#S3.SS3)\n\
+  A16: MemSteer-Opt uses the generated QA–evidence supervision to evaluate\n\nmemory\
+  \ designs and turn observed failures into feedback for iterative revisions.\n[S13]\
+  \ Design space and evaluation. (https://arxiv.org/html/2610.39276v1#S3.SS3.SSS0.Px1)\n\
+  A17: Starting from a basic memory system, MemSteer-Opt iteratively optimizes\n\n\
+  how historical records are organized into memory units and indexed,\n\nhow relevant\
+  \ records are retrieved,\n\nand how retrieved records are assembled into the context\
+  \ supplied to the answerer.\n\nWe represent these storage, retrieval, and context-construction\
+  \ choices\n\nas a memory design d=(s,r,c) .\n\nUnder design d , the system constructs\
+  \ a memory M_{d}\n\nfrom the user’s historical records H :\n\nM_{d}=\\operatorname{Store}_{s}(H).\n\
+  \nFor each question q_{i} , it retrieves information from M_{d} ,\n\nassembles the\
+  \ answer context X_{d,i} ,\n\nand generates a response \\hat{a}_{d,i} :\n\nX_{d,i}=\\\
+  operatorname{Context}_{c}(\\operatorname{Retrieve}_{r}(q_{i},M_{d})),\\qquad\\hat{a}_{d,i}=\\\
+  operatorname{Answer}(q_{i},X_{d,i}).\n\n(2)\n\nWe evaluate each prediction \\hat{a}_{d,i}\
+  \ against its reference answer a_{i}\n\nunder a fixed scoring protocol, yielding\
+  \ a binary correctness score\n\ny_{d,i}\\in\\{0,1\\} .\n\nWe score a design d by\
+  \ its accuracy on the same validation set as\n\nA(d)=\\frac{1}{N_{\\mathrm{val}}}\\\
+  sum_{i=1}^{N_{\\mathrm{val}}}y_{d,i} ,\n\nwhere N_{\\mathrm{val}} is the number\
+  \ of validation questions.\n\nWe use this binary validation accuracy for design\
+  \ selection; final benchmark\n\nscores follow the corresponding evaluation protocols\
+  \ (Appendix A.4).\n\nWe hold the answering model, its instruction prompt,\n\n\n\
+  A18: and the final context budget fixed across designs.\n[S14] Evidence-guided diagnosis\
+  \ and sampling. (https://arxiv.org/html/2610.39276v1#S3.SS3.SSS0.Px2)\nA19: Beyond\
+  \ scoring candidate designs, we use the automatically constructed\n\nevidence annotations\
+  \ to build targeted feedback for revising memory designs.\n\n(i) Evidence-guided\
+  \ diagnosis.\n\nFor each incorrect training-set response, we use its evidence annotations\n\
+  \nto check whether the required source records and cited passages\n\nare fully available\
+  \ in the final answer context.\n\nIf so, we label an answering failure.\n\nFor missing\
+  \ evidence, we use the annotated source IDs to check whether the\n\ncurrent memory\
+  \ system can recover the corresponding records.\n\nWe assign a storage failure if\
+  \ any missing record is unrecoverable,\n\nand a retrieval failure if all missing\
+  \ records are recoverable.\n\n(ii) Failure-stratified sampling.\n\nTo cover different\
+  \ failure modes within the proposer’s input-context budget,\n\nwe sample cases separately\
+  \ from each observed failure category.\n\nEach sampled case includes the question,\
+  \ its reference answer and annotated\n\nsource evidence, together with the current\
+  \ system’s response and diagnostic results.\n\nTogether with the current design\
+  \ and revision history,\n\nthese cases form the input to the design proposer.\n\
+  [S15] Feedback-guided revision and selection. (https://arxiv.org/html/2610.39276v1#S3.SS3.SSS0.Px3)\n\
+  A20: Given this feedback, an LLM-based design proposer proposes a revised design\
+  \ d^{\\prime} ,\n\nusing the diagnosed failures to guide changes to storage, retrieval,\n\
+  \nor context construction.\n\nIt also provides a rationale for the proposed changes.\n\
+  \nWe rebuild the memory under each valid candidate and evaluate its accuracy\n\n\
+  on the fixed validation set.\n\nWe replace the current design d_{t} with d^{\\prime}\
+  \ only if A(d^{\\prime})>A(d_{t}) ;\n\notherwise, we retain d_{t} .\n\nAfter accepting\
+  \ a revision, we rerun the updated system on the training set\n\nto refresh the\
+  \ failure diagnoses and sampled feedback for the next iteration.\n[S16] Supervision\
+  \ for existing memory-design optimizers. (https://arxiv.org/html/2610.39276v1#S3.SS3.SSS0.Px4)\n\
+  A21: Beyond MemSteer-Opt, we use the generated supervision to guide existing\n\n\
+  memory-design optimizers within their own design spaces.\n\nGenerated questions\
+  \ and reference answers supply task feedback for evaluating\n\nand refining memory\
+  \ designs; source evidence can additionally support feedback\n\nwhen the optimizer’s\
+  \ interface accommodates it.\n\nThis tests whether the supervision remains useful\
+  \ across optimization frameworks.\n[S17] 4 Experiments (https://arxiv.org/html/2610.39276v1#S4)\n\
+  A22: We address four questions:\n\nQ1 (§4.2): Can generated supervision guide memory-design\
+  \ optimization?\n\nQ2 (§4.3): Can optimized memory designs transfer and adapt?\n\
+  \nQ3 (§4.4): Which supervision-construction choices matter?\n\nQ4 (§4.5): Does evidence-guided\
+  \ feedback improve optimization?\n[S18] Benchmarks and evaluation. (https://arxiv.org/html/2610.39276v1#S4.SS1.SSS0.Px1)\n\
+  A23: ATM-Bench (Mei et al., 2026b) is a multimodal personal-memory QA benchmark\n\
+  \nbuilt from approximately four years of personal records. Its corpus contains 11,034\n\
+  \nemail, image, and video records. Unless otherwise specified, we follow the\n\n\
+  ATM-Bench scoring protocol and evaluate performance on its 1,013-question main\n\
+  \nset and 31-question hard multi-hop set.\n\nRHELM (Zhang et al., 2026) covers 21,142\
+  \ interaction records from ten\n\npersonas, evaluated with and without external\
+  \ data sources.\n\nBenchmark selection is discussed in Appendix A.1.\n[S19] Optimizers\
+  \ and protocol. (https://arxiv.org/html/2610.39276v1#S4.SS1.SSS0.Px2)\nA24: MemSteer-Opt\
+  \ starts from a basic record-level retrieve-and-read system,\n\nwhich we refer to\
+  \ as Base-BM25: it indexes\n\nsource text and metadata and uses the original question\
+  \ for BM25 (Robertson & Zaragoza, 2009)\n\nretrieval. Retrieved content is assembled\
+  \ in ranked order within a fixed context\n\nbudget and passed to a fixed answering\
+  \ model.\n\nM^{\\star} (Pan et al., 2026) and MemEvolve (Zhang et al., 2025) retain\
+  \ their\n\nown starting systems and design spaces.\n\nMemSteer uses our generated\
+  \ QA–evidence supervision for both training and validation while official QA is\
+  \ used only for testing.\n\nMemSteer-Opt runs 20 reflective evolution iterations\
+  \ per setting.\n[S20] Models and metrics. (https://arxiv.org/html/2610.39276v1#S4.SS1.SSS0.Px3)\n\
+  A25: On ATM-Bench, DeepSeek-V4-Flash (DeepSeek-AI, 2026) serves as the answerer,\n\
+  \nopen-answer judge (Zheng et al., 2023), and design proposer, matching the\n\n\
+  answerer and judge used by the corresponding leaderboard\n\nconfigurations (Mei\
+  \ et al., 2026a).\n\nWe report Question Score (QS) and evidence recall at 10 (R@10).\n\
+  \nOn RHELM, we follow the official protocol, using\n\nGPT-4.1-mini (OpenAI, 2025)\
+  \ for answering and evaluation and reporting\n\noverall accuracy, separately with\
+  \ and without external data.\n\nWe include existing memory systems as performance\
+  \ references; their configurations\n\nand additional results are detailed in Appendix\
+  \ A.2 and Appendix B.3.\n[S21] 4.2 Can Generated Supervision Guide Memory-Design\
+  \ Optimization? (https://arxiv.org/html/2610.39276v1#S4.SS2)\nA26: Table 1: ATM-Bench\
+  \ results across memory systems and supervision sources (%).\n\n“+” denotes optimization\
+  \ from each optimizer’s start; arrows show point changes.\n\nBold scores mark the\
+  \ best per metric, excluding Oracle. Oracle uses gold evidence.\n\n†Official-QA\
+  \ training items are included in evaluation.\n\nFull (1,013)\n\nHard (31)\n\nMethod\n\
+  \nQS\n\nR@10\n\nQS\n\nR@10\n\nExisting memory systems (DeepSeek-V4)\n\nMemexa\n\n\
+  65.3\n\n78.9\n\n–\n\n–\n\nA-Mem\n\n–\n\n–\n\n16.7\n\n38.5\n\nMemPalace\n\n–\n\n\
+  –\n\n13.6\n\n28.9\n\nHippoRAG2\n\n–\n\n–\n\n12.3\n\n32.2\n\nOracle (gold evidence)\n\
+  \n71.8\n\n–\n\n46.2\n\n–\n\nOur optimizer: MemSteer-Opt\n\nBase-BM25\n\n54.9\n\n\
+  61.7\n\n8.2\n\n10.0\n\n+ Official-QA†\n\n67.3\n\n83.5\n\n27.9\n\n42.2\n\n+ MemSteer\n\
+  \n68.3\n\n\\uparrow 13.4\n\n84.1\n\n\\uparrow 22.4\n\n29.1\n\n\\uparrow 20.9\n\n\
+  43.6\n\n\\uparrow 33.6\n\nExternal optimizers\n\nM^{\\star} start\n\n47.4\n\n55.2\n\
+  \n1.9\n\n13.6\n\n+ Official-QA†\n\n51.8\n\n69.4\n\n9.5\n\n26.0\n\n+ MemSteer\n\n\
+  53.4\n\n\\uparrow 6.0\n\n69.8\n\n\\uparrow 14.6\n\n12.9\n\n\\uparrow 11.0\n\n25.6\n\
+  \n\\uparrow 12.0\n\nMemEvolve start\n\n35.1\n\n41.3\n\n7.1\n\n18.7\n\n+ Official-QA†\n\
+  \n53.7\n\n63.8\n\n11.4\n\n21.6\n\n+ MemSteer\n\n53.7\n\n\\uparrow 18.6\n\n63.7\n\
+  \n\\uparrow 22.4\n\n9.5\n\n\\uparrow 2.3\n\n18.6\n\n\\downarrow 0.1\n\nTable 2:\
+  \ RHELM results (accuracy, %). w/o: conversation records only;\n\nw/: conversation\
+  \ records plus emails and documents.\n\nWe use GPT-4.1-mini in MemSteer-Opt and\
+  \ other optimized memory systems.\n\nMethod\n\nw/o\n\nw/\n\nExisting methods (GPT-4.1-mini)\n\
+  \nRAG ( k{=}20 )\n\n23.5\n\n25.1\n\n\nA27: RAG ( k{=}50 )\n\n28.9\n\n32.6\n\nHybrid\
+  \ ( k{=}5 )\n\n16.7\n\n17.6\n\nHybrid ( k{=}20 )\n\n24.8\n\n26.0\n\nHybrid ( k{=}50\
+  \ )\n\n27.8\n\n29.6\n\nMemGPT\n\n13.9\n\n17.3\n\nMem0\n\n21.1\n\n28.9\n\nMemU\n\n\
+  23.1\n\n33.6\n\nLong-Context Models (1M)\n\nGemini-2.5-Flash-Lite\n\n16.0\n\n17.3\n\
+  \nQwen-2.5-14B-Instruct\n\n15.3\n\n8.1\n\nGPT-4.1-mini\n\n24.0\n\n33.9\n\nOur optimizer:\
+  \ MemSteer-Opt\n\nBase-BM25\n\n22.3\n\n33.3\n\n+ Official-QA†\n\n26.5\n\n40.7\n\n\
+  + MemSteer\n\n26.4\n\n\\uparrow 4.1\n\n39.9\n\n\\uparrow 6.6\n\nTransferred ATM-Bench\
+  \ design\n\nATM-Bench-evolved(frozen)\n\n26.4\n\n38.6\n\n+ Official-QA†\n\n31.5\n\
+  \n42.9\n\n+ MemSteer\n\n30.6\n\n\\uparrow 4.2\n\n42.8\n\n\\uparrow 4.2\n\nTables\
+  \ 2 and 2 compare MemSteer-generated\n\nsupervision with official annotations (Official-QA)\
+  \ on ATM-Bench and RHELM;\n\nthe ATM comparison also includes two external optimizers.\
+  \ Official-QA uses\n\n600 of the 1,013 official ATM items and 788 of the 1,305 RHELM\
+  \ items for training\n\nand validation. These items remain in its evaluation sets,\
+  \ whereas MemSteer\n\nuses no evaluation items for training. The final RHELM MemSteer\
+  \ configuration\n\nuses 788 generated training items and is evaluated on all 1,305\
+  \ official QA items.\n\nBased on Tables 2 and 2, we make the following observations.\n\
+  \nGenerated supervision improves memory designs.\n\nWith MemSteer supervision, MemSteer-Opt\
+  \ raises QS from 54.9 to 68.3 on\n\nATM-Bench and from 8.2 to 29.1 on Hard, alongside\
+  \ gains in evidence recall\n\n(Table 2).\nA28:  On RHELM, MemSteer improves over\
+  \ Base-BM25 by\n\n4.1 accuracy points without external data and 6.6 points with\
+  \ it\n\n(Table 2).\n\nGenerated supervision is competitive with the human-annotated\
+  \ reference.\n\nOn ATM-Bench, MemSteer scores marginally higher than Official-QA\
+  \ across all four metrics,\n\nincluding QS margins of 1.1 points on the main set\
+  \ and 1.3 points on Hard.\n\nOn RHELM, MemSteer remains 0.1 and 0.8 accuracy points\
+  \ below\n\nOfficial-QA without and with external data, respectively.\n\nThe supervision\
+  \ also benefits existing optimizers.\n\nFrom their own starting systems, M^{\\star}\
+  \ and MemEvolve gain 6.0 and 18.6\n\nmain-set QS points with MemSteer supervision,\
+  \ compared with 4.4 and 18.6\n\npoints with Official-QA. Thus, the supervision’s\
+  \ utility is not limited to\n\nMemSteer-Opt. The benefit is not uniform: on Hard,\
+  \ MemEvolve obtains smaller\n\ngains than with Official-QA, and its R@10 decreases\
+  \ by 0.1 points.\n\nThe optimized designs are competitive with existing memory systems.\n\
+  \nOn ATM-Bench, MemSteer-Opt achieves the highest QS among the non-oracle systems\n\
+  \nusing DeepSeek-V4 as the answerer. On RHELM with external data, MemSteer\n\nreaches\
+  \ 39.9 accuracy, compared with 33.9 for the strongest listed RAG,\n\nlong-context,\
+  \ or memory-system baseline. Without external data, it remains\n\ncompetitive with\
+  \ the strongest listed baseline, RAG with k{=}50 .\n[S22] 4.3 Can Optimized Memory\
+  \ Designs Transfer and Adapt? (https://arxiv.org/html/2610.39276v1#S4.SS3)\nA29:\
+  \ We test design reuse across benchmarks and continued\n\noptimization for users,\
+  \ respectively.\n\nCross-benchmark transfer.\n\nWe freeze the design optimized with\
+  \ generated ATM-Bench QA and apply it to\n\nRHELM records without target-domain\
+  \ optimization.\n\nATM-Bench-evolved(frozen) outperforms Base-BM25 by 4.1 and 5.3\
+  \ accuracy points\n\nwithout and with external data, respectively (Table 2).\n\n\
+  These results suggest that some of the design improvements learned on ATM-Bench\n\
+  \nremain useful on RHELM without target-domain optimization.\n\nWhen further optimized\
+  \ using either RHELM Official-QA or QA generated from RHELM\n\nhistories, the transferred\
+  \ design achieves further gains. Generated supervision\n\nachieves performance close\
+  \ to the Official-QA reference without requiring manually\n\nannotated target-domain\
+  \ QA for optimization.\n\nTable 3: RHELM cross-user accuracy (%, with external data).\n\
+  \nMartin and David are outside the six-user pool; personal continuation adapts its\n\
+  \nshared design using target-history-generated supervision. Source-user scores\n\
+  \npool evaluation questions.\n\nEvaluation\n\nusers\n\nBase-BM25\n\n6-user\n\ndesign\n\
+  \nPersonal\n\ncontinuation\n\nSource users (6)\n\n31.5\n\n34.3\n\n–\n\nMartin Keller\n\
+  \n41.2\n\n37.7\n\n44.3\n\nDavid R. Ellis\n\n37.3\n\n38.6\n\n39.2\n\nCross-user transfer\
+  \ and continuation.\n\nWe apply a frozen design optimized on six RHELM users to\
+  \ Martin Keller and\n\nDavid R.\nA30:  Ellis, who are excluded from the source-user\
+  \ pool. We then continue\n\noptimization from this shared design using QA–evidence\
+  \ supervision generated\n\nfrom each target user’s history, reserving official QA\
+  \ for evaluation\n\n(Appendix A.3).\n\nDirect transfer helps David slightly but\
+  \ reduces Martin’s accuracy\n\n(Table 3). Personal continuation improves both transferred\n\
+  \ndesigns, especially for Martin, suggesting that target-history supervision can\n\
+  \nsupport adaptation beyond a shared design.\n[S23] 4.4 What Makes QA–Evidence Supervision\
+  \ Effective? (https://arxiv.org/html/2610.39276v1#S4.SS4)\nA31: We first compare\
+  \ QA-generation methods and the effect of verification on\n\nsupervision quality\
+  \ and downstream utility. We then examine two generator\n\ndesign choices: constructing\
+  \ an explicit evidence-grounded answer plan and\n\nseparating its construction from\
+  \ question generation.\n\nTable 4: QA-generation methods and verification on ATM-Bench.\n\
+  \nQA quality scores are reported for two\n\njudges (DS-V4F: DeepSeek-V4-Flash);\
+  \ Avg. is their mean.\n\nQS measures downstream utility; Kept is the percentage\
+  \ of candidates\n\nretained after verification (“–”: no filtering).\n\nQS\n\nQA\
+  \ quality (%)\n\nKept\n\nMethod\n\nFull\n\nHard\n\nGPT-5-\n\nmini\n\nDS-V4F\n\n\
+  Avg.\n\n(%)\n\nNaive-QA\n\n54.2\n\n5.3\n\n63.3\n\n63.8\n\n63.5\n\n–\n\n+ checks\n\
+  \n64.8\n\n24.4\n\n77.8\n\n77.0\n\n77.4\n\n21.2\n\nRagas-QA\n\n63.0\n\n23.3\n\n73.5\n\
+  \n69.3\n\n71.4\n\n–\n\n+ checks\n\n65.1\n\n20.7\n\n84.3\n\n80.8\n\n82.5\n\n42.1\n\
+  \nMemSteer\n\nw/o checks\n\n65.2\n\n22.0\n\n83.5\n\n67.3\n\n75.4\n\n–\n\nMemSteer\n\
+  \n68.3\n\n29.1\n\n94.3\n\n87.5\n\n90.9\n\n47.9\n\nQA-generation ablations.\n\nTable\
+  \ 4 compares heuristic synthesis that randomly selects records\n\nto form a material\
+  \ bundle (Naive-QA), Ragas multi-hop\n\ngeneration (Ragas, 2026) (Ragas-QA), and\
+  \ MemSteer, each with and\n\nwithout verification. Checks denote our source-grounded\
+  \ verification\n\n(§3.2).\n\nFor this comparison, QA quality is assessed using four\
+  \ criteria: premise support,\n\nquestion clarity, answer support, and evidence support.\
+  \ For each judge, a question\n\n\nA32: receives 1 only when all four criteria are\
+  \ supported, and 0 otherwise.\n\nThe QA quality score is the mean of these binary\n\
+  \nscores, expressed as a percentage. We evaluate QA quality using two independent\n\
+  \nLLMs—GPT-5-mini (OpenAI, n.d.) and DeepSeek-V4-Flash—and their average\n\nto see\
+  \ whether the trends are consistent.\n\nWe make the following observations.\n\n\
+  (i) MemSteer outperforms Naive-QA and Ragas-QA, even when both\n\nbaselines use\
+  \ our checks, in downstream QS and in QA quality assessed by both judges.\n\n(ii)\
+  \ Our checks improve QA quality across all three generation methods\n\nand downstream\
+  \ QS in most settings, except Ragas-QA on Hard. Naive-QA’s\n\nlowest retention indicates\
+  \ that a larger fraction of its candidates fail\n\nthe verification criteria.\n\n\
+  (iii) QA quality scores from GPT-5-mini and DeepSeek-V4-Flash\n\nshow broadly consistent\
+  \ trends across generation methods and generally align\n\nwith downstream QS. This\
+  \ supports using the QA quality score as a useful\n\nindicator of supervision quality.\n\
+  \nTable 5: Generated QA quality evaluation. q denotes a question.\n\nGeneration\n\
+  \nQuality (%)\n\nTokens/q\n\n(k)\n\nDirect QA\n\n67.8\n\n64.0\n\nJoint Plan–Q\n\n\
+  73.1\n\n68.2\n\nTwo-stage Plan–Q\n\n85.9\n\n105.1\n\nEvidence-grounded answer planning\
+  \ and staged generation.\n\nWe test whether constructing an evidence-grounded answer\
+  \ plan improves QA quality\n\n\nA33: over direct generation, and whether programmatically\
+  \ checking the plan before a\n\nseparate question-generation call provides further\
+  \ gains over joint generation.\n\nTable 5 compares three generation procedures on\
+  \ the\n\nsame 600 tasks, holding source records, question types, evidence-count\
+  \ requirements,\n\nand the DeepSeek-V4-Flash generator fixed. Direct QA jointly\
+  \ generates\n\nthe question, answer, and evidence in one call, without an intermediate\n\
+  \nanswer plan. Joint Plan–Q first produces an evidence-grounded answer plan\n\n\
+  and then the question within the same response.\n\nTwo-stage Plan–Q constructs the\
+  \ answer plan, applies programmatic\n\nstructural and provenance checks, and generates\
+  \ the question in a separate\n\ncall using the accepted answer plan and source records.\n\
+  \nAll three use the same GPT-4.1-mini filter, which sees the QA, evidence and source\n\
+  \nmaterial but not our detailed evidence-grounded answer plan.\n\nThis shared filter\
+  \ is used only for the\n\ngeneration comparison, rather than the full MemSteer verification\
+  \ pipeline.\n\nFor QA passing this filter, a separate, blinded GPT-4.1 review assesses\
+  \ QA quality\n\nwith four criteria as used in Table 4.\n\nJoint Plan–Q improves\
+  \ QA quality over Direct QA, although both use one call,\n\nsupporting explicit\
+  \ evidence-grounded answer planning. Two-stage Plan–Q improves\n\n\nA34: quality\
+  \ further with programmatic plan checks before separate question generation,\n\n\
+  but has the highest per-question token cost.\n\nTraining-question budget.\n\nIncreasing\
+  \ the budget from 100 to 200 questions yields the largest performance\n\ngains in\
+  \ the evaluated sweep. Beyond 200, retrieval recall largely plateaus,\n\nwhile QS\
+  \ improves overall on both ATM-Bench and ATM-Bench-Hard\n\n(Appendix B.2).\n[S24]\
+  \ 4.5 Does Evidence-Guided Feedback Improve Optimization? (https://arxiv.org/html/2610.39276v1#S4.SS5)\n\
+  A35: We test whether explicit failure diagnosis improves on raw-evidence feedback\n\
+  \nand whether failure-stratified sampling further improves memory-design optimization.\n\
+  \nAll four feedback conditions use MemSteer-generated QA–evidence supervision\n\n\
+  and start from Base-BM25 (Figure 3).\n\nFigure 3: Attribution and sampling ablation\
+  \ on ATM-Bench and\n\nATM-Bench-Hard. Bars report QS and R@10 (%). Optimized conditions\
+  \ use\n\nMemSteer-generated supervision and start from Base-BM25;\n\nDiagnosis +\
+  \ stratified sampling is the full MemSteer-Opt configuration.\n\nWe compare four\
+  \ ways to construct feedback from unsuccessful cases.\n\nRandom-30 randomly samples\
+  \ up to 30 scored failures per round and gives\n\nthe design proposer their questions,\
+  \ reference answers, predictions, scores, retrieval\n\ntraces, and answer-context\
+  \ excerpts. Random-30 + Gold evidence retains\n\nthe random sampling and adds required-evidence\
+  \ IDs and gold-record excerpts,\n\nbut no failure attribution. Random-30 + Diagnosis\
+  \ further adds\n\nevidence-grounded failure attribution while retaining random sampling.\n\
+  \nDiagnosis + stratified sampling (ours) keeps the diagnostic feedback\n\nand samples\
+  \ up to ten cases per failure category, preventing frequent failure\n\ntypes from\
+  \ exhausting the feedback budget.\n\nAppendix A.5 details the feedback fields, while\n\
+  \nAppendix B.5 shows an accepted architectural trajectory.\n\nWe make the following\
+  \ observations.\nA36:  (i) Adding gold evidence provides only\n\nlimited improvement\
+  \ over trace-based feedback. (ii) Explicit failure\n\nattribution yields larger\
+  \ gains, particularly in evidence retrieval, supporting\n\nthe use of stage-level\
+  \ diagnostic feedback rather than raw evidence alone.\n\n(iii) Combining diagnosis\
+  \ with stratified sampling achieves the highest\n\ndownstream QS, although diagnosis\
+  \ with random sampling yields higher evidence\n\nrecall on Hard.\n[S25] 5 Conclusion\
+  \ (https://arxiv.org/html/2610.39276v1#S5)\nA37: We presented MemSteer, a framework\
+  \ for constructing QA–evidence supervision\n\nfrom unlabeled user histories and\
+  \ using it to guide memory-design optimization.\n\nRather than requiring manually\
+  \ annotated QA for each new history, MemSteer\n\nderives reference answers and supporting\
+  \ evidence from the records themselves.\n\nThese annotations serve complementary\
+  \ purposes: reference answers support the\n\nevaluation of candidate memory designs,\
+  \ while source evidence helps diagnose\n\nunsuccessful responses and guide revisions.\
+  \ We instantiate this approach in\n\nMemSteer-Opt and also use the generated supervision\
+  \ with existing optimizers\n\nthat retain their own design spaces. Experiments on\
+  \ ATM-Bench and RHELM show\n\nthat generated supervision improves memory designs,\
+  \ achieves performance\n\ncompetitive with the Official-QA reference, and supports\
+  \ continued adaptation\n\nto new user histories.\n[S26] Ethics Statement (https://arxiv.org/html/2610.39276v1#Sx1)\n\
+  A38: Our experiments use released benchmark data under their published terms, without\n\
+  \ncollecting new personal data or conducting human-subjects studies. Source records\n\
+  \nare processed through third-party LLM APIs, and generated QA may reveal sensitive\n\
+  \ninformation by combining facts across records. Deployment on personal histories\n\
+  \nshould therefore require informed user consent and appropriate privacy safeguards.\n\
+  \nMemSteer is intended to improve memory systems for users, not to enable\n\nunauthorized\
+  \ profiling.\n[S27] Reproducibility Statement (https://arxiv.org/html/2610.39276v1#Sx2)\n\
+  A39: Section 3.2 specifies the supervision-construction pipeline\n\n(graph-guided\
+  \ material preparation, evidence-grounded answer planning, question\n\ngeneration,\
+  \ and source-grounded verification), and\n\nSection 3.3 specifies the design space,\
+  \ evaluation protocol,\n\nevidence-guided diagnosis, and acceptance rule of MemSteer-Opt.\n\
+  \nSection 4.1 describes the benchmarks, baselines, iteration\n\nbudget, and model\
+  \ roles.\n\nAppendix A documents additional experimental details, including\n\n\
+  evaluation populations and feedback inputs; Appendix B\n\nreports further experimental\
+  \ results.\n\nBecause the pipeline depends on remote LLM APIs, exact outputs may\
+  \ vary with\n\nmodel nondeterminism and provider updates; we therefore report the\
+  \ model\n\nidentities used for each role.\n[S28] LLM Usage (https://arxiv.org/html/2610.39276v1#Sx3)\n\
+  A40: LLMs perform evidence-grounded answer planning, question generation,\n\nsource-grounded\
+  \ auditing, and blind answer recovery in MemSteer. They also\n\npropose design revisions\
+  \ in MemSteer-Opt, act as fixed answerers and answer\n\njudges, and perform shared\
+  \ filtering and post hoc QA-quality evaluation.\n\nWe use DeepSeek-V4-Flash, GPT-4.1-mini,\
+  \ GPT-4.1, and GPT-5-mini across these\n\nroles (Section 4.1).\n\nIn preparing this\
+  \ paper, we also used LLM assistants for language editing and\n\ncoding assistance.\n\
+  \nThe authors reviewed all such output and take full responsibility for this paper.\n\
+  [S29] References (https://arxiv.org/html/2610.39276v1#bib)\nA41: Alberti et al.\
+  \ (2019)\n\nChris Alberti, Daniel Andor, Emily Pitler, Jacob Devlin, and Michael\
+  \ Collins.\n\nSynthetic QA corpora generation with roundtrip consistency.\n\narXiv\
+  \ preprint arXiv:1906.05416, 2019.\n\nURL https://arxiv.org/abs/1906.05416.\n\n\
+  Anthropic (2025)\n\nAnthropic.\n\nSystem card: Claude Opus 4.5.\n\nAnthropic system\
+  \ card, November 2025, 2025.\n\nURL https://www.anthropic.com/claude-opus-4-5-system-card.\n\
+  \nAsai et al. (2023)\n\nAkari Asai, Zeqiu Wu, Yizhong Wang, Avirup Sil, and Hannaneh\
+  \ Hajishirzi.\n\nSelf-RAG: Learning to retrieve, generate, and critique through\
+  \ self-reflection.\n\narXiv preprint arXiv:2310.11511, 2023.\n\nURL https://arxiv.org/abs/2310.11511.\n\
+  \nBai et al. (2025)\n\nShuai Bai, Yuxuan Cai, Ruizhe Chen, Keqin Chen, et al.\n\n\
+  Qwen3-VL technical report.\n\narXiv preprint arXiv:2511.21631, 2025.\n\nURL https://arxiv.org/abs/2511.21631.\n\
+  \nChang & Ren (2026)\n\nJiale Chang and Yuxiang Ren.\n\nScrapMem: A bio-inspired\
+  \ framework for on-device personalized agent memory via optical forgetting.\n\n\
+  arXiv preprint arXiv:2605.03804, 2026.\n\nURL https://arxiv.org/abs/2605.03804.\n\
+  \nChen et al. (2024)\n\nJianlyu Chen, Shitao Xiao, Peitian Zhang, Kun Luo, Defu\
+  \ Lian, and Zheng Liu.\n\nM3-Embedding: Multi-linguality, multi-functionality, multi-granularity\
+  \ text embeddings through self-knowledge distillation.\n\nIn Findings of the Association\
+  \ for Computational Linguistics: ACL 2024, pp. 2318–2335.\nA42:  Association for\
+  \ Computational Linguistics, 2024.\n\ndoi: 10.18653/v1/2024.findings-acl.137.\n\n\
+  URL https://aclanthology.org/2024.findings-acl.137/.\n\nChen et al. (2025)\n\nZihong\
+  \ Chen, Wanli Jiang, Jinzhe Li, Zhonghang Yuan, Huanjun Kong, Wanli Ouyang, and\
+  \ Nanqing Dong.\n\nGraphGen: Enhancing supervised fine-tuning for LLMs with knowledge-driven\
+  \ synthetic data generation.\n\narXiv preprint arXiv:2505.20416, 2025.\n\nURL https://arxiv.org/abs/2505.20416.\n\
+  \nChhikara et al. (2025)\n\nPrateek Chhikara, Dev Khant, Saket Aryan, Taranjeet\
+  \ Singh, and Deshraj Yadav.\n\nMem0: Building production-ready AI agents with scalable\
+  \ long-term memory.\n\narXiv preprint arXiv:2504.19413, 2025.\n\nURL https://arxiv.org/abs/2504.19413.\n\
+  \nComanici et al. (2025)\n\nGheorghe Comanici, Eric Bieber, Mike Schaekermann, Ice\
+  \ Pasupat, et al.\n\nGemini 2.5: Pushing the frontier with advanced reasoning, multimodality,\
+  \ long context, and next generation agentic capabilities.\n\narXiv preprint arXiv:2507.06261,\
+  \ 2025.\n\nURL https://arxiv.org/abs/2507.06261.\n\nDai et al. (2022)\n\nZhuyun\
+  \ Dai, Vincent Y. Zhao, Ji Ma, Yi Luan, Jianmo Ni, Jing Lu, Anton Bakalov, Kelvin\
+  \ Guu, Keith B. Hall, and Ming-Wei Chang.\n\nPromptagator: Few-shot dense retrieval\
+  \ from 8 examples.\n\narXiv preprint arXiv:2209.11755, 2022.\n\nURL https://arxiv.org/abs/2209.11755.\n\
+  \nDeepSeek-AI (2026)\n\nDeepSeek-AI.\n\nDeepSeek-V4: Towards highly efficient million-token\
+  \ context intelligence.\n\nA43: \narXiv preprint arXiv:2606.19348, 2026.\n\nURL\
+  \ https://arxiv.org/abs/2606.19348.\n\nFilice et al. (2025)\n\nSimone Filice, Guy\
+  \ Horowitz, David Carmel, Zohar Karnin, Liane Lewin-Eytan, and Yoelle Maarek.\n\n\
+  Generating diverse Q&A benchmarks for RAG evaluation with DataMorgana.\n\narXiv\
+  \ preprint arXiv:2501.12789, 2025.\n\nURL https://arxiv.org/abs/2501.12789.\n\n\
+  Gao et al. (2023)\n\nLuyu Gao, Xueguang Ma, Jimmy Lin, and Jamie Callan.\n\nPrecise\
+  \ zero-shot dense retrieval without relevance labels.\n\nIn Proceedings of the 61st\
+  \ Annual Meeting of the Association for Computational Linguistics (Volume 1: Long\
+  \ Papers), pp. 1762–1777. Association for Computational Linguistics, 2023.\n\ndoi:\
+  \ 10.18653/v1/2023.acl-long.99.\n\nURL https://aclanthology.org/2023.acl-long.99/.\n\
+  \nGutiérrez et al. (2025)\n\nBernal Jiménez Gutiérrez, Yiheng Shu, Weijian Qi, Sizhe\
+  \ Zhou, and Yu Su.\n\nFrom RAG to memory: Non-parametric continual learning for\
+  \ large language models.\n\narXiv preprint arXiv:2502.14802, 2025.\n\nURL https://arxiv.org/abs/2502.14802.\n\
+  \nHe et al. (2026)\n\nZexue He, Yu Wang, Churan Zhi, Yuanzhe Hu, Tzu-Ping Chen,\
+  \ Lang Yin, Ze Chen, Tong Arthur Wu, Siru Ouyang, Zihan Wang, Jiaxin Pei, Julian\
+  \ McAuley, Yejin Choi, and Alex Pentland.\n\nMemoryArena: Benchmarking agent memory\
+  \ in interdependent multi-session agentic tasks.\n\narXiv preprint arXiv:2602.16313,\
+  \ 2026.\n\nURL https://arxiv.org/abs/2602.16313.\n\nKang et al. (2025)\n\n\nA44:\
+  \ Jiazheng Kang, Mingming Ji, Zhe Zhao, and Ting Bai.\n\nMemory OS of AI agent.\n\
+  \narXiv preprint arXiv:2506.06326, 2025.\n\nURL https://arxiv.org/abs/2506.06326.\n\
+  \nlabazhou2024 (2026)\n\nlabazhou2024.\n\nMemexa: A traceable personal memory layer.\n\
+  \nGitHub repository, 2026.\n\nURL https://github.com/labazhou2024/memexa.\n\nAccessed\
+  \ September 24, 2026.\n\nLin et al. (2026)\n\nMinhua Lin, Zhiwei Zhang, Hanqing\
+  \ Lu, Hui Liu, Xianfeng Tang, Qi He, Xiang Zhang, and Suhang Wang.\n\nMemMA: Coordinating\
+  \ the memory cycle through multi-agent reasoning and in-situ self-evolution.\n\n\
+  arXiv preprint arXiv:2603.18718, 2026.\n\nURL https://arxiv.org/abs/2603.18718v2.\n\
+  \nVersion 2.\n\nMaharana et al. (2024)\n\nAdyasha Maharana, Dong-Ho Lee, Sergey\
+  \ Tulyakov, Mohit Bansal, Francesco Barbieri, and Yuwei Fang.\n\nEvaluating very\
+  \ long-term conversational memory of LLM agents.\n\narXiv preprint arXiv:2402.17753,\
+  \ 2024.\n\nURL https://arxiv.org/abs/2402.17753v1.\n\nVersion 1; no dataset-size\
+  \ claim is based on this early version.\n\nMei et al. (2026a)\n\nJingbiao Mei, Jinghong\
+  \ Chen, Guangyu Yang, Xinyu Hou, Margaret Li, and Bill Byrne.\n\nATM-Bench live\
+  \ leaderboard.\n\nhttps://atmbench.github.io/leaderboard.html, 2026a.\n\nAccessed\
+  \ 2026-09-24.\n\nMei et al. (2026b)\n\nJingbiao Mei, Jinghong Chen, Guangyu Yang,\
+  \ Xinyu Hou, Margaret Li, and Bill Byrne.\n\nAccording to me: Long-term personalized\
+  \ referential memory QA.\n\narXiv preprint arXiv:2603.01990, 2026b.\n\n\nA45: URL\
+  \ https://arxiv.org/abs/2603.01990.\n\nMemPalace (2026)\n\nMemPalace.\n\nMemPalace:\
+  \ Local-first AI memory.\n\nGitHub repository, 2026.\n\nURL https://github.com/MemPalace/mempalace.\n\
+  \nAccessed September 24, 2026.\n\nNevaMind AI (2025)\n\nNevaMind AI.\n\nMemU: Personal\
+  \ memory across agents.\n\nGitHub repository, 2025.\n\nURL https://github.com/NevaMind-AI/memU.\n\
+  \nAccessed September 24, 2026.\n\nOpenAI (2025)\n\nOpenAI.\n\nIntroducing GPT-4.1\
+  \ in the API.\n\nOpenAI blog, April 14, 2025, 2025.\n\nURL https://openai.com/index/gpt-4-1/.\n\
+  \nOpenAI (n.d.)\n\nOpenAI.\n\nGPT-5 Mini.\n\nOpenAI API documentation, n.d.\n\n\
+  URL https://developers.openai.com/api/docs/models/gpt-5-mini.\n\nAccessed September\
+  \ 26, 2026.\n\nPacker et al. (2023)\n\nCharles Packer, Sarah Wooders, Kevin Lin,\
+  \ Vivian Fang, Shishir G. Patil, Ion Stoica, and Joseph E. Gonzalez.\n\nMemGPT:\
+  \ Towards LLMs as operating systems.\n\narXiv preprint arXiv:2310.08560, 2023.\n\
+  \nURL https://arxiv.org/abs/2310.08560.\n\nPan et al. (2026)\n\nWenbo Pan, Shujie\
+  \ Liu, Xiangyang Zhou, Shiwei Zhang, Wanlu Shi, Mirror Xu, and Xiaohua Jia.\n\n\
+  M^{\\star} : Every task deserves its own memory harness.\n\narXiv preprint arXiv:2604.11811,\
+  \ 2026.\n\nURL https://arxiv.org/abs/2604.11811v2.\n\nVersion 2.\n\nRagas (2026)\n\
+  \nRagas.\n\nTestset generation for RAG.\n\nRagas documentation, 2026.\n\nURL https://docs.ragas.io/en/stable/concepts/test_data_generation/rag/.\n\
+  \n\nA46: Continuously updated documentation; accessed September 9, 2026. Year denotes\
+  \ access, not first publication.\n\nRobertson & Zaragoza (2009)\n\nStephen Robertson\
+  \ and Hugo Zaragoza.\n\nThe probabilistic relevance framework: BM25 and beyond.\n\
+  \nFoundations and Trends in Information Retrieval, 3(4):333–389, 2009.\n\ndoi: 10.1561/1500000019.\n\
+  \nShen et al. (2026)\n\nZhiyu Shen, Ziming Wu, Fuming Lai, Shaobing Lian, and Yanghui\
+  \ Rao.\n\nMemBuilder: Reinforcing LLMs for long-term memory construction via attributed\
+  \ dense rewards.\n\narXiv preprint arXiv:2601.05488, 2026.\n\nURL https://arxiv.org/abs/2601.05488v4.\n\
+  \nVersion 4.\n\nWang et al. (2026)\n\nYubo Wang, Qiuyu Zhao, Zenghui Sun, Shichao\
+  \ Dong, Jinsong Lan, Xiaoyong Zhu, Haoyang Li, Bo Zheng, and Lei Chen.\n\nCMI-Mem:\
+  \ Toward generalizable long-term memory management via CMI-augmented reinforcement\
+  \ learning.\n\narXiv preprint arXiv:2607.20553, 2026.\n\nURL https://arxiv.org/abs/2607.20553v2.\n\
+  \nVersion 2.\n\nWu et al. (2024)\n\nDi Wu, Hongwei Wang, Wenhao Yu, Yuwei Zhang,\
+  \ Kai-Wei Chang, and Dong Yu.\n\nLongMemEval: Benchmarking chat assistants on long-term\
+  \ interactive memory.\n\narXiv preprint arXiv:2410.10813, 2024.\n\nURL https://arxiv.org/abs/2410.10813v1.\n\
+  \nConstruction details consulted in version 1.\n\nXiong et al. (2026)\n\nYiming\
+  \ Xiong, Shengran Hu, and Jeff Clune.\n\nLearning to continually learn via meta-learning\
+  \ agentic memory designs.\n\n\nA47: arXiv preprint arXiv:2602.07755, 2026.\n\nURL\
+  \ https://arxiv.org/abs/2602.07755v1.\n\nVersion 1.\n\nXu et al. (2025)\n\nWujiang\
+  \ Xu, Zujie Liang, Kai Mei, Hang Gao, Juntao Tan, and Yongfeng Zhang.\n\nA-MEM:\
+  \ Agentic memory for LLM agents.\n\narXiv preprint arXiv:2502.12110, 2025.\n\nURL\
+  \ https://arxiv.org/abs/2502.12110.\n\nYang et al. (2025)\n\nAn Yang, Bowen Yu,\
+  \ Chengyuan Li, Dayiheng Liu, Fei Huang, et al.\n\nQwen2.5-1M technical report.\n\
+  \narXiv preprint arXiv:2501.15383, 2025.\n\nURL https://arxiv.org/abs/2501.15383.\n\
+  \nYang et al. (2026)\n\nYuqing Yang, Tengxiao Liu, Wang Bill Zhu, Taiwei Shi, Linxin\
+  \ Song, and Robin Jia.\n\nSelf-evolving LLM memory extraction across heterogeneous\
+  \ tasks.\n\narXiv preprint arXiv:2604.11610, 2026.\n\nURL https://arxiv.org/abs/2604.11610.\n\
+  \nYue et al. (2022)\n\nXiang Yue, Ziyu Yao, and Huan Sun.\n\nSynthetic question\
+  \ value estimation for domain adaptation of question answering.\n\nIn Proceedings\
+  \ of the 60th Annual Meeting of the Association for Computational Linguistics (Volume\
+  \ 1: Long Papers), pp. 1340–1351. Association for Computational Linguistics, 2022.\n\
+  \ndoi: 10.18653/v1/2022.acl-long.95.\n\nURL https://aclanthology.org/2022.acl-long.95/.\n\
+  \nZhang et al. (2025)\n\nGuibin Zhang, Haotian Ren, Chong Zhan, Zhenhong Zhou, Junhao\
+  \ Wang, He Zhu, Wangchunshu Zhou, and Shuicheng Yan.\n\nMemEvolve: Meta-evolution\
+  \ of agent memory systems.\n\narXiv preprint arXiv:2512.18746, 2025.\n\n\nA48: URL\
+  \ https://arxiv.org/abs/2512.18746.\n\nZhang et al. (2026)\n\nHan Zhang, Zihao Tang,\
+  \ Xin Yu, Xiao Liu, Yeyun Gong, Haizhen Huang, Yan Lu, Weiwei Deng, Feng Sun, Qi\
+  \ Zhang, and Hanfang Yang.\n\nBeyond static dialogues: Benchmarking realistic, heterogeneous,\
+  \ and evolving long-term memory.\n\narXiv preprint arXiv:2605.31086, 2026.\n\nURL\
+  \ https://arxiv.org/abs/2605.31086.\n\nZheng et al. (2023)\n\nLianmin Zheng, Wei-Lin\
+  \ Chiang, Ying Sheng, Siyuan Zhuang, Zhanghao Wu, Yonghao Zhuang, Zi Lin, Zhuohan\
+  \ Li, Dacheng Li, Eric P. Xing, Hao Zhang, Joseph E. Gonzalez, and Ion Stoica.\n\
+  \nJudging LLM-as-a-judge with MT-Bench and Chatbot Arena.\n\narXiv preprint arXiv:2306.05685,\
+  \ 2023.\n\nURL https://arxiv.org/abs/2306.05685v4.\n\nVersion 4.\n[S30] A.1 Benchmark\
+  \ Selection (https://arxiv.org/html/2610.39276v1#A1.SS1)\nA49: We prioritize ATM-Bench\
+  \ (Mei et al., 2026b) and\n\nRHELM (Zhang et al., 2026) because recent work characterizes\n\
+  \nperformance on LoCoMo (Maharana et al., 2024) and\n\nLongMemEval (Wu et al., 2024)\
+  \ as near-saturated in\n\nconversational-memory QA settings (He et al., 2026).\n\
+  \nATM-Bench combines real-world images, videos, and emails, whereas\n\nRHELM couples\
+  \ evolving simulated user dialogues with external textual\n\nsources such as emails\
+  \ and documents.\n[S31] A.2 Reference Systems (https://arxiv.org/html/2610.39276v1#A1.SS2)\n\
+  A50: Table 2 compares DeepSeek-V4-based Memexa (labazhou2024, 2026),\n\nA-Mem (Xu\
+  \ et al., 2025), MemPalace (MemPalace, 2026), and\n\nHippoRAG2 (Gutiérrez et al.,\
+  \ 2025) on ATM-Bench (Mei et al., 2026a).\n\nTable 2 includes the RHELM reference\
+  \ results (Zhang et al., 2026)\n\nfor RAG ( k\\in\\{20,50\\} ), Hybrid ( k\\in\\\
+  {5,20,50\\} ),\n\nMemGPT (Packer et al., 2023), Mem0 (Chhikara et al., 2025), and\n\
+  \nMemU (NevaMind AI, 2025), all using GPT-4.1-mini as the answering model.\n\nHybrid\
+  \ combines dense retrieval with BM25 through reciprocal rank fusion.\n\nThe same\
+  \ table reports 1M-context inference with\n\nGemini-2.5-Flash-Lite (Comanici et\
+  \ al., 2025),\n\nQwen-2.5-14B-Instruct (1M) (Yang et al., 2025), and\n\nGPT-4.1-mini\
+  \ (OpenAI, 2025).\n\nThe Base-BM25, optimized, and transferred-design rows follow\
+  \ the protocols\n\nin Sections 4.1 and 4.3.\n\nAppendix Table B.2 additionally reports\
+  \ RAG with\n\nGPT-4.1 (OpenAI, 2025), Gemini-2.5-Pro (Comanici et al., 2025),\n\n\
+  and Claude-Opus-4.5 (Anthropic, 2025), all at k=20 .\n\nNative Qwen3-VL/GPT-5-mini\
+  \ results, including\n\nATM-RAG (Mei et al., 2026b), Self-RAG (Asai et al., 2023),\n\
+  \nScrapMem (Chang & Ren, 2026), and MemoryOS (Kang et al., 2025), are\n\nincluded\
+  \ in Appendix Table 7.\n[S32] A.3 Evaluation populations (https://arxiv.org/html/2610.39276v1#A1.SS3)\n\
+  A51: The training split drives failure attribution and revision proposals, whereas\n\
+  \nvalidation is used to accept revisions and select the final design. MemSteer\n\
+  \nuses generated QA–evidence supervision for these processes, without using\n\n\
+  benchmark evaluation questions. The Official-QA reference instead uses official\n\
+  \nQA for training and validation; these items remain included in evaluation.\n\n\
+  On ATM-Bench, both the Official-QA and MemSteer conditions use 400 training items\n\
+  \nand a fixed 200-item validation set; the former uses official QA and the latter\n\
+  \nuses QA–evidence supervision generated from the records. Evaluation covers all\n\
+  \n1,013 official QA items, including the 600 items used for Official-QA training\n\
+  \nand validation. ATM-Bench-Hard, the 31-question hard multi-hop subset, is reported\n\
+  \nseparately. Leaderboard references also use the full 1,013-item population.\n\n\
+  RHELM contains 1,305 official QA items from ten personas and is evaluated on the\n\
+  \nfull official set, both with and without external data sources. The Official-QA\n\
+  \nreference uses 524 official items for training and 264 for validation; these\n\
+  \nitems remain included in evaluation. The final MemSteer configuration uses 788\n\
+  \ngenerated QA–evidence items for training, without using official QA for training\n\
+  \nor design selection.\n\nIn the six-user setting, four personas provide training\
+  \ supervision,\n\n\nA52: two provide validation supervision, and the remaining four\
+  \ are held out\n\n(Table 9). For personal continuation, MemSteer\n\ngenerates 421\
+  \ supervision items from Martin Keller’s history, split into 282\n\ntraining and\
+  \ 139 validation items, and evaluates the continued design on 228\n\nofficial questions.\
+  \ For David R. Ellis, it generates 337 supervision items,\n\nsplit into 223 training\
+  \ and 114 validation items, and evaluates on 158 official\n\nquestions.\n[S33] A.4\
+  \ Evaluation Metrics (https://arxiv.org/html/2610.39276v1#A1.SS4)\nA53: On ATM-Bench,\
+  \ Question Score (QS) uses exact match\n\nfor numerical items, Jaccard partial credit\
+  \ for list items, and judge scores\n\nfor open-ended items. R@10 averages the fraction\
+  \ of gold evidence records\n\namong the top-10 retrieved records over questions.\n\
+  \nBlind answer agreement.\n\nBlind answer recovery checks type-normalized exact\
+  \ agreement: normalized text\n\nequality, set equality for lists, and exact value-and-unit\
+  \ agreement for\n\nnumerical answers. Boolean answers are matched exactly. Evidence\
+  \ coverage is\n\nchecked at the record level, requiring citations to every selected\
+  \ evidence record.\n\nDesign-selection accuracy.\n\nValidation accuracy guides revision\
+  \ acceptance and design selection.\n\nPredictions identical to their reference answers\
+  \ are scored as correct;\n\nother responses receive a binary correctness judgment\
+  \ from a fixed LLM judge.\n\nFinal ATM-Bench evaluation uses Question Score (QS),\
+  \ which includes partial\n\ncredit for list questions. Final RHELM evaluation reports\
+  \ overall accuracy,\n\ncomputed as the mean of binary correctness judgments from\
+  \ the official evaluator.\n[S34] A.5 Feedback inputs (https://arxiv.org/html/2610.39276v1#A1.SS5)\n\
+  A54: Gold evidence denotes the reference source evidence in\n\nMemSteer-generated\
+  \ QA–evidence supervision, not human-annotated evidence.\n\nFor Random-30, each\
+  \ sampled case includes the question, reference\n\nanswer, prediction and score,\
+  \ ranked\n\nretrieved-record IDs, IDs actually delivered to the answer.\n\nGold\
+  \ evidence remains unmarked in Random-30, even if it appears in the context.\n\n\
+  Random-30 + Gold evidence adds required-evidence IDs and gold-record\n\nexcerpts\
+  \ without programmatic failure attribution. Random-30 + Diagnosis\n\nretains random\
+  \ sampling and additionally provides failure-stage labels,\n\nmissing-evidence IDs,\
+  \ evidence checks, and memory-lookup results.\n\nDiagnosis + stratified sampling\
+  \ uses the same diagnostic information\n\nbut organizes examples by failure category\
+  \ before allocating the feedback budget.\n[S35] B.1 ATM-Bench reference and optimization\
+  \ results (https://arxiv.org/html/2610.39276v1#A2.SS1)\nA55: Table B.1 reorganizes\
+  \ the DeepSeek-V4-Flash-evaluated\n\nresults from Table 2 .\n\nTable 6: Performance\
+  \ on ATM-Bench and ATM-Bench-Hard (%). DeepSeek-V4-Flash is used for answer generation\
+  \ and as the judge for open-ended answers. Arrows indicate percentage-point changes\
+  \ relative to the corresponding initial design: Base-BM25 for MemSteer-Opt and the\
+  \ respective starting systems for the external optimizers. Bold and underlined values\
+  \ indicate the best and second-best results per metric, excluding the oracle, which\
+  \ uses gold evidence. †Official-QA training items are included in evaluation.\n\n\
+  ATM-Bench\n\nATM-Bench-Hard\n\nMethod\n\nBackbone\n\nSupervision\n\nQS \\uparrow\n\
+  \nR@10 \\uparrow\n\nQS \\uparrow\n\nR@10 \\uparrow\n\nReference memory systems\n\
+  \nMemexa\n\nDeepSeek-V4\n\nNone\n\n65.3\n\n78.9\n\n–\n\n–\n\nA-Mem\n\nDeepSeek-V4\n\
+  \nNone\n\n–\n\n–\n\n16.7\n\n38.5\n\nMemPalace\n\nDeepSeek-V4\n\nNone\n\n–\n\n–\n\
+  \n13.6\n\n28.9\n\nHippoRAG2\n\nDeepSeek-V4\n\nNone\n\n–\n\n–\n\n12.3\n\n32.2\n\n\
+  Base starting system and oracle\n\nBase-BM25\n\nDeepSeek-V4\n\n–\n\n54.9\n\n61.7\n\
+  \n8.2\n\n10.0\n\nOracle\n\nDeepSeek-V4\n\n–\n\n71.8\n\n–\n\n46.2\n\n–\n\nMemSteer-Opt\
+  \ (Ours) across supervision sources\n\nMemSteer-Opt\n\nDeepSeek-V4\n\nOfficial-QA†\n\
+  \n67.3\n\n83.5\n\n27.9\n\n42.2\n\nMemSteer-Opt\n\nDeepSeek-V4\n\nMemSteer\n\n68.3\n\
+  \n\\uparrow 13.4\n\n84.1\n\n\\uparrow 22.4\n\n29.1\n\n\\uparrow 20.9\n\n43.6\n\n\
+  \\uparrow 33.6\n\nExternal optimizers\n\nM^{\\star} start\n\nDeepSeek-V4\n\n–\n\n\
+  47.4\n\n55.2\n\n1.9\n\n13.6\n\nM^{\\star}\n\nDeepSeek-V4\n\nOfficial-QA†\n\n51.8\n\
+  \n\nA56: 69.4\n\n9.5\n\n26.0\n\nM^{\\star}\n\nDeepSeek-V4\n\nMemSteer\n\n53.4\n\n\
+  \\uparrow 6.0\n\n69.8\n\n\\uparrow 14.6\n\n12.9\n\n\\uparrow 11.0\n\n25.6\n\n\\\
+  uparrow 12.0\n\nMemEvolve start\n\nDeepSeek-V4\n\n–\n\n35.1\n\n41.3\n\n7.1\n\n18.7\n\
+  \nMemEvolve\n\nDeepSeek-V4\n\nOfficial-QA†\n\n53.7\n\n63.8\n\n11.4\n\n21.6\n\nMemEvolve\n\
+  \nDeepSeek-V4\n\nMemSteer\n\n53.7\n\n\\uparrow 18.6\n\n63.7\n\n\\uparrow 22.4\n\n\
+  9.5\n\n\\uparrow 2.3\n\n18.6\n\n\\downarrow 0.1\n\nFor MemSteer-Opt, we retested\
+  \ the full QA pipeline using GPT-5-mini judge.\n\nTable 7 provides the complementary\
+  \ GPT-5-mini\n\nevaluation.\n\nNote that variability in LLM-generated retrieval\
+  \ queries can therefore yield\n\nsmall differences in R@10 with Table B.1.\n\nThe\
+  \ native reference rows come from the ATM-Bench\n\nleaderboard (Mei et al., 2026a),\
+  \ use Qwen3-VL\n\nbackbones (Bai et al., 2025), and report QS from the official\n\
+  \nGPT-5-mini (OpenAI, n.d.) judge. Here, 2B/8B denotes the\n\nmemory-processing\
+  \ and answering model sizes, respectively.\n\nTable 7: Performance on ATM-Bench\
+  \ and ATM-Bench-Hard (%). MemSteer-Opt uses DeepSeek-V4-Flash for answer generation.\
+  \ Open-ended answers are evaluated by the official GPT-5-mini judge. All MemSteer-Opt\
+  \ runs start from Base-BM25. Green arrows indicate percentage-point improvements\
+  \ over Base-BM25. Bold and underlined values indicate the best and second-best results\
+  \ per metric among the MemSteer-Opt variants, respectively. The oracle uses gold\
+  \ evidence.\nA57:  †Official-QA training items are included in evaluation.\n\nATM-Bench\n\
+  \nATM-Bench-Hard\n\nMethod\n\nBackbone\n\nSupervision\n\nQS \\uparrow\n\nR@10 \\\
+  uparrow\n\nQS \\uparrow\n\nR@10 \\uparrow\n\nReference memory systems\n\nMemPalace\n\
+  \nQwen3-VL-2B/8B\n\nNone\n\n56.8\n\n76.4\n\n9.7\n\n28.3\n\nATM-RAG\n\nQwen3-VL-2B/8B\n\
+  \nNone\n\n51.0\n\n68.7\n\n13.8\n\n30.4\n\nSelf-RAG\n\nQwen3-VL-2B/8B\n\nNone\n\n\
+  50.3\n\n68.7\n\n–\n\n–\n\nScrapMem\n\nQwen3-VL-2B/8B\n\nNone\n\n48.4\n\n66.1\n\n\
+  –\n\n–\n\nMemoryOS\n\nQwen3-VL-2B/8B\n\nNone\n\n47.2\n\n59.2\n\n13.7\n\n32.7\n\n\
+  A-Mem\n\nQwen3-VL-2B/8B\n\nNone\n\n44.8\n\n66.4\n\n9.9\n\n31.7\n\nMem0\n\nQwen3-VL-2B/8B\n\
+  \nNone\n\n43.5\n\n61.9\n\n9.2\n\n23.7\n\nBase starting system\n\nBase-BM25\n\nDeepSeek-V4\n\
+  \n–\n\n55.1\n\n61.7\n\n5.4\n\n10.0\n\nOracle\n\nDeepSeek-V4\n\n–\n\n71.6\n\n–\n\n\
+  39.5\n\n–\n\nMemSteer-Opt (Ours) across supervision sources\n\nMemSteer-Opt\n\n\
+  DeepSeek-V4\n\nNaive-QA\n\n54.1\n\n60.6\n\n5.4\n\n16.7\n\nMemSteer-Opt\n\nDeepSeek-V4\n\
+  \nNaive-QA + checks\n\n65.4\n\n\\uparrow 10.4\n\n82.0\n\n\\uparrow 20.3\n\n25.6\n\
+  \n\\uparrow 20.2\n\n43.2\n\n\\uparrow 33.2\n\nMemSteer-Opt\n\nDeepSeek-V4\n\nRagas-QA\n\
+  \n63.5\n\n\\uparrow 8.4\n\n83.5\n\n\\uparrow 21.8\n\n23.3\n\n\\uparrow 17.9\n\n\
+  42.1\n\n\\uparrow 32.1\n\nMemSteer-Opt\n\nDeepSeek-V4\n\nOfficial-QA†\n\n69.6\n\n\
+  \\uparrow 14.5\n\n83.2\n\n\\uparrow 21.5\n\n24.3\n\n\\uparrow 18.9\n\n42.3\n\n\\\
+  uparrow 32.3\n\nMemSteer-Opt\n\nDeepSeek-V4\n\nMemSteer\n\n69.2\n\n\\uparrow 14.2\n\
+  \n84.1\n\n\\uparrow 22.4\n\n27.5\n\n\\uparrow 22.1\n\n43.8\n\n\\uparrow 33.8\n[S36]\
+  \ B.2 Effect of supervision budget (https://arxiv.org/html/2610.39276v1#A2.SS2)\n\
+  A58: We augment the existing pool of generated QA–evidence pairs with an additional\n\
+  \nbatch of generated data. From the expanded pool, we randomly sample supervision\n\
+  \nfor five settings containing 100, 200, 300, 400, or 500 training questions,\n\n\
+  respectively. In each setting, training and validation account for approximately\n\
+  \n60% and 40% of the sampled supervision. All runs start from the same Base-BM25\n\
+  \ndesign, with training questions used to guide design revisions and validation\n\
+  \nquestions used for design selection. Figure B.2 reports\n\nthe resulting performance\
+  \ on ATM-Bench and ATM-Bench-Hard.\n\nFigure 4: Effect of the supervision budget\
+  \ on ATM-Bench and ATM-Bench-Hard (%).\n\nAll runs start from the same Base-BM25\
+  \ design, shown as Base at zero training\n\nquestions. The horizontal axis indicates\
+  \ the number of training questions;\n\nthe validation set scales proportionally\
+  \ to maintain an approximately 60:40\n\ntraining-to-validation split.\n\nTable 8:\
+  \ RHELM accuracy (%) by question type, with and without external data sources. FC,\
+  \ TP, AG, HL, and MI denote fact, temporal, aggregation, hallucination, and misleading\
+  \ questions, respectively; EX covers attachments and emails, and MX denotes mixed-context\
+  \ questions. Avg reports overall accuracy across evaluation questions. All memory-framework\
+  \ methods and our systems use GPT-4.1-mini for answer generation.\nA59:  ATM-Bench-evolved\
+  \ (frozen) transfers the ATM-Bench-optimized memory design without further optimization\
+  \ on RHELM; its + Official-QA and + MemSteer variants continue optimization on RHELM\
+  \ using the corresponding supervision. Base-BM25+Official-QA and Base-BM25+MemSteer\
+  \ instead initialize optimization from Base-BM25. Bold and underlined values indicate\
+  \ the best and second-best results per column, respectively. †Official-QA training\
+  \ and validation items are included in evaluation.\n\nModel\n\nWithout External\
+  \ Data Sources\n\nWith External Data Sources\n\nFC\n\nTP\n\nAG\n\nHL\n\nMI\n\nEX\n\
+  \nMX\n\nAvg\n\nFC\n\nTP\n\nAG\n\nHL\n\nMI\n\nEX\n\nMX\n\nAvg\n\nRAG Baselines\n\n\
+  GPT-4.1-mini ( k=5 )\n\n35.8\n\n17.3\n\n17.7\n\n15.2\n\n3.1\n\n8.0\n\n10.0\n\n16.3\n\
+  \n34.8\n\n14.1\n\n19.3\n\n11.7\n\n3.1\n\n16.9\n\n12.4\n\n17.5\n\nGPT-4.1-mini (\
+  \ k=20 )\n\n44.0\n\n32.4\n\n31.8\n\n18.3\n\n3.1\n\n12.1\n\n12.9\n\n23.5\n\n42.5\n\
+  \n28.7\n\n30.7\n\n13.2\n\n3.1\n\n28.5\n\n13.8\n\n25.1\n\nGPT-4.1-mini ( k=50 )\n\
+  \n59.9\n\n41.6\n\n40.1\n\n15.7\n\n1.5\n\n12.9\n\n16.7\n\n28.9\n\n54.6\n\n39.5\n\n\
+  38.0\n\n11.2\n\n1.5\n\n38.6\n\n22.4\n\n32.6\n\nHybrid ( k=5 )\n\n34.3\n\n20.5\n\n\
+  14.1\n\n19.8\n\n1.5\n\n8.0\n\n10.5\n\n16.7\n\n31.9\n\n19.5\n\n14.1\n\n19.3\n\n1.5\n\
+  \n16.1\n\n10.5\n\n17.6\n\nHybrid ( k=20 )\n\n47.3\n\n35.7\n\n31.8\n\n19.3\n\n3.1\n\
+  \n10.4\n\n15.2\n\n24.8\n\n45.9\n\n30.8\n\n26.6\n\n16.8\n\n4.6\n\n26.9\n\n15.7\n\n\
+  26.0\n\nHybrid ( k=50 )\n\n56.5\n\n41.1\n\n35.9\n\n15.2\n\n3.1\n\n13.7\n\n16.7\n\
+  \n27.8\n\n53.1\n\n37.8\n\n33.9\n\n8.6\n\n3.1\n\n33.3\n\n18.6\n\n29.6\n\nGPT-4.1\
+  \ ( k=20 )\n\n51.7\n\n34.1\n\n35.9\n\n23.9\n\n7.7\n\n16.1\n\n17.6\n\n28.2\n\n50.2\n\
+  \n29.2\n\n32.3\n\n19.8\n\n\nA60: 6.2\n\n32.5\n\n19.5\n\n29.5\n\nGemini-2.5-Pro (\
+  \ k=20 )\n\n45.4\n\n35.1\n\n27.1\n\n66.0\n\n23.1\n\n12.4\n\n18.1\n\n32.6\n\n43.0\n\
+  \n31.9\n\n26.0\n\n64.5\n\n26.2\n\n31.3\n\n20.5\n\n35.5\n\nClaude-Opus-4.5 ( k=20\
+  \ )\n\n50.7\n\n37.8\n\n33.3\n\n68.0\n\n47.7\n\n13.7\n\n16.2\n\n36.2\n\n50.2\n\n\
+  30.8\n\n31.8\n\n60.9\n\n41.5\n\n33.7\n\n21.0\n\n38.1\n\nLong-Context Models (1M)\n\
+  \nGemini-2.5-Flash-Lite\n\n33.2\n\n22.7\n\n15.2\n\n17.3\n\n0.0\n\n9.5\n\n5.6\n\n\
+  16.0\n\n31.7\n\n14.1\n\n23.4\n\n7.6\n\n0.0\n\n19.0\n\n13.1\n\n17.3\n\nQwen-2.5-14B-Instruct\n\
+  \n29.5\n\n15.1\n\n29.7\n\n3.1\n\n0.0\n\n11.7\n\n9.1\n\n15.3\n\n16.9\n\n7.0\n\n15.6\n\
+  \n1.0\n\n0.0\n\n5.2\n\n6.2\n\n8.1\n\nGPT-4.1-mini\n\n55.1\n\n31.9\n\n40.1\n\n4.1\n\
+  \n1.5\n\n11.2\n\n12.4\n\n24.0\n\n49.3\n\n27.0\n\n33.9\n\n2.0\n\n1.5\n\n43.4\n\n\
+  0.3\n\n33.9\n\nMemory Frameworks (GPT-4.1-mini)\n\nMemGPT\n\n31.9\n\n18.4\n\n22.9\n\
+  \n0.5\n\n0.0\n\n7.6\n\n8.1\n\n13.9\n\n27.5\n\n14.6\n\n28.7\n\n1.5\n\n1.5\n\n18.9\n\
+  \n17.1\n\n17.3\n\nMem0\n\n41.6\n\n31.4\n\n28.1\n\n10.7\n\n3.1\n\n10.8\n\n13.3\n\n\
+  21.1\n\n46.4\n\n29.2\n\n27.1\n\n10.2\n\n3.1\n\n31.3\n\n35.7\n\n28.9\n\nMemU\n\n\
+  49.3\n\n32.4\n\n33.9\n\n8.6\n\n4.6\n\n12.0\n\n11.4\n\n23.1\n\n54.6\n\n36.2\n\n35.4\n\
+  \n10.2\n\n3.1\n\n36.5\n\n36.7\n\n33.6\n\nBase-BM25\n\n50.2\n\n25.9\n\n30.2\n\n6.1\n\
+  \n3.1\n\n11.2\n\n18.6\n\n22.3\n\n47.3\n\n21.6\n\n27.1\n\n10.7\n\n3.1\n\n45.8\n\n\
+  51.4\n\n33.3\n\nBase-BM25+Official-QA†\n\n58.5\n\n26.5\n\n36.5\n\n19.8\n\n3.1\n\n\
+  9.6\n\n19.5\n\n26.5\n\n54.6\n\n23.8\n\n37.5\n\n21.3\n\n4.6\n\n53.4\n\n59.0\n\n40.7\n\
+  \nBase-BM25+MemSteer\n\n53.6\n\n27.0\n\n39.1\n\n16.8\n\n4.6\n\n12.4\n\n19.5\n\n\
+  26.4\n\n48.8\n\n28.1\n\n37.0\n\n23.4\n\n6.2\n\n52.2\n\n55.7\n\n39.9\n\nATM-Bench-evolved(frozen)\n\
+  \n64.3\n\n29.2\n\n33.3\n\n9.1\n\n3.1\n\n13.7\n\n19.0\n\n26.4\n\n59.4\n\n28.6\n\n\
+  33.9\n\n10.7\n\n3.1\n\n52.6\n\n51.9\n\nA61: \n38.6\n\nATM-Bench-evolved + Official-QA†\n\
+  \n60.4\n\n47.6\n\n39.1\n\n24.9\n\n3.1\n\n12.0\n\n20.0\n\n31.5\n\n56.0\n\n43.2\n\n\
+  39.1\n\n16.2\n\n4.6\n\n58.6\n\n51.4\n\n42.9\n\nATM-Bench-evolved + MemSteer\n\n\
+  58.5\n\n46.5\n\n39.1\n\n21.8\n\n3.1\n\n12.0\n\n20.0\n\n30.6\n\n55.6\n\n43.2\n\n\
+  35.9\n\n18.8\n\n3.1\n\n59.0\n\n51.4\n\n42.8\n\nTable 9: Per-persona accuracy on\
+  \ RHELM with external data sources (%). (a) Six-user optimization: roles indicate\
+  \ participation in training, validation, or neither (held-out). (b) Ten-user optimization:\
+  \ all personas participate as training and validation, with Official-QA or MemSteer\
+  \ supervision. N is the number of evaluation questions; parentheses show percentage-point\
+  \ changes from Base-BM25. Group summaries pool evaluation questions from the six\
+  \ source users (training and validation) or the four held-out users; Overall (pooled)\
+  \ pools all 1,305 questions. †Official-QA training and validation items are included\
+  \ in evaluation.\n\n(a) Six-user optimization setting\n\nPersona\n\nRole\n\nN\n\n\
+  Base-BM25\n\nShared design\n\nJonas Richter\n\nTraining\n\n106\n\n25.5\n\n33.0 (+7.5)\n\
+  \nDavid Reyes\n\nTraining\n\n132\n\n34.8\n\n37.1 (+2.3)\n\nDr. Elias Romero\n\n\
+  Training\n\n122\n\n31.1\n\n31.1 (+0.0)\n\nJustice Arvind P. Mehra\n\nTraining\n\n\
+  123\n\n33.3\n\n34.1 (+0.8)\n\nElena Morales\n\nValidation\n\n87\n\n35.6\n\n39.1\
+  \ (+3.5)\n\nDr. Elena Markovic\n\nValidation\n\n109\n\n28.4\n\n32.1 (+3.7)\n\nDr.\
+  \ Alastair McEwan\n\nHeld-out\n\n96\n\n30.2\n\n34.4 (+4.2)\n\nDr. Marcus Ellison\n\
+  \nHeld-out\n\n144\n\n27.1\n\n27.8 (+0.7)\n\n\nA62: Martin Keller\n\nHeld-out\n\n\
+  228\n\n41.2\n\n37.7 ( - 3.5)\n\nDavid R. Ellis\n\nHeld-out\n\n158\n\n37.3\n\n38.6\
+  \ (+1.3)\n\nSource users (6)\n\n–\n\n679\n\n31.5\n\n34.3 (+2.8)\n\nHeld-out users\
+  \ (4)\n\n–\n\n626\n\n35.3\n\n35.1 ( - 0.2)\n\nOverall (pooled)\n\n–\n\n1,305\n\n\
+  33.3\n\n34.7 (+1.4)\n\n(b) Ten-user optimization setting\n\nPersona\n\nN\n\nBase-BM25\n\
+  \nOfficial-QA†\n\nMemSteer\n\nJonas Richter\n\n106\n\n25.5\n\n37.7 (+12.2)\n\n40.6\
+  \ (+15.1)\n\nDavid Reyes\n\n132\n\n34.8\n\n36.4 (+1.6)\n\n37.9 (+3.1)\n\nDr. Elias\
+  \ Romero\n\n122\n\n31.1\n\n41.0 (+9.9)\n\n34.4 (+3.3)\n\nJustice Arvind P. Mehra\n\
+  \n123\n\n33.3\n\n39.8 (+6.5)\n\n39.8 (+6.5)\n\nElena Morales\n\n87\n\n35.6\n\n47.1\
+  \ (+11.5)\n\n42.5 (+6.9)\n\nDr. Elena Markovic\n\n109\n\n28.4\n\n38.5 (+10.1)\n\n\
+  37.6 (+9.2)\n\nDr. Alastair McEwan\n\n96\n\n30.2\n\n39.6 (+9.4)\n\n37.5 (+7.3)\n\
+  \nDr. Marcus Ellison\n\n144\n\n27.1\n\n41.7 (+14.6)\n\n38.2 (+11.1)\n\nMartin Keller\n\
+  \n228\n\n41.2\n\n42.5 (+1.3)\n\n43.0 (+1.8)\n\nDavid R. Ellis\n\n158\n\n37.3\n\n\
+  41.8 (+4.5)\n\n44.3 (+7.0)\n\nOverall (pooled)\n\n1,305\n\n33.3\n\n40.7 (+7.4)\n\
+  \n39.9 (+6.6)\n\nPerformance remains close to Base-BM25 at the smallest question\
+  \ budget, with\n\nthe largest gains occurring between the 100- and 200-question\
+  \ settings.\n\nBeyond this point, QS on ATM-Bench generally improves, while R@10\
+  \ remains\n\nlargely stable on both benchmarks. ATM-Bench-Hard shows small fluctuations\n\
+  \nin QS, with a test set of only 31 questions.\n[S37] B.3 Full RHELM results (https://arxiv.org/html/2610.39276v1#A2.SS3)\n\
+  A63: Table B.2 reports RHELM results by question type, with and without\n\nexternal\
+  \ data sources. It also includes baselines using other answer models and\n\nlong-context\
+  \ models for reference, rather than as controlled comparisons with\n\nthe GPT-4.1-mini\
+  \ systems in Table 2.\n[S38] B.4 Per-persona results (https://arxiv.org/html/2610.39276v1#A2.SS4)\n\
+  A64: Table 9 reports per-persona results for shared\n\nmemory designs under two\
+  \ optimization settings, complementing the shared and\n\ncontinued designs compared\
+  \ in Table 3. In the six-user setting,\n\nfour personas provide training supervision\
+  \ and two provide validation\n\nsupervision; the remaining four are held out from\
+  \ optimization. In the ten-user\n\nsetting, all personas participate in optimization.\
+  \ Official-QA uses 40% of each\n\npersona’s official QA for training and 20% for\
+  \ validation, whereas MemSteer uses\n\nQA–evidence supervision generated from user\
+  \ histories and reserves official QA\n\nfor evaluation.\n[S39] Transfer of the six-user\
+  \ shared design. (https://arxiv.org/html/2610.39276v1#A2.SS4.SSS0.Px1)\nA65: Table\
+  \ 9(a) shows that the shared design improves\n\npooled accuracy on the six source\
+  \ users from 31.5% to 34.3%. However, this\n\nimprovement does not carry over in\
+  \ aggregate to the four users held out from\n\noptimization. These results highlight\
+  \ heterogeneous transfer across users: a\n\ndesign optimized on the source users\
+  \ does not necessarily benefit other users.\n\nThis makes the target-user continuation\
+  \ valuable, as studied in\n\nTable 3.\n[S40] Generated versus official supervision\
+  \ in the ten-user setting. (https://arxiv.org/html/2610.39276v1#A2.SS4.SSS0.Px2)\n\
+  A66: Table 9(b) shows that MemSteer improves over\n\nBase-BM25 for all ten personas,\
+  \ raising pooled accuracy from 33.3% to 39.9%.\n\nIts overall accuracy is 0.8 points\
+  \ below the 40.7% obtained with Official-QA\n\nsupervision. Note that MemSteer reserves\
+  \ official QA for evaluation, whereas the\n\nOfficial-QA results include questions\
+  \ used for training or validation. Thus,\n\nhistory-generated supervision provides\
+  \ an effective alternative for optimizing\n\na shared memory design without relying\
+  \ on official QA for training or design\n\nselection.\n[S41] B.5 Example accepted\
+  \ architecture trajectory (https://arxiv.org/html/2610.39276v1#A2.SS5)\nA67: Figure\
+  \ 5: Accepted memory-design optimization trajectory on ATM-Bench, starting\n\nfrom\
+  \ Base-BM25 and comprising nine accepted revisions. Numbered badges and\n\ncolored\
+  \ arrows indicate the revision order.\n\nFigure B.5 traces one accepted memory-design\
+  \ optimization trajectory on ATM-Bench. Starting\n\nfrom Base-BM25 with raw queries\
+  \ and a direct reader, revisions add BGE-M3 (Chen et al., 2024) dense\n\nretrieval;\
+  \ hybrid retrieval with BGE reranking; question decomposition; HyDE (Gao et al.,\
+  \ 2023) and\n\na second retrieval stage; HyDE queries; a 180-candidate pool with\
+  \ 90 reranked\n\nitems; and answer verification. The final design uses four HyDE\
+  \ queries, reranks\n\n120 candidates, reads 25 records, and permits a 4,000-token\
+  \ output. The sequence\n\nmoves from retrieval representation and ranking to multi-query\
+  \ context\n\nconstruction and answer validation.\n[S42] Appendix C Limitations (https://arxiv.org/html/2610.39276v1#A3)\n\
+  A68: MemSteer’s supervision is generated and verified by LLMs without human\n\n\
+  certification, so errors or biases shared across answer planning,\n\nsource-grounded\
+  \ auditing, and blind answer recovery can pass verification\n\nundetected. Blind\
+  \ answer recovery checks whether the reference answer is\n\nrecoverable from the\
+  \ sampled records and every selected evidence record is\n\ncited; it does not establish\
+  \ that each record is necessary.\n\nGenerated questions follow the distribution\
+  \ of the history rather than users’\n\nactual information needs.\n\nMemSteer-Opt\
+  \ explores a constrained, largely retrieval-centric design space.\n\nFinally, our\
+  \ evaluation covers two benchmarks, one of which (RHELM) consists\n\nof synthetic\
+  \ personas, so evidence on real, heterogeneous user histories\n\nremains limited."
+record:
+  kind: paper
+  metadata:
+    title: 'MemSteer: Turning User Histories into Supervision for Agent Memory Optimization'
+    source: arXiv
+    source_url: https://arxiv.org/abs/2610.39276
+    authors:
+    - Huang, Jie
+    - Lan, Cuiling
+    - Yu, Qize
+    - Peng, Xiulian
+    - Lu, Yan
+    published_at: '2026-10-29'
+    arxiv_id: '2610.39276'
+    source_version: v1
+  body_text: An effective agent memory system should adapt to a user's history and
+    task requirements. Human-annotated supervision can guide this adaptation by providing
+    feedback for evaluating and improving memory designs. Yet suitable labels are
+    rarely available for new user histories, and manually constructing QA pairs and
+    supporting evidence is costly. We introduce MemSteer, which turns unlabeled user
+    histories into question-answer (QA) supervision with supporting evidence for memory-design
+    optimization. MemSteer constructs an evidence-grounded answer plan that specifies
+    how facts across related records jointly support a reference answer. The plan
+    guides question generation, while source-grounded auditing and blind answer recovery
+    check the resulting annotations. To study the utility of this supervision, we
+    develop MemSteer-Opt, which combines QA-based design evaluation with evidence-guided
+    failure diagnosis to revise memory store, retrieval, and context construction
+    without updating model parameters. Experiments on ATM-Bench and RHELM show that
+    this supervision is competitive with official-QA-guided optimization. Relative
+    to Base-BM25, MemSteer-Opt improves ATM-Bench Question Score by 13.4 points and
+    RHELM accuracy by 4.1 and 6.6 points without and with external data, respectively.
+    The supervision also benefits two existing optimizers on ATM-Bench, while new-user
+    experiments demonstrate continued design optimization using supervision generated
+    from the target histories.
+  coverage: abstract_only
+  upstream_updated_at: '2026-10-29'
+  content_hash: 411de243c564fe6d12e6d2cf7f1951403b55e260fdd64c3d93c7c66b334b3da0
+  discovery_mode: explicit_seed_fallback
+document:
+  sections:
+  - id: S1
+    title: 'MemSteer: Turning User Histories into Supervision for Agent Memory Optimization'
+    text: 'Jie Huang
+
+
+      ††thanks: Work done during an internship at MSRA.
+
+
+      Affiliation: Peking University
+
+
+      Affiliation: Microsoft Research Asia
+
+
+      Cuiling Lan
+
+
+      Affiliation: Microsoft Research Asia
+
+
+      Qize Yu
+
+
+      Affiliation: Peking University
+
+
+      Xiulian Peng
+
+
+      Affiliation: Microsoft Research Asia
+
+
+      Yan Lu
+
+
+      Affiliation: Microsoft Research Asia'
+    location: https://arxiv.org/html/2610.39276v1
+  - id: S2
+    title: Abstract
+    text: 'An effective agent memory system should adapt to a user’s history and task
+      requirements.
+
+
+      Human-annotated supervision can guide this adaptation by providing feedback
+
+
+      for evaluating and improving memory designs.
+
+
+      Yet suitable labels are rarely available for new user histories,
+
+
+      and manually constructing QA pairs and supporting evidence is costly.
+
+
+      We introduce MemSteer, which turns unlabeled user histories into question–answer
+
+
+      (QA) supervision with supporting evidence for memory-design optimization.
+
+
+      MemSteer constructs an evidence-grounded answer plan that specifies how facts
+
+
+      across related records jointly support a reference answer.
+
+
+      The plan guides question generation, while source-grounded auditing and blind
+
+
+      answer recovery check the resulting annotations.
+
+
+      To study the utility of this supervision, we develop MemSteer-Opt,
+
+
+      which combines QA-based design evaluation with evidence-guided failure diagnosis
+
+
+      to revise memory store, retrieval, and context construction without updating
+
+
+      model parameters.
+
+
+      Experiments on ATM-Bench and RHELM show that this supervision is competitive
+
+
+      with official-QA-guided optimization.
+
+
+      Relative to Base-BM25, MemSteer-Opt improves ATM-Bench Question Score by 13.4
+      points
+
+
+      and RHELM accuracy by 4.1 and 6.6 points without and with external data, respectively.
+
+
+      The supervision also benefits two existing optimizers on ATM-Bench,
+
+
+      while new-user experiments demonstrate continued design optimization using
+
+
+      supervision generated from the target histories.'
+    location: https://arxiv.org/html/2610.39276v1#abstract1
+  - id: S3
+    title: 1 Introduction
+    text: 'Figure 1: Motivation for MemSteer.
+
+
+      User histories vary in data characteristics, so one memory design may not suit
+      every user.
+
+
+      Automatic design adaptation through iterative optimization requires feedback
+      on memory performance.
+
+
+      MemSteer supports this optimization by automatically generating QA–evidence
+      supervision from unlabeled histories, avoiding labor-intensive manual labeling.
+
+
+      Agents that assist users over time need to draw on information accumulated
+
+
+      across conversations, emails, and documents.
+
+
+      An external memory system supports this process by storing and organizing
+
+
+      the user’s history and retrieving relevant context for the agent.
+
+
+      Storage granularity, retrieval strategy, and answer-context construction
+
+
+      shape how effectively the agent can use that history.
+
+
+      User histories differ in their content, modalities, and organization,
+
+
+      so a memory design effective for one user may be less suitable for another.
+
+
+      This motivates adapting memory designs to user histories.
+
+
+      Recent methods such as MemEvolve, ALMA, and M^{\star} optimize memory designs
+
+
+      using downstream task feedback (Zhang et al., 2025; Xiong et al., 2026; Pan
+      et al., 2026).
+
+
+      While executable tasks can provide feedback through their outcomes, personal
+
+
+      records and interactions often lack an explicit signal for assessing memory
+      quality.
+
+
+      Annotated question–answer (QA) pairs can supply this signal (Pan et al., 2026),
+
+
+      but constructing questions, reference answers, and supporting evidence for each
+
+
+      new history is costly.
+
+
+      This motivates our question (Figure 1):
+
+
+      Can unlabeled user histories guide memory-design optimization?
+
+
+      Generating QA from the history itself offers a potential source of this feedback.
+
+
+      Within agent memory, MemBuilder uses synthetic QA rewards to train
+
+
+      memory-construction policies (Shen et al., 2026), while MemMA uses QA probes
+
+
+      to repair stored memories (Lin et al., 2026).
+
+
+      We instead investigate whether history-derived QA can provide reliable feedback
+
+
+      for evaluating and improving memory-system designs.
+
+
+      For memory-design optimization, reference answers determine how candidate designs
+
+
+      are evaluated, while source evidence can help diagnose unsuccessful responses.
+
+
+      Unsupported answers or mismatched evidence can misdirect design selection
+
+
+      and later revisions.
+
+
+      We propose MemSteer, a framework that turns unlabeled user histories
+
+
+      into source-grounded QA–evidence supervision for memory-design optimization
+
+
+      (Figure 2).
+
+
+      It brings together related source records and specifies how their facts
+
+
+      jointly support a reference answer. The resulting evidence-grounded answer plan
+
+
+      guides question generation. Source-grounded auditing checks
+
+
+      the generated QA for evidence support and consistency, while blind answer
+
+
+      recovery assesses whether the reference answer can be recovered from
+
+
+      the sampled records.
+
+
+      To investigate the utility of MemSteer’s generated supervision,
+
+
+      we develop MemSteer-Opt, an evidence-guided memory-design optimizer.
+
+
+      It uses source evidence and execution traces to identify whether
+
+
+      incorrect responses stem from storage, retrieval, or answer generation,
+
+
+      then proposes targeted design revisions and evaluates them using QA performance.
+
+
+      Starting from a basic memory system, we use MemSteer-Opt to optimize
+
+
+      memory representations, retrieval strategies, and context construction.
+
+
+      We further supply the generated QA to M⋆ and MemEvolve
+
+
+      (Pan et al., 2026; Zhang et al., 2025),
+
+
+      allowing each framework to optimize within its own design space.
+
+
+      Our contributions are threefold:
+
+
+      •
+
+
+      Memory-design optimization from unlabeled histories.
+
+
+      MemSteer constructs QA–evidence supervision from unlabeled user histories
+
+
+      for evaluating and improving memory designs without updating model parameters.
+
+
+      •
+
+
+      Evidence-grounded answer planning and verification.
+
+
+      We construct answer plans that make explicit how source facts jointly
+
+
+      support a reference answer for question generation.
+
+
+      Source-grounded verification checks the resulting annotations.
+
+
+      •
+
+
+      Empirical validation across optimizers and user histories.
+
+
+      Experiments with MemSteer-Opt on ATM-Bench and RHELM
+
+
+      (Mei et al., 2026b; Zhang et al., 2026) show that generated
+
+
+      supervision improves memory designs and is competitive with the
+
+
+      Official-QA reference. Further experiments demonstrate its utility for
+
+
+      two existing optimizers on ATM-Bench and for continued optimization
+
+
+      on new user histories.'
+    location: https://arxiv.org/html/2610.39276v1#S1
+  - id: S4
+    title: Memory-design optimization.
+    text: 'Applications differ in what agents need to remember and how they use
+
+
+      past information, making memory design an application-specific
+
+
+      engineering challenge (Xiong et al., 2026; Pan et al., 2026).
+
+
+      Recent work therefore explores automatic memory-design optimization
+
+
+      to accommodate these requirements while reducing reliance on manual design.
+
+
+      ALMA searches over code-based memory designs using task success
+
+
+      and interaction logs as feedback (Xiong et al., 2026).
+
+
+      MemEvolve introduces a dual-level process that evolves both
+
+
+      experience memory and its underlying architecture (Zhang et al., 2025).
+
+
+      M^{\star} searches over memory programs by jointly refining their
+
+
+      schema, logic, and instructions through task feedback and reflective
+
+
+      code evolution (Pan et al., 2026).
+
+
+      At a narrower level, CluE refines memory-extraction prompts
+
+
+      using downstream feedback across heterogeneous tasks (Yang et al., 2026).
+
+
+      These methods optimize memory designs using feedback from downstream tasks.
+
+
+      In many personal-memory applications, however, user records and everyday
+
+
+      interactions do not naturally yield success-or-failure signals
+
+
+      to guide memory-design optimization.
+
+
+      We therefore investigate how these histories can be turned into supervision
+
+
+      for memory-design optimization.'
+    location: https://arxiv.org/html/2610.39276v1#S2.SS0.SSS0.Px1
+  - id: S5
+    title: Synthetic queries and QA for training and evaluation.
+    text: 'Outside agent memory, synthetic data has been used to reduce
+
+
+      annotation requirements for model training and system evaluation.
+
+
+      Promptagator generates query–document pairs to train task-specific
+
+
+      dense retrievers (Dai et al., 2022).
+
+
+      Alberti et al. (2019) generate QA by selecting answers,
+
+
+      formulating questions, and filtering pairs through answer-recovery
+
+
+      consistency before training reading-comprehension models.
+
+
+      For structured synthesis, GraphGen samples knowledge-graph subgraphs
+
+
+      to construct atomic, aggregated, and multi-hop QA for supervised
+
+
+      fine-tuning (Chen et al., 2025).
+
+
+      For evaluation, DataMorgana constructs corpus-specific RAG benchmarks
+
+
+      with configurable user and question categories (Filice et al., 2025),
+
+
+      while Ragas uses graph relationships to synthesize multi-hop
+
+
+      test questions (Ragas, 2026).
+
+
+      The usefulness of synthetic questions has also been studied directly:
+
+
+      Yue et al. (2022) learn a question value estimator to select examples
+
+
+      that improve target-domain QA performance, rather than relying only
+
+
+      on generation or answer-model scores.
+
+
+      We ask whether synthetic QA can provide effective feedback
+
+
+      for memory-design optimization.'
+    location: https://arxiv.org/html/2610.39276v1#S2.SS0.SSS0.Px2
+  - id: S6
+    title: Synthetic supervision for agent memory.
+    text: 'Generated QA has also been incorporated into memory learning
+
+
+      and refinement.
+
+
+      MemBuilder and CMI-Mem generate QA pairs from current sessions
+
+
+      and retrieved memories, then use answering accuracy as a reward signal
+
+
+      to train LLMs to construct and update memories via reinforcement
+
+
+      learning (Shen et al., 2026; Wang et al., 2026).
+
+
+      MemMA generates QA probes from each session and its historical context,
+
+
+      then uses answering failures to repair the memory bank (Lin et al., 2026).
+
+
+      MemMA also examines how the choice of probe generator affects repair outcomes.
+
+
+      MemSteer instead uses generated QA pairs with source-grounded evidence
+
+
+      to guide memory-design optimization, rather than to train memory models
+
+
+      or repair stored memories.
+
+
+      This turns user histories into a source of feedback for memory-design
+
+
+      optimization without requiring manually annotated QA for the target history.
+
+
+      Figure 2: Overview of MemSteer.
+
+
+      (a) MemSteer turns unlabeled user histories into QA–evidence supervision
+
+
+      through evidence-grounded answer planning, question generation,
+
+
+      and source-grounded verification.
+
+
+      (b) The resulting supervision supports the evaluation and refinement
+
+
+      of memory designs with either MemSteer-Opt, our evidence-guided optimizer,
+
+
+      or existing memory-design optimizers.
+
+
+      Dashed E denotes optional evidence input.'
+    location: https://arxiv.org/html/2610.39276v1#S2.SS0.SSS0.Px3
+  - id: S7
+    title: 3.1 Overview
+    text: 'Histories from different users vary in content and structure,
+
+
+      so a memory design effective for one user may be less suitable for another.
+
+
+      Given unlabeled user histories H , our goal is to improve agent
+
+
+      memory designs without manually annotating QA pairs for those histories.
+
+
+      To this end, MemSteer constructs QA–evidence supervision:
+
+
+      \mathcal{D}_{H}=\{(q_{i},a_{i},E_{i})\}_{i=1}^{N},
+
+
+      (1)
+
+
+      where q_{i} is a question about the history,
+
+
+      a_{i} is its reference answer,
+
+
+      and E_{i} identifies the selected source records, with source-span citations
+
+
+      providing provenance for the supporting facts.
+
+
+      Reference answers provide a criterion for evaluating memory designs,
+
+
+      while evidence annotations support the diagnosis of unsuccessful responses.
+
+
+      We describe the supervision construction process
+
+
+      in Section 3.2.
+
+
+      To assess the effectiveness of this supervision for
+
+
+      memory-design optimization, we develop MemSteer-Opt,
+
+
+      which evaluates candidate designs and uses evidence-guided feedback
+
+
+      to propose iterative revisions (Section 3.3).
+
+
+      The generated supervision can also be supplied to existing optimizers,
+
+
+      allowing each to retain its own design space and optimization procedure.'
+    location: https://arxiv.org/html/2610.39276v1#S3.SS1
+  - id: S8
+    title: 3.2 Constructing QA–evidence supervision
+    text: 'MemSteer constructs QA–evidence annotations by selecting related source
+      records,
+
+
+      establishing how their facts support an answer,
+
+
+      and generating and verifying the corresponding question.'
+    location: https://arxiv.org/html/2610.39276v1#S3.SS2
+  - id: S9
+    title: Graph-guided material preparation.
+    text: 'We organize each user’s history as a graph of source records, preserving
+      original
+
+
+      text, identifiers, and source-provided structural metadata. Edges connect records
+
+
+      sharing a conversation, occupying adjacent document sections, explicitly
+
+
+      referencing one another, or having sufficient lexical overlap.
+
+
+      Path-based expansion from a seed samples a connected subgraph, whose records
+      form
+
+
+      a context-budgeted material bundle B with source-span references for identifying
+
+
+      jointly supporting facts and evidence records.'
+    location: https://arxiv.org/html/2610.39276v1#S3.SS2.SSS0.Px1
+  - id: S10
+    title: Evidence-grounded answer planning and question generation.
+    text: 'Given a material bundle B , an LLM-based planner constructs
+
+
+      an evidence-grounded answer plan that specifies what the question should ask
+
+
+      and its reference answer a , identifies supporting facts with source-span
+
+
+      citations, and describes each selected evidence record’s contribution
+
+
+      and operations needed to combine facts.
+
+
+      Answer plans that fail programmatic checks of structural consistency
+
+
+      and provenance coverage are rejected before question generation.
+
+
+      Given the answer plan and material bundle B ,
+
+
+      a question generator produces a standalone question.'
+    location: https://arxiv.org/html/2610.39276v1#S3.SS2.SSS0.Px2
+  - id: S11
+    title: Source-grounded verification.
+    text: 'We verify each candidate through a semantic audit followed by blind
+
+
+      answer recovery.
+
+
+      Given the material bundle B , the answer plan, and the generated
+
+
+      question, an LLM reviewer returns structured verification judgments
+
+
+      with supporting rationales.
+
+
+      These judgments assess answer support and question–plan
+
+
+      consistency, with separate assessments of each fact’s source support
+
+
+      and each evidence record’s stated contribution.
+
+
+      A candidate proceeds only if all required judgments are supported.
+
+
+      Given only the question, its answer type, and the source records in B ,
+
+
+      an LLM-based blind reader returns an answer with source citations.
+
+
+      A candidate passes only if the reader declares the question answerable,
+
+
+      its answer exactly matches the reference after type-specific normalization,
+
+
+      and its citations cover every selected evidence record.
+
+
+      Normalization rules are detailed in Appendix A.4.
+
+
+      We partition the generated QA–evidence annotations into disjoint
+
+
+      training and validation sets, using the former to generate revision proposals
+
+
+      and the latter to select memory designs.'
+    location: https://arxiv.org/html/2610.39276v1#S3.SS2.SSS0.Px3
+  - id: S12
+    title: '3.3 MemSteer-Opt: evidence-guided memory-design optimization'
+    text: 'MemSteer-Opt uses the generated QA–evidence supervision to evaluate
+
+
+      memory designs and turn observed failures into feedback for iterative revisions.'
+    location: https://arxiv.org/html/2610.39276v1#S3.SS3
+  - id: S13
+    title: Design space and evaluation.
+    text: 'Starting from a basic memory system, MemSteer-Opt iteratively optimizes
+
+
+      how historical records are organized into memory units and indexed,
+
+
+      how relevant records are retrieved,
+
+
+      and how retrieved records are assembled into the context supplied to the answerer.
+
+
+      We represent these storage, retrieval, and context-construction choices
+
+
+      as a memory design d=(s,r,c) .
+
+
+      Under design d , the system constructs a memory M_{d}
+
+
+      from the user’s historical records H :
+
+
+      M_{d}=\operatorname{Store}_{s}(H).
+
+
+      For each question q_{i} , it retrieves information from M_{d} ,
+
+
+      assembles the answer context X_{d,i} ,
+
+
+      and generates a response \hat{a}_{d,i} :
+
+
+      X_{d,i}=\operatorname{Context}_{c}(\operatorname{Retrieve}_{r}(q_{i},M_{d})),\qquad\hat{a}_{d,i}=\operatorname{Answer}(q_{i},X_{d,i}).
+
+
+      (2)
+
+
+      We evaluate each prediction \hat{a}_{d,i} against its reference answer a_{i}
+
+
+      under a fixed scoring protocol, yielding a binary correctness score
+
+
+      y_{d,i}\in\{0,1\} .
+
+
+      We score a design d by its accuracy on the same validation set as
+
+
+      A(d)=\frac{1}{N_{\mathrm{val}}}\sum_{i=1}^{N_{\mathrm{val}}}y_{d,i} ,
+
+
+      where N_{\mathrm{val}} is the number of validation questions.
+
+
+      We use this binary validation accuracy for design selection; final benchmark
+
+
+      scores follow the corresponding evaluation protocols (Appendix A.4).
+
+
+      We hold the answering model, its instruction prompt,
+
+
+      and the final context budget fixed across designs.'
+    location: https://arxiv.org/html/2610.39276v1#S3.SS3.SSS0.Px1
+  - id: S14
+    title: Evidence-guided diagnosis and sampling.
+    text: 'Beyond scoring candidate designs, we use the automatically constructed
+
+
+      evidence annotations to build targeted feedback for revising memory designs.
+
+
+      (i) Evidence-guided diagnosis.
+
+
+      For each incorrect training-set response, we use its evidence annotations
+
+
+      to check whether the required source records and cited passages
+
+
+      are fully available in the final answer context.
+
+
+      If so, we label an answering failure.
+
+
+      For missing evidence, we use the annotated source IDs to check whether the
+
+
+      current memory system can recover the corresponding records.
+
+
+      We assign a storage failure if any missing record is unrecoverable,
+
+
+      and a retrieval failure if all missing records are recoverable.
+
+
+      (ii) Failure-stratified sampling.
+
+
+      To cover different failure modes within the proposer’s input-context budget,
+
+
+      we sample cases separately from each observed failure category.
+
+
+      Each sampled case includes the question, its reference answer and annotated
+
+
+      source evidence, together with the current system’s response and diagnostic
+      results.
+
+
+      Together with the current design and revision history,
+
+
+      these cases form the input to the design proposer.'
+    location: https://arxiv.org/html/2610.39276v1#S3.SS3.SSS0.Px2
+  - id: S15
+    title: Feedback-guided revision and selection.
+    text: 'Given this feedback, an LLM-based design proposer proposes a revised design
+      d^{\prime} ,
+
+
+      using the diagnosed failures to guide changes to storage, retrieval,
+
+
+      or context construction.
+
+
+      It also provides a rationale for the proposed changes.
+
+
+      We rebuild the memory under each valid candidate and evaluate its accuracy
+
+
+      on the fixed validation set.
+
+
+      We replace the current design d_{t} with d^{\prime} only if A(d^{\prime})>A(d_{t})
+      ;
+
+
+      otherwise, we retain d_{t} .
+
+
+      After accepting a revision, we rerun the updated system on the training set
+
+
+      to refresh the failure diagnoses and sampled feedback for the next iteration.'
+    location: https://arxiv.org/html/2610.39276v1#S3.SS3.SSS0.Px3
+  - id: S16
+    title: Supervision for existing memory-design optimizers.
+    text: 'Beyond MemSteer-Opt, we use the generated supervision to guide existing
+
+
+      memory-design optimizers within their own design spaces.
+
+
+      Generated questions and reference answers supply task feedback for evaluating
+
+
+      and refining memory designs; source evidence can additionally support feedback
+
+
+      when the optimizer’s interface accommodates it.
+
+
+      This tests whether the supervision remains useful across optimization frameworks.'
+    location: https://arxiv.org/html/2610.39276v1#S3.SS3.SSS0.Px4
+  - id: S17
+    title: 4 Experiments
+    text: 'We address four questions:
+
+
+      Q1 (§4.2): Can generated supervision guide memory-design optimization?
+
+
+      Q2 (§4.3): Can optimized memory designs transfer and adapt?
+
+
+      Q3 (§4.4): Which supervision-construction choices matter?
+
+
+      Q4 (§4.5): Does evidence-guided feedback improve optimization?'
+    location: https://arxiv.org/html/2610.39276v1#S4
+  - id: S18
+    title: Benchmarks and evaluation.
+    text: 'ATM-Bench (Mei et al., 2026b) is a multimodal personal-memory QA benchmark
+
+
+      built from approximately four years of personal records. Its corpus contains
+      11,034
+
+
+      email, image, and video records. Unless otherwise specified, we follow the
+
+
+      ATM-Bench scoring protocol and evaluate performance on its 1,013-question main
+
+
+      set and 31-question hard multi-hop set.
+
+
+      RHELM (Zhang et al., 2026) covers 21,142 interaction records from ten
+
+
+      personas, evaluated with and without external data sources.
+
+
+      Benchmark selection is discussed in Appendix A.1.'
+    location: https://arxiv.org/html/2610.39276v1#S4.SS1.SSS0.Px1
+  - id: S19
+    title: Optimizers and protocol.
+    text: 'MemSteer-Opt starts from a basic record-level retrieve-and-read system,
+
+
+      which we refer to as Base-BM25: it indexes
+
+
+      source text and metadata and uses the original question for BM25 (Robertson
+      & Zaragoza, 2009)
+
+
+      retrieval. Retrieved content is assembled in ranked order within a fixed context
+
+
+      budget and passed to a fixed answering model.
+
+
+      M^{\star} (Pan et al., 2026) and MemEvolve (Zhang et al., 2025) retain their
+
+
+      own starting systems and design spaces.
+
+
+      MemSteer uses our generated QA–evidence supervision for both training and validation
+      while official QA is used only for testing.
+
+
+      MemSteer-Opt runs 20 reflective evolution iterations per setting.'
+    location: https://arxiv.org/html/2610.39276v1#S4.SS1.SSS0.Px2
+  - id: S20
+    title: Models and metrics.
+    text: 'On ATM-Bench, DeepSeek-V4-Flash (DeepSeek-AI, 2026) serves as the answerer,
+
+
+      open-answer judge (Zheng et al., 2023), and design proposer, matching the
+
+
+      answerer and judge used by the corresponding leaderboard
+
+
+      configurations (Mei et al., 2026a).
+
+
+      We report Question Score (QS) and evidence recall at 10 (R@10).
+
+
+      On RHELM, we follow the official protocol, using
+
+
+      GPT-4.1-mini (OpenAI, 2025) for answering and evaluation and reporting
+
+
+      overall accuracy, separately with and without external data.
+
+
+      We include existing memory systems as performance references; their configurations
+
+
+      and additional results are detailed in Appendix A.2 and Appendix B.3.'
+    location: https://arxiv.org/html/2610.39276v1#S4.SS1.SSS0.Px3
+  - id: S21
+    title: 4.2 Can Generated Supervision Guide Memory-Design Optimization?
+    text: 'Table 1: ATM-Bench results across memory systems and supervision sources
+      (%).
+
+
+      “+” denotes optimization from each optimizer’s start; arrows show point changes.
+
+
+      Bold scores mark the best per metric, excluding Oracle. Oracle uses gold evidence.
+
+
+      †Official-QA training items are included in evaluation.
+
+
+      Full (1,013)
+
+
+      Hard (31)
+
+
+      Method
+
+
+      QS
+
+
+      R@10
+
+
+      QS
+
+
+      R@10
+
+
+      Existing memory systems (DeepSeek-V4)
+
+
+      Memexa
+
+
+      65.3
+
+
+      78.9
+
+
+      –
+
+
+      –
+
+
+      A-Mem
+
+
+      –
+
+
+      –
+
+
+      16.7
+
+
+      38.5
+
+
+      MemPalace
+
+
+      –
+
+
+      –
+
+
+      13.6
+
+
+      28.9
+
+
+      HippoRAG2
+
+
+      –
+
+
+      –
+
+
+      12.3
+
+
+      32.2
+
+
+      Oracle (gold evidence)
+
+
+      71.8
+
+
+      –
+
+
+      46.2
+
+
+      –
+
+
+      Our optimizer: MemSteer-Opt
+
+
+      Base-BM25
+
+
+      54.9
+
+
+      61.7
+
+
+      8.2
+
+
+      10.0
+
+
+      + Official-QA†
+
+
+      67.3
+
+
+      83.5
+
+
+      27.9
+
+
+      42.2
+
+
+      + MemSteer
+
+
+      68.3
+
+
+      \uparrow 13.4
+
+
+      84.1
+
+
+      \uparrow 22.4
+
+
+      29.1
+
+
+      \uparrow 20.9
+
+
+      43.6
+
+
+      \uparrow 33.6
+
+
+      External optimizers
+
+
+      M^{\star} start
+
+
+      47.4
+
+
+      55.2
+
+
+      1.9
+
+
+      13.6
+
+
+      + Official-QA†
+
+
+      51.8
+
+
+      69.4
+
+
+      9.5
+
+
+      26.0
+
+
+      + MemSteer
+
+
+      53.4
+
+
+      \uparrow 6.0
+
+
+      69.8
+
+
+      \uparrow 14.6
+
+
+      12.9
+
+
+      \uparrow 11.0
+
+
+      25.6
+
+
+      \uparrow 12.0
+
+
+      MemEvolve start
+
+
+      35.1
+
+
+      41.3
+
+
+      7.1
+
+
+      18.7
+
+
+      + Official-QA†
+
+
+      53.7
+
+
+      63.8
+
+
+      11.4
+
+
+      21.6
+
+
+      + MemSteer
+
+
+      53.7
+
+
+      \uparrow 18.6
+
+
+      63.7
+
+
+      \uparrow 22.4
+
+
+      9.5
+
+
+      \uparrow 2.3
+
+
+      18.6
+
+
+      \downarrow 0.1
+
+
+      Table 2: RHELM results (accuracy, %). w/o: conversation records only;
+
+
+      w/: conversation records plus emails and documents.
+
+
+      We use GPT-4.1-mini in MemSteer-Opt and other optimized memory systems.
+
+
+      Method
+
+
+      w/o
+
+
+      w/
+
+
+      Existing methods (GPT-4.1-mini)
+
+
+      RAG ( k{=}20 )
+
+
+      23.5
+
+
+      25.1
+
+
+      RAG ( k{=}50 )
+
+
+      28.9
+
+
+      32.6
+
+
+      Hybrid ( k{=}5 )
+
+
+      16.7
+
+
+      17.6
+
+
+      Hybrid ( k{=}20 )
+
+
+      24.8
+
+
+      26.0
+
+
+      Hybrid ( k{=}50 )
+
+
+      27.8
+
+
+      29.6
+
+
+      MemGPT
+
+
+      13.9
+
+
+      17.3
+
+
+      Mem0
+
+
+      21.1
+
+
+      28.9
+
+
+      MemU
+
+
+      23.1
+
+
+      33.6
+
+
+      Long-Context Models (1M)
+
+
+      Gemini-2.5-Flash-Lite
+
+
+      16.0
+
+
+      17.3
+
+
+      Qwen-2.5-14B-Instruct
+
+
+      15.3
+
+
+      8.1
+
+
+      GPT-4.1-mini
+
+
+      24.0
+
+
+      33.9
+
+
+      Our optimizer: MemSteer-Opt
+
+
+      Base-BM25
+
+
+      22.3
+
+
+      33.3
+
+
+      + Official-QA†
+
+
+      26.5
+
+
+      40.7
+
+
+      + MemSteer
+
+
+      26.4
+
+
+      \uparrow 4.1
+
+
+      39.9
+
+
+      \uparrow 6.6
+
+
+      Transferred ATM-Bench design
+
+
+      ATM-Bench-evolved(frozen)
+
+
+      26.4
+
+
+      38.6
+
+
+      + Official-QA†
+
+
+      31.5
+
+
+      42.9
+
+
+      + MemSteer
+
+
+      30.6
+
+
+      \uparrow 4.2
+
+
+      42.8
+
+
+      \uparrow 4.2
+
+
+      Tables 2 and 2 compare MemSteer-generated
+
+
+      supervision with official annotations (Official-QA) on ATM-Bench and RHELM;
+
+
+      the ATM comparison also includes two external optimizers. Official-QA uses
+
+
+      600 of the 1,013 official ATM items and 788 of the 1,305 RHELM items for training
+
+
+      and validation. These items remain in its evaluation sets, whereas MemSteer
+
+
+      uses no evaluation items for training. The final RHELM MemSteer configuration
+
+
+      uses 788 generated training items and is evaluated on all 1,305 official QA
+      items.
+
+
+      Based on Tables 2 and 2, we make the following observations.
+
+
+      Generated supervision improves memory designs.
+
+
+      With MemSteer supervision, MemSteer-Opt raises QS from 54.9 to 68.3 on
+
+
+      ATM-Bench and from 8.2 to 29.1 on Hard, alongside gains in evidence recall
+
+
+      (Table 2). On RHELM, MemSteer improves over Base-BM25 by
+
+
+      4.1 accuracy points without external data and 6.6 points with it
+
+
+      (Table 2).
+
+
+      Generated supervision is competitive with the human-annotated reference.
+
+
+      On ATM-Bench, MemSteer scores marginally higher than Official-QA across all
+      four metrics,
+
+
+      including QS margins of 1.1 points on the main set and 1.3 points on Hard.
+
+
+      On RHELM, MemSteer remains 0.1 and 0.8 accuracy points below
+
+
+      Official-QA without and with external data, respectively.
+
+
+      The supervision also benefits existing optimizers.
+
+
+      From their own starting systems, M^{\star} and MemEvolve gain 6.0 and 18.6
+
+
+      main-set QS points with MemSteer supervision, compared with 4.4 and 18.6
+
+
+      points with Official-QA. Thus, the supervision’s utility is not limited to
+
+
+      MemSteer-Opt. The benefit is not uniform: on Hard, MemEvolve obtains smaller
+
+
+      gains than with Official-QA, and its R@10 decreases by 0.1 points.
+
+
+      The optimized designs are competitive with existing memory systems.
+
+
+      On ATM-Bench, MemSteer-Opt achieves the highest QS among the non-oracle systems
+
+
+      using DeepSeek-V4 as the answerer. On RHELM with external data, MemSteer
+
+
+      reaches 39.9 accuracy, compared with 33.9 for the strongest listed RAG,
+
+
+      long-context, or memory-system baseline. Without external data, it remains
+
+
+      competitive with the strongest listed baseline, RAG with k{=}50 .'
+    location: https://arxiv.org/html/2610.39276v1#S4.SS2
+  - id: S22
+    title: 4.3 Can Optimized Memory Designs Transfer and Adapt?
+    text: 'We test design reuse across benchmarks and continued
+
+
+      optimization for users, respectively.
+
+
+      Cross-benchmark transfer.
+
+
+      We freeze the design optimized with generated ATM-Bench QA and apply it to
+
+
+      RHELM records without target-domain optimization.
+
+
+      ATM-Bench-evolved(frozen) outperforms Base-BM25 by 4.1 and 5.3 accuracy points
+
+
+      without and with external data, respectively (Table 2).
+
+
+      These results suggest that some of the design improvements learned on ATM-Bench
+
+
+      remain useful on RHELM without target-domain optimization.
+
+
+      When further optimized using either RHELM Official-QA or QA generated from RHELM
+
+
+      histories, the transferred design achieves further gains. Generated supervision
+
+
+      achieves performance close to the Official-QA reference without requiring manually
+
+
+      annotated target-domain QA for optimization.
+
+
+      Table 3: RHELM cross-user accuracy (%, with external data).
+
+
+      Martin and David are outside the six-user pool; personal continuation adapts
+      its
+
+
+      shared design using target-history-generated supervision. Source-user scores
+
+
+      pool evaluation questions.
+
+
+      Evaluation
+
+
+      users
+
+
+      Base-BM25
+
+
+      6-user
+
+
+      design
+
+
+      Personal
+
+
+      continuation
+
+
+      Source users (6)
+
+
+      31.5
+
+
+      34.3
+
+
+      –
+
+
+      Martin Keller
+
+
+      41.2
+
+
+      37.7
+
+
+      44.3
+
+
+      David R. Ellis
+
+
+      37.3
+
+
+      38.6
+
+
+      39.2
+
+
+      Cross-user transfer and continuation.
+
+
+      We apply a frozen design optimized on six RHELM users to Martin Keller and
+
+
+      David R. Ellis, who are excluded from the source-user pool. We then continue
+
+
+      optimization from this shared design using QA–evidence supervision generated
+
+
+      from each target user’s history, reserving official QA for evaluation
+
+
+      (Appendix A.3).
+
+
+      Direct transfer helps David slightly but reduces Martin’s accuracy
+
+
+      (Table 3). Personal continuation improves both transferred
+
+
+      designs, especially for Martin, suggesting that target-history supervision can
+
+
+      support adaptation beyond a shared design.'
+    location: https://arxiv.org/html/2610.39276v1#S4.SS3
+  - id: S23
+    title: 4.4 What Makes QA–Evidence Supervision Effective?
+    text: 'We first compare QA-generation methods and the effect of verification on
+
+
+      supervision quality and downstream utility. We then examine two generator
+
+
+      design choices: constructing an explicit evidence-grounded answer plan and
+
+
+      separating its construction from question generation.
+
+
+      Table 4: QA-generation methods and verification on ATM-Bench.
+
+
+      QA quality scores are reported for two
+
+
+      judges (DS-V4F: DeepSeek-V4-Flash); Avg. is their mean.
+
+
+      QS measures downstream utility; Kept is the percentage of candidates
+
+
+      retained after verification (“–”: no filtering).
+
+
+      QS
+
+
+      QA quality (%)
+
+
+      Kept
+
+
+      Method
+
+
+      Full
+
+
+      Hard
+
+
+      GPT-5-
+
+
+      mini
+
+
+      DS-V4F
+
+
+      Avg.
+
+
+      (%)
+
+
+      Naive-QA
+
+
+      54.2
+
+
+      5.3
+
+
+      63.3
+
+
+      63.8
+
+
+      63.5
+
+
+      –
+
+
+      + checks
+
+
+      64.8
+
+
+      24.4
+
+
+      77.8
+
+
+      77.0
+
+
+      77.4
+
+
+      21.2
+
+
+      Ragas-QA
+
+
+      63.0
+
+
+      23.3
+
+
+      73.5
+
+
+      69.3
+
+
+      71.4
+
+
+      –
+
+
+      + checks
+
+
+      65.1
+
+
+      20.7
+
+
+      84.3
+
+
+      80.8
+
+
+      82.5
+
+
+      42.1
+
+
+      MemSteer
+
+
+      w/o checks
+
+
+      65.2
+
+
+      22.0
+
+
+      83.5
+
+
+      67.3
+
+
+      75.4
+
+
+      –
+
+
+      MemSteer
+
+
+      68.3
+
+
+      29.1
+
+
+      94.3
+
+
+      87.5
+
+
+      90.9
+
+
+      47.9
+
+
+      QA-generation ablations.
+
+
+      Table 4 compares heuristic synthesis that randomly selects records
+
+
+      to form a material bundle (Naive-QA), Ragas multi-hop
+
+
+      generation (Ragas, 2026) (Ragas-QA), and MemSteer, each with and
+
+
+      without verification. Checks denote our source-grounded verification
+
+
+      (§3.2).
+
+
+      For this comparison, QA quality is assessed using four criteria: premise support,
+
+
+      question clarity, answer support, and evidence support. For each judge, a question
+
+
+      receives 1 only when all four criteria are supported, and 0 otherwise.
+
+
+      The QA quality score is the mean of these binary
+
+
+      scores, expressed as a percentage. We evaluate QA quality using two independent
+
+
+      LLMs—GPT-5-mini (OpenAI, n.d.) and DeepSeek-V4-Flash—and their average
+
+
+      to see whether the trends are consistent.
+
+
+      We make the following observations.
+
+
+      (i) MemSteer outperforms Naive-QA and Ragas-QA, even when both
+
+
+      baselines use our checks, in downstream QS and in QA quality assessed by both
+      judges.
+
+
+      (ii) Our checks improve QA quality across all three generation methods
+
+
+      and downstream QS in most settings, except Ragas-QA on Hard. Naive-QA’s
+
+
+      lowest retention indicates that a larger fraction of its candidates fail
+
+
+      the verification criteria.
+
+
+      (iii) QA quality scores from GPT-5-mini and DeepSeek-V4-Flash
+
+
+      show broadly consistent trends across generation methods and generally align
+
+
+      with downstream QS. This supports using the QA quality score as a useful
+
+
+      indicator of supervision quality.
+
+
+      Table 5: Generated QA quality evaluation. q denotes a question.
+
+
+      Generation
+
+
+      Quality (%)
+
+
+      Tokens/q
+
+
+      (k)
+
+
+      Direct QA
+
+
+      67.8
+
+
+      64.0
+
+
+      Joint Plan–Q
+
+
+      73.1
+
+
+      68.2
+
+
+      Two-stage Plan–Q
+
+
+      85.9
+
+
+      105.1
+
+
+      Evidence-grounded answer planning and staged generation.
+
+
+      We test whether constructing an evidence-grounded answer plan improves QA quality
+
+
+      over direct generation, and whether programmatically checking the plan before
+      a
+
+
+      separate question-generation call provides further gains over joint generation.
+
+
+      Table 5 compares three generation procedures on the
+
+
+      same 600 tasks, holding source records, question types, evidence-count requirements,
+
+
+      and the DeepSeek-V4-Flash generator fixed. Direct QA jointly generates
+
+
+      the question, answer, and evidence in one call, without an intermediate
+
+
+      answer plan. Joint Plan–Q first produces an evidence-grounded answer plan
+
+
+      and then the question within the same response.
+
+
+      Two-stage Plan–Q constructs the answer plan, applies programmatic
+
+
+      structural and provenance checks, and generates the question in a separate
+
+
+      call using the accepted answer plan and source records.
+
+
+      All three use the same GPT-4.1-mini filter, which sees the QA, evidence and
+      source
+
+
+      material but not our detailed evidence-grounded answer plan.
+
+
+      This shared filter is used only for the
+
+
+      generation comparison, rather than the full MemSteer verification pipeline.
+
+
+      For QA passing this filter, a separate, blinded GPT-4.1 review assesses QA quality
+
+
+      with four criteria as used in Table 4.
+
+
+      Joint Plan–Q improves QA quality over Direct QA, although both use one call,
+
+
+      supporting explicit evidence-grounded answer planning. Two-stage Plan–Q improves
+
+
+      quality further with programmatic plan checks before separate question generation,
+
+
+      but has the highest per-question token cost.
+
+
+      Training-question budget.
+
+
+      Increasing the budget from 100 to 200 questions yields the largest performance
+
+
+      gains in the evaluated sweep. Beyond 200, retrieval recall largely plateaus,
+
+
+      while QS improves overall on both ATM-Bench and ATM-Bench-Hard
+
+
+      (Appendix B.2).'
+    location: https://arxiv.org/html/2610.39276v1#S4.SS4
+  - id: S24
+    title: 4.5 Does Evidence-Guided Feedback Improve Optimization?
+    text: 'We test whether explicit failure diagnosis improves on raw-evidence feedback
+
+
+      and whether failure-stratified sampling further improves memory-design optimization.
+
+
+      All four feedback conditions use MemSteer-generated QA–evidence supervision
+
+
+      and start from Base-BM25 (Figure 3).
+
+
+      Figure 3: Attribution and sampling ablation on ATM-Bench and
+
+
+      ATM-Bench-Hard. Bars report QS and R@10 (%). Optimized conditions use
+
+
+      MemSteer-generated supervision and start from Base-BM25;
+
+
+      Diagnosis + stratified sampling is the full MemSteer-Opt configuration.
+
+
+      We compare four ways to construct feedback from unsuccessful cases.
+
+
+      Random-30 randomly samples up to 30 scored failures per round and gives
+
+
+      the design proposer their questions, reference answers, predictions, scores,
+      retrieval
+
+
+      traces, and answer-context excerpts. Random-30 + Gold evidence retains
+
+
+      the random sampling and adds required-evidence IDs and gold-record excerpts,
+
+
+      but no failure attribution. Random-30 + Diagnosis further adds
+
+
+      evidence-grounded failure attribution while retaining random sampling.
+
+
+      Diagnosis + stratified sampling (ours) keeps the diagnostic feedback
+
+
+      and samples up to ten cases per failure category, preventing frequent failure
+
+
+      types from exhausting the feedback budget.
+
+
+      Appendix A.5 details the feedback fields, while
+
+
+      Appendix B.5 shows an accepted architectural trajectory.
+
+
+      We make the following observations. (i) Adding gold evidence provides only
+
+
+      limited improvement over trace-based feedback. (ii) Explicit failure
+
+
+      attribution yields larger gains, particularly in evidence retrieval, supporting
+
+
+      the use of stage-level diagnostic feedback rather than raw evidence alone.
+
+
+      (iii) Combining diagnosis with stratified sampling achieves the highest
+
+
+      downstream QS, although diagnosis with random sampling yields higher evidence
+
+
+      recall on Hard.'
+    location: https://arxiv.org/html/2610.39276v1#S4.SS5
+  - id: S25
+    title: 5 Conclusion
+    text: 'We presented MemSteer, a framework for constructing QA–evidence supervision
+
+
+      from unlabeled user histories and using it to guide memory-design optimization.
+
+
+      Rather than requiring manually annotated QA for each new history, MemSteer
+
+
+      derives reference answers and supporting evidence from the records themselves.
+
+
+      These annotations serve complementary purposes: reference answers support the
+
+
+      evaluation of candidate memory designs, while source evidence helps diagnose
+
+
+      unsuccessful responses and guide revisions. We instantiate this approach in
+
+
+      MemSteer-Opt and also use the generated supervision with existing optimizers
+
+
+      that retain their own design spaces. Experiments on ATM-Bench and RHELM show
+
+
+      that generated supervision improves memory designs, achieves performance
+
+
+      competitive with the Official-QA reference, and supports continued adaptation
+
+
+      to new user histories.'
+    location: https://arxiv.org/html/2610.39276v1#S5
+  - id: S26
+    title: Ethics Statement
+    text: 'Our experiments use released benchmark data under their published terms,
+      without
+
+
+      collecting new personal data or conducting human-subjects studies. Source records
+
+
+      are processed through third-party LLM APIs, and generated QA may reveal sensitive
+
+
+      information by combining facts across records. Deployment on personal histories
+
+
+      should therefore require informed user consent and appropriate privacy safeguards.
+
+
+      MemSteer is intended to improve memory systems for users, not to enable
+
+
+      unauthorized profiling.'
+    location: https://arxiv.org/html/2610.39276v1#Sx1
+  - id: S27
+    title: Reproducibility Statement
+    text: 'Section 3.2 specifies the supervision-construction pipeline
+
+
+      (graph-guided material preparation, evidence-grounded answer planning, question
+
+
+      generation, and source-grounded verification), and
+
+
+      Section 3.3 specifies the design space, evaluation protocol,
+
+
+      evidence-guided diagnosis, and acceptance rule of MemSteer-Opt.
+
+
+      Section 4.1 describes the benchmarks, baselines, iteration
+
+
+      budget, and model roles.
+
+
+      Appendix A documents additional experimental details, including
+
+
+      evaluation populations and feedback inputs; Appendix B
+
+
+      reports further experimental results.
+
+
+      Because the pipeline depends on remote LLM APIs, exact outputs may vary with
+
+
+      model nondeterminism and provider updates; we therefore report the model
+
+
+      identities used for each role.'
+    location: https://arxiv.org/html/2610.39276v1#Sx2
+  - id: S28
+    title: LLM Usage
+    text: 'LLMs perform evidence-grounded answer planning, question generation,
+
+
+      source-grounded auditing, and blind answer recovery in MemSteer. They also
+
+
+      propose design revisions in MemSteer-Opt, act as fixed answerers and answer
+
+
+      judges, and perform shared filtering and post hoc QA-quality evaluation.
+
+
+      We use DeepSeek-V4-Flash, GPT-4.1-mini, GPT-4.1, and GPT-5-mini across these
+
+
+      roles (Section 4.1).
+
+
+      In preparing this paper, we also used LLM assistants for language editing and
+
+
+      coding assistance.
+
+
+      The authors reviewed all such output and take full responsibility for this paper.'
+    location: https://arxiv.org/html/2610.39276v1#Sx3
+  - id: S29
+    title: References
+    text: 'Alberti et al. (2019)
+
+
+      Chris Alberti, Daniel Andor, Emily Pitler, Jacob Devlin, and Michael Collins.
+
+
+      Synthetic QA corpora generation with roundtrip consistency.
+
+
+      arXiv preprint arXiv:1906.05416, 2019.
+
+
+      URL https://arxiv.org/abs/1906.05416.
+
+
+      Anthropic (2025)
+
+
+      Anthropic.
+
+
+      System card: Claude Opus 4.5.
+
+
+      Anthropic system card, November 2025, 2025.
+
+
+      URL https://www.anthropic.com/claude-opus-4-5-system-card.
+
+
+      Asai et al. (2023)
+
+
+      Akari Asai, Zeqiu Wu, Yizhong Wang, Avirup Sil, and Hannaneh Hajishirzi.
+
+
+      Self-RAG: Learning to retrieve, generate, and critique through self-reflection.
+
+
+      arXiv preprint arXiv:2310.11511, 2023.
+
+
+      URL https://arxiv.org/abs/2310.11511.
+
+
+      Bai et al. (2025)
+
+
+      Shuai Bai, Yuxuan Cai, Ruizhe Chen, Keqin Chen, et al.
+
+
+      Qwen3-VL technical report.
+
+
+      arXiv preprint arXiv:2511.21631, 2025.
+
+
+      URL https://arxiv.org/abs/2511.21631.
+
+
+      Chang & Ren (2026)
+
+
+      Jiale Chang and Yuxiang Ren.
+
+
+      ScrapMem: A bio-inspired framework for on-device personalized agent memory via
+      optical forgetting.
+
+
+      arXiv preprint arXiv:2605.03804, 2026.
+
+
+      URL https://arxiv.org/abs/2605.03804.
+
+
+      Chen et al. (2024)
+
+
+      Jianlyu Chen, Shitao Xiao, Peitian Zhang, Kun Luo, Defu Lian, and Zheng Liu.
+
+
+      M3-Embedding: Multi-linguality, multi-functionality, multi-granularity text
+      embeddings through self-knowledge distillation.
+
+
+      In Findings of the Association for Computational Linguistics: ACL 2024, pp.
+      2318–2335. Association for Computational Linguistics, 2024.
+
+
+      doi: 10.18653/v1/2024.findings-acl.137.
+
+
+      URL https://aclanthology.org/2024.findings-acl.137/.
+
+
+      Chen et al. (2025)
+
+
+      Zihong Chen, Wanli Jiang, Jinzhe Li, Zhonghang Yuan, Huanjun Kong, Wanli Ouyang,
+      and Nanqing Dong.
+
+
+      GraphGen: Enhancing supervised fine-tuning for LLMs with knowledge-driven synthetic
+      data generation.
+
+
+      arXiv preprint arXiv:2505.20416, 2025.
+
+
+      URL https://arxiv.org/abs/2505.20416.
+
+
+      Chhikara et al. (2025)
+
+
+      Prateek Chhikara, Dev Khant, Saket Aryan, Taranjeet Singh, and Deshraj Yadav.
+
+
+      Mem0: Building production-ready AI agents with scalable long-term memory.
+
+
+      arXiv preprint arXiv:2504.19413, 2025.
+
+
+      URL https://arxiv.org/abs/2504.19413.
+
+
+      Comanici et al. (2025)
+
+
+      Gheorghe Comanici, Eric Bieber, Mike Schaekermann, Ice Pasupat, et al.
+
+
+      Gemini 2.5: Pushing the frontier with advanced reasoning, multimodality, long
+      context, and next generation agentic capabilities.
+
+
+      arXiv preprint arXiv:2507.06261, 2025.
+
+
+      URL https://arxiv.org/abs/2507.06261.
+
+
+      Dai et al. (2022)
+
+
+      Zhuyun Dai, Vincent Y. Zhao, Ji Ma, Yi Luan, Jianmo Ni, Jing Lu, Anton Bakalov,
+      Kelvin Guu, Keith B. Hall, and Ming-Wei Chang.
+
+
+      Promptagator: Few-shot dense retrieval from 8 examples.
+
+
+      arXiv preprint arXiv:2209.11755, 2022.
+
+
+      URL https://arxiv.org/abs/2209.11755.
+
+
+      DeepSeek-AI (2026)
+
+
+      DeepSeek-AI.
+
+
+      DeepSeek-V4: Towards highly efficient million-token context intelligence.
+
+
+      arXiv preprint arXiv:2606.19348, 2026.
+
+
+      URL https://arxiv.org/abs/2606.19348.
+
+
+      Filice et al. (2025)
+
+
+      Simone Filice, Guy Horowitz, David Carmel, Zohar Karnin, Liane Lewin-Eytan,
+      and Yoelle Maarek.
+
+
+      Generating diverse Q&A benchmarks for RAG evaluation with DataMorgana.
+
+
+      arXiv preprint arXiv:2501.12789, 2025.
+
+
+      URL https://arxiv.org/abs/2501.12789.
+
+
+      Gao et al. (2023)
+
+
+      Luyu Gao, Xueguang Ma, Jimmy Lin, and Jamie Callan.
+
+
+      Precise zero-shot dense retrieval without relevance labels.
+
+
+      In Proceedings of the 61st Annual Meeting of the Association for Computational
+      Linguistics (Volume 1: Long Papers), pp. 1762–1777. Association for Computational
+      Linguistics, 2023.
+
+
+      doi: 10.18653/v1/2023.acl-long.99.
+
+
+      URL https://aclanthology.org/2023.acl-long.99/.
+
+
+      Gutiérrez et al. (2025)
+
+
+      Bernal Jiménez Gutiérrez, Yiheng Shu, Weijian Qi, Sizhe Zhou, and Yu Su.
+
+
+      From RAG to memory: Non-parametric continual learning for large language models.
+
+
+      arXiv preprint arXiv:2502.14802, 2025.
+
+
+      URL https://arxiv.org/abs/2502.14802.
+
+
+      He et al. (2026)
+
+
+      Zexue He, Yu Wang, Churan Zhi, Yuanzhe Hu, Tzu-Ping Chen, Lang Yin, Ze Chen,
+      Tong Arthur Wu, Siru Ouyang, Zihan Wang, Jiaxin Pei, Julian McAuley, Yejin Choi,
+      and Alex Pentland.
+
+
+      MemoryArena: Benchmarking agent memory in interdependent multi-session agentic
+      tasks.
+
+
+      arXiv preprint arXiv:2602.16313, 2026.
+
+
+      URL https://arxiv.org/abs/2602.16313.
+
+
+      Kang et al. (2025)
+
+
+      Jiazheng Kang, Mingming Ji, Zhe Zhao, and Ting Bai.
+
+
+      Memory OS of AI agent.
+
+
+      arXiv preprint arXiv:2506.06326, 2025.
+
+
+      URL https://arxiv.org/abs/2506.06326.
+
+
+      labazhou2024 (2026)
+
+
+      labazhou2024.
+
+
+      Memexa: A traceable personal memory layer.
+
+
+      GitHub repository, 2026.
+
+
+      URL https://github.com/labazhou2024/memexa.
+
+
+      Accessed September 24, 2026.
+
+
+      Lin et al. (2026)
+
+
+      Minhua Lin, Zhiwei Zhang, Hanqing Lu, Hui Liu, Xianfeng Tang, Qi He, Xiang Zhang,
+      and Suhang Wang.
+
+
+      MemMA: Coordinating the memory cycle through multi-agent reasoning and in-situ
+      self-evolution.
+
+
+      arXiv preprint arXiv:2603.18718, 2026.
+
+
+      URL https://arxiv.org/abs/2603.18718v2.
+
+
+      Version 2.
+
+
+      Maharana et al. (2024)
+
+
+      Adyasha Maharana, Dong-Ho Lee, Sergey Tulyakov, Mohit Bansal, Francesco Barbieri,
+      and Yuwei Fang.
+
+
+      Evaluating very long-term conversational memory of LLM agents.
+
+
+      arXiv preprint arXiv:2402.17753, 2024.
+
+
+      URL https://arxiv.org/abs/2402.17753v1.
+
+
+      Version 1; no dataset-size claim is based on this early version.
+
+
+      Mei et al. (2026a)
+
+
+      Jingbiao Mei, Jinghong Chen, Guangyu Yang, Xinyu Hou, Margaret Li, and Bill
+      Byrne.
+
+
+      ATM-Bench live leaderboard.
+
+
+      https://atmbench.github.io/leaderboard.html, 2026a.
+
+
+      Accessed 2026-09-24.
+
+
+      Mei et al. (2026b)
+
+
+      Jingbiao Mei, Jinghong Chen, Guangyu Yang, Xinyu Hou, Margaret Li, and Bill
+      Byrne.
+
+
+      According to me: Long-term personalized referential memory QA.
+
+
+      arXiv preprint arXiv:2603.01990, 2026b.
+
+
+      URL https://arxiv.org/abs/2603.01990.
+
+
+      MemPalace (2026)
+
+
+      MemPalace.
+
+
+      MemPalace: Local-first AI memory.
+
+
+      GitHub repository, 2026.
+
+
+      URL https://github.com/MemPalace/mempalace.
+
+
+      Accessed September 24, 2026.
+
+
+      NevaMind AI (2025)
+
+
+      NevaMind AI.
+
+
+      MemU: Personal memory across agents.
+
+
+      GitHub repository, 2025.
+
+
+      URL https://github.com/NevaMind-AI/memU.
+
+
+      Accessed September 24, 2026.
+
+
+      OpenAI (2025)
+
+
+      OpenAI.
+
+
+      Introducing GPT-4.1 in the API.
+
+
+      OpenAI blog, April 14, 2025, 2025.
+
+
+      URL https://openai.com/index/gpt-4-1/.
+
+
+      OpenAI (n.d.)
+
+
+      OpenAI.
+
+
+      GPT-5 Mini.
+
+
+      OpenAI API documentation, n.d.
+
+
+      URL https://developers.openai.com/api/docs/models/gpt-5-mini.
+
+
+      Accessed September 26, 2026.
+
+
+      Packer et al. (2023)
+
+
+      Charles Packer, Sarah Wooders, Kevin Lin, Vivian Fang, Shishir G. Patil, Ion
+      Stoica, and Joseph E. Gonzalez.
+
+
+      MemGPT: Towards LLMs as operating systems.
+
+
+      arXiv preprint arXiv:2310.08560, 2023.
+
+
+      URL https://arxiv.org/abs/2310.08560.
+
+
+      Pan et al. (2026)
+
+
+      Wenbo Pan, Shujie Liu, Xiangyang Zhou, Shiwei Zhang, Wanlu Shi, Mirror Xu, and
+      Xiaohua Jia.
+
+
+      M^{\star} : Every task deserves its own memory harness.
+
+
+      arXiv preprint arXiv:2604.11811, 2026.
+
+
+      URL https://arxiv.org/abs/2604.11811v2.
+
+
+      Version 2.
+
+
+      Ragas (2026)
+
+
+      Ragas.
+
+
+      Testset generation for RAG.
+
+
+      Ragas documentation, 2026.
+
+
+      URL https://docs.ragas.io/en/stable/concepts/test_data_generation/rag/.
+
+
+      Continuously updated documentation; accessed September 9, 2026. Year denotes
+      access, not first publication.
+
+
+      Robertson & Zaragoza (2009)
+
+
+      Stephen Robertson and Hugo Zaragoza.
+
+
+      The probabilistic relevance framework: BM25 and beyond.
+
+
+      Foundations and Trends in Information Retrieval, 3(4):333–389, 2009.
+
+
+      doi: 10.1561/1500000019.
+
+
+      Shen et al. (2026)
+
+
+      Zhiyu Shen, Ziming Wu, Fuming Lai, Shaobing Lian, and Yanghui Rao.
+
+
+      MemBuilder: Reinforcing LLMs for long-term memory construction via attributed
+      dense rewards.
+
+
+      arXiv preprint arXiv:2601.05488, 2026.
+
+
+      URL https://arxiv.org/abs/2601.05488v4.
+
+
+      Version 4.
+
+
+      Wang et al. (2026)
+
+
+      Yubo Wang, Qiuyu Zhao, Zenghui Sun, Shichao Dong, Jinsong Lan, Xiaoyong Zhu,
+      Haoyang Li, Bo Zheng, and Lei Chen.
+
+
+      CMI-Mem: Toward generalizable long-term memory management via CMI-augmented
+      reinforcement learning.
+
+
+      arXiv preprint arXiv:2607.20553, 2026.
+
+
+      URL https://arxiv.org/abs/2607.20553v2.
+
+
+      Version 2.
+
+
+      Wu et al. (2024)
+
+
+      Di Wu, Hongwei Wang, Wenhao Yu, Yuwei Zhang, Kai-Wei Chang, and Dong Yu.
+
+
+      LongMemEval: Benchmarking chat assistants on long-term interactive memory.
+
+
+      arXiv preprint arXiv:2410.10813, 2024.
+
+
+      URL https://arxiv.org/abs/2410.10813v1.
+
+
+      Construction details consulted in version 1.
+
+
+      Xiong et al. (2026)
+
+
+      Yiming Xiong, Shengran Hu, and Jeff Clune.
+
+
+      Learning to continually learn via meta-learning agentic memory designs.
+
+
+      arXiv preprint arXiv:2602.07755, 2026.
+
+
+      URL https://arxiv.org/abs/2602.07755v1.
+
+
+      Version 1.
+
+
+      Xu et al. (2025)
+
+
+      Wujiang Xu, Zujie Liang, Kai Mei, Hang Gao, Juntao Tan, and Yongfeng Zhang.
+
+
+      A-MEM: Agentic memory for LLM agents.
+
+
+      arXiv preprint arXiv:2502.12110, 2025.
+
+
+      URL https://arxiv.org/abs/2502.12110.
+
+
+      Yang et al. (2025)
+
+
+      An Yang, Bowen Yu, Chengyuan Li, Dayiheng Liu, Fei Huang, et al.
+
+
+      Qwen2.5-1M technical report.
+
+
+      arXiv preprint arXiv:2501.15383, 2025.
+
+
+      URL https://arxiv.org/abs/2501.15383.
+
+
+      Yang et al. (2026)
+
+
+      Yuqing Yang, Tengxiao Liu, Wang Bill Zhu, Taiwei Shi, Linxin Song, and Robin
+      Jia.
+
+
+      Self-evolving LLM memory extraction across heterogeneous tasks.
+
+
+      arXiv preprint arXiv:2604.11610, 2026.
+
+
+      URL https://arxiv.org/abs/2604.11610.
+
+
+      Yue et al. (2022)
+
+
+      Xiang Yue, Ziyu Yao, and Huan Sun.
+
+
+      Synthetic question value estimation for domain adaptation of question answering.
+
+
+      In Proceedings of the 60th Annual Meeting of the Association for Computational
+      Linguistics (Volume 1: Long Papers), pp. 1340–1351. Association for Computational
+      Linguistics, 2022.
+
+
+      doi: 10.18653/v1/2022.acl-long.95.
+
+
+      URL https://aclanthology.org/2022.acl-long.95/.
+
+
+      Zhang et al. (2025)
+
+
+      Guibin Zhang, Haotian Ren, Chong Zhan, Zhenhong Zhou, Junhao Wang, He Zhu, Wangchunshu
+      Zhou, and Shuicheng Yan.
+
+
+      MemEvolve: Meta-evolution of agent memory systems.
+
+
+      arXiv preprint arXiv:2512.18746, 2025.
+
+
+      URL https://arxiv.org/abs/2512.18746.
+
+
+      Zhang et al. (2026)
+
+
+      Han Zhang, Zihao Tang, Xin Yu, Xiao Liu, Yeyun Gong, Haizhen Huang, Yan Lu,
+      Weiwei Deng, Feng Sun, Qi Zhang, and Hanfang Yang.
+
+
+      Beyond static dialogues: Benchmarking realistic, heterogeneous, and evolving
+      long-term memory.
+
+
+      arXiv preprint arXiv:2605.31086, 2026.
+
+
+      URL https://arxiv.org/abs/2605.31086.
+
+
+      Zheng et al. (2023)
+
+
+      Lianmin Zheng, Wei-Lin Chiang, Ying Sheng, Siyuan Zhuang, Zhanghao Wu, Yonghao
+      Zhuang, Zi Lin, Zhuohan Li, Dacheng Li, Eric P. Xing, Hao Zhang, Joseph E. Gonzalez,
+      and Ion Stoica.
+
+
+      Judging LLM-as-a-judge with MT-Bench and Chatbot Arena.
+
+
+      arXiv preprint arXiv:2306.05685, 2023.
+
+
+      URL https://arxiv.org/abs/2306.05685v4.
+
+
+      Version 4.'
+    location: https://arxiv.org/html/2610.39276v1#bib
+  - id: S30
+    title: A.1 Benchmark Selection
+    text: 'We prioritize ATM-Bench (Mei et al., 2026b) and
+
+
+      RHELM (Zhang et al., 2026) because recent work characterizes
+
+
+      performance on LoCoMo (Maharana et al., 2024) and
+
+
+      LongMemEval (Wu et al., 2024) as near-saturated in
+
+
+      conversational-memory QA settings (He et al., 2026).
+
+
+      ATM-Bench combines real-world images, videos, and emails, whereas
+
+
+      RHELM couples evolving simulated user dialogues with external textual
+
+
+      sources such as emails and documents.'
+    location: https://arxiv.org/html/2610.39276v1#A1.SS1
+  - id: S31
+    title: A.2 Reference Systems
+    text: 'Table 2 compares DeepSeek-V4-based Memexa (labazhou2024, 2026),
+
+
+      A-Mem (Xu et al., 2025), MemPalace (MemPalace, 2026), and
+
+
+      HippoRAG2 (Gutiérrez et al., 2025) on ATM-Bench (Mei et al., 2026a).
+
+
+      Table 2 includes the RHELM reference results (Zhang et al., 2026)
+
+
+      for RAG ( k\in\{20,50\} ), Hybrid ( k\in\{5,20,50\} ),
+
+
+      MemGPT (Packer et al., 2023), Mem0 (Chhikara et al., 2025), and
+
+
+      MemU (NevaMind AI, 2025), all using GPT-4.1-mini as the answering model.
+
+
+      Hybrid combines dense retrieval with BM25 through reciprocal rank fusion.
+
+
+      The same table reports 1M-context inference with
+
+
+      Gemini-2.5-Flash-Lite (Comanici et al., 2025),
+
+
+      Qwen-2.5-14B-Instruct (1M) (Yang et al., 2025), and
+
+
+      GPT-4.1-mini (OpenAI, 2025).
+
+
+      The Base-BM25, optimized, and transferred-design rows follow the protocols
+
+
+      in Sections 4.1 and 4.3.
+
+
+      Appendix Table B.2 additionally reports RAG with
+
+
+      GPT-4.1 (OpenAI, 2025), Gemini-2.5-Pro (Comanici et al., 2025),
+
+
+      and Claude-Opus-4.5 (Anthropic, 2025), all at k=20 .
+
+
+      Native Qwen3-VL/GPT-5-mini results, including
+
+
+      ATM-RAG (Mei et al., 2026b), Self-RAG (Asai et al., 2023),
+
+
+      ScrapMem (Chang & Ren, 2026), and MemoryOS (Kang et al., 2025), are
+
+
+      included in Appendix Table 7.'
+    location: https://arxiv.org/html/2610.39276v1#A1.SS2
+  - id: S32
+    title: A.3 Evaluation populations
+    text: 'The training split drives failure attribution and revision proposals, whereas
+
+
+      validation is used to accept revisions and select the final design. MemSteer
+
+
+      uses generated QA–evidence supervision for these processes, without using
+
+
+      benchmark evaluation questions. The Official-QA reference instead uses official
+
+
+      QA for training and validation; these items remain included in evaluation.
+
+
+      On ATM-Bench, both the Official-QA and MemSteer conditions use 400 training
+      items
+
+
+      and a fixed 200-item validation set; the former uses official QA and the latter
+
+
+      uses QA–evidence supervision generated from the records. Evaluation covers all
+
+
+      1,013 official QA items, including the 600 items used for Official-QA training
+
+
+      and validation. ATM-Bench-Hard, the 31-question hard multi-hop subset, is reported
+
+
+      separately. Leaderboard references also use the full 1,013-item population.
+
+
+      RHELM contains 1,305 official QA items from ten personas and is evaluated on
+      the
+
+
+      full official set, both with and without external data sources. The Official-QA
+
+
+      reference uses 524 official items for training and 264 for validation; these
+
+
+      items remain included in evaluation. The final MemSteer configuration uses 788
+
+
+      generated QA–evidence items for training, without using official QA for training
+
+
+      or design selection.
+
+
+      In the six-user setting, four personas provide training supervision,
+
+
+      two provide validation supervision, and the remaining four are held out
+
+
+      (Table 9). For personal continuation, MemSteer
+
+
+      generates 421 supervision items from Martin Keller’s history, split into 282
+
+
+      training and 139 validation items, and evaluates the continued design on 228
+
+
+      official questions. For David R. Ellis, it generates 337 supervision items,
+
+
+      split into 223 training and 114 validation items, and evaluates on 158 official
+
+
+      questions.'
+    location: https://arxiv.org/html/2610.39276v1#A1.SS3
+  - id: S33
+    title: A.4 Evaluation Metrics
+    text: 'On ATM-Bench, Question Score (QS) uses exact match
+
+
+      for numerical items, Jaccard partial credit for list items, and judge scores
+
+
+      for open-ended items. R@10 averages the fraction of gold evidence records
+
+
+      among the top-10 retrieved records over questions.
+
+
+      Blind answer agreement.
+
+
+      Blind answer recovery checks type-normalized exact agreement: normalized text
+
+
+      equality, set equality for lists, and exact value-and-unit agreement for
+
+
+      numerical answers. Boolean answers are matched exactly. Evidence coverage is
+
+
+      checked at the record level, requiring citations to every selected evidence
+      record.
+
+
+      Design-selection accuracy.
+
+
+      Validation accuracy guides revision acceptance and design selection.
+
+
+      Predictions identical to their reference answers are scored as correct;
+
+
+      other responses receive a binary correctness judgment from a fixed LLM judge.
+
+
+      Final ATM-Bench evaluation uses Question Score (QS), which includes partial
+
+
+      credit for list questions. Final RHELM evaluation reports overall accuracy,
+
+
+      computed as the mean of binary correctness judgments from the official evaluator.'
+    location: https://arxiv.org/html/2610.39276v1#A1.SS4
+  - id: S34
+    title: A.5 Feedback inputs
+    text: 'Gold evidence denotes the reference source evidence in
+
+
+      MemSteer-generated QA–evidence supervision, not human-annotated evidence.
+
+
+      For Random-30, each sampled case includes the question, reference
+
+
+      answer, prediction and score, ranked
+
+
+      retrieved-record IDs, IDs actually delivered to the answer.
+
+
+      Gold evidence remains unmarked in Random-30, even if it appears in the context.
+
+
+      Random-30 + Gold evidence adds required-evidence IDs and gold-record
+
+
+      excerpts without programmatic failure attribution. Random-30 + Diagnosis
+
+
+      retains random sampling and additionally provides failure-stage labels,
+
+
+      missing-evidence IDs, evidence checks, and memory-lookup results.
+
+
+      Diagnosis + stratified sampling uses the same diagnostic information
+
+
+      but organizes examples by failure category before allocating the feedback budget.'
+    location: https://arxiv.org/html/2610.39276v1#A1.SS5
+  - id: S35
+    title: B.1 ATM-Bench reference and optimization results
+    text: 'Table B.1 reorganizes the DeepSeek-V4-Flash-evaluated
+
+
+      results from Table 2 .
+
+
+      Table 6: Performance on ATM-Bench and ATM-Bench-Hard (%). DeepSeek-V4-Flash
+      is used for answer generation and as the judge for open-ended answers. Arrows
+      indicate percentage-point changes relative to the corresponding initial design:
+      Base-BM25 for MemSteer-Opt and the respective starting systems for the external
+      optimizers. Bold and underlined values indicate the best and second-best results
+      per metric, excluding the oracle, which uses gold evidence. †Official-QA training
+      items are included in evaluation.
+
+
+      ATM-Bench
+
+
+      ATM-Bench-Hard
+
+
+      Method
+
+
+      Backbone
+
+
+      Supervision
+
+
+      QS \uparrow
+
+
+      R@10 \uparrow
+
+
+      QS \uparrow
+
+
+      R@10 \uparrow
+
+
+      Reference memory systems
+
+
+      Memexa
+
+
+      DeepSeek-V4
+
+
+      None
+
+
+      65.3
+
+
+      78.9
+
+
+      –
+
+
+      –
+
+
+      A-Mem
+
+
+      DeepSeek-V4
+
+
+      None
+
+
+      –
+
+
+      –
+
+
+      16.7
+
+
+      38.5
+
+
+      MemPalace
+
+
+      DeepSeek-V4
+
+
+      None
+
+
+      –
+
+
+      –
+
+
+      13.6
+
+
+      28.9
+
+
+      HippoRAG2
+
+
+      DeepSeek-V4
+
+
+      None
+
+
+      –
+
+
+      –
+
+
+      12.3
+
+
+      32.2
+
+
+      Base starting system and oracle
+
+
+      Base-BM25
+
+
+      DeepSeek-V4
+
+
+      –
+
+
+      54.9
+
+
+      61.7
+
+
+      8.2
+
+
+      10.0
+
+
+      Oracle
+
+
+      DeepSeek-V4
+
+
+      –
+
+
+      71.8
+
+
+      –
+
+
+      46.2
+
+
+      –
+
+
+      MemSteer-Opt (Ours) across supervision sources
+
+
+      MemSteer-Opt
+
+
+      DeepSeek-V4
+
+
+      Official-QA†
+
+
+      67.3
+
+
+      83.5
+
+
+      27.9
+
+
+      42.2
+
+
+      MemSteer-Opt
+
+
+      DeepSeek-V4
+
+
+      MemSteer
+
+
+      68.3
+
+
+      \uparrow 13.4
+
+
+      84.1
+
+
+      \uparrow 22.4
+
+
+      29.1
+
+
+      \uparrow 20.9
+
+
+      43.6
+
+
+      \uparrow 33.6
+
+
+      External optimizers
+
+
+      M^{\star} start
+
+
+      DeepSeek-V4
+
+
+      –
+
+
+      47.4
+
+
+      55.2
+
+
+      1.9
+
+
+      13.6
+
+
+      M^{\star}
+
+
+      DeepSeek-V4
+
+
+      Official-QA†
+
+
+      51.8
+
+
+      69.4
+
+
+      9.5
+
+
+      26.0
+
+
+      M^{\star}
+
+
+      DeepSeek-V4
+
+
+      MemSteer
+
+
+      53.4
+
+
+      \uparrow 6.0
+
+
+      69.8
+
+
+      \uparrow 14.6
+
+
+      12.9
+
+
+      \uparrow 11.0
+
+
+      25.6
+
+
+      \uparrow 12.0
+
+
+      MemEvolve start
+
+
+      DeepSeek-V4
+
+
+      –
+
+
+      35.1
+
+
+      41.3
+
+
+      7.1
+
+
+      18.7
+
+
+      MemEvolve
+
+
+      DeepSeek-V4
+
+
+      Official-QA†
+
+
+      53.7
+
+
+      63.8
+
+
+      11.4
+
+
+      21.6
+
+
+      MemEvolve
+
+
+      DeepSeek-V4
+
+
+      MemSteer
+
+
+      53.7
+
+
+      \uparrow 18.6
+
+
+      63.7
+
+
+      \uparrow 22.4
+
+
+      9.5
+
+
+      \uparrow 2.3
+
+
+      18.6
+
+
+      \downarrow 0.1
+
+
+      For MemSteer-Opt, we retested the full QA pipeline using GPT-5-mini judge.
+
+
+      Table 7 provides the complementary GPT-5-mini
+
+
+      evaluation.
+
+
+      Note that variability in LLM-generated retrieval queries can therefore yield
+
+
+      small differences in R@10 with Table B.1.
+
+
+      The native reference rows come from the ATM-Bench
+
+
+      leaderboard (Mei et al., 2026a), use Qwen3-VL
+
+
+      backbones (Bai et al., 2025), and report QS from the official
+
+
+      GPT-5-mini (OpenAI, n.d.) judge. Here, 2B/8B denotes the
+
+
+      memory-processing and answering model sizes, respectively.
+
+
+      Table 7: Performance on ATM-Bench and ATM-Bench-Hard (%). MemSteer-Opt uses
+      DeepSeek-V4-Flash for answer generation. Open-ended answers are evaluated by
+      the official GPT-5-mini judge. All MemSteer-Opt runs start from Base-BM25. Green
+      arrows indicate percentage-point improvements over Base-BM25. Bold and underlined
+      values indicate the best and second-best results per metric among the MemSteer-Opt
+      variants, respectively. The oracle uses gold evidence. †Official-QA training
+      items are included in evaluation.
+
+
+      ATM-Bench
+
+
+      ATM-Bench-Hard
+
+
+      Method
+
+
+      Backbone
+
+
+      Supervision
+
+
+      QS \uparrow
+
+
+      R@10 \uparrow
+
+
+      QS \uparrow
+
+
+      R@10 \uparrow
+
+
+      Reference memory systems
+
+
+      MemPalace
+
+
+      Qwen3-VL-2B/8B
+
+
+      None
+
+
+      56.8
+
+
+      76.4
+
+
+      9.7
+
+
+      28.3
+
+
+      ATM-RAG
+
+
+      Qwen3-VL-2B/8B
+
+
+      None
+
+
+      51.0
+
+
+      68.7
+
+
+      13.8
+
+
+      30.4
+
+
+      Self-RAG
+
+
+      Qwen3-VL-2B/8B
+
+
+      None
+
+
+      50.3
+
+
+      68.7
+
+
+      –
+
+
+      –
+
+
+      ScrapMem
+
+
+      Qwen3-VL-2B/8B
+
+
+      None
+
+
+      48.4
+
+
+      66.1
+
+
+      –
+
+
+      –
+
+
+      MemoryOS
+
+
+      Qwen3-VL-2B/8B
+
+
+      None
+
+
+      47.2
+
+
+      59.2
+
+
+      13.7
+
+
+      32.7
+
+
+      A-Mem
+
+
+      Qwen3-VL-2B/8B
+
+
+      None
+
+
+      44.8
+
+
+      66.4
+
+
+      9.9
+
+
+      31.7
+
+
+      Mem0
+
+
+      Qwen3-VL-2B/8B
+
+
+      None
+
+
+      43.5
+
+
+      61.9
+
+
+      9.2
+
+
+      23.7
+
+
+      Base starting system
+
+
+      Base-BM25
+
+
+      DeepSeek-V4
+
+
+      –
+
+
+      55.1
+
+
+      61.7
+
+
+      5.4
+
+
+      10.0
+
+
+      Oracle
+
+
+      DeepSeek-V4
+
+
+      –
+
+
+      71.6
+
+
+      –
+
+
+      39.5
+
+
+      –
+
+
+      MemSteer-Opt (Ours) across supervision sources
+
+
+      MemSteer-Opt
+
+
+      DeepSeek-V4
+
+
+      Naive-QA
+
+
+      54.1
+
+
+      60.6
+
+
+      5.4
+
+
+      16.7
+
+
+      MemSteer-Opt
+
+
+      DeepSeek-V4
+
+
+      Naive-QA + checks
+
+
+      65.4
+
+
+      \uparrow 10.4
+
+
+      82.0
+
+
+      \uparrow 20.3
+
+
+      25.6
+
+
+      \uparrow 20.2
+
+
+      43.2
+
+
+      \uparrow 33.2
+
+
+      MemSteer-Opt
+
+
+      DeepSeek-V4
+
+
+      Ragas-QA
+
+
+      63.5
+
+
+      \uparrow 8.4
+
+
+      83.5
+
+
+      \uparrow 21.8
+
+
+      23.3
+
+
+      \uparrow 17.9
+
+
+      42.1
+
+
+      \uparrow 32.1
+
+
+      MemSteer-Opt
+
+
+      DeepSeek-V4
+
+
+      Official-QA†
+
+
+      69.6
+
+
+      \uparrow 14.5
+
+
+      83.2
+
+
+      \uparrow 21.5
+
+
+      24.3
+
+
+      \uparrow 18.9
+
+
+      42.3
+
+
+      \uparrow 32.3
+
+
+      MemSteer-Opt
+
+
+      DeepSeek-V4
+
+
+      MemSteer
+
+
+      69.2
+
+
+      \uparrow 14.2
+
+
+      84.1
+
+
+      \uparrow 22.4
+
+
+      27.5
+
+
+      \uparrow 22.1
+
+
+      43.8
+
+
+      \uparrow 33.8'
+    location: https://arxiv.org/html/2610.39276v1#A2.SS1
+  - id: S36
+    title: B.2 Effect of supervision budget
+    text: 'We augment the existing pool of generated QA–evidence pairs with an additional
+
+
+      batch of generated data. From the expanded pool, we randomly sample supervision
+
+
+      for five settings containing 100, 200, 300, 400, or 500 training questions,
+
+
+      respectively. In each setting, training and validation account for approximately
+
+
+      60% and 40% of the sampled supervision. All runs start from the same Base-BM25
+
+
+      design, with training questions used to guide design revisions and validation
+
+
+      questions used for design selection. Figure B.2 reports
+
+
+      the resulting performance on ATM-Bench and ATM-Bench-Hard.
+
+
+      Figure 4: Effect of the supervision budget on ATM-Bench and ATM-Bench-Hard (%).
+
+
+      All runs start from the same Base-BM25 design, shown as Base at zero training
+
+
+      questions. The horizontal axis indicates the number of training questions;
+
+
+      the validation set scales proportionally to maintain an approximately 60:40
+
+
+      training-to-validation split.
+
+
+      Table 8: RHELM accuracy (%) by question type, with and without external data
+      sources. FC, TP, AG, HL, and MI denote fact, temporal, aggregation, hallucination,
+      and misleading questions, respectively; EX covers attachments and emails, and
+      MX denotes mixed-context questions. Avg reports overall accuracy across evaluation
+      questions. All memory-framework methods and our systems use GPT-4.1-mini for
+      answer generation. ATM-Bench-evolved (frozen) transfers the ATM-Bench-optimized
+      memory design without further optimization on RHELM; its + Official-QA and +
+      MemSteer variants continue optimization on RHELM using the corresponding supervision.
+      Base-BM25+Official-QA and Base-BM25+MemSteer instead initialize optimization
+      from Base-BM25. Bold and underlined values indicate the best and second-best
+      results per column, respectively. †Official-QA training and validation items
+      are included in evaluation.
+
+
+      Model
+
+
+      Without External Data Sources
+
+
+      With External Data Sources
+
+
+      FC
+
+
+      TP
+
+
+      AG
+
+
+      HL
+
+
+      MI
+
+
+      EX
+
+
+      MX
+
+
+      Avg
+
+
+      FC
+
+
+      TP
+
+
+      AG
+
+
+      HL
+
+
+      MI
+
+
+      EX
+
+
+      MX
+
+
+      Avg
+
+
+      RAG Baselines
+
+
+      GPT-4.1-mini ( k=5 )
+
+
+      35.8
+
+
+      17.3
+
+
+      17.7
+
+
+      15.2
+
+
+      3.1
+
+
+      8.0
+
+
+      10.0
+
+
+      16.3
+
+
+      34.8
+
+
+      14.1
+
+
+      19.3
+
+
+      11.7
+
+
+      3.1
+
+
+      16.9
+
+
+      12.4
+
+
+      17.5
+
+
+      GPT-4.1-mini ( k=20 )
+
+
+      44.0
+
+
+      32.4
+
+
+      31.8
+
+
+      18.3
+
+
+      3.1
+
+
+      12.1
+
+
+      12.9
+
+
+      23.5
+
+
+      42.5
+
+
+      28.7
+
+
+      30.7
+
+
+      13.2
+
+
+      3.1
+
+
+      28.5
+
+
+      13.8
+
+
+      25.1
+
+
+      GPT-4.1-mini ( k=50 )
+
+
+      59.9
+
+
+      41.6
+
+
+      40.1
+
+
+      15.7
+
+
+      1.5
+
+
+      12.9
+
+
+      16.7
+
+
+      28.9
+
+
+      54.6
+
+
+      39.5
+
+
+      38.0
+
+
+      11.2
+
+
+      1.5
+
+
+      38.6
+
+
+      22.4
+
+
+      32.6
+
+
+      Hybrid ( k=5 )
+
+
+      34.3
+
+
+      20.5
+
+
+      14.1
+
+
+      19.8
+
+
+      1.5
+
+
+      8.0
+
+
+      10.5
+
+
+      16.7
+
+
+      31.9
+
+
+      19.5
+
+
+      14.1
+
+
+      19.3
+
+
+      1.5
+
+
+      16.1
+
+
+      10.5
+
+
+      17.6
+
+
+      Hybrid ( k=20 )
+
+
+      47.3
+
+
+      35.7
+
+
+      31.8
+
+
+      19.3
+
+
+      3.1
+
+
+      10.4
+
+
+      15.2
+
+
+      24.8
+
+
+      45.9
+
+
+      30.8
+
+
+      26.6
+
+
+      16.8
+
+
+      4.6
+
+
+      26.9
+
+
+      15.7
+
+
+      26.0
+
+
+      Hybrid ( k=50 )
+
+
+      56.5
+
+
+      41.1
+
+
+      35.9
+
+
+      15.2
+
+
+      3.1
+
+
+      13.7
+
+
+      16.7
+
+
+      27.8
+
+
+      53.1
+
+
+      37.8
+
+
+      33.9
+
+
+      8.6
+
+
+      3.1
+
+
+      33.3
+
+
+      18.6
+
+
+      29.6
+
+
+      GPT-4.1 ( k=20 )
+
+
+      51.7
+
+
+      34.1
+
+
+      35.9
+
+
+      23.9
+
+
+      7.7
+
+
+      16.1
+
+
+      17.6
+
+
+      28.2
+
+
+      50.2
+
+
+      29.2
+
+
+      32.3
+
+
+      19.8
+
+
+      6.2
+
+
+      32.5
+
+
+      19.5
+
+
+      29.5
+
+
+      Gemini-2.5-Pro ( k=20 )
+
+
+      45.4
+
+
+      35.1
+
+
+      27.1
+
+
+      66.0
+
+
+      23.1
+
+
+      12.4
+
+
+      18.1
+
+
+      32.6
+
+
+      43.0
+
+
+      31.9
+
+
+      26.0
+
+
+      64.5
+
+
+      26.2
+
+
+      31.3
+
+
+      20.5
+
+
+      35.5
+
+
+      Claude-Opus-4.5 ( k=20 )
+
+
+      50.7
+
+
+      37.8
+
+
+      33.3
+
+
+      68.0
+
+
+      47.7
+
+
+      13.7
+
+
+      16.2
+
+
+      36.2
+
+
+      50.2
+
+
+      30.8
+
+
+      31.8
+
+
+      60.9
+
+
+      41.5
+
+
+      33.7
+
+
+      21.0
+
+
+      38.1
+
+
+      Long-Context Models (1M)
+
+
+      Gemini-2.5-Flash-Lite
+
+
+      33.2
+
+
+      22.7
+
+
+      15.2
+
+
+      17.3
+
+
+      0.0
+
+
+      9.5
+
+
+      5.6
+
+
+      16.0
+
+
+      31.7
+
+
+      14.1
+
+
+      23.4
+
+
+      7.6
+
+
+      0.0
+
+
+      19.0
+
+
+      13.1
+
+
+      17.3
+
+
+      Qwen-2.5-14B-Instruct
+
+
+      29.5
+
+
+      15.1
+
+
+      29.7
+
+
+      3.1
+
+
+      0.0
+
+
+      11.7
+
+
+      9.1
+
+
+      15.3
+
+
+      16.9
+
+
+      7.0
+
+
+      15.6
+
+
+      1.0
+
+
+      0.0
+
+
+      5.2
+
+
+      6.2
+
+
+      8.1
+
+
+      GPT-4.1-mini
+
+
+      55.1
+
+
+      31.9
+
+
+      40.1
+
+
+      4.1
+
+
+      1.5
+
+
+      11.2
+
+
+      12.4
+
+
+      24.0
+
+
+      49.3
+
+
+      27.0
+
+
+      33.9
+
+
+      2.0
+
+
+      1.5
+
+
+      43.4
+
+
+      0.3
+
+
+      33.9
+
+
+      Memory Frameworks (GPT-4.1-mini)
+
+
+      MemGPT
+
+
+      31.9
+
+
+      18.4
+
+
+      22.9
+
+
+      0.5
+
+
+      0.0
+
+
+      7.6
+
+
+      8.1
+
+
+      13.9
+
+
+      27.5
+
+
+      14.6
+
+
+      28.7
+
+
+      1.5
+
+
+      1.5
+
+
+      18.9
+
+
+      17.1
+
+
+      17.3
+
+
+      Mem0
+
+
+      41.6
+
+
+      31.4
+
+
+      28.1
+
+
+      10.7
+
+
+      3.1
+
+
+      10.8
+
+
+      13.3
+
+
+      21.1
+
+
+      46.4
+
+
+      29.2
+
+
+      27.1
+
+
+      10.2
+
+
+      3.1
+
+
+      31.3
+
+
+      35.7
+
+
+      28.9
+
+
+      MemU
+
+
+      49.3
+
+
+      32.4
+
+
+      33.9
+
+
+      8.6
+
+
+      4.6
+
+
+      12.0
+
+
+      11.4
+
+
+      23.1
+
+
+      54.6
+
+
+      36.2
+
+
+      35.4
+
+
+      10.2
+
+
+      3.1
+
+
+      36.5
+
+
+      36.7
+
+
+      33.6
+
+
+      Base-BM25
+
+
+      50.2
+
+
+      25.9
+
+
+      30.2
+
+
+      6.1
+
+
+      3.1
+
+
+      11.2
+
+
+      18.6
+
+
+      22.3
+
+
+      47.3
+
+
+      21.6
+
+
+      27.1
+
+
+      10.7
+
+
+      3.1
+
+
+      45.8
+
+
+      51.4
+
+
+      33.3
+
+
+      Base-BM25+Official-QA†
+
+
+      58.5
+
+
+      26.5
+
+
+      36.5
+
+
+      19.8
+
+
+      3.1
+
+
+      9.6
+
+
+      19.5
+
+
+      26.5
+
+
+      54.6
+
+
+      23.8
+
+
+      37.5
+
+
+      21.3
+
+
+      4.6
+
+
+      53.4
+
+
+      59.0
+
+
+      40.7
+
+
+      Base-BM25+MemSteer
+
+
+      53.6
+
+
+      27.0
+
+
+      39.1
+
+
+      16.8
+
+
+      4.6
+
+
+      12.4
+
+
+      19.5
+
+
+      26.4
+
+
+      48.8
+
+
+      28.1
+
+
+      37.0
+
+
+      23.4
+
+
+      6.2
+
+
+      52.2
+
+
+      55.7
+
+
+      39.9
+
+
+      ATM-Bench-evolved(frozen)
+
+
+      64.3
+
+
+      29.2
+
+
+      33.3
+
+
+      9.1
+
+
+      3.1
+
+
+      13.7
+
+
+      19.0
+
+
+      26.4
+
+
+      59.4
+
+
+      28.6
+
+
+      33.9
+
+
+      10.7
+
+
+      3.1
+
+
+      52.6
+
+
+      51.9
+
+
+      38.6
+
+
+      ATM-Bench-evolved + Official-QA†
+
+
+      60.4
+
+
+      47.6
+
+
+      39.1
+
+
+      24.9
+
+
+      3.1
+
+
+      12.0
+
+
+      20.0
+
+
+      31.5
+
+
+      56.0
+
+
+      43.2
+
+
+      39.1
+
+
+      16.2
+
+
+      4.6
+
+
+      58.6
+
+
+      51.4
+
+
+      42.9
+
+
+      ATM-Bench-evolved + MemSteer
+
+
+      58.5
+
+
+      46.5
+
+
+      39.1
+
+
+      21.8
+
+
+      3.1
+
+
+      12.0
+
+
+      20.0
+
+
+      30.6
+
+
+      55.6
+
+
+      43.2
+
+
+      35.9
+
+
+      18.8
+
+
+      3.1
+
+
+      59.0
+
+
+      51.4
+
+
+      42.8
+
+
+      Table 9: Per-persona accuracy on RHELM with external data sources (%). (a) Six-user
+      optimization: roles indicate participation in training, validation, or neither
+      (held-out). (b) Ten-user optimization: all personas participate as training
+      and validation, with Official-QA or MemSteer supervision. N is the number of
+      evaluation questions; parentheses show percentage-point changes from Base-BM25.
+      Group summaries pool evaluation questions from the six source users (training
+      and validation) or the four held-out users; Overall (pooled) pools all 1,305
+      questions. †Official-QA training and validation items are included in evaluation.
+
+
+      (a) Six-user optimization setting
+
+
+      Persona
+
+
+      Role
+
+
+      N
+
+
+      Base-BM25
+
+
+      Shared design
+
+
+      Jonas Richter
+
+
+      Training
+
+
+      106
+
+
+      25.5
+
+
+      33.0 (+7.5)
+
+
+      David Reyes
+
+
+      Training
+
+
+      132
+
+
+      34.8
+
+
+      37.1 (+2.3)
+
+
+      Dr. Elias Romero
+
+
+      Training
+
+
+      122
+
+
+      31.1
+
+
+      31.1 (+0.0)
+
+
+      Justice Arvind P. Mehra
+
+
+      Training
+
+
+      123
+
+
+      33.3
+
+
+      34.1 (+0.8)
+
+
+      Elena Morales
+
+
+      Validation
+
+
+      87
+
+
+      35.6
+
+
+      39.1 (+3.5)
+
+
+      Dr. Elena Markovic
+
+
+      Validation
+
+
+      109
+
+
+      28.4
+
+
+      32.1 (+3.7)
+
+
+      Dr. Alastair McEwan
+
+
+      Held-out
+
+
+      96
+
+
+      30.2
+
+
+      34.4 (+4.2)
+
+
+      Dr. Marcus Ellison
+
+
+      Held-out
+
+
+      144
+
+
+      27.1
+
+
+      27.8 (+0.7)
+
+
+      Martin Keller
+
+
+      Held-out
+
+
+      228
+
+
+      41.2
+
+
+      37.7 ( - 3.5)
+
+
+      David R. Ellis
+
+
+      Held-out
+
+
+      158
+
+
+      37.3
+
+
+      38.6 (+1.3)
+
+
+      Source users (6)
+
+
+      –
+
+
+      679
+
+
+      31.5
+
+
+      34.3 (+2.8)
+
+
+      Held-out users (4)
+
+
+      –
+
+
+      626
+
+
+      35.3
+
+
+      35.1 ( - 0.2)
+
+
+      Overall (pooled)
+
+
+      –
+
+
+      1,305
+
+
+      33.3
+
+
+      34.7 (+1.4)
+
+
+      (b) Ten-user optimization setting
+
+
+      Persona
+
+
+      N
+
+
+      Base-BM25
+
+
+      Official-QA†
+
+
+      MemSteer
+
+
+      Jonas Richter
+
+
+      106
+
+
+      25.5
+
+
+      37.7 (+12.2)
+
+
+      40.6 (+15.1)
+
+
+      David Reyes
+
+
+      132
+
+
+      34.8
+
+
+      36.4 (+1.6)
+
+
+      37.9 (+3.1)
+
+
+      Dr. Elias Romero
+
+
+      122
+
+
+      31.1
+
+
+      41.0 (+9.9)
+
+
+      34.4 (+3.3)
+
+
+      Justice Arvind P. Mehra
+
+
+      123
+
+
+      33.3
+
+
+      39.8 (+6.5)
+
+
+      39.8 (+6.5)
+
+
+      Elena Morales
+
+
+      87
+
+
+      35.6
+
+
+      47.1 (+11.5)
+
+
+      42.5 (+6.9)
+
+
+      Dr. Elena Markovic
+
+
+      109
+
+
+      28.4
+
+
+      38.5 (+10.1)
+
+
+      37.6 (+9.2)
+
+
+      Dr. Alastair McEwan
+
+
+      96
+
+
+      30.2
+
+
+      39.6 (+9.4)
+
+
+      37.5 (+7.3)
+
+
+      Dr. Marcus Ellison
+
+
+      144
+
+
+      27.1
+
+
+      41.7 (+14.6)
+
+
+      38.2 (+11.1)
+
+
+      Martin Keller
+
+
+      228
+
+
+      41.2
+
+
+      42.5 (+1.3)
+
+
+      43.0 (+1.8)
+
+
+      David R. Ellis
+
+
+      158
+
+
+      37.3
+
+
+      41.8 (+4.5)
+
+
+      44.3 (+7.0)
+
+
+      Overall (pooled)
+
+
+      1,305
+
+
+      33.3
+
+
+      40.7 (+7.4)
+
+
+      39.9 (+6.6)
+
+
+      Performance remains close to Base-BM25 at the smallest question budget, with
+
+
+      the largest gains occurring between the 100- and 200-question settings.
+
+
+      Beyond this point, QS on ATM-Bench generally improves, while R@10 remains
+
+
+      largely stable on both benchmarks. ATM-Bench-Hard shows small fluctuations
+
+
+      in QS, with a test set of only 31 questions.'
+    location: https://arxiv.org/html/2610.39276v1#A2.SS2
+  - id: S37
+    title: B.3 Full RHELM results
+    text: 'Table B.2 reports RHELM results by question type, with and without
+
+
+      external data sources. It also includes baselines using other answer models
+      and
+
+
+      long-context models for reference, rather than as controlled comparisons with
+
+
+      the GPT-4.1-mini systems in Table 2.'
+    location: https://arxiv.org/html/2610.39276v1#A2.SS3
+  - id: S38
+    title: B.4 Per-persona results
+    text: 'Table 9 reports per-persona results for shared
+
+
+      memory designs under two optimization settings, complementing the shared and
+
+
+      continued designs compared in Table 3. In the six-user setting,
+
+
+      four personas provide training supervision and two provide validation
+
+
+      supervision; the remaining four are held out from optimization. In the ten-user
+
+
+      setting, all personas participate in optimization. Official-QA uses 40% of each
+
+
+      persona’s official QA for training and 20% for validation, whereas MemSteer
+      uses
+
+
+      QA–evidence supervision generated from user histories and reserves official
+      QA
+
+
+      for evaluation.'
+    location: https://arxiv.org/html/2610.39276v1#A2.SS4
+  - id: S39
+    title: Transfer of the six-user shared design.
+    text: 'Table 9(a) shows that the shared design improves
+
+
+      pooled accuracy on the six source users from 31.5% to 34.3%. However, this
+
+
+      improvement does not carry over in aggregate to the four users held out from
+
+
+      optimization. These results highlight heterogeneous transfer across users: a
+
+
+      design optimized on the source users does not necessarily benefit other users.
+
+
+      This makes the target-user continuation valuable, as studied in
+
+
+      Table 3.'
+    location: https://arxiv.org/html/2610.39276v1#A2.SS4.SSS0.Px1
+  - id: S40
+    title: Generated versus official supervision in the ten-user setting.
+    text: 'Table 9(b) shows that MemSteer improves over
+
+
+      Base-BM25 for all ten personas, raising pooled accuracy from 33.3% to 39.9%.
+
+
+      Its overall accuracy is 0.8 points below the 40.7% obtained with Official-QA
+
+
+      supervision. Note that MemSteer reserves official QA for evaluation, whereas
+      the
+
+
+      Official-QA results include questions used for training or validation. Thus,
+
+
+      history-generated supervision provides an effective alternative for optimizing
+
+
+      a shared memory design without relying on official QA for training or design
+
+
+      selection.'
+    location: https://arxiv.org/html/2610.39276v1#A2.SS4.SSS0.Px2
+  - id: S41
+    title: B.5 Example accepted architecture trajectory
+    text: 'Figure 5: Accepted memory-design optimization trajectory on ATM-Bench,
+      starting
+
+
+      from Base-BM25 and comprising nine accepted revisions. Numbered badges and
+
+
+      colored arrows indicate the revision order.
+
+
+      Figure B.5 traces one accepted memory-design optimization trajectory on ATM-Bench.
+      Starting
+
+
+      from Base-BM25 with raw queries and a direct reader, revisions add BGE-M3 (Chen
+      et al., 2024) dense
+
+
+      retrieval; hybrid retrieval with BGE reranking; question decomposition; HyDE
+      (Gao et al., 2023) and
+
+
+      a second retrieval stage; HyDE queries; a 180-candidate pool with 90 reranked
+
+
+      items; and answer verification. The final design uses four HyDE queries, reranks
+
+
+      120 candidates, reads 25 records, and permits a 4,000-token output. The sequence
+
+
+      moves from retrieval representation and ranking to multi-query context
+
+
+      construction and answer validation.'
+    location: https://arxiv.org/html/2610.39276v1#A2.SS5
+  - id: S42
+    title: Appendix C Limitations
+    text: 'MemSteer’s supervision is generated and verified by LLMs without human
+
+
+      certification, so errors or biases shared across answer planning,
+
+
+      source-grounded auditing, and blind answer recovery can pass verification
+
+
+      undetected. Blind answer recovery checks whether the reference answer is
+
+
+      recoverable from the sampled records and every selected evidence record is
+
+
+      cited; it does not establish that each record is necessary.
+
+
+      Generated questions follow the distribution of the history rather than users’
+
+
+      actual information needs.
+
+
+      MemSteer-Opt explores a constrained, largely retrieval-centric design space.
+
+
+      Finally, our evaluation covers two benchmarks, one of which (RHELM) consists
+
+
+      of synthetic personas, so evidence on real, heterogeneous user histories
+
+
+      remains limited.'
+    location: https://arxiv.org/html/2610.39276v1#A3
+  format: html
+  coverage: full_text
+  source_url: https://arxiv.org/html/2610.39276v1
+  attempts:
+  - format: html
+    url: https://arxiv.org/html/2610.39276v1
+    status: success
+    reason: extracted
+  text_sha256: f846d4f5eece0b9e9ccba31c4b7c432675b635613e748f5e0559d6d635024f68
+  total_chars: 64263
+  limitations:
+  - Text extraction does not verify figures, layout, or faithful mathematical rendering.
+  extraction_scope: complete extracted document text including available references
+  http:
+    url: https://arxiv.org/html/2610.39276v1
+    requested_url: https://arxiv.org/html/2610.39276v1
+    content_type: text/html
+    fetched_at: '2026-11-08T14:58:47.700429+00:00'
+    sha256: 0d8cd88205828a71c5b83e69a324683a91ae551a2493f3099326a4010302d988
+responses:
+- url: https://arxiv.org/abs/2610.39276v1
+  requested_url: https://arxiv.org/abs/2610.39276v1
+  content_type: text/html
+  fetched_at: '2026-11-08T14:58:44.960834+00:00'
+  status: 200
+  redirects: []
+  sha256: e84a8c2e13ed85218439de28be3598363a0cb2ab9a9d0ce66e959152a59b37fd
+- url: https://arxiv.org/html/2610.39276v1
+  requested_url: https://arxiv.org/html/2610.39276v1
+  content_type: text/html
+  fetched_at: '2026-11-08T14:58:47.700429+00:00'
+  status: 200
+  redirects: []
+  sha256: 0d8cd88205828a71c5b83e69a324683a91ae551a2493f3099326a4010302d988
+captured_at: '2026-11-08T14:58:55.625558+00:00'

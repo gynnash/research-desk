@@ -1,0 +1,166 @@
+schema_version: 1
+topic: agent_memory
+cycle_id: agent_memory-manual-20261108-145358
+config_fingerprint: 015c6e25b160d275b5e228009247011f37b5d4ba6ad9fbada14753ddd51642a6
+selected_topic:
+  schema_version: 1
+  topics:
+    agent_memory:
+      name: Agent Memory
+      enabled: true
+      description: 研究 AI Agent 如何形成、检索、更新和使用记忆，解释具体机制、实验结果、工程取舍与适用边界。
+      scope:
+      - 长期与短期记忆、情景与语义记忆、跨会话状态及个性化。
+      - 记忆写入、压缩、检索、更新、遗忘与冲突处理，以及这些机制与上下文管理和 RAG 的区别与联系。
+      - 基于原文分析方法、实现、实验设置、评测指标、基线和失败案例，区分作者结论与我们的推断。
+      - 优先原始论文和有实质技术细节的博客；排除无技术内容的产品宣传及仅凭摘要的全文研究。
+      keywords:
+      - agent memory
+      - long-term agent memory
+      - episodic agent memory
+      - memory-augmented agent
+      - conversational agent memory
+      - 智能体记忆
+      - 大模型长期记忆
+topics_path: config/local/automation/agent_memory-manual-20261108-145358/topics.yaml
+topics_yaml_text: "schema_version: 1\ntopics:\n  agent_memory:\n    name: Agent Memory\n\
+  \    enabled: true\n    description: 研究 AI Agent 如何形成、检索、更新和使用记忆，解释具体机制、实验结果、工程取舍与适用边界。\n\
+  \    scope:\n    - 长期与短期记忆、情景与语义记忆、跨会话状态及个性化。\n    - 记忆写入、压缩、检索、更新、遗忘与冲突处理，以及这些机制与上下文管理和\
+  \ RAG 的区别与联系。\n    - 基于原文分析方法、实现、实验设置、评测指标、基线和失败案例，区分作者结论与我们的推断。\n    - 优先原始论文和有实质技术细节的博客；排除无技术内容的产品宣传及仅凭摘要的全文研究。\n\
+  \    keywords:\n    - agent memory\n    - long-term agent memory\n    - episodic\
+  \ agent memory\n    - memory-augmented agent\n    - conversational agent memory\n\
+  \    - 智能体记忆\n    - 大模型长期记忆\n"
+topics_sha256: a252b9013b241b2fcf83015269e4c28a9718c0575b62bd6f43b039f2da202c2b
+research_config_path: config/local/automation/agent_memory-manual-20261108-145358/cycle.yaml
+research_config:
+  schema_version: 1
+  mode: research_cycle_test
+  backend: chatgpt_plan
+  topic: agent_memory
+  topics_file: config/local/automation/agent_memory-manual-20261108-145358/topics.yaml
+  archive: true
+  presentation: technical_article
+  reading:
+    mode: full_text_required
+    paper_max_chars: 200000
+    blog_max_chars: 200000
+  window:
+    mode: rolling
+    days: 60
+  selection:
+    mode: community_attention
+    min_score: 0.1
+    max_requests: 240
+  discovery:
+    max_candidates: 80
+    max_documents: 5
+    max_per_source: 5
+    evidence_max_chars: 6000
+    sources:
+    - id: arxiv
+      adapter: arxiv
+      entry_url: https://export.arxiv.org/api/query
+    - id: letta
+      adapter: letta
+      entry_url: https://www.letta.com/blog/
+      sitemap_url: https://www.letta.com/sitemap.xml
+      sitemap_max_pages: 5
+    - id: langchain
+      adapter: langchain
+      entry_url: https://www.langchain.com/blog
+      sitemap_url: https://www.langchain.com/sitemap.xml
+      sitemap_max_pages: 5
+    - id: huggingface-blog
+      adapter: rss
+      publisher: Hugging Face Blog
+      entry_url: https://huggingface.co/blog/feed.xml
+      allowed_hosts:
+      - huggingface.co
+    - id: meituan-tech
+      adapter: rss
+      publisher: 美团技术团队
+      entry_url: https://tech.meituan.com/feed/
+      allowed_hosts:
+      - tech.meituan.com
+    - id: ruanyifeng-blog
+      adapter: rss
+      publisher: 阮一峰的网络日志
+      entry_url: https://www.ruanyifeng.com/blog/atom.xml
+      allowed_hosts:
+      - www.ruanyifeng.com
+  models:
+    research: gpt-6.1-sol
+    insight: gpt-6.1-sol
+    review: gpt-6-astra
+  budget:
+    max_calls_per_cycle: 16
+    research_max_calls: 12
+    insight_max_calls: 4
+    max_input_chars: 600000
+    max_output_chars: 24000
+    timeout_seconds: 240
+    max_revisions: 1
+  history:
+    lookback_days: 180
+    max_documents: 30
+research_config_yaml_text: "schema_version: 1\nmode: research_cycle_test\nbackend:\
+  \ chatgpt_plan\ntopic: agent_memory\ntopics_file: config/local/automation/agent_memory-manual-20261108-145358/topics.yaml\n\
+  archive: true\npresentation: technical_article\nreading:\n  mode: full_text_required\n\
+  \  paper_max_chars: 200000\n  blog_max_chars: 200000\nwindow:\n  mode: rolling\n\
+  \  days: 60\nselection:\n  mode: community_attention\n  min_score: 0.1\n  max_requests:\
+  \ 240\ndiscovery:\n  max_candidates: 80\n  max_documents: 5\n  max_per_source: 5\n\
+  \  evidence_max_chars: 6000\n  sources:\n  - id: arxiv\n    adapter: arxiv\n   \
+  \ entry_url: https://export.arxiv.org/api/query\n  - id: letta\n    adapter: letta\n\
+  \    entry_url: https://www.letta.com/blog/\n    sitemap_url: https://www.letta.com/sitemap.xml\n\
+  \    sitemap_max_pages: 5\n  - id: langchain\n    adapter: langchain\n    entry_url:\
+  \ https://www.langchain.com/blog\n    sitemap_url: https://www.langchain.com/sitemap.xml\n\
+  \    sitemap_max_pages: 5\n  - id: huggingface-blog\n    adapter: rss\n    publisher:\
+  \ Hugging Face Blog\n    entry_url: https://huggingface.co/blog/feed.xml\n    allowed_hosts:\n\
+  \    - huggingface.co\n  - id: meituan-tech\n    adapter: rss\n    publisher: 美团技术团队\n\
+  \    entry_url: https://tech.meituan.com/feed/\n    allowed_hosts:\n    - tech.meituan.com\n\
+  \  - id: ruanyifeng-blog\n    adapter: rss\n    publisher: 阮一峰的网络日志\n    entry_url:\
+  \ https://www.ruanyifeng.com/blog/atom.xml\n    allowed_hosts:\n    - www.ruanyifeng.com\n\
+  models:\n  research: gpt-6.1-sol\n  insight: gpt-6.1-sol\n  review: gpt-6-astra\n\
+  budget:\n  max_calls_per_cycle: 16\n  research_max_calls: 12\n  insight_max_calls:\
+  \ 4\n  max_input_chars: 600000\n  max_output_chars: 24000\n  timeout_seconds: 240\n\
+  \  max_revisions: 1\nhistory:\n  lookback_days: 180\n  max_documents: 30\n"
+research_config_sha256: b02a7332df54c8cc9fc8c95147ca0c393e80bf043ab0d92bc735f446cab17909
+insight_config_path: config/local/automation/agent_memory-manual-20261108-145358/insight.yaml
+insight_config:
+  schema_version: 1
+  mode: codex_insight_test
+  backend: codex
+  topic: agent_memory
+  topics_file: config/local/automation/agent_memory-manual-20261108-145358/topics.yaml
+  models:
+    generation: gpt-6.1-sol
+    review: gpt-6-astra
+  codex:
+    driver: python_sdk
+    sdk_version: 0.163.0
+    runtime: bundled
+    auth_source: researchdesk_siwc
+    max_requests_per_task: 3
+    timeout_seconds: 240
+  review_policy: accuracy_only
+  history:
+    lookback_days: 180
+  generation:
+    target_words:
+    - 3000
+    - 4500
+    min_insights: 1
+  limits:
+    max_agent_turns: 4
+    max_revisions: 1
+insight_config_yaml_text: "schema_version: 1\nmode: codex_insight_test\nbackend: codex\n\
+  topic: agent_memory\ntopics_file: config/local/automation/agent_memory-manual-20261108-145358/topics.yaml\n\
+  models:\n  generation: gpt-6.1-sol\n  review: gpt-6-astra\ncodex:\n  driver: python_sdk\n\
+  \  sdk_version: 0.163.0\n  runtime: bundled\n  auth_source: researchdesk_siwc\n\
+  \  max_requests_per_task: 3\n  timeout_seconds: 240\nreview_policy: accuracy_only\n\
+  history:\n  lookback_days: 180\ngeneration:\n  target_words:\n  - 3000\n  - 4500\n\
+  \  min_insights: 1\nlimits:\n  max_agent_turns: 4\n  max_revisions: 1\n"
+insight_config_sha256: c24eed282f2dfeaee18753e075b93af2fff1defe689e807a8fe77ce96ef74b9d
+writing_started: false
+publish_authorized: false
+base_commit: 370ae3f80b1721e008d60417646fc55dfaa9cd1c

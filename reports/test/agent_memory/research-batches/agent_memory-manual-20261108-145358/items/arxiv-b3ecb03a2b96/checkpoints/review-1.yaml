@@ -1,0 +1,31 @@
+binding: f5b4f610a4d4dd11cb959a5a5928d731a60ceac19edfaa96ddde410a15071666
+result:
+  text: "{\n  \"decision\": \"pass\",\n  \"coverage_acknowledged\": true,\n  \"issues\"\
+    : [\n    {\n      \"severity\": \"info\",\n      \"location\": \"reading_scope；candidate.limitations[0]\"\
+    ,\n      \"reason\": \"已按所提供的完整抽取文本核对正文及附录。reading_scope标记未截断，但不保证图像内部内容、版式与公式呈现完整；候选准确说明这些限制，并明确未独立复现实验。正文未补写仅有图注的示例细节。\"\
+    ,\n      \"suggestion\": \"保留当前阅读范围与未复现实验说明。\"\n    }\n  ],\n  \"checks\": [\n\
+    \    {\n      \"claim_index\": 0,\n      \"verdict\": \"supported\",\n      \"\
+    evidence_ids\": [\"A7\", \"A8\", \"A13\", \"A14\"]\n    },\n    {\n      \"claim_index\"\
+    : 1,\n      \"verdict\": \"supported\",\n      \"evidence_ids\": [\"A15\", \"\
+    A17\", \"A45\", \"A46\", \"A47\", \"A48\"]\n    },\n    {\n      \"claim_index\"\
+    : 2,\n      \"verdict\": \"supported\",\n      \"evidence_ids\": [\"A50\", \"\
+    A51\", \"A53\", \"A54\", \"A55\", \"A56\", \"A58\"]\n    },\n    {\n      \"claim_index\"\
+    : 3,\n      \"verdict\": \"supported\",\n      \"evidence_ids\": [\"A11\", \"\
+    A18\", \"A23\", \"A76\", \"A79\"]\n    },\n    {\n      \"claim_index\": 4,\n\
+    \      \"verdict\": \"supported\",\n      \"evidence_ids\": [\"A22\", \"A23\"\
+    , \"A24\", \"A68\", \"A75\"]\n    },\n    {\n      \"claim_index\": 5,\n     \
+    \ \"verdict\": \"supported\",\n      \"evidence_ids\": [\"A25\", \"A26\", \"A28\"\
+    ]\n    },\n    {\n      \"claim_index\": 6,\n      \"verdict\": \"supported\"\
+    ,\n      \"evidence_ids\": [\"A25\", \"A26\", \"A27\", \"A58\"]\n    },\n    {\n\
+    \      \"claim_index\": 7,\n      \"verdict\": \"supported\",\n      \"evidence_ids\"\
+    : [\"A24\", \"A29\", \"A30\", \"A83\", \"A84\", \"A85\"]\n    },\n    {\n    \
+    \  \"claim_index\": 8,\n      \"verdict\": \"supported\",\n      \"evidence_ids\"\
+    : [\"A32\", \"A73\", \"A81\"]\n    },\n    {\n      \"claim_index\": 9,\n    \
+    \  \"verdict\": \"supported\",\n      \"evidence_ids\": [\"A33\", \"A34\", \"\
+    A35\"]\n    }\n  ]\n}"
+  model: gpt-6-astra
+  response_id: resp_0772e5be15506cab016af08eeb8bcc87d085830ac5459fbfd8
+  usage:
+    input_tokens: 35949
+    output_tokens: 639
+    total_tokens: 36588

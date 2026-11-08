@@ -1,0 +1,14 @@
+type: call_completed
+key: arxiv-310b98d3c9bc
+reservation_id: arxiv-310b98d3c9bc:review:1
+role: review
+revision: 1
+model_id: gpt-6-astra
+at: '2026-11-08T15:10:02.037428+00:00'
+response_path: reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-310b98d3c9bc/checkpoints/review-1.yaml
+response_sha256: 6468612c23bee98f7793e086b62565c4a23c656e7eb37d2d9dbf02b3b6d58e0e
+usage:
+  input_tokens: 70905
+  output_tokens: 1746
+  total_tokens: 72651
+usage_status: reported

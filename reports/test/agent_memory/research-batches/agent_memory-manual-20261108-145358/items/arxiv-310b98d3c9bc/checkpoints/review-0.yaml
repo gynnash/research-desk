@@ -1,0 +1,47 @@
+binding: 2800591a6e0276267aba7e24dcc9b1e2d8b49b391b4503407c6285821d09e0c6
+result:
+  text: "{\n  \"decision\": \"revise\",\n  \"coverage_acknowledged\": true,\n  \"\
+    issues\": [\n    {\n      \"severity\": \"info\",\n      \"location\": \"reading_scope\
+    \ 与 limitations[0]\",\n      \"reason\": \"已按所提供的完整抽取文本核对，范围包括正文、可用图注和表格文字、参考文献及作者信息；reading_scope\
+    \ 标明未截断，各节 selected_chars 与 total_chars 相等。候选明确说明未复现实验，也未把理论示意曲线视为实测。该范围不包括独立核查图像、数学排版或被引用论文的完整实验。\"\
+    ,\n      \"suggestion\": \"保留实际阅读范围、抽取限制和未复现实验的说明；无需将研究降级为摘要解读。\"\n    },\n  \
+    \  {\n      \"severity\": \"warning\",\n      \"location\": \"claims[6] 至 claims[8]，第四节实验与扩展模型解读\"\
+    ,\n      \"reason\": \"已有数字基本准确，但作为完整技术解读，遗漏了原文支撑参数容量项的关键比较。当前参数部分只讲 GradMem 的写入计算和\
+    \ TMEM 的写入时机，没有呈现 A98–A99 的固定骨干容量扫描及等容量不同写入方法比较，因而读者无法理解容量、写入方法与负载各自有哪些证据。非参数部分也没有给出\
+    \ A83 中所选 LongMemEval 样本上完整历史 Raw RAG 从 35.00% 到 44.00% 的直接比较，尽管 limitations 已提到该实验。\"\
+    ,\n      \"suggestion\": \"在现有第四节内补充代表性的容量与写入方法对照：例如固定 1.3B 配置下 Memory+ 从 1M 到\
+    \ 64M 的 NaturalQuestions accuracy、TriviaQA F1 及无记忆层基线，并注明这些层在预训练中联合训练，不验证部署期顺序写入；或同时简述\
+    \ Qwen3-8B、rank 128 下 SFT、MemFT-OT、MemFT-SW 的记忆准确率差异。补充 LongMemEval 的读取预算比较及其一百个所选样本、本地语义裁判条件。各研究结果应保持分组，不能跨设置排名。\"\
+    \n    },\n    {\n      \"severity\": \"warning\",\n      \"location\": \"claims[0]\
+    \ 与 claims[8]，存储介质机制及参数扩展模型\",\n      \"reason\": \"三轴分类总体正确，但存储介质主要停留在名称列举。原文\
+    \ A11–A18 明确解释了上下文、激活、外部记录、可更新参数的访问及修订机制，并给出关键边界：数据库文本进入提示词仍属外部记忆，KV 缓存移到磁盘仍属激活表示，静态预训练权重不算部署期自适应参数记忆。候选未解释这些边界，也未交代参数模型中的负载比及读取预算为何通常不是独立变量，使核心扩展机制的说明不够完整。\"\
+    ,\n      \"suggestion\": \"增加一段紧凑的介质机制说明，保留上述分类反例及激活状态难以逐事实编辑、跨模型转移的限制；在参数扩展段定义负载比为待保留信息量相对于有效参数容量的比例，并说明读取由架构决定、不额外占用提示词\
+    \ token 不等于零计算成本。将这些内容作为作者模型假设，而非已验证通则。\"\n    }\n  ],\n  \"checks\": [\n    {\n\
+    \      \"claim_index\": 0,\n      \"verdict\": \"supported\",\n      \"evidence_ids\"\
+    : [\"A3\", \"A4\", \"A5\", \"A9\", \"A10\", \"A11\", \"A28\"]\n    },\n    {\n\
+    \      \"claim_index\": 1,\n      \"verdict\": \"supported\",\n      \"evidence_ids\"\
+    : [\"A33\", \"A34\", \"A35\", \"A36\", \"A56\", \"A57\", \"A61\"]\n    },\n  \
+    \  {\n      \"claim_index\": 2,\n      \"verdict\": \"supported\",\n      \"evidence_ids\"\
+    : [\"A27\", \"A38\", \"A39\", \"A40\", \"A42\", \"A43\", \"A44\", \"A45\"]\n \
+    \   },\n    {\n      \"claim_index\": 3,\n      \"verdict\": \"supported\",\n\
+    \      \"evidence_ids\": [\"A47\", \"A48\", \"A49\", \"A51\", \"A52\", \"A53\"\
+    , \"A54\"]\n    },\n    {\n      \"claim_index\": 4,\n      \"verdict\": \"supported\"\
+    ,\n      \"evidence_ids\": [\"A49\", \"A63\", \"A64\", \"A65\", \"A73\", \"A74\"\
+    , \"A76\"]\n    },\n    {\n      \"claim_index\": 5,\n      \"verdict\": \"supported\"\
+    ,\n      \"evidence_ids\": [\"A66\", \"A67\", \"A68\", \"A69\", \"A70\", \"A71\"\
+    , \"A72\", \"A75\", \"A76\"]\n    },\n    {\n      \"claim_index\": 6,\n     \
+    \ \"verdict\": \"supported\",\n      \"evidence_ids\": [\"A78\", \"A79\", \"A80\"\
+    , \"A81\", \"A82\", \"A83\", \"A85\"]\n    },\n    {\n      \"claim_index\": 7,\n\
+    \      \"verdict\": \"supported\",\n      \"evidence_ids\": [\"A85\", \"A87\"\
+    , \"A88\", \"A90\"]\n    },\n    {\n      \"claim_index\": 8,\n      \"verdict\"\
+    : \"supported\",\n      \"evidence_ids\": [\"A92\", \"A93\", \"A95\", \"A96\"\
+    , \"A101\", \"A102\", \"A104\"]\n    },\n    {\n      \"claim_index\": 9,\n  \
+    \    \"verdict\": \"supported\",\n      \"evidence_ids\": [\"A49\", \"A52\", \"\
+    A54\", \"A87\", \"A88\", \"A89\", \"A90\", \"A105\", \"A126\", \"A127\", \"A128\"\
+    ]\n    }\n  ]\n}"
+  model: gpt-6-astra
+  response_id: resp_0329c5bb17e19b45016af0901ec45c87d08a772e6725eabe84
+  usage:
+    input_tokens: 70605
+    output_tokens: 1499
+    total_tokens: 72104
