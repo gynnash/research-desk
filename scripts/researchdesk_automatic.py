@@ -150,15 +150,33 @@ def _freeze(root, effective, topic, identity, base, fingerprint, publisher_conte
     return context
 
 
-def _context(root, effective, topic, identity, base, fingerprint, publisher_context):
+def _research_limit_increase(effective, context):
+    frozen = context['research_config']['budget']
+    current = effective['research']['budget']
+    increase = current['research_max_calls'] - frozen['research_max_calls']
+    if increase <= 0 or current['max_calls_per_cycle'] != frozen['max_calls_per_cycle'] + increase:
+        return None
+    original = deepcopy(effective)
+    for key in ('research_max_calls', 'max_calls_per_cycle'):
+        original['research']['budget'][key] = frozen[key]
+    if context['config_fingerprint'] in (_fingerprint(original), _fingerprint(original, selected_only=False)):
+        return current['research_max_calls']
+    return None
+
+
+def _context(root, effective, topic, identity, base, fingerprint, publisher_context, allow_budget_extension):
     path = root / base / 'context.yaml'
     if path.exists():
         value = store.checked_yaml(root, base + '/context.yaml')
         if value.get('topic') != topic or value.get('cycle_id') != identity:
             raise store.OfflineError('冻结上下文不属于当前研究轮次')
         saved_fingerprint = value.get('config_fingerprint')
+        research_limit = None
         if saved_fingerprint != fingerprint and saved_fingerprint != _fingerprint(effective, selected_only=False):
-            return None
+            if allow_budget_extension:
+                research_limit = _research_limit_increase(effective, value)
+            if research_limit is None:
+                return None
         private = workbench._read(workbench._path(root, 'config/local/automation/' + identity + '/snapshot.yaml'))
         if private.get('config_fingerprint') != saved_fingerprint:
             raise store.OfflineError('冻结配置标识已变化')
@@ -173,6 +191,8 @@ def _context(root, effective, topic, identity, base, fingerprint, publisher_cont
             path = workbench._path(root, relative)
             if not path.is_file() or store.digest(path.read_bytes()) != digest:
                 raise store.OfflineError('冻结配置已被修改，保留现场')
+        if research_limit is not None:
+            request_budget.extend_cycle_research_budget(root, topic, identity, research_limit)
         return value
     return _freeze(root, effective, topic, identity, base, fingerprint, publisher_context)
 
@@ -285,7 +305,7 @@ def _empty(topic):
 
 
 def _run_topic(root, effective, identity, operation, publisher_context, collector, researcher,
-               insight_runner, health_checker, admitter):
+               insight_runner, health_checker, admitter, allow_budget_extension=False):
     topic = effective['research']['topic']
     empty = _empty(topic)
     if not identity:
@@ -297,7 +317,8 @@ def _run_topic(root, effective, identity, operation, publisher_context, collecto
     if (root / base / 'receipt.yaml').exists() or admission_only:
         return _cached_result(root, base, effective, admitter)
     fingerprint = _fingerprint(effective)
-    context = _context(root, effective, topic, identity, base, fingerprint, publisher_context)
+    context = _context(root, effective, topic, identity, base, fingerprint, publisher_context,
+                       allow_budget_extension)
     initial = dict(empty, cycle_id=identity, config_fingerprint=fingerprint, stages={},
                    collection_count=0, summary_count=0)
     initial.pop('model_calls', None)
@@ -329,8 +350,11 @@ def _run_topic(root, effective, identity, operation, publisher_context, collecto
         result['research_reserved_calls'] = studied.get('reserved_calls')
         result['research_completed_calls'] = studied.get('completed_calls')
         finished_items = studied.get('items', [])
-        settled = bool(finished_items) and all(item.get('status') in {'summarized', 'reject', 'rejected'}
-                                               for item in finished_items)
+        max_revisions = context['research_config']['budget']['max_revisions']
+        settled = bool(finished_items) and all(
+            item.get('status') in {'summarized', 'reject', 'rejected'}
+            or item.get('status') == 'revise' and item.get('revision_count') == max_revisions
+            for item in finished_items)
         if not result['summary_count']:
             return _finish(root, base, dict(result,
                 status='research_rejected' if settled else 'research_incomplete', terminal=settled))
@@ -398,7 +422,9 @@ def run(root, event='schedule', operation='run', cycle_id=None, publisher_contex
                 'insight': {**effective['insight'], 'topic': selected},
             }
             return _run_topic(root, config, identity, operation, publisher_context, collector,
-                              researcher, insight_runner, health_checker, admitter)
+                              researcher, insight_runner, health_checker, admitter,
+                              allow_budget_extension=bool(cycle_id and event == 'manual'
+                                                          and operation in {'run', 'catchup'}))
 
         directions = (scheduling.get('topics')
                       if event == 'schedule' and operation == 'run' and not cycle_id else None)

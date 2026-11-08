@@ -230,6 +230,51 @@ class CodexGateway(unittest.TestCase):
             shared.ensure_cycle_room(self.root, topic, cycle_id, 'research')
         self.assertEqual(len(self.client.calls), 2)
 
+    def test_explicit_cycle_extension_preserves_research_proof_and_insight_limit(self):
+        topic, cycle_id = 'agent_memory', 'fixture-cycle'
+        cycle_manifest = f'reports/test/{topic}/cycles/{cycle_id}/manifest.yaml'
+        research = f'reports/test/{topic}/research-batches/{cycle_id}'
+        budget = {'max_calls_per_cycle': 16, 'research_max_calls': 12, 'insight_max_calls': 4}
+        store.save_yaml(self.root, cycle_manifest, {
+            'schema_version': 1, 'mode': 'research_cycle_test', 'backend': 'chatgpt_plan',
+            'topic': topic, 'cycle_id': cycle_id, 'config': {'budget': budget}})
+        config = {'backend': 'chatgpt_plan', 'topic': topic, 'budget': {
+            'max_documents': 5, 'max_calls_per_item': 4, 'max_calls_per_batch': 12,
+            'month_max_calls': 100}}
+        store.save_yaml(self.root, research + '/manifest.yaml', {
+            'backend': 'chatgpt_plan', 'topic': topic, 'batch_id': cycle_id,
+            'created_at': shared.now(), 'budget': config['budget']})
+        events = []
+        month = shared.now()[:7]
+        for index in range(12):
+            store.append_event(self.root, research, events, {
+                'type': 'call_reserved', 'month': month, 'key': f'paper-{index // 4}'})
+        checkpoint = research + '/items/paper-0/checkpoints/research-0.yaml'
+        store.save_yaml(self.root, checkpoint, {'result': {'text': 'Prior research'}})
+        proof = {path: path.read_bytes() for path in (self.root / research).rglob('*.yaml*')}
+        proof.update({self.root / name: (self.root / name).read_bytes()
+                      for name in (cycle_manifest, cycle_manifest + '.sha256')})
+        with self.assertRaises(store.OfflineError):
+            shared.ensure_room(self.root, config, events, 'paper-3', 2, cycle_id)
+
+        shared.extend_cycle_research_budget(self.root, topic, cycle_id, 100)
+        shared.extend_cycle_research_budget(self.root, topic, cycle_id, 100)
+        effective = shared.cycle_request_budget(self.root, topic, cycle_id)
+        self.assertEqual({key: effective[key] for key in budget}, {
+            'max_calls_per_cycle': 104, 'research_max_calls': 100, 'insight_max_calls': 4})
+        for index in range(12, 20):
+            key = f'paper-{index // 4}'
+            shared.ensure_room(self.root, config, events, key, 1, cycle_id)
+            store.append_event(self.root, research, events, {
+                'type': 'call_reserved', 'month': month, 'key': key})
+        with self.assertRaises(store.OfflineError):
+            shared.ensure_room(self.root, config, events, 'paper-3', 1, cycle_id)
+        with self.make_gateway(max_requests=5) as bridge:
+            self.assertEqual([self.request(bridge)[0] for _ in range(5)], [200] * 4 + [429])
+        self.assertEqual(shared.cycle_request_usage(self.root, topic, cycle_id),
+                         {'research': 20, 'insight': 4, 'total': 24})
+        self.assertEqual({path: path.read_bytes() for path in proof}, proof)
+
     def test_shared_monthly_limit_includes_archived_legacy_and_gateway_requests(self):
         month = shared.now()[:7]
         (self.root / 'config/research_state.yaml').write_text(yaml.safe_dump({
