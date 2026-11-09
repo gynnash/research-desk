@@ -1,0 +1,9 @@
+type: call_reserved
+key: langchain-d55b0b25ce79
+reservation_id: langchain-d55b0b25ce79:review:0
+role: review
+revision: 0
+model_id: gpt-6-astra
+month: 2026-11
+at: '2026-11-09T07:45:09.978650+00:00'
+usage_status: unknown

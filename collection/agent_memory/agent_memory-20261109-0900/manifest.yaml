@@ -1,0 +1,44 @@
+schema_version: 1
+mode: collection_index
+topic: agent_memory
+cycle_id: agent_memory-20261109-0900
+receipt_path: reports/test/agent_memory/cycles/agent_memory-20261109-0900/collection.yaml
+receipt_sha256: de6ce832daaee1ee510c1c6dd1383ed8f637c0a6a7553bac656e8818ea3fbd0f
+records:
+- key: arxiv-6f0f57c922e8
+  title: Multimodal Filesystem Memory For Long-Horizon Embodied Agents
+  source_url: https://arxiv.org/abs/2610.22686
+  source_id: paper-9a0f0a87-ada0-4922-9f28-cd647e18d1f5
+  candidate_path: reports/test/agent_memory/research-batches/agent_memory-20261109-0900/items/arxiv-6f0f57c922e8/candidate.yaml
+  original_path: collection/agent_memory/agent_memory-20261109-0900/items/arxiv-6f0f57c922e8/original.yaml
+  original_markdown_path: collection/agent_memory/agent_memory-20261109-0900/items/arxiv-6f0f57c922e8/original.md
+  coverage: full_text
+  content_hash: c59f55de5236fa281d0d281fd8d6f4f276140263ea222ca020b64c7bc64d490f
+- key: langchain-d55b0b25ce79
+  title: 'Managed Deep Agents v0.8: new auth, memory, and channels'
+  source_url: https://www.langchain.com/blog/langsmith-managed-deep-agents-whats-new
+  source_id: blog-ced9b66c-bd58-4fcf-a08c-113913daa6ac
+  candidate_path: reports/test/agent_memory/research-batches/agent_memory-20261109-0900/items/langchain-d55b0b25ce79/candidate.yaml
+  original_path: collection/agent_memory/agent_memory-20261109-0900/items/langchain-d55b0b25ce79/original.yaml
+  original_markdown_path: collection/agent_memory/agent_memory-20261109-0900/items/langchain-d55b0b25ce79/original.md
+  coverage: full_text
+  content_hash: 88bd1ecfa31b3396c15fc7182d8eca0c2b8db86d73a1bcdbaa130fe09ae1f05c
+- key: arxiv-e05d9eb84420
+  title: 'From Memory Hits to Answerable Evidence: Query-Conditioned Memory Compilation
+    for Long-Term Agent Memory'
+  source_url: https://arxiv.org/abs/2610.23313
+  source_id: paper-0038cf95-bc43-4519-979f-d764269fb589
+  candidate_path: reports/test/agent_memory/research-batches/agent_memory-20261109-0900/items/arxiv-e05d9eb84420/candidate.yaml
+  original_path: collection/agent_memory/agent_memory-20261109-0900/items/arxiv-e05d9eb84420/original.yaml
+  original_markdown_path: collection/agent_memory/agent_memory-20261109-0900/items/arxiv-e05d9eb84420/original.md
+  coverage: full_text
+  content_hash: 798769fd9d2f4502650c40d7692ffe29fe1c1bcdb13e8f28d2d1fbe34e738cc2
+- key: arxiv-c9ee1ae11513
+  title: 'MemoryTax: The Bitter Lesson of Agent Memory'
+  source_url: https://arxiv.org/abs/2610.29823
+  source_id: paper-8db9e69d-271e-4c3c-97d1-3e2ea98dc602
+  candidate_path: reports/test/agent_memory/research-batches/agent_memory-20261109-0900/items/arxiv-c9ee1ae11513/candidate.yaml
+  original_path: collection/agent_memory/agent_memory-20261109-0900/items/arxiv-c9ee1ae11513/original.yaml
+  original_markdown_path: collection/agent_memory/agent_memory-20261109-0900/items/arxiv-c9ee1ae11513/original.md
+  coverage: full_text
+  content_hash: 4cd9464542e8b0dc3c852f09aa24067675355e9d10b7ebf839e8b29bbe3dbeb8

@@ -1,0 +1,121 @@
+schema_version: 1
+mode: research_batch_test
+backend: chatgpt_plan
+topic: agent_memory
+batch_id: agent_memory-20261109-0900
+status: test_accepted
+production_accepted: false
+models: &id001
+  research: gpt-6.1-sol
+  review: gpt-6-astra
+authorization:
+  authenticated: true
+  plan_permission: true
+  authorization: official_chatgpt_oauth
+  account_fingerprint: 4be5bc45c39fc32a
+items:
+- key: arxiv-6f0f57c922e8
+  status: test_accepted
+  source_id: paper-9a0f0a87-ada0-4922-9f28-cd647e18d1f5
+  coverage: full_text
+  revision_count: 0
+  models: *id001
+  actual_models:
+  - gpt-6-astra
+  - gpt-6.1-sol
+  reserved_calls: 2
+  completed_calls: 2
+  report_path: reports/test/agent_memory/research-batches/agent_memory-20261109-0900/items/arxiv-6f0f57c922e8/report.md
+  report_sha256: b487f5db366757762a629cc6f6ca7e2ed4278b2f8256f9b4d64f45e7d7964489
+  finished_at: '2026-11-09T07:44:48.364232+00:00'
+  production_accepted: false
+- key: langchain-d55b0b25ce79
+  status: test_accepted
+  source_id: blog-ced9b66c-bd58-4fcf-a08c-113913daa6ac
+  coverage: full_text
+  revision_count: 0
+  models: *id001
+  actual_models:
+  - gpt-6-astra
+  - gpt-6.1-sol
+  reserved_calls: 2
+  completed_calls: 2
+  report_path: reports/test/agent_memory/research-batches/agent_memory-20261109-0900/items/langchain-d55b0b25ce79/report.md
+  report_sha256: 8ae29152d0714e70bdd166b3f0ac61ab643f9395ebad20badcbf33c56923192d
+  finished_at: '2026-11-09T07:45:20.556598+00:00'
+  production_accepted: false
+- key: arxiv-e05d9eb84420
+  status: test_accepted
+  source_id: paper-0038cf95-bc43-4519-979f-d764269fb589
+  coverage: full_text
+  revision_count: 0
+  models: *id001
+  actual_models:
+  - gpt-6-astra
+  - gpt-6.1-sol
+  reserved_calls: 2
+  completed_calls: 2
+  report_path: reports/test/agent_memory/research-batches/agent_memory-20261109-0900/items/arxiv-e05d9eb84420/report.md
+  report_sha256: c3fa49f010a4bfc0b5a51f5b996240443f3338b6c5cac04ef10574128622c7c1
+  finished_at: '2026-11-09T07:46:05.314468+00:00'
+  production_accepted: false
+- key: arxiv-c9ee1ae11513
+  status: test_accepted
+  source_id: paper-8db9e69d-271e-4c3c-97d1-3e2ea98dc602
+  coverage: full_text
+  revision_count: 1
+  models: *id001
+  actual_models:
+  - gpt-6-astra
+  - gpt-6.1-sol
+  reserved_calls: 4
+  completed_calls: 4
+  report_path: reports/test/agent_memory/research-batches/agent_memory-20261109-0900/items/arxiv-c9ee1ae11513/report.md
+  report_sha256: 76e61c1be8fc6bd17ba2e96ac7173b07880fa6c648909a3f3c238e487e66f753
+  finished_at: '2026-11-09T07:47:37.116407+00:00'
+  production_accepted: false
+reserved_calls: 10
+completed_calls: 10
+actual_models:
+- gpt-6-astra
+- gpt-6.1-sol
+usage:
+- input_tokens: 31452
+  output_tokens: 1048
+  total_tokens: 32500
+- input_tokens: 32284
+  output_tokens: 383
+  total_tokens: 32667
+- input_tokens: 3773
+  output_tokens: 761
+  total_tokens: 4534
+- input_tokens: 4372
+  output_tokens: 262
+  total_tokens: 4634
+- input_tokens: 28643
+  output_tokens: 978
+  total_tokens: 29621
+- input_tokens: 29414
+  output_tokens: 420
+  total_tokens: 29834
+- input_tokens: 10040
+  output_tokens: 942
+  total_tokens: 10982
+- input_tokens: 10734
+  output_tokens: 680
+  total_tokens: 11414
+- input_tokens: 11411
+  output_tokens: 987
+  total_tokens: 12398
+- input_tokens: 10798
+  output_tokens: 337
+  total_tokens: 11135
+monthly_reserved_calls: 48
+effective_month_max_calls: 100
+membership_remaining_quota: null
+api_billed_cost: null
+cost_note: 真实会员共享额度不换算模拟单位或 API 金额；未知请求始终占用预算。
+all_existing_notes_unchanged: true
+formal_notes_unchanged: true
+receipt_path: reports/test/agent_memory/research-batches/agent_memory-20261109-0900/receipt-attempt-1.yaml
+finished_at: '2026-11-09T07:47:37.244718+00:00'

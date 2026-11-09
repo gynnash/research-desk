@@ -1,0 +1,14 @@
+type: call_completed
+key: langchain-d55b0b25ce79
+reservation_id: langchain-d55b0b25ce79:review:0
+role: review
+revision: 0
+model_id: gpt-6-astra
+at: '2026-11-09T07:45:20.548446+00:00'
+response_path: reports/test/agent_memory/research-batches/agent_memory-20261109-0900/items/langchain-d55b0b25ce79/checkpoints/review-0.yaml
+response_sha256: 95a30371244ba28c0dfe09ffc1a5f4e87551a083560344f5187464e3a295ad60
+usage:
+  input_tokens: 4372
+  output_tokens: 262
+  total_tokens: 4634
+usage_status: reported

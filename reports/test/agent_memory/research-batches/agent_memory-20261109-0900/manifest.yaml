@@ -1,0 +1,72 @@
+schema_version: 1
+mode: research_batch_test
+production_accepted: false
+backend: chatgpt_plan
+topic: agent_memory
+batch_id: agent_memory-20261109-0900
+created_at: '2026-11-09T07:43:58.167743+00:00'
+fingerprint: e4f9da0e374681bc63098ee902e22bb193a03a1a9199871f37f670f5d4fc1482
+config_sha256: a0c903a09ce672fd17daa3df9f8509bb46f78b8bdc4c385034c2dc399fcd3e3c
+topics_sha256: a252b9013b241b2fcf83015269e4c28a9718c0575b62bd6f43b039f2da202c2b
+models:
+  research: gpt-6.1-sol
+  review: gpt-6-astra
+budget:
+  max_documents: 4
+  max_calls_per_item: 100
+  max_calls_per_batch: 100
+  month_max_calls: 100
+  max_input_chars: 600000
+  max_output_chars: 24000
+  timeout_seconds: 240
+  max_revisions: 1
+authorization:
+  authenticated: true
+  plan_permission: true
+  authorization: official_chatgpt_oauth
+  account_fingerprint: 4be5bc45c39fc32a
+catalog:
+- slug: gpt-6.1-sol
+  display_name: GPT-6.1-Sol
+- slug: gpt-6-astra
+  display_name: GPT-6-Astra
+- slug: gpt-6.1-terra
+  display_name: GPT-6.1 Terra
+- slug: gpt-6-sol
+  display_name: GPT-6-Sol
+- slug: gpt-6-luna
+  display_name: GPT-6-Luna
+- slug: gpt-5.6-sol
+  display_name: GPT-5.6-Sol
+- slug: gpt-5.6-terra
+  display_name: GPT-5.6-Terra
+- slug: gpt-5.6-luna
+  display_name: GPT-5.6-Luna
+prompt_version: research-batch-v5
+protected_notes:
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-310b98d3c9bc/report.md: 068a98bab4dd6b303ae4b09abbe8ab78694bf7a050a848f764489cbe096e70ff
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-244ddaafb793/report.md: a42c424986e7fde6e131e238cb616cacd6a0b874289ba533df3fc975c92a2c5f
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-1b2c6c25ca02/report.md: 87c712a70c3403b12f3c4576914de9daa3946a4c6fa88d3016bcca980f799bc3
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-b3ecb03a2b96/report.md: e98b48cf9fa624351692e2d563ea609631f1b1635e2f99e7f1cff566dc03baff
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-347d26e2053b/report.md: c6feb6ffdeffa4efc3e3983d318efdbb1075c10f8ff1c0a3ee19cf9c54f661f7
+  insights/agent_memory/agent_memory-manual-20261108-145358/report.md: bb83e1ce9e9d1943f8d1124c2ad6dd6d5be69f5865c75ff7f1a106819316543c
+  insights/test/agent_memory/agent_memory-manual-20261108-145358/report.md: 02f524355fdaa9490bd92249c16d5e89dc4b2757df883dad15c71ebf729cf6d9
+  articles/agent_memory/agent_memory-manual-20261108-145358-topic-1.md: 7f590b2c625a09dd4c79937037044f3e350b6b19d8eb135be8ed79bd53bf8218
+  articles/test/agent_memory/agent_memory-manual-20261108-145358/topic-1.md: c3a8c5b4055888e24ec0f4a54efd1b79346deb4f158f09ddf4cbca34e4aeb652
+  collection/README.md: 6b28ec414625172e2b04864f463ed732671cc939f34dd9bd902e8cefd34e1710
+  collection/agent_memory/README.md: ccf55c9a7f47fe66a2376cf2541708610c13807847d61e1f17f7a531590d205a
+  collection/agent_memory/agent_memory-20261109-0900/items/arxiv-6f0f57c922e8/original.md: 3188a3fb31392918aa24fa7b952543b50a8bd91e243c3772dbd99762e02ccab0
+  collection/agent_memory/agent_memory-20261109-0900/items/langchain-d55b0b25ce79/original.md: 4ac8f9a702154b548e9c819b0cfb026310a2c225c245370a4b2c51a3714258b7
+  collection/agent_memory/agent_memory-20261109-0900/items/arxiv-c9ee1ae11513/original.md: 94be3854d7491405e98e69a221a3cb7b73b194c5840b53fc6f2462c46463a543
+  collection/agent_memory/agent_memory-20261109-0900/items/arxiv-e05d9eb84420/original.md: 96cb74b7c08061b336a9a812fc57b5ab98dda3a19da20fb625fbc3b227ca5c9e
+  collection/agent_memory/agent_memory-manual-20261108-145358/items/arxiv-310b98d3c9bc/original.md: d831abb5105ac3921fe1bddd3e2c5326ad2a8d1bc73bb13f98b956ce1fce8bd6
+  collection/agent_memory/agent_memory-manual-20261108-145358/items/arxiv-244ddaafb793/original.md: 4ca3ca50b131b8b4542185625738f146dcc25ebfb109594b2c8e69659817424b
+  collection/agent_memory/agent_memory-manual-20261108-145358/items/arxiv-1b2c6c25ca02/original.md: 184f29dbeca29fb50909609c5760ecbe48fad3293d79b76370bea3c32d770fa7
+  collection/agent_memory/agent_memory-manual-20261108-145358/items/arxiv-b3ecb03a2b96/original.md: d5777c631ffb22fd94f4e7c3ef8b1243677809d3ded17e8fa8b9e5e0a127c061
+  collection/agent_memory/agent_memory-manual-20261108-145358/items/arxiv-347d26e2053b/original.md: c44cfc81f946775ff83e0cb9578661ed5eb16a3cd85aacc48afddfd72945c934
+  summary/README.md: 7f028a3170b0f754c6be7deb8a2c6936ff0f0f045196fbf0a106d9b0ed55b5fd
+  summary/agent_memory/README.md: 327df676215679f716588f4438892a3597cbf64e9fc34cfe1063dce49b1d391c
+  summary/agent_memory/agent_memory-manual-20261108-145358/arxiv-b3ecb03a2b96.md: 0373fc7619ecc41ec2602aa864835f353d289cee04a262a4123fd918ed75ddd0
+  summary/agent_memory/agent_memory-manual-20261108-145358/arxiv-347d26e2053b.md: 8104f7235fc4c4e71b99cd33b2205facaaf90aa5f14e697a769c889a7224c49d
+  summary/agent_memory/agent_memory-manual-20261108-145358/arxiv-1b2c6c25ca02.md: 6213ad55eeff0f5a516fac950622b72d099bf33e315207a165eb0f7b7e9be768
+  summary/agent_memory/agent_memory-manual-20261108-145358/arxiv-244ddaafb793.md: 4ba341d5da201718d7b04bd979c2809403367b18b4a9c0d0f049a16c07f4b7de

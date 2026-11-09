@@ -1,0 +1,21 @@
+binding: abd92dd40b500200832da01db7b09f1fbb7df44c08044fa3c3743369ee90d48c
+result:
+  text: "{\n  \"decision\": \"pass\",\n  \"coverage_acknowledged\": true,\n  \"issues\"\
+    : [\n    {\n      \"severity\": \"info\",\n      \"location\": \"reading_scope、summary、全部\
+    \ claims 及 limitations\",\n      \"reason\": \"已按所提供的 A1–A78 核对完整抽取正文及附录；reading_scope\
+    \ 标明未截断，但不保证图像、排版及数学公式的忠实呈现。摘要的23.51个百分点差值、各项比较条件与成本口径均有正文支持。候选明确将实验结果归于作者，并注明未独立复现；同时保留了跨基准反例、只读评测、事实抽取遗漏及成本排除项等关键限制。\"\
+    ,\n      \"suggestion\": \"无需修改；保留现有作者归因、阅读范围和未复现实验声明。\"\n    }\n  ],\n  \"checks\"\
+    : [\n    {\n      \"claim_index\": 0,\n      \"verdict\": \"supported\",\n   \
+    \   \"evidence_ids\": [\"A12\", \"A13\", \"A18\", \"A20\", \"A21\", \"A22\", \"\
+    A45\"]\n    },\n    {\n      \"claim_index\": 1,\n      \"verdict\": \"supported\"\
+    ,\n      \"evidence_ids\": [\"A31\", \"A32\", \"A34\", \"A35\"]\n    },\n    {\n\
+    \      \"claim_index\": 2,\n      \"verdict\": \"supported\",\n      \"evidence_ids\"\
+    : [\"A36\", \"A37\", \"A66\"]\n    },\n    {\n      \"claim_index\": 3,\n    \
+    \  \"verdict\": \"supported\",\n      \"evidence_ids\": [\"A26\", \"A27\", \"\
+    A29\", \"A68\", \"A69\", \"A70\"]\n    }\n  ]\n}"
+  model: gpt-6-astra
+  response_id: resp_0007805d58b1a1bb016af17a2f792487d086274c0d85ee7e1c
+  usage:
+    input_tokens: 29414
+    output_tokens: 420
+    total_tokens: 29834

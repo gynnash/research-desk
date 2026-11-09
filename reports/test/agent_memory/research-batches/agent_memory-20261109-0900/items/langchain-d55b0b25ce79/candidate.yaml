@@ -1,0 +1,109 @@
+candidate:
+  key: langchain-d55b0b25ce79
+  kind: blog
+  topic: agent_memory
+  metadata:
+    title: 'Managed Deep Agents v0.8: new auth, memory, and channels'
+    source: LangChain
+    source_url: https://www.langchain.com/blog/langsmith-managed-deep-agents-whats-new
+    authors:
+    - Nathan Drezner
+    - Karthic Subramanian
+    published_at: '2026-09-24'
+  evidence:
+    coverage: full_text
+    extraction_coverage: full_text
+    source_url: https://www.langchain.com/blog/langsmith-managed-deep-agents-whats-new
+    source_version: null
+    content_hash: 88bd1ecfa31b3396c15fc7182d8eca0c2b8db86d73a1bcdbaa130fe09ae1f05c
+    evidence_sha256: e7ef8832a0b994d6f9b2704317bf3da2d6bb5308067f3e1ec1cd8e415158b8e0
+    locators:
+    - id: A1
+      section_id: S1
+      location: https://www.langchain.com/blog/langsmith-managed-deep-agents-whats-new;
+        chars 1-816
+      text_sha256: b4f4af2e58f4674b7b53c99cf119c7f8a4068d584014f1316085114b4fcc57ed
+      quote: Today we’re launching Managed Deep Agents 0.8, which adds support for
+        user-owned credentials, user-level memory, HTTP channels, file transfer in
+        Slack and adds a pre-built
+    - id: A2
+      section_id: S1
+      location: https://www.langchain.com/blog/langsmith-managed-deep-agents-whats-new;
+        chars 817-2080
+      text_sha256: 0d60359f7a4ff28735a5e8f3b3459445cc3b7f7cb508b8f4fe841578ee82a203
+      quote: ''
+    - id: A3
+      section_id: S1
+      location: https://www.langchain.com/blog/langsmith-managed-deep-agents-whats-new;
+        chars 2081-3299
+      text_sha256: 3f1f654fabfea30e6530796945443c74e9ad3f173ca7a22fd97a837f6e2a0b1a
+      quote: ''
+    - id: A4
+      section_id: S1
+      location: https://www.langchain.com/blog/langsmith-managed-deep-agents-whats-new;
+        chars 3300-4654
+      text_sha256: 20992fe98181e91580b18b7439bbd36906a8ffac22418794f55c524a7a12ca44
+      quote: ''
+    - id: A5
+      section_id: S1
+      location: https://www.langchain.com/blog/langsmith-managed-deep-agents-whats-new;
+        chars 4655-5977
+      text_sha256: dd21ac6a8c6be96c2559c7db595df04a0cb1cab86ab5c9b399401407c2618a1a
+      quote: ''
+    - id: A6
+      section_id: S1
+      location: https://www.langchain.com/blog/langsmith-managed-deep-agents-whats-new;
+        chars 5978-7285
+      text_sha256: 004703c8092c2df051a4e653d946b1d1fe0977a3049726639f394d4bb042661d
+      quote: ''
+    - id: A7
+      section_id: S1
+      location: https://www.langchain.com/blog/langsmith-managed-deep-agents-whats-new;
+        chars 7286-8632
+      text_sha256: 42bef63d46bd4dd57238e10c8fdd66cbc6ac9a208f9adf06d0880dc7d3315034
+      quote: ''
+    - id: A8
+      section_id: S1
+      location: https://www.langchain.com/blog/langsmith-managed-deep-agents-whats-new;
+        chars 8633-9925
+      text_sha256: 0d3a8a5fb934fd16c139ea36753ce38b102fbac6478b8c17413e16cbf561d9b6
+      quote: ''
+    - id: A9
+      section_id: S1
+      location: https://www.langchain.com/blog/langsmith-managed-deep-agents-whats-new;
+        chars 9926-10970
+      text_sha256: 021fad1b79f7ac0c9ec9150c0b762855aa982d8f35eca8e1c8b5cb335ed37397
+      quote: ''
+    reading_profile: blog-fulltext-v1
+    format: html
+    document_url: https://www.langchain.com/blog/langsmith-managed-deep-agents-whats-new
+    sections:
+    - id: S1
+      title: 'Managed Deep Agents v0.8: new auth, memory, and channels'
+      location: https://www.langchain.com/blog/langsmith-managed-deep-agents-whats-new
+      total_chars: 10970
+      selected_chars: 10970
+    total_chars: 10970
+    selected_chars: 10970
+    truncated: false
+    extraction_scope: complete readable text within the explicit publisher article
+      body
+    limitations:
+    - Public HTML article text only; embedded images, video, interactive content,
+      external links, and inaccessible content are not verified.
+  identity_keys:
+  - url:https://www.langchain.com/blog/langsmith-managed-deep-agents-whats-new
+  source_id: blog-ced9b66c-bd58-4fcf-a08c-113913daa6ac
+  existing_source_path: null
+  existing_source_metadata: null
+  content_hash: 88bd1ecfa31b3396c15fc7182d8eca0c2b8db86d73a1bcdbaa130fe09ae1f05c
+  metadata_hash: 1494b26ec0487d711535481fbbc6c60c6eff4d15ac0c43276e0073a738b0a4a8
+  upstream_updated_at: '2026-10-08T02:56:27.974Z'
+  archive:
+    path: collection/agent_memory/agent_memory-20261109-0900/items/langchain-d55b0b25ce79/original.yaml
+    sha256: b4c3afcb9fe9ab549015bf397cebd16177f10f0b0184413daac87c1a6f3745d7
+    markdown_path: collection/agent_memory/agent_memory-20261109-0900/items/langchain-d55b0b25ce79/original.md
+    markdown_sha256: 4ac8f9a702154b548e9c819b0cfb026310a2c225c245370a4b2c51a3714258b7
+material_sha256: e7ef8832a0b994d6f9b2704317bf3da2d6bb5308067f3e1ec1cd8e415158b8e0
+action: research
+reason: no_completed_real_research

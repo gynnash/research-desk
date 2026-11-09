@@ -1,0 +1,8 @@
+type: item_finished
+key: arxiv-6f0f57c922e8
+status: test_accepted
+result_path: reports/test/agent_memory/research-batches/agent_memory-20261109-0900/items/arxiv-6f0f57c922e8/result.yaml
+result_sha256: e8b332321cb33a05da1b9148529cb9ee7f1a7e833e707b64e78e1168159d90ff
+at: '2026-11-09T07:44:48.365933+00:00'
+output: reports/test/agent_memory/research-batches/agent_memory-20261109-0900/items/arxiv-6f0f57c922e8/report.md
+output_sha256: b487f5db366757762a629cc6f6ca7e2ed4278b2f8256f9b4d64f45e7d7964489

@@ -1,0 +1,14 @@
+type: call_completed
+key: langchain-d55b0b25ce79
+reservation_id: langchain-d55b0b25ce79:research:0
+role: research
+revision: 0
+model_id: gpt-6.1-sol
+at: '2026-11-09T07:45:09.879182+00:00'
+response_path: reports/test/agent_memory/research-batches/agent_memory-20261109-0900/items/langchain-d55b0b25ce79/checkpoints/research-0.yaml
+response_sha256: 8de2e1f749e01f9c6104b00daaeef79345283a226b29edd63a3e59234bda69ba
+usage:
+  input_tokens: 3773
+  output_tokens: 761
+  total_tokens: 4534
+usage_status: reported

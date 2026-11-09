@@ -1,0 +1,49 @@
+---
+schema_version: 1
+kind: research_summary
+topic: agent_memory
+cycle_id: agent_memory-20261109-0900
+title: Multimodal Filesystem Memory For Long-Horizon Embodied Agents
+source_url: https://arxiv.org/abs/2610.22686v2
+source_id: paper-9a0f0a87-ada0-4922-9f28-cd647e18d1f5
+collection_original: collection/agent_memory/agent_memory-20261109-0900/items/arxiv-6f0f57c922e8/original.md
+coverage: full_text
+review_status: passed
+research_model: gpt-6.1-sol
+review_model: gpt-6-astra
+generated_at: '2026-11-09T07:44:48.364232+00:00'
+---
+
+# Multimodal Filesystem Memory For Long-Horizon Embodied Agents
+
+作者报告，在 Minecraft 和 KiCad 的长时程单智能体任务中，MFM 通过“检索文本线索、回看原始多模态证据、更新可追溯知识”的组合提高了表现。GPT-6-Astra 在 36,000 步预算内完成 Ender Dragon 的 16/24 个里程碑，优于最佳基线的 12.7，但仍未完成任务。
+
+## 先定位经历，再检查原始证据
+
+作者提出的 MFM 不用摘要替代历史，而是把原始观察、状态和动作保存为情景记录，另建包含时间、位置、动作、结果和证据路径的索引。智能体先按线索筛选经历，再选择加载历史画面、裁剪区域或比较新旧视图，从而检查索引文字未记下的细节。Minecraft 索引由运行框架根据结构化游戏状态生成，并非模型自由撰写。
+
+作者将记忆巩固实现为对知识、程序和当前计划的修订，同时保留情景档案及索引。知识和程序引用支持它们的经历，便于发现矛盾后重新查证；working.md 则保存计划、未解决问题和上下文重置后的恢复信息。这里改变的是可读写的外部记忆，而非丢弃原始证据后只留下压缩结论。
+
+## 提升来自多个组件的组合
+
+作者在三个随机种子的主实验中报告：GPT-6-Astra 配合 MFM 在 Ender Dragon 上达到 16.0±0.0 个里程碑，VISTA 为 12.7±0.6；在含 25 个任务、允许跨任务保留记忆的 KiCad 评测中，平均奖励分别为 0.440±0.013 和 0.400±0.010。相同模型移除历史画面、将索引换成扁平日志、移除程序或移除巩固后，Dragon 得分分别降至 9.7、9.3、10.7、9.3，支持各组件均有贡献。
+
+## 迁移收益取决于记住了什么
+
+作者把探索轨迹的记忆交给同一世界中的新智能体，再要求寻找并开采铁、钻石或金矿；成功次数从无继承记忆的 1/12 增至完整记忆的 11/12。收益主要出现在记忆已记录目标矿位置的条件下：继承发现目标之前的记忆，往往仍会耗尽预算。因此，实验支持相关环境知识的复用，而不是记忆越多就必然越有效。
+
+## 适用条件与仍需验证的问题
+
+已阅读完整抽取正文及可用附录，未独立复现实验，也未核验图像本身。提示词附录仅有引导句，无法据此完整检查实际提示配置。
+
+主实验和消融每配置仅三个种子，评测限于 Minecraft、KiCad 的单智能体；世界知识迁移在同一世界中进行，不能直接推广为跨环境泛化。
+
+Minecraft 索引依赖结构化游戏状态。VISTA 与 MFM 具有等价的历史画面检查能力，但还同时存在索引、知识组织和程序形成方面的差异，因此总体优势不能单独归因于视觉记忆。
+
+记忆尚未解决探索瓶颈，Ender Dragon 仍未完成；完整保存历史也有存储代价，文中单次 Diamond 运行的全分辨率画面占用 720 MB，不能据此推定更长时间运行仍可低成本扩展。
+
+## 资料来源与阅读范围
+
+- [Multimodal Filesystem Memory For Long-Horizon Embodied Agents](https://arxiv.org/abs/2610.22686v2)：已阅读完整抽取正文，未独立复现实验。
+
+- [阅读已采集的完整原文](../../../collection/agent_memory/agent_memory-20261109-0900/items/arxiv-6f0f57c922e8/original.md)。

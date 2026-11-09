@@ -1,0 +1,17 @@
+key: langchain-d55b0b25ce79
+status: test_accepted
+source_id: blog-ced9b66c-bd58-4fcf-a08c-113913daa6ac
+coverage: full_text
+revision_count: 0
+models:
+  research: gpt-6.1-sol
+  review: gpt-6-astra
+actual_models:
+- gpt-6-astra
+- gpt-6.1-sol
+reserved_calls: 2
+completed_calls: 2
+report_path: reports/test/agent_memory/research-batches/agent_memory-20261109-0900/items/langchain-d55b0b25ce79/report.md
+report_sha256: 8ae29152d0714e70bdd166b3f0ac61ab643f9395ebad20badcbf33c56923192d
+finished_at: '2026-11-09T07:45:20.556598+00:00'
+production_accepted: false

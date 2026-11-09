@@ -1,0 +1,50 @@
+---
+schema_version: 1
+kind: research_summary
+topic: agent_memory
+cycle_id: agent_memory-20261109-0900
+title: 'From Memory Hits to Answerable Evidence: Query-Conditioned Memory Compilation
+  for Long-Term Agent Memory'
+source_url: https://arxiv.org/abs/2610.23313v1
+source_id: paper-0038cf95-bc43-4519-979f-d764269fb589
+collection_original: collection/agent_memory/agent_memory-20261109-0900/items/arxiv-e05d9eb84420/original.md
+coverage: full_text
+review_status: passed
+research_model: gpt-6.1-sol
+review_model: gpt-6-astra
+generated_at: '2026-11-09T07:46:05.314468+00:00'
+---
+
+# From Memory Hits to Answerable Evidence: Query-Conditioned Memory Compilation for Long-Term Agent Memory
+
+作者最有说服力的发现是：在 LoCoMo 中固定检索到的来源及其顺序后，把每个来源的全部保留事实编译成证据束，比只呈现一条代表事实的 Judge Accuracy 高出23.51个百分点。MemCompile 因而把“选哪些来源”和“怎样呈现来源”拆开优化，而不只追求更多检索命中。
+
+## 按来源分配预算，再编译证据
+
+作者让每轮原始对话对应一个不可变的 SourcePacket，抽取事实并保留来源外键。Cell 路由与 BM25 找到的事实先按来源合并，避免同一轮对话因多条事实、多通道命中而重复占位；调度器再选择10个互补来源，并从语义候选中最多追加2个。最终上下文不是命中事实或原文的直接拼接，而是按调度顺序呈现每个入选来源的全部保留事实及时间戳。
+
+## 去重与互补选择作用不同
+
+作者在10个来源名额下发现，按来源归一化比精确文本去重使 Gold Source Recall 提高3.35个百分点；继续加入互补调度后，平均独立来源数仍为9.988，重复预算率仍为零，但召回率从51.91%升至80.84%。这说明释放重复名额只是第一步，决定哪些来源能共同补齐答案证据，带来的收益更大。
+
+在固定来源集合、顺序及85.50%来源召回率的对照中，作者报告：代表事实、原始对话、完整事实束的 Judge Accuracy 分别为57.01%、75.32%、80.52%。这一实验将证据呈现与检索覆盖分开，支持“找到正确来源仍不够”的判断；作者将事实束的优势解释为保留关系和时间限定，同时过滤对话噪声。
+
+## 更高质量并非最低成本
+
+作者用相同骨干模型及回答、评判提示重跑基线；MemCompile 的生成组件使用 gpt-4o-mini，评判使用 gpt-5-nano。LoCoMo 上，其总体 F1 为55.94、Judge Accuracy 为80.52%；相较成本接近的 AtomMem，Judge 高10.01个百分点，生成 token 多8.8%（26.72M 对24.55M）。两次来源调度占在线 token 用量的83.4%，是主要服务成本。
+
+## 适用条件与仍需验证的问题
+
+已阅读完整抽取正文及附录，未独立复现实验；未核验原始图像、排版及公式渲染，以上主要依赖可读方法描述与表格。
+
+实验仅覆盖两个对话记忆基准及专有模型。LongMemEval-S 并非全面领先：多会话类别准确率为54.14%，低于 LightMem 的57.14%和 Mem0 的65.41%。
+
+评测期间持久记忆只读，因此不能据此确认持续交互中的更新、遗忘或冲突处理效果。所谓完整事实束仅覆盖抽取后保留的事实，不能恢复抽取阶段遗漏的信息。
+
+Judge Accuracy 来自模型评判而非人工独立核验；成本统计排除评判与嵌入用量，不能直接视为完整部署成本。
+
+## 资料来源与阅读范围
+
+- [From Memory Hits to Answerable Evidence: Query-Conditioned Memory Compilation for Long-Term Agent Memory](https://arxiv.org/abs/2610.23313v1)：已阅读完整抽取正文，未独立复现实验。
+
+- [阅读已采集的完整原文](../../../collection/agent_memory/agent_memory-20261109-0900/items/arxiv-e05d9eb84420/original.md)。

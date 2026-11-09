@@ -1,0 +1,18 @@
+binding: 9082f7876cdf44e2fbc642abc307aab7401a7760733a690d760da2c034feb60c
+result:
+  text: "{\n  \"decision\": \"pass\",\n  \"coverage_acknowledged\": true,\n  \"issues\"\
+    : [\n    {\n      \"severity\": \"info\",\n      \"location\": \"reading_scope\
+    \ 与 limitations[0]\",\n      \"reason\": \"已核对 S1 中 A1–A9 的完整抽取正文，材料未截断。候选准确限定了公开\
+    \ HTML 正文的阅读范围，并说明未核验外链、嵌入媒体或实现代码，未独立复现实验；未将 full_text 等同于独立验证。\",\n      \"suggestion\"\
+    : \"保留现有范围声明和未复现说明。\"\n    }\n  ],\n  \"checks\": [\n    {\n      \"claim_index\"\
+    : 0,\n      \"verdict\": \"supported\",\n      \"evidence_ids\": [\"A3\", \"A4\"\
+    ]\n    },\n    {\n      \"claim_index\": 1,\n      \"verdict\": \"supported\"\
+    ,\n      \"evidence_ids\": [\"A4\", \"A5\"]\n    },\n    {\n      \"claim_index\"\
+    : 2,\n      \"verdict\": \"supported\",\n      \"evidence_ids\": [\"A3\", \"A4\"\
+    , \"A5\", \"A7\"]\n    }\n  ]\n}"
+  model: gpt-6-astra
+  response_id: resp_0bc31d779854dbc0016af17a071ad487d0869c879a6c215024
+  usage:
+    input_tokens: 4372
+    output_tokens: 262
+    total_tokens: 4634

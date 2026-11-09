@@ -1,0 +1,52 @@
+schema_version: 1
+mode: research_batch_test
+backend: chatgpt_plan
+topic: agent_memory
+topics_file: config/local/automation/agent_memory-20261109-0900/topics.yaml
+models:
+  research: gpt-6.1-sol
+  review: gpt-6-astra
+budget:
+  max_documents: 4
+  max_calls_per_item: 100
+  max_calls_per_batch: 100
+  month_max_calls: 100
+  max_input_chars: 600000
+  max_output_chars: 24000
+  timeout_seconds: 240
+  max_revisions: 1
+prompts:
+  version: research-batch-v5
+sources:
+- id: arxiv-6f0f57c922e8
+  adapter: arxiv
+  kind: paper
+  url: https://arxiv.org/abs/2610.22686v2
+  evidence_max_chars: 200000
+  reading:
+    mode: full_text_required
+  archive: true
+- id: langchain-d55b0b25ce79
+  adapter: langchain
+  kind: blog
+  url: https://www.langchain.com/blog/langsmith-managed-deep-agents-whats-new
+  evidence_max_chars: 200000
+  reading:
+    mode: full_text_required
+  archive: true
+- id: arxiv-e05d9eb84420
+  adapter: arxiv
+  kind: paper
+  url: https://arxiv.org/abs/2610.23313v1
+  evidence_max_chars: 200000
+  reading:
+    mode: full_text_required
+  archive: true
+- id: arxiv-c9ee1ae11513
+  adapter: arxiv
+  kind: paper
+  url: https://arxiv.org/abs/2610.29823v1
+  evidence_max_chars: 200000
+  reading:
+    mode: full_text_required
+  archive: true

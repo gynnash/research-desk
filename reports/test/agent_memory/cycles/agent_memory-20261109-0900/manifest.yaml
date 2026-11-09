@@ -1,0 +1,106 @@
+schema_version: 1
+mode: research_cycle_test
+backend: chatgpt_plan
+cycle_id: agent_memory-20261109-0900
+topic: agent_memory
+config:
+  schema_version: 1
+  mode: research_cycle_test
+  backend: chatgpt_plan
+  topic: agent_memory
+  topics_file: config/local/automation/agent_memory-20261109-0900/topics.yaml
+  archive: true
+  presentation: technical_article
+  reading:
+    mode: full_text_required
+    paper_max_chars: 200000
+    blog_max_chars: 200000
+  window:
+    mode: rolling
+    days: 60
+  selection:
+    mode: community_attention
+    min_score: 0.1
+    max_requests: 240
+  discovery:
+    max_candidates: 80
+    max_documents: 5
+    max_per_source: 5
+    evidence_max_chars: 6000
+    sources:
+    - id: arxiv
+      adapter: arxiv
+      entry_url: https://export.arxiv.org/api/query
+    - id: letta
+      adapter: letta
+      entry_url: https://www.letta.com/blog/
+      sitemap_url: https://www.letta.com/sitemap.xml
+      sitemap_max_pages: 5
+    - id: langchain
+      adapter: langchain
+      entry_url: https://www.langchain.com/blog
+      sitemap_url: https://www.langchain.com/sitemap.xml
+      sitemap_max_pages: 5
+    - id: huggingface-blog
+      adapter: rss
+      publisher: Hugging Face Blog
+      entry_url: https://huggingface.co/blog/feed.xml
+      allowed_hosts:
+      - huggingface.co
+    - id: meituan-tech
+      adapter: rss
+      publisher: 美团技术团队
+      entry_url: https://tech.meituan.com/feed/
+      allowed_hosts:
+      - tech.meituan.com
+    - id: ruanyifeng-blog
+      adapter: rss
+      publisher: 阮一峰的网络日志
+      entry_url: https://www.ruanyifeng.com/blog/atom.xml
+      allowed_hosts:
+      - www.ruanyifeng.com
+  models:
+    research: gpt-6.1-sol
+    insight: gpt-6.1-sol
+    review: gpt-6-astra
+  budget:
+    max_calls_per_cycle: 100
+    research_max_calls: 100
+    insight_max_calls: 100
+    max_calls_per_item: 100
+    max_input_chars: 600000
+    max_output_chars: 24000
+    timeout_seconds: 240
+    max_revisions: 1
+  history:
+    lookback_days: 180
+    max_documents: 30
+  _config_path: config/local/automation/agent_memory-20261109-0900/cycle.yaml
+  _config_sha256: ba95a0faf149b3c4c329e32bd5f11cba6d0dd31c50e4bcdb0595840dee7a49bf
+  _topics_sha256: a252b9013b241b2fcf83015269e4c28a9718c0575b62bd6f43b039f2da202c2b
+window_start: '2026-09-10T07:40:36.742918+00:00'
+window_end: '2026-11-09T07:40:36.742918+00:00'
+protected_notes:
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-310b98d3c9bc/report.md: 068a98bab4dd6b303ae4b09abbe8ab78694bf7a050a848f764489cbe096e70ff
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-244ddaafb793/report.md: a42c424986e7fde6e131e238cb616cacd6a0b874289ba533df3fc975c92a2c5f
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-1b2c6c25ca02/report.md: 87c712a70c3403b12f3c4576914de9daa3946a4c6fa88d3016bcca980f799bc3
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-b3ecb03a2b96/report.md: e98b48cf9fa624351692e2d563ea609631f1b1635e2f99e7f1cff566dc03baff
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-347d26e2053b/report.md: c6feb6ffdeffa4efc3e3983d318efdbb1075c10f8ff1c0a3ee19cf9c54f661f7
+  insights/agent_memory/agent_memory-manual-20261108-145358/report.md: bb83e1ce9e9d1943f8d1124c2ad6dd6d5be69f5865c75ff7f1a106819316543c
+  insights/test/agent_memory/agent_memory-manual-20261108-145358/report.md: 02f524355fdaa9490bd92249c16d5e89dc4b2757df883dad15c71ebf729cf6d9
+  articles/agent_memory/agent_memory-manual-20261108-145358-topic-1.md: 7f590b2c625a09dd4c79937037044f3e350b6b19d8eb135be8ed79bd53bf8218
+  articles/test/agent_memory/agent_memory-manual-20261108-145358/topic-1.md: c3a8c5b4055888e24ec0f4a54efd1b79346deb4f158f09ddf4cbca34e4aeb652
+  collection/README.md: 6b28ec414625172e2b04864f463ed732671cc939f34dd9bd902e8cefd34e1710
+  collection/agent_memory/README.md: ccf55c9a7f47fe66a2376cf2541708610c13807847d61e1f17f7a531590d205a
+  collection/agent_memory/agent_memory-manual-20261108-145358/items/arxiv-310b98d3c9bc/original.md: d831abb5105ac3921fe1bddd3e2c5326ad2a8d1bc73bb13f98b956ce1fce8bd6
+  collection/agent_memory/agent_memory-manual-20261108-145358/items/arxiv-244ddaafb793/original.md: 4ca3ca50b131b8b4542185625738f146dcc25ebfb109594b2c8e69659817424b
+  collection/agent_memory/agent_memory-manual-20261108-145358/items/arxiv-1b2c6c25ca02/original.md: 184f29dbeca29fb50909609c5760ecbe48fad3293d79b76370bea3c32d770fa7
+  collection/agent_memory/agent_memory-manual-20261108-145358/items/arxiv-b3ecb03a2b96/original.md: d5777c631ffb22fd94f4e7c3ef8b1243677809d3ded17e8fa8b9e5e0a127c061
+  collection/agent_memory/agent_memory-manual-20261108-145358/items/arxiv-347d26e2053b/original.md: c44cfc81f946775ff83e0cb9578661ed5eb16a3cd85aacc48afddfd72945c934
+  summary/README.md: 7f028a3170b0f754c6be7deb8a2c6936ff0f0f045196fbf0a106d9b0ed55b5fd
+  summary/agent_memory/README.md: 327df676215679f716588f4438892a3597cbf64e9fc34cfe1063dce49b1d391c
+  summary/agent_memory/agent_memory-manual-20261108-145358/arxiv-b3ecb03a2b96.md: 0373fc7619ecc41ec2602aa864835f353d289cee04a262a4123fd918ed75ddd0
+  summary/agent_memory/agent_memory-manual-20261108-145358/arxiv-347d26e2053b.md: 8104f7235fc4c4e71b99cd33b2205facaaf90aa5f14e697a769c889a7224c49d
+  summary/agent_memory/agent_memory-manual-20261108-145358/arxiv-1b2c6c25ca02.md: 6213ad55eeff0f5a516fac950622b72d099bf33e315207a165eb0f7b7e9be768
+  summary/agent_memory/agent_memory-manual-20261108-145358/arxiv-244ddaafb793.md: 4ba341d5da201718d7b04bd979c2809403367b18b4a9c0d0f049a16c07f4b7de
+production_accepted: false

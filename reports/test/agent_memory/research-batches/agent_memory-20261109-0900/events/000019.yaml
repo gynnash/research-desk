@@ -1,0 +1,14 @@
+type: call_completed
+key: arxiv-c9ee1ae11513
+reservation_id: arxiv-c9ee1ae11513:review:0
+role: review
+revision: 0
+model_id: gpt-6-astra
+at: '2026-11-09T07:47:01.045479+00:00'
+response_path: reports/test/agent_memory/research-batches/agent_memory-20261109-0900/items/arxiv-c9ee1ae11513/checkpoints/review-0.yaml
+response_sha256: bc996ac6436f9d63185968be4516d69e9f959546af872fe61ec68741a716f387
+usage:
+  input_tokens: 10734
+  output_tokens: 680
+  total_tokens: 11414
+usage_status: reported

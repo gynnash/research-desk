@@ -1,0 +1,20 @@
+binding: a37358c3211ba9351eb70341f6c941a0d73f39381628b013ebb02d1b9190c16b
+result:
+  text: "{\n  \"decision\": \"pass\",\n  \"coverage_acknowledged\": true,\n  \"issues\"\
+    : [\n    {\n      \"severity\": \"info\",\n      \"location\": \"reading_scope；summary；limitations\"\
+    ,\n      \"reason\": \"已按 full_text 范围核对所提供的 A1–A82 抽取文本，范围未截断，但不包含对原始图像、排版或实验的独立核验。候选准确注明未复现实验、未核验图像，以及提示词附录仅有引导句的限制；摘要中的预算、里程碑及比较对象与正文一致。\"\
+    ,\n      \"suggestion\": \"保留现有阅读范围和未复现声明，无需扩写。\"\n    }\n  ],\n  \"checks\":\
+    \ [\n    {\n      \"claim_index\": 0,\n      \"verdict\": \"supported\",\n   \
+    \   \"evidence_ids\": [\"A14\", \"A15\", \"A19\", \"A20\", \"A60\", \"A72\"]\n\
+    \    },\n    {\n      \"claim_index\": 1,\n      \"verdict\": \"supported\",\n\
+    \      \"evidence_ids\": [\"A17\", \"A18\", \"A21\", \"A22\", \"A60\", \"A61\"\
+    ]\n    },\n    {\n      \"claim_index\": 2,\n      \"verdict\": \"supported\"\
+    ,\n      \"evidence_ids\": [\"A25\", \"A26\", \"A27\", \"A30\", \"A31\"]\n   \
+    \ },\n    {\n      \"claim_index\": 3,\n      \"verdict\": \"supported\",\n  \
+    \    \"evidence_ids\": [\"A35\", \"A36\", \"A39\"]\n    }\n  ]\n}"
+  model: gpt-6-astra
+  response_id: resp_0aedaf717946714c016af179e3c4bc87d0871a19f36899aa33
+  usage:
+    input_tokens: 32284
+    output_tokens: 383
+    total_tokens: 32667
