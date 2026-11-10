@@ -10,15 +10,15 @@ import unittest
 import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
-import researchdesk_archive as archive
-import researchdesk_membership as membership
-import researchdesk_offline as store
-import researchdesk_writing as writing
+import archive
+import membership
+import offline as store
+import writing
 import test_cycle as cycle_fixtures
 from test_fulltext_review import FulltextFetcher
 
 
-REAL_DISCOVER = cycle_fixtures.importlib.import_module('researchdesk_cycle_discovery').discover
+REAL_DISCOVER = cycle_fixtures.importlib.import_module('cycle_discovery').discover
 
 
 class FixedClock(datetime):

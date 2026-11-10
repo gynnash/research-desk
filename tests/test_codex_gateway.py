@@ -14,10 +14,10 @@ from unittest import mock
 import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
-import researchdesk_batch as shared
-import researchdesk_codex_gateway as gateway
-import researchdesk_membership as membership
-import researchdesk_offline as store
+import batch as shared
+import codex_gateway as gateway
+import membership
+import offline as store
 
 
 STREAM = (b'event: response.output_item.done\r\n'

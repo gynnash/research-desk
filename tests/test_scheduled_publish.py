@@ -14,10 +14,10 @@ import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'scripts'))
-import researchdesk_harness as harness
-import researchdesk_note_paths as notes
-import researchdesk_offline as store
-import researchdesk_publish as publish
+import harness
+import note_paths as notes
+import offline as store
+import publish
 import test_codex_harness as codex_fixtures
 import test_research_entry as research_fixtures
 
@@ -215,10 +215,10 @@ class ScheduledPublication(unittest.TestCase):
 
 class AutomaticPublishIntegration(unittest.TestCase):
     def test_two_real_offline_rounds_restore_history_snapshots_on_the_publisher(self):
-        import researchdesk_automatic as automatic
-        import researchdesk_cycle as cycle
-        import researchdesk_research as research
-        import researchdesk_workbench as workbench
+        import automatic
+        import cycle
+        import research
+        import workbench
         fixture = research_fixtures.ResearchEntry('test_collection_to_detailed_reviewed_summaries_and_idempotent_resume')
         fixture.setUp()
         self.addCleanup(fixture.doCleanups)

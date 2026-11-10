@@ -8,13 +8,13 @@ from unittest import mock
 import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
-import researchdesk_batch as batch
-import researchdesk_cycle as cycle
-import researchdesk_membership as membership
-import researchdesk_note_paths as notes
-import researchdesk_offline as store
-import researchdesk_research as research
-import researchdesk_writing as writing
+import batch
+import cycle
+import membership
+import note_paths as notes
+import offline as store
+import research
+import writing
 import test_research_batch as fixtures
 from test_collection_only import CollectionFetcher, FixedClock
 from test_research_depth import detailed_response

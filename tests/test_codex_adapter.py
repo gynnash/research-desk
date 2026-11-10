@@ -12,7 +12,7 @@ from unittest.mock import patch
 from contextlib import contextmanager, ExitStack
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
-import researchdesk_codex as codex
+import codex
 
 
 def task(task_id, phase, model='fixture-generator'):
@@ -26,10 +26,10 @@ class CodexAdapterAcceptance(unittest.TestCase):
     def test_frozen_task_limit_can_increase_without_enabling_read_only_requests(self):
         backend = codex.CodexBackend({'max_requests_per_task': 3}, root=Path('/not-read'))
         generation = task('generate', 'generation')
-        with patch('researchdesk_batch.cycle_request_budget', return_value=None):
+        with patch('batch.cycle_request_budget', return_value=None):
             self.assertEqual(backend._gateway(generation).max_requests, 3)
 
-        with patch('researchdesk_batch.cycle_request_budget',
+        with patch('batch.cycle_request_budget',
                    return_value={'insight_max_requests_per_task': 100}) as policy:
             self.assertEqual(backend._gateway(generation).max_requests, 100)
             self.assertEqual(backend._gateway(generation, read_only=True).max_requests, 0)

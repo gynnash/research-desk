@@ -12,10 +12,10 @@ import yaml
 import test_research_batch as batch_fixtures
 import test_fulltext_review as fulltext_fixtures
 from test_insight import FakeInsightClient
-import researchdesk_admission as admission
-import researchdesk_cycle as cycle
-import researchdesk_cycle_discovery as discovery
-import researchdesk_offline as store
+import admission
+import cycle
+import cycle_discovery as discovery
+import offline as store
 
 
 class ArchivedFormalCycle(unittest.TestCase):

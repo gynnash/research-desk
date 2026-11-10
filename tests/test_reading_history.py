@@ -8,7 +8,7 @@ import unittest
 import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
-import researchdesk_cycle_discovery as discovery
+import cycle_discovery as discovery
 
 
 class ReadingHistory(unittest.TestCase):

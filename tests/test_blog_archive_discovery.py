@@ -13,8 +13,8 @@ from unittest import mock
 import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
-import researchdesk_cycle_discovery as discovery
-import researchdesk_sources as sources
+import cycle_discovery as discovery
+import sources
 
 
 NS = 'http://www.sitemaps.org/schemas/sitemap/0.9'
@@ -243,7 +243,7 @@ class BlogArchiveDiscovery(unittest.TestCase):
             observed.extend(item['source_id'] for item in items)
             return items, {'status': 'complete', 'deferred': []}
 
-        with mock.patch('researchdesk_attention.rank_candidates', side_effect=rank):
+        with mock.patch('attention.rank_candidates', side_effect=rank):
             result, _ = self.run_discovery(responses)
         self.assertEqual(observed, ['publisher-0', 'publisher-1', 'publisher-0', 'publisher-1'])
         self.assertEqual([item['source_id'] for item in result['candidates']], ['publisher-0', 'publisher-1'])

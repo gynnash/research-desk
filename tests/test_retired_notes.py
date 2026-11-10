@@ -10,11 +10,11 @@ from unittest import mock
 import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
-import researchdesk_admission as admission
-import researchdesk_batch as batch
-import researchdesk_offline as store
-import researchdesk_retired as retired
-import researchdesk_writing_member_inputs as writing
+import admission
+import batch
+import offline as store
+import retired
+import writing_member_inputs as writing
 
 
 NOTE = 'reports/test/agent-memory/old-offline/acceptance.md'

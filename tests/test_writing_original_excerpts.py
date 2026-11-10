@@ -15,10 +15,10 @@ from unittest import mock
 import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
-import researchdesk_admission as admission
-import researchdesk_archive as archive
-import researchdesk_confirmation_inputs as inputs
-import researchdesk_offline as store
+import admission
+import archive
+import confirmation_inputs as inputs
+import offline as store
 
 
 class WritingOriginalExcerpts(unittest.TestCase):

@@ -54,10 +54,10 @@ jobs:
           RESEARCHDESK_TRIGGER_CRON: ${{ github.event.schedule || '' }}
         run: |
           if [ -z "${RESEARCHDESK_RUNTIME_PYTHON:-}" ] || [ -z "${RESEARCHDESK_WORKBENCH_ROOT:-}" ]; then
-            echo 'Run python scripts/researchdesk_workbench.py start on this machine first.'
+            echo 'Run python scripts/workbench.py start on this machine first.'
             exit 1
           fi
-          "$RESEARCHDESK_RUNTIME_PYTHON" researchdesk-code/scripts/researchdesk_deployment.py dispatch \
+          "$RESEARCHDESK_RUNTIME_PYTHON" researchdesk-code/scripts/deployment.py dispatch \
             --source "$GITHUB_WORKSPACE/researchdesk-code" --base-commit "$(git -C researchdesk-code rev-parse HEAD)" \
             --event "$TRIGGER_EVENT" --operation "$REQUESTED_OPERATION" \
             --cycle-id "$REQUESTED_CYCLE_ID" \
@@ -95,7 +95,7 @@ jobs:
           name: researchdesk-checkpoints
           path: ${{ runner.temp }}/researchdesk-checkpoints
       - name: Verify frozen evidence and add results without overwriting notes
-        run: python scripts/researchdesk_publish.py apply --artifact "$RUNNER_TEMP/researchdesk-checkpoints" --push
+        run: python scripts/publish.py apply --artifact "$RUNNER_TEMP/researchdesk-checkpoints" --push
 
   refresh-obsidian:
     needs: save-checkpoints

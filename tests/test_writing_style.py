@@ -8,8 +8,8 @@ import unittest
 import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
-import researchdesk_offline as store
-import researchdesk_writing_style as style
+import offline as store
+import writing_style as style
 
 
 def profile(text='从真实问题进入，不按资料顺序汇报。'):

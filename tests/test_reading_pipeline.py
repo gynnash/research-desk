@@ -12,10 +12,10 @@ from unittest import mock
 
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
-import researchdesk_admission as admission
-import researchdesk_job as job
-import researchdesk_offline as store
-import researchdesk_writing_admission as writing
+import admission
+import job
+import offline as store
+import writing_admission as writing
 
 
 class ReadingPublication(unittest.TestCase):
@@ -32,7 +32,7 @@ class ReadingPublication(unittest.TestCase):
         self.operations = []
         self.reader = SimpleNamespace(refresh=mock.Mock(return_value=[]))
         self.addCleanup(mock.patch.stopall)
-        mock.patch.dict(sys.modules, {'researchdesk_reading': self.reader}).start()
+        mock.patch.dict(sys.modules, {'reading': self.reader}).start()
         self.git = mock.patch.object(job, 'git', side_effect=self.git_call).start()
         mock.patch.object(job, 'tracked', return_value={'研究首页.md': 'home-blob'}).start()
         self.plan = mock.patch.object(job, 'formal_plan', return_value=({'files': {}}, set())).start()
@@ -113,7 +113,7 @@ class WritingReadingRefresh(unittest.TestCase):
                 order = []
                 result = {'status': 'accepted', 'cached': cached}
                 reader = SimpleNamespace(refresh=mock.Mock(side_effect=lambda root: order.append('refresh')))
-                with mock.patch.dict(sys.modules, {'researchdesk_reading': reader}), \
+                with mock.patch.dict(sys.modules, {'reading': reader}), \
                         mock.patch.object(writing, '_run', side_effect=lambda *args: order.append('accepted') or result):
                     actual = writing.run(Path('/tmp/vault'), 'approval-one')
                 self.assertIs(actual, result)
@@ -122,7 +122,7 @@ class WritingReadingRefresh(unittest.TestCase):
 
     def test_failed_or_interrupted_admission_never_refreshes(self):
         reader = SimpleNamespace(refresh=mock.Mock())
-        with mock.patch.dict(sys.modules, {'researchdesk_reading': reader}), \
+        with mock.patch.dict(sys.modules, {'reading': reader}), \
                 mock.patch.object(writing, '_run', side_effect=store.SimulatedInterruption('not accepted')):
             with self.assertRaises(store.SimulatedInterruption):
                 writing.run(Path('/tmp/vault'), 'approval-one')

@@ -10,9 +10,9 @@ from unittest import mock
 import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
-import researchdesk_insight_inputs as inputs
-from researchdesk_note_paths import summary_ids
-import researchdesk_offline as store
+import insight_inputs as inputs
+from note_paths import summary_ids
+import offline as store
 import test_research_entry as entry_fixtures
 
 

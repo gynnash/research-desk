@@ -13,8 +13,8 @@ import yaml
 
 REPOSITORY = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPOSITORY / 'scripts'))
-import researchdesk_batch as batch
-import researchdesk_offline as store
+import batch
+import offline as store
 
 
 class MembershipBudgetPolicy(unittest.TestCase):

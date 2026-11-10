@@ -14,10 +14,10 @@ from unittest import mock
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'scripts'))
 import test_insight
-import researchdesk_admission as admission
-import researchdesk_batch_inputs as research_inputs
-import researchdesk_insight_inputs as inputs
-import researchdesk_offline as store
+import admission
+import batch_inputs as research_inputs
+import insight_inputs as inputs
+import offline as store
 
 
 class AdmissionTimestamp(unittest.TestCase):

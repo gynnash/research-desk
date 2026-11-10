@@ -11,7 +11,7 @@ from urllib.error import HTTPError
 from urllib.parse import parse_qs, urlsplit
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
-import researchdesk_zhihu as zhihu
+import zhihu
 
 
 NOW = int(datetime(2026, 10, 31, 12, tzinfo=timezone.utc).timestamp())

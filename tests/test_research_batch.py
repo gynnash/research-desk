@@ -21,9 +21,9 @@ import yaml
 REPOSITORY = Path(__file__).resolve().parents[1]
 FIXTURES = REPOSITORY / 'workflows/test/example-topic/fixtures/collection'
 sys.path.insert(0, str(REPOSITORY / 'scripts'))
-import researchdesk_batch as batch
-import researchdesk_offline as store
-from researchdesk_sources import SourceError, parse_arxiv_abstract
+import batch
+import offline as store
+from sources import SourceError, parse_arxiv_abstract
 
 
 class FixtureFetcher:

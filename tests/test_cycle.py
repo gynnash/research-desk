@@ -16,7 +16,7 @@ import yaml
 
 REPOSITORY = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPOSITORY / 'scripts'))
-import researchdesk_offline as store
+import offline as store
 from test_research_batch import FakeMemberClient, FixtureFetcher
 from test_insight import FakeInsightClient
 
@@ -120,7 +120,7 @@ class ResearchInsightCycle(unittest.TestCase):
                           side_effect=AssertionError('Network prohibited')).start()
         mock.patch.object(socket.socket, 'connect',
                           side_effect=AssertionError('Network prohibited')).start()
-        self.cycle = importlib.import_module('researchdesk_cycle')
+        self.cycle = importlib.import_module('cycle')
         self.real_research_run = self.cycle.research.run
         self.real_insight_run = self.cycle.insight.run
         self.discovery = mock.patch.object(self.cycle.discovery, 'discover',

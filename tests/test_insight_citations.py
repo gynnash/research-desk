@@ -8,8 +8,8 @@ import unittest
 
 REPOSITORY = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPOSITORY / 'scripts'))
-import researchdesk_insight as insight
-import researchdesk_insight_inputs as inputs
+import insight
+import insight_inputs as inputs
 
 
 class CitationProjection(unittest.TestCase):

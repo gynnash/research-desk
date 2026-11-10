@@ -6,8 +6,8 @@ import sys
 import unittest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
-import researchdesk_offline as store
-import researchdesk_writing_member as member
+import offline as store
+import writing_member as member
 
 
 class WritingV2Paragraphs(unittest.TestCase):

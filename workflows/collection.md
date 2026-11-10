@@ -29,7 +29,7 @@ python3 -m venv .venv
 使用唯一且稳定的批次ID：
 
 ```sh
-.venv/bin/python -B scripts/researchdesk_cycle.py collect \
+.venv/bin/python -B scripts/cycle.py collect \
   --config config/cycles/default.yaml \
   --cycle-id agent-memory-manual-001
 ```

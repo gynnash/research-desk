@@ -13,10 +13,10 @@ import yaml
 
 REPOSITORY = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPOSITORY / 'scripts'))
-import researchdesk_batch as batch
-import researchdesk_batch_inputs as inputs
-import researchdesk_identity as identity
-import researchdesk_offline as store
+import batch
+import batch_inputs as inputs
+import identity
+import offline as store
 
 
 BLOG = 'https://www.letta.com/blog/fixture-memory'

@@ -16,8 +16,8 @@ from unittest.mock import patch
 import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
-import researchdesk_codex as codex
-import researchdesk_harness as harness
+import codex
+import harness
 
 
 def candidate(count=3):

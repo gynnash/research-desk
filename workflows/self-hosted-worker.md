@@ -7,8 +7,8 @@ GitHub Actions 按时派发任务；用户自己的 Mac 执行采集、逐篇 Re
 准备 Python 3.12、Git、GitHub CLI、curl/tar，以及自己仓库的 runner 管理权限。在自己的仓库根目录安装初始化依赖，执行 `workbench init` 建立本地配置，然后完成两项授权：
 
 ```sh
-python scripts/researchdesk_membership.py login
-python scripts/researchdesk_membership.py models
+python scripts/membership.py login
+python scripts/membership.py models
 gh auth login
 ```
 
@@ -26,7 +26,7 @@ admission:
 两个开关默认均为 `false`；`admission` 控制真实审阅结果自动正式准入。随后执行：
 
 ```sh
-python scripts/researchdesk_workbench.py start
+python scripts/workbench.py start
 ```
 
 `start` 自动应用两层配置，检查本机会员授权、配置模型和 GitHub 权限，将 Codex SDK 依赖安装到 `runtime.python.venv`，下载并核对官方 runner 包，注册执行机器并启动用户服务。Mac 使用当前用户 LaunchAgent，按普通用户执行，无需 `sudo`。

@@ -18,11 +18,11 @@ from unittest import mock
 
 REPOSITORY = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPOSITORY / 'scripts'))
-import researchdesk_admission as admission
-import researchdesk_cycle as cycle
-import researchdesk_job as job
-import researchdesk_offline as store
-import researchdesk_runner as runtime
+import admission
+import cycle
+import job
+import offline as store
+import runner as runtime
 
 
 TOPIC = 'custom-topic'
@@ -57,7 +57,7 @@ class RecoveryJobTransfer(unittest.TestCase):
         self.recovery = SimpleNamespace(
             requested=mock.Mock(return_value=RECOVERY), verify_lineage=mock.Mock())
         self.addCleanup(mock.patch.stopall)
-        mock.patch.dict(sys.modules, {'researchdesk_recovery': self.recovery}).start()
+        mock.patch.dict(sys.modules, {'recovery': self.recovery}).start()
         mock.patch.dict('os.environ', {'GITHUB_ACTIONS': 'false'}).start()
         mock.patch.object(cycle, 'load_config', return_value={'topic': TOPIC}).start()
         mock.patch.object(runtime, 'load_config', return_value=self.host).start()
@@ -146,7 +146,7 @@ class RecoveryJobTransfer(unittest.TestCase):
         self.assertEqual(self.context()['operation'], 'recover')
         self.assertEqual(self.context()['baseline_blobs'], self.baseline)
         self.assertEqual(self.process.call_args.args[0], [
-            str(self.host['_venv'] / 'bin/python'), str(self.root / 'scripts/researchdesk_recovery.py'),
+            str(self.host['_venv'] / 'bin/python'), str(self.root / 'scripts/recovery.py'),
             '--root', str(self.root), '--config', CONFIG, '--cycle-id', ORIGINAL,
             '--profile', str(self.host['_profile'])])
         self.assertEqual(summary['cycle_id'], RECOVERY)
@@ -156,7 +156,7 @@ class RecoveryJobTransfer(unittest.TestCase):
         self.execute('run')
         self.assertEqual(self.context()['operation'], 'recover')
         self.assertEqual(self.context()['cycle_id'], RECOVERY)
-        self.assertIn(str(self.root / 'scripts/researchdesk_recovery.py'), self.process.call_args.args[0])
+        self.assertIn(str(self.root / 'scripts/recovery.py'), self.process.call_args.args[0])
 
     def test_original_research_interruption_is_rejected_before_recovery_context(self):
         with self.assertRaisesRegex(job.JobError, 'recovery_interruption_must_follow_new_review'):
@@ -175,7 +175,7 @@ class RecoveryJobTransfer(unittest.TestCase):
         self.assertEqual(self.context()['operation'], 'run')
         self.assertEqual(self.context()['cycle_id'], ORIGINAL)
         command = self.process.call_args.args[0]
-        self.assertEqual(command[1], str(self.root / 'scripts/researchdesk_cycle.py'))
+        self.assertEqual(command[1], str(self.root / 'scripts/cycle.py'))
         self.assertIn('run', command)
         self.assertEqual(command[command.index('--cycle-id') + 1], ORIGINAL)
 

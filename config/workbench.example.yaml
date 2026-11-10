@@ -1,4 +1,4 @@
-# Copy with: python3 scripts/researchdesk_workbench.py init
+# Copy with: python3 scripts/workbench.py init
 # Edit config/local/workbench.yaml, then apply. Personal settings stay out of Git.
 # Omitted fields inherit config/system.yaml; model names are examples only.
 schema_version: 1

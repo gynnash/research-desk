@@ -12,8 +12,8 @@ import unittest
 from urllib.parse import parse_qs, urlsplit
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
-import researchdesk_attention as attention
-import researchdesk_sources as sources
+import attention
+import sources
 
 
 START, END = '2026-09-01T00:00:00Z', '2026-11-01T00:00:00Z'

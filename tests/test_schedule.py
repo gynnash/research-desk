@@ -14,8 +14,8 @@ import yaml
 
 REPOSITORY = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPOSITORY / 'scripts'))
-import researchdesk_offline as store
-import researchdesk_schedule as schedule
+import offline as store
+import schedule
 
 
 class BeijingSchedule(unittest.TestCase):

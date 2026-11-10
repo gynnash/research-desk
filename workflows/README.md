@@ -4,7 +4,7 @@
 
 ## 配置与准备
 
-先按[工作台初始化说明](workbench-init.md)执行 `python3 -B scripts/researchdesk_workbench.py init`；已有配置用 `init --adopt-existing`。以后只编辑本地 `config/local/workbench.yaml`。手动入口用 `apply` 和 `check`；用 `start` 部署后，每轮定时任务会自动重新应用配置。下表中的兼容文件由工具生成，不另行编辑，也不提交 GitHub。
+先按[工作台初始化说明](workbench-init.md)执行 `python3 -B scripts/workbench.py init`；已有配置用 `init --adopt-existing`。以后只编辑本地 `config/local/workbench.yaml`。手动入口用 `apply` 和 `check`；用 `start` 部署后，每轮定时任务会自动重新应用配置。下表中的兼容文件由工具生成，不另行编辑，也不提交 GitHub。
 
 | 设置 | 统一 YAML 部分 → 生成文件 |
 | --- | --- |
@@ -23,8 +23,8 @@
 以下命令只做元数据预检或临时目录内的虚构离线验收，不登录、不调用模型，也不需要安装 Codex SDK：
 
 ```sh
-python3 -B scripts/researchdesk_harness.py preflight --config config/local/codex-insight.yaml
-python3 -B scripts/researchdesk_harness.py offline-demo
+python3 -B scripts/harness.py preflight --config config/local/codex-insight.yaml
+python3 -B scripts/harness.py offline-demo
 PYTHONPATH=tests python3 -B -m unittest test_codex_adapter test_codex_inputs test_codex_harness -v
 ```
 
@@ -35,8 +35,8 @@ PYTHONPATH=tests python3 -B -m unittest test_codex_adapter test_codex_inputs tes
 真实且已通过独立准确性审阅的结果可以零模型调用正式准入；模拟结果不能准入：
 
 ```sh
-python3 -B scripts/researchdesk_insight_admission.py admit --topic agent_memory --cycle-id '<已通过审阅的批次>'
-python3 -B scripts/researchdesk_insight_admission.py check --topic agent_memory --cycle-id '<已通过审阅的批次>'
+python3 -B scripts/insight_admission.py admit --topic agent_memory --cycle-id '<已通过审阅的批次>'
+python3 -B scripts/insight_admission.py check --topic agent_memory --cycle-id '<已通过审阅的批次>'
 ```
 
 新生成的正式综合文章在 `insights/<主题>/<核心发现>~<批次ID>/<报告短标题>.md`，选题在 `articles/<主题>/<批次>-topic-N.md`。原 test 文件和旧正式文件保留原路径。准入使用版本 2 的 `reports/<主题>/admissions/<批次>/plan.yaml`、`accepted.yaml` 及配对散列，绑定固定原文、Research 与 SDK 独立审阅证明，不要求把当前私人配置提交到 GitHub。正式选题可以进入已有确认页面及 Writing，旧版选题仍保持兼容。
@@ -46,8 +46,8 @@ python3 -B scripts/researchdesk_insight_admission.py check --topic agent_memory 
 ```sh
 python3.12 -m venv "$HOME/Library/Application Support/ResearchDesk/codex-venv"
 "$HOME/Library/Application Support/ResearchDesk/codex-venv/bin/python" -m pip install -r workflows/requirements-codex.txt
-"$HOME/Library/Application Support/ResearchDesk/codex-venv/bin/python" -B scripts/researchdesk_harness.py preflight --config config/local/codex-insight.yaml
-"$HOME/Library/Application Support/ResearchDesk/codex-venv/bin/python" -B scripts/researchdesk_harness.py insight --config config/local/codex-insight.yaml --cycle-id '<已完成逐篇研究的批次>'
+"$HOME/Library/Application Support/ResearchDesk/codex-venv/bin/python" -B scripts/harness.py preflight --config config/local/codex-insight.yaml
+"$HOME/Library/Application Support/ResearchDesk/codex-venv/bin/python" -B scripts/harness.py insight --config config/local/codex-insight.yaml --cycle-id '<已完成逐篇研究的批次>'
 ```
 
 `preflight` 不推理，`live_ready` 只表示本机运行条件齐备，不代表账号模型资格已验证。`sdk-smoke --cycle-id <稳定验收ID>` 会执行两项真实模型任务，读取小型本地验收文件并由另一模型核对；它不是论文研究。每任务默认最多 3 次上游请求，首次运行会消耗会员额度，恢复或查询不得创建新 turn。
@@ -59,13 +59,13 @@ python3.12 -m venv "$HOME/Library/Application Support/ResearchDesk/codex-venv"
 只获取原文时使用[独立采集命令](collection.md)：
 
 ```sh
-python3 -B scripts/researchdesk_cycle.py collect --config config/cycles/default.yaml --cycle-id agent-memory-manual-001
+python3 -B scripts/cycle.py collect --config config/cycles/default.yaml --cycle-id agent-memory-manual-001
 ```
 
 该入口在本地运行，结果保存到 `collection/<主题>/`，不需要会员授权。随后对同一批次逐篇 Research：
 
 ```sh
-python3 -B scripts/researchdesk_research.py --cycle-id agent-memory-manual-001
+python3 -B scripts/research.py --cycle-id agent-memory-manual-001
 ```
 
 只有独立审阅通过的详细总结会新增到 `summary/<主题>/`。预算、失败补跑与人工修改保护见[Research 说明](research.md)；该入口不执行 Insight 或 Writing。
@@ -75,7 +75,7 @@ python3 -B scripts/researchdesk_research.py --cycle-id agent-memory-manual-001
 完成本机 ChatGPT 与 GitHub CLI 授权后，一条命令部署当前工作台：
 
 ```sh
-python3 -B scripts/researchdesk_workbench.py start
+python3 -B scripts/workbench.py start
 ```
 
 它应用两层配置、校验授权和模型、安装 SDK 依赖、注册并启动 runner，并设置非敏感仓库变量 `RESEARCHDESK_DEPLOYED=true`。新下载或 fork 未执行此命令时不会排队研究。要自动研究，先在用户文件设置 `automation.enabled: true`；命令会保留用户开关。执行器绑定当前持久工作台，不另起空克隆，也不上传个人配置或 OAuth。
@@ -113,8 +113,8 @@ Research 与 SDK 在每次真实请求预留前共同检查固定批次的 `rese
 ## 选题确认与 Writing
 
 ```sh
-python3 scripts/researchdesk_confirmation.py setup
-python3 scripts/researchdesk_confirmation.py serve --open-browser
+python3 scripts/confirmation.py setup
+python3 scripts/confirmation.py serve --open-browser
 ```
 
 在本机 `http://127.0.0.1:8765` 核对选题、角度、读者、篇幅和证据后，亲自保存确认。同步完成后才可在页面启动 Writing。远程部署通过自己的安全端口转发访问，不直接公开页面。
@@ -126,8 +126,8 @@ Writing 生成大纲、初稿和候选稿，每阶段独立审阅。文风在本
 已有三阶段结果通过后，可使用已保存的确认 ID 正式准入，不重新生成：
 
 ```sh
-python3 scripts/researchdesk_writing_admission.py run --approval-id '<真实确认 ID>'
-python3 scripts/researchdesk_writing_admission.py verify --topic example-topic --approval-id '<真实确认 ID>'
+python3 scripts/writing_admission.py run --approval-id '<真实确认 ID>'
+python3 scripts/writing_admission.py verify --topic example-topic --approval-id '<真实确认 ID>'
 ```
 
 选题确认、模型审阅与正式准入均不授予公众号发布权限。
@@ -144,7 +144,7 @@ git diff --check
 已存在正式研究时，可只读校验阅读入口：
 
 ```sh
-python3 -B scripts/researchdesk_reading.py --check
+python3 -B scripts/reading.py --check
 ```
 
 [Schema](source-schema.md)、[模板](templates/)和[维护规范](maintenance.md)定义资料规则。GitHub 保存共享文件与版本；Obsidian 可选，用同一仓库或自己的同步流程阅读 Markdown。授权与 Obsidian 本地设置不进入 Git。

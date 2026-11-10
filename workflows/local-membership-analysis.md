@@ -10,9 +10,9 @@ ResearchDesk 使用本应用的官方 Sign in with ChatGPT 授权，将用户自
 python3 -m venv .venv-membership
 .venv-membership/bin/python -m pip install -r workflows/requirements-membership.txt
 researchdesk_profile_dir="$HOME/Library/Application Support/ResearchDesk/chatgpt"
-.venv-membership/bin/python scripts/researchdesk_membership.py --profile-dir "$researchdesk_profile_dir" status
-.venv-membership/bin/python scripts/researchdesk_membership.py --profile-dir "$researchdesk_profile_dir" login
-.venv-membership/bin/python scripts/researchdesk_membership.py --profile-dir "$researchdesk_profile_dir" models
+.venv-membership/bin/python scripts/membership.py --profile-dir "$researchdesk_profile_dir" status
+.venv-membership/bin/python scripts/membership.py --profile-dir "$researchdesk_profile_dir" login
+.venv-membership/bin/python scripts/membership.py --profile-dir "$researchdesk_profile_dir" models
 ```
 
 Python 需为 3.9+。`--profile-dir` 接收授权目录，必须位于仓库及 Obsidian Vault 外；远程主机使用自己的本地路径。用户亲自在官方浏览器页面完成登录与用量授权，不提供密码或验证码。登录文件限制为当前用户可读写，不能上传 GitHub、复制进回执或放入 GitHub Secrets。
@@ -23,7 +23,7 @@ Python 需为 3.9+。`--profile-dir` 接收授权目录，必须位于仓库及 
 
 ## 接入执行器
 
-在本地 `config/local/workbench.yaml` 的 `runtime` 部分选择外部 venv 和会员 profile，随后按[自托管部署说明](self-hosted-worker.md)执行一条 `python scripts/researchdesk_workbench.py start` 注册并启动执行器。`membership.profile: null` 使用这台主机的 ResearchDesk 默认授权目录，不读取其他应用授权。
+在本地 `config/local/workbench.yaml` 的 `runtime` 部分选择外部 venv 和会员 profile，随后按[自托管部署说明](self-hosted-worker.md)执行一条 `python scripts/workbench.py start` 注册并启动执行器。`membership.profile: null` 使用这台主机的 ResearchDesk 默认授权目录，不读取其他应用授权。
 
 ```sh
 gh workflow run researchdesk-manual.yml --ref main -f operation=health

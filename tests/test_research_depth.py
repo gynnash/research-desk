@@ -8,8 +8,8 @@ import unittest
 import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
-import researchdesk_batch as batch
-import researchdesk_offline as store
+import batch
+import offline as store
 import test_research_batch as fixtures
 from test_fulltext_review import FulltextFetcher
 

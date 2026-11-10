@@ -24,9 +24,9 @@ import yaml
 
 REPOSITORY = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPOSITORY / 'scripts'))
-import researchdesk_membership as membership
-import researchdesk_offline as store
-import researchdesk_sources as sources
+import membership
+import offline as store
+import sources
 
 TOPIC = 'agent-memory'
 CYCLE = 'cycle-agent-memory-gh-20261019'
@@ -40,7 +40,7 @@ class RealTopicConfirmation(unittest.TestCase):
         path = REPOSITORY / BASE / 'plan.yaml'
         if not path.is_file():
             raise unittest.SkipTest('本测试需要已有真实独立审阅及正式准入证明；不联网或伪造 pass 补建')
-        cls.confirmation = importlib.import_module('researchdesk_confirmation')
+        cls.confirmation = importlib.import_module('confirmation')
         cls.plan = yaml.safe_load(path.read_text(encoding='utf-8'))
 
     def git(self, *arguments):
@@ -61,7 +61,7 @@ class RealTopicConfirmation(unittest.TestCase):
             if (REPOSITORY / (relative + '.sha256')).is_file():
                 paths.add(relative + '.sha256')
         for relative in sorted(paths):
-            retired = importlib.import_module('researchdesk_retired')
+            retired = importlib.import_module('retired')
             expected = self.plan['input_hashes'].get(relative, self.plan['protected_notes'].get(relative))
             if not (REPOSITORY / relative).exists() and retired.missing_hash(REPOSITORY, relative, expected):
                 continue

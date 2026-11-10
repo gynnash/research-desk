@@ -61,8 +61,8 @@ flowchart TD
 选题回存后，在仓库根目录运行：
 
 ```sh
-.venv-membership/bin/python -B scripts/researchdesk_confirmation.py setup
-.venv-membership/bin/python -B scripts/researchdesk_confirmation.py serve --open-browser
+.venv-membership/bin/python -B scripts/confirmation.py setup
+.venv-membership/bin/python -B scripts/confirmation.py serve --open-browser
 ```
 
 **核对证据 → 调整写作要求 → 保存写作确认 → 同步后点「开始测试写作」**。通过审阅和回存验证的稿件可在「确认记录」查看。确认页需要 Git 能读写 `origin`，HTTPS 凭据未配置时可用 `gh auth setup-git`。

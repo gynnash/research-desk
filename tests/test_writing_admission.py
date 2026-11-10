@@ -35,7 +35,7 @@ class WritingAdmission(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         fixture.RealMemberWriting.setUpClass.__func__(cls)
-        cls.formal = importlib.import_module('researchdesk_writing_admission')
+        cls.formal = importlib.import_module('writing_admission')
 
     def setUp(self):
         fixture.RealMemberWriting.setUp(self)

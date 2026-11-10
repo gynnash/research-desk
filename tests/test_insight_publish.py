@@ -10,10 +10,10 @@ import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'scripts'))
-import researchdesk_insight_admission as admission
-import researchdesk_note_paths as notes
-import researchdesk_offline as store
-import researchdesk_publish as publish
+import insight_admission as admission
+import note_paths as notes
+import offline as store
+import publish
 from test_insight_admission import prepare_cycle
 from workflows import validate
 

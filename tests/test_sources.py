@@ -17,7 +17,7 @@ from urllib.error import HTTPError
 REPOSITORY = Path(__file__).resolve().parents[1]
 FIXTURES = REPOSITORY / "workflows/test/example-topic/fixtures/collection"
 sys.path.insert(0, str(REPOSITORY / "scripts"))
-import researchdesk_sources as sources  # noqa: E402
+import sources  # noqa: E402
 
 
 def fixture(name):

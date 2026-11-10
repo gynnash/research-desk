@@ -15,9 +15,9 @@ import yaml
 
 REPOSITORY = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPOSITORY / 'scripts'))
-import researchdesk_membership as membership
-import researchdesk_offline as store
-import researchdesk_workbench as workbench
+import membership
+import offline as store
+import workbench
 
 
 class LayeredConfiguration(unittest.TestCase):

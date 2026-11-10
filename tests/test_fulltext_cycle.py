@@ -10,7 +10,7 @@ import yaml
 import test_cycle as fixtures
 from test_fulltext_review import FulltextFetcher
 from test_insight import FakeInsightClient
-import researchdesk_offline as store
+import offline as store
 
 
 class PdfCycleFetcher(FulltextFetcher):

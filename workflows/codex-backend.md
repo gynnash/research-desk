@@ -2,7 +2,7 @@
 
 状态：官方 SDK 已在当前 Mac 真实接通，自有会员授权、原生文件工具、独立模型审阅与逐请求预算已通过小额接入验收；完整真实资料 Insight 批次、Research/Writing 迁移待完成。基线日期：2026-11-01；内容仅做准确性校验。默认旧后端与定时开关保持不变。
 
-已落地入口是 `scripts/researchdesk_harness.py`：`preflight` 只检查元数据，`offline-demo` 零调用演练，`sdk-smoke` 真实核对本地测试文件，`insight` 显式消费已审阅研究。运行方式见[操作说明](README.md)，实际验收及平台边界见 [SDK 核实记录](codex-sdk-capabilities.md)。
+已落地入口是 `scripts/harness.py`：`preflight` 只检查元数据，`offline-demo` 零调用演练，`sdk-smoke` 真实核对本地测试文件，`insight` 显式消费已审阅研究。运行方式见[操作说明](README.md)，实际验收及平台边界见 [SDK 核实记录](codex-sdk-capabilities.md)。
 
 目标是让 Research、Insight、Writing 复用官方 Codex 的读文件、检索、工具调用循环与会话管理，同时保留 ResearchDesk 的资料规范、独立审阅、人工确认、预算和入库规则。先接通 Insight，再迁移 Research 与 Writing。
 
@@ -40,15 +40,15 @@ flowchart TD
 
 ## 2. 当前实现与需要替换的边界
 
-现有 [membership 客户端](../scripts/researchdesk_membership.py) 已支持 ResearchDesk 自己的 ChatGPT 官方授权、刷新及 Responses 流式调用，但 `infer()` 主要返回文本，没有承载完整 Agent 工具循环。
+现有 [membership 客户端](../scripts/membership.py) 已支持 ResearchDesk 自己的 ChatGPT 官方授权、刷新及 Responses 流式调用，但 `infer()` 主要返回文本，没有承载完整 Agent 工具循环。
 
 | 现有位置 | 迁移方式 |
 | --- | --- |
-| [researchdesk_membership.py](../scripts/researchdesk_membership.py) | 保留本应用 SIWC 授权与刷新；Codex 推理由新适配器承接 |
-| [researchdesk_batch.py](../scripts/researchdesk_batch.py)、[researchdesk_insight.py](../scripts/researchdesk_insight.py) | 复用准确性提示、笔记保护和渲染；新路径按任务执行，收缩旧结构与格式准入规则，保留旧单请求路径 |
-| [researchdesk_insight_inputs.py](../scripts/researchdesk_insight_inputs.py)、[researchdesk_cycle_discovery.py](../scripts/researchdesk_cycle_discovery.py) | 接入新 `summary` 与关联 `collection`，移除新 Insight 路径的字符预算和固定历史篇数截断 |
-| [researchdesk_research.py](../scripts/researchdesk_research.py) | 继续消费采集回执，按单篇生成已审阅总结；后续只替换内部执行后端 |
-| [researchdesk_runner.py](../scripts/researchdesk_runner.py)、[researchdesk_job.py](../scripts/researchdesk_job.py) | 保留本地/远程主机与回存机制，显式扩展新结果和证明文件的导出允许清单 |
+| [membership.py](../scripts/membership.py) | 保留本应用 SIWC 授权与刷新；Codex 推理由新适配器承接 |
+| [batch.py](../scripts/batch.py)、[insight.py](../scripts/insight.py) | 复用准确性提示、笔记保护和渲染；新路径按任务执行，收缩旧结构与格式准入规则，保留旧单请求路径 |
+| [insight_inputs.py](../scripts/insight_inputs.py)、[cycle_discovery.py](../scripts/cycle_discovery.py) | 接入新 `summary` 与关联 `collection`，移除新 Insight 路径的字符预算和固定历史篇数截断 |
+| [research.py](../scripts/research.py) | 继续消费采集回执，按单篇生成已审阅总结；后续只替换内部执行后端 |
+| [runner.py](../scripts/runner.py)、[job.py](../scripts/job.py) | 保留本地/远程主机与回存机制，显式扩展新结果和证明文件的导出允许清单 |
 
 新增 `backend: codex`，与现有 `chatgpt_plan` 分开。不能把一个多轮 Codex 任务直接塞进 `infer()`，继续记成“一次模型调用”；也不能伪造旧 `official_chatgpt_oauth` 回执以通过现有校验。
 
@@ -77,10 +77,10 @@ Codex 提供的是 Agent runtime，并不自动继承 ChatGPT 网页的全部工
 业务执行保留两个核心模块，另有两项运行辅助，角色提示词沿用现有来源并做必要调整：
 
 ```text
-scripts/researchdesk_codex.py     # 官方 runtime 适配、能力检查与事件转换
-scripts/researchdesk_harness.py   # 固定输入、阶段状态、审阅、恢复与准入
-scripts/researchdesk_codex_gateway.py    # 本机授权转发及逐请求共享预算
-scripts/researchdesk_codex_isolation.py  # Mac 受控启动与原生只读权限探针
+scripts/codex.py     # 官方 runtime 适配、能力检查与事件转换
+scripts/harness.py   # 固定输入、阶段状态、审阅、恢复与准入
+scripts/codex_gateway.py    # 本机授权转发及逐请求共享预算
+scripts/codex_isolation.py  # Mac 受控启动与原生只读权限探针
 ```
 
 适配器不读取业务资料目录、不决定研究选题、不提交 Git。Harness 调用既有采集索引、预算、人工笔记保护与渲染函数，避免同时重写整个项目。
@@ -232,8 +232,8 @@ prepared → input_frozen → generation_reserved → generation_running
 主题在本地统一配置的 `research_topics` 部分管理，Codex 设置放在 `insight` 部分。先按[初始化说明](workbench-init.md)建立本人配置，修改后执行 `apply`，新入口显式读取生成的 `config/local/codex-insight.yaml`：
 
 ```sh
-python3 -B scripts/researchdesk_harness.py preflight --config config/local/codex-insight.yaml
-python3 -B scripts/researchdesk_harness.py insight --config config/local/codex-insight.yaml --cycle-id '<已完成逐篇研究的批次>'
+python3 -B scripts/harness.py preflight --config config/local/codex-insight.yaml
+python3 -B scripts/harness.py insight --config config/local/codex-insight.yaml --cycle-id '<已完成逐篇研究的批次>'
 ```
 
 `preflight` 不推理，`insight` 会执行真实任务。新批次使用 `codex-insight-v2`，报告和洞察合计参考 700–1200 字，通常提炼 1–3 条证据最充分的发现。只保留影响判断的机制、数据和适用条件，用自然、指代清楚的中文表达。已有批次沿用固定提示词。公开[示例](../config/examples/codex-insight.yaml)列出了可执行字段。以下为原总体配置草案，旧 cycle loader 不接受 `backend: codex`：
@@ -270,9 +270,9 @@ articles/<topic>/<cycle>/topic-N.md
 
 洞察、比较、趋势和深入研究方向组织在同一篇综合文章中；选题卡单列，待页面人工确认。Writing 继续受确认 ID、选题/证据散列和写作要求约束，生成大纲、初稿和候选稿，分别独立审阅。
 
-Harness 首先导出到 `insights/test/<topic>/<cycle>/`、`articles/test/<topic>/<cycle>/`，脱敏证明沿用 `reports/test/<topic>/` 内部记录。现已提供零模型调用的 `researchdesk_insight_admission.py admit/check`：真实且独立准确性审阅通过后，新增正式综合文章、待确认选题及版本 2 准入回执，保留 test 和人工笔记。自动入口遵守 `admission.enabled`；关闭时不正式晋级。新旧准入格式分流，正式选题可进入同一确认页面与 Writing。
+Harness 首先导出到 `insights/test/<topic>/<cycle>/`、`articles/test/<topic>/<cycle>/`，脱敏证明沿用 `reports/test/<topic>/` 内部记录。现已提供零模型调用的 `insight_admission.py admit/check`：真实且独立准确性审阅通过后，新增正式综合文章、待确认选题及版本 2 准入回执，保留 test 和人工笔记。自动入口遵守 `admission.enabled`；关闭时不正式晋级。新旧准入格式分流，正式选题可进入同一确认页面与 Writing。
 
-GitHub Actions 保留触发和结果回存框架；授权与 Codex 使用用户自己的执行主机。个人配置不进入 Git；执行 `python scripts/researchdesk_workbench.py start` 后，计划与执行在绑定的持久 Mac 工作台中加载两层配置。GitHub 使用非敏感部署开关派发，独立回存 job 验证公开证据和产物后保存。Git 凭据不进入模型工具环境，回存使用允许路径清单。GitHub 与 Obsidian 共享 Markdown；runtime 会话、凭据和原始事件不进入 Vault。
+GitHub Actions 保留触发和结果回存框架；授权与 Codex 使用用户自己的执行主机。个人配置不进入 Git；执行 `python scripts/workbench.py start` 后，计划与执行在绑定的持久 Mac 工作台中加载两层配置。GitHub 使用非敏感部署开关派发，独立回存 job 验证公开证据和产物后保存。Git 凭据不进入模型工具环境，回存使用允许路径清单。GitHub 与 Obsidian 共享 Markdown；runtime 会话、凭据和原始事件不进入 Vault。
 
 ## 10. 实施顺序与验收
 

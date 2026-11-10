@@ -45,10 +45,10 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           if [ -z "${RESEARCHDESK_RUNTIME_PYTHON:-}" ] || [ -z "${RESEARCHDESK_WORKBENCH_ROOT:-}" ]; then
-            echo 'Run python scripts/researchdesk_workbench.py start on this machine first.'
+            echo 'Run python scripts/workbench.py start on this machine first.'
             exit 1
           fi
-          "$RESEARCHDESK_RUNTIME_PYTHON" researchdesk-code/scripts/researchdesk_writing_job.py dispatch \
+          "$RESEARCHDESK_RUNTIME_PYTHON" researchdesk-code/scripts/writing_job.py dispatch \
             --source "$GITHUB_WORKSPACE/researchdesk-code" \
             --base-commit "$(git -C researchdesk-code rev-parse HEAD)" \
             --approval-id "$APPROVAL_ID" --max-new-calls "$MAX_NEW_CALLS" \
@@ -84,7 +84,7 @@ jobs:
           name: researchdesk-writing-checkpoints
           path: ${{ runner.temp }}/researchdesk-writing-checkpoints
       - name: Recheck human confirmation and reviews, then save only new results
-        run: python scripts/researchdesk_writing_job.py apply --artifact "$RUNNER_TEMP/researchdesk-writing-checkpoints"
+        run: python scripts/writing_job.py apply --artifact "$RUNNER_TEMP/researchdesk-writing-checkpoints"
 
   refresh-obsidian:
     needs: save

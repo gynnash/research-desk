@@ -14,7 +14,7 @@ import urllib.parse
 from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
-import researchdesk_membership as membership
+import membership
 
 try:
     import jwt

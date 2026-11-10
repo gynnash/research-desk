@@ -11,11 +11,11 @@ import yaml
 
 import test_research_batch as fixtures
 from test_fulltext_review import FulltextFetcher
-import researchdesk_admission as admission
-import researchdesk_archive as archive
-import researchdesk_batch_inputs as inputs
-import researchdesk_job as job
-import researchdesk_offline as store
+import admission
+import archive
+import batch_inputs as inputs
+import job
+import offline as store
 
 
 class ArchiveTransfer(unittest.TestCase):

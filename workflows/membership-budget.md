@@ -19,7 +19,7 @@ Codex SDK 通过本机 Responses 网关转发，每一次上游请求（包括 S
 from pathlib import Path
 import sys
 sys.path.insert(0, str(Path('scripts').resolve()))
-from researchdesk_batch import monthly_budget
+from batch import monthly_budget
 reserved, limit = monthly_budget(Path.cwd(), {
     'backend': 'chatgpt_plan',
     'budget': {'month_max_calls': 100},

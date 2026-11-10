@@ -6,7 +6,7 @@ import tempfile
 import unittest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
-import researchdesk_admission as admission
+import admission
 
 
 class SourceCard(unittest.TestCase):

@@ -20,7 +20,7 @@ import yaml
 
 REPOSITORY = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPOSITORY / "scripts"))
-import researchdesk_offline as offline  # noqa: E402
+import offline  # noqa: E402
 
 
 class OfflineResearchAcceptance(unittest.TestCase):

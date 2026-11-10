@@ -13,9 +13,9 @@ import yaml
 import test_cycle as fixtures
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
-import researchdesk_cycle_discovery as discovery
-import researchdesk_offline as store
-from researchdesk_sources import SourceError
+import cycle_discovery as discovery
+import offline as store
+from sources import SourceError
 
 
 REAL_DISCOVER = discovery.discover

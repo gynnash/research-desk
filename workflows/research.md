@@ -25,14 +25,14 @@ summary/
 安装依赖并完成自己账号的[会员授权](local-membership-analysis.md)。单独采集不需要模型授权：
 
 ```sh
-python3 -B scripts/researchdesk_cycle.py collect \
+python3 -B scripts/cycle.py collect \
   --config config/cycles/default.yaml --cycle-id agent-memory-manual-001
 ```
 
 采集成功后，对同一批次逐篇研究：
 
 ```sh
-python3 -B scripts/researchdesk_research.py \
+python3 -B scripts/research.py \
   --config config/cycles/default.yaml --cycle-id agent-memory-manual-001
 ```
 

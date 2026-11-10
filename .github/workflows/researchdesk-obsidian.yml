@@ -48,5 +48,5 @@ jobs:
             echo '::warning::The runner is not bound to a local ResearchDesk workbench.'
             exit 1
           fi
-          "$RESEARCHDESK_RUNTIME_PYTHON" researchdesk-code/scripts/researchdesk_setup_obsidian.py \
+          "$RESEARCHDESK_RUNTIME_PYTHON" researchdesk-code/scripts/setup_obsidian.py \
             --refresh-existing --root "$RESEARCHDESK_WORKBENCH_ROOT" --expected-repo "$EXPECTED_REPO"

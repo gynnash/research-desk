@@ -14,10 +14,10 @@ import unittest
 from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
-import researchdesk_setup as setup
-import researchdesk_setup_github as github_setup
-import researchdesk_setup_obsidian as obsidian_setup
-import researchdesk_workbench as workbench
+import setup
+import setup_github as github_setup
+import setup_obsidian as obsidian_setup
+import workbench
 
 
 WEEKLY = {'weekdays': [1, 4], 'time': '09:35', 'timezone': 'America/New_York'}
@@ -724,7 +724,7 @@ class GitHubScheduleTest(unittest.TestCase):
         github = setup.GitHubSetup(workbench.REPOSITORY)
         missing = setup.GitHubSetupError('需要登录', code='github_login_required')
         notify = mock.Mock()
-        with (mock.patch('researchdesk_setup_github.shutil.which', return_value='gh'),
+        with (mock.patch('setup_github.shutil.which', return_value='gh'),
               mock.patch.object(github, '_check_auth', side_effect=[missing, None]) as check,
               mock.patch.object(github, '_authorize_in_browser') as browser):
             github.login(notify)
@@ -735,7 +735,7 @@ class GitHubScheduleTest(unittest.TestCase):
     def test_permission_status_is_independent_of_repository_connection(self):
         github = setup.GitHubSetup(workbench.REPOSITORY)
         missing_repository = setup.GitHubSetupError('需要连接仓库', code='github_repository_required')
-        with (mock.patch('researchdesk_setup_github.shutil.which', return_value='gh'),
+        with (mock.patch('setup_github.shutil.which', return_value='gh'),
               mock.patch.dict(os.environ, {'GH_TOKEN': '', 'GITHUB_TOKEN': ''}),
               mock.patch.object(github, '_check_auth'),
               mock.patch.object(github, '_repository', side_effect=missing_repository),
@@ -792,7 +792,7 @@ class GitHubScheduleTest(unittest.TestCase):
             github.prepare(expected_repository='fixture/workbench', require_private=True, require_schedule=True)
             self.assertEqual([call.args[0] for call in api.call_args_list], [
                 'repos/fixture/workbench/contents/.github/workflows/researchdesk-manual.yml?ref=main',
-                'repos/fixture/workbench/contents/scripts/researchdesk_setup_obsidian.py?ref=main',
+                'repos/fixture/workbench/contents/scripts/setup_obsidian.py?ref=main',
             ])
 
     def test_workflow_update_preserves_other_lines_and_same_schedule_needs_no_commit(self):

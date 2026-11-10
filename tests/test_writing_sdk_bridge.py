@@ -13,11 +13,11 @@ import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'scripts'))
-import researchdesk_confirmation as page
-import researchdesk_confirmation_inputs as previews
-import researchdesk_offline as store
-import researchdesk_writing_member as writing
-import researchdesk_writing_member_inputs as inputs
+import confirmation as page
+import confirmation_inputs as previews
+import offline as store
+import writing_member as writing
+import writing_member_inputs as inputs
 from test_insight_admission import prepare_cycle
 from test_research_batch import FakeMemberClient
 
@@ -106,8 +106,8 @@ class WritingSDKBridge(unittest.TestCase):
             inputs.verify_frozen_bundle(self.root, bundle)
 
     def test_hosted_save_without_private_yaml_admits_create_only_formal_writing(self):
-        import researchdesk_writing_deployment as deployed
-        import researchdesk_writing_admission as formal
+        import writing_deployment as deployed
+        import writing_admission as formal
         self.config['writing']['budget'].update(max_calls=100, max_calls_per_stage=100)
         (self.root / 'config/confirmation-v2.yaml').write_text(yaml.safe_dump(self.config))
         manager, approval = self.approve()
@@ -191,7 +191,7 @@ class WritingSDKBridge(unittest.TestCase):
         self.assertEqual(formal.inspect(publisher, bundle['topic'], approval)['status'], 'accepted')
 
     def test_manual_formal_entry_routes_current_approved_bundle(self):
-        import researchdesk_writing_admission as formal
+        import writing_admission as formal
         _, approval = self.approve()
         bundle = inputs.prepare_bundle(self.root, approval)
         policy = copy.deepcopy(yaml.safe_load((ROOT / 'config/system.yaml').read_text())['writing_admission'])

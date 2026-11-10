@@ -11,13 +11,13 @@ import yaml
 
 REPOSITORY = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPOSITORY / 'scripts'))
-import researchdesk_admission as admission
-import researchdesk_batch as research
-import researchdesk_cycle as cycle
-import researchdesk_insight as insight
-import researchdesk_insight_inputs as inputs
-import researchdesk_offline as store
-import researchdesk_recovery as recovery
+import admission
+import batch as research
+import cycle
+import insight
+import insight_inputs as inputs
+import offline as store
+import recovery
 import test_cycle
 from test_insight import FakeInsightClient
 from test_research_batch import FakeMemberClient

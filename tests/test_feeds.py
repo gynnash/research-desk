@@ -3,8 +3,8 @@ import sys
 import unittest
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / 'scripts'))
-from researchdesk_feeds import parse_article, parse_feed
-from researchdesk_sources import SourceError
+from feeds import parse_article, parse_feed
+from sources import SourceError
 
 
 class FeedTests(unittest.TestCase):

@@ -15,8 +15,8 @@
 ## 新下载或 fork 的工作台
 
 ```sh
-python3 -B scripts/researchdesk_workbench.py init
-python3 -B scripts/researchdesk_workbench.py check
+python3 -B scripts/workbench.py init
+python3 -B scripts/workbench.py check
 ```
 
 `init` 复制短用户模板，与系统默认合并并生成现有入口需要的配置，按主题准备 `collection/`、`summary/`、`insights/`、`articles/` 目录。新工作台没有维护者的研究资料、实际用量或真实 SDK 验收回执。公开 `config/examples/`、`config/test/` 和虚构测试样例仍可用于离线验收。
@@ -30,15 +30,15 @@ python3 -B scripts/researchdesk_workbench.py check
 新版定时执行当前使用 Mac。准备 Python 3.12、GitHub CLI 和本人仓库的管理权限，在执行机器完成 ChatGPT 与 GitHub 授权：
 
 ```sh
-python scripts/researchdesk_membership.py login
-python scripts/researchdesk_membership.py models
+python scripts/membership.py login
+python scripts/membership.py models
 gh auth login
 ```
 
 填好本地模型、主题和预算后，需要自动研究的用户在同一 YAML 设置 `automation.enabled: true`；需要真实 Insight 独立审阅通过后自动正式入库，再设置 `admission.enabled: true`。两个开关默认关闭。随后运行：
 
 ```sh
-python scripts/researchdesk_workbench.py start
+python scripts/workbench.py start
 ```
 
 命令自动应用配置、校验现有授权、安装 `runtime.python.venv` 需要的 SDK 依赖、注册并启动 runner。它不会推理，也不擅自打开自动研究开关；保留默认 `false` 时只启动执行服务，不自动研究。
@@ -50,15 +50,15 @@ python scripts/researchdesk_workbench.py start
 仍使用旧的分散兼容配置、尚无本地统一 YAML 时：
 
 ```sh
-python3 -B scripts/researchdesk_workbench.py init --adopt-existing
-python3 -B scripts/researchdesk_workbench.py check
+python3 -B scripts/workbench.py init --adopt-existing
+python3 -B scripts/workbench.py check
 ```
 
 导入读取现有设置，生成本人的差异配置。已有上一版完整 `config/local/workbench.yaml` 时，使用：
 
 ```sh
-python3 -B scripts/researchdesk_workbench.py migrate
-python3 -B scripts/researchdesk_workbench.py check
+python3 -B scripts/workbench.py migrate
+python3 -B scripts/workbench.py check
 ```
 
 `migrate` 先将完整本地 YAML 备份为 `config/local/workbench.before-layers.yaml`，再压缩为相对系统默认的差异，保留当前有效设置；旧配置缺少的默认来源会记录为禁用，避免迁移意外加入来源。备份同样不提交 Git。已有兼容文件保持原字节，人工笔记、原文和研究结果不改，去重状态、历史用量和实际请求账本不清空。以后只编辑差异配置；已部署的定时入口会在下一轮自动应用。
@@ -122,8 +122,8 @@ research:
 需要立即检查本地修改，或使用独立手动研究入口时，可运行：
 
 ```sh
-python3 -B scripts/researchdesk_workbench.py apply
-python3 -B scripts/researchdesk_workbench.py check
+python3 -B scripts/workbench.py apply
+python3 -B scripts/workbench.py check
 ```
 
 `apply` 加载两层配置，合并并校验后更新兼容配置。`check` 检查两层配置及已应用结果，不修改工作台文件，不登录、不调用模型、不修改 Git。直接手改兼容文件会造成配置分歧，工具会停止并保留文件；先将修改合入用户覆盖，再按提示处理。预算归档和去重状态属于运行状态，继续保存在本地 `config/research_state.yaml`，不放进公共模板或个人配置副本。
@@ -137,7 +137,7 @@ python3 -B scripts/researchdesk_workbench.py check
 使用 Codex Insight 时，显式传入生成的本人配置：
 
 ```sh
-python3 -B scripts/researchdesk_harness.py preflight --config config/local/codex-insight.yaml
+python3 -B scripts/harness.py preflight --config config/local/codex-insight.yaml
 ```
 
 `preflight` 不调用模型。真实执行另按 [Codex 后端说明](codex-backend.md)准备 SDK、隔离环境和本人会员授权；SDK 当前真实验收范围为 macOS。本次初始化不会把 Research 或 Writing 自动切换到 Codex 后端。
@@ -155,7 +155,7 @@ Obsidian 继续阅读同一份 Markdown。`.gitignore` 只控制 Git，不能决
 ## 可复现检查
 
 ```sh
-python3 -B scripts/researchdesk_workbench.py check
+python3 -B scripts/workbench.py check
 python3 -B workflows/validate.py --include-test
 git check-ignore config/local/workbench.yaml config/research_topics.yaml config/research_state.yaml
 git diff --check

@@ -19,8 +19,8 @@ import yaml
 REPOSITORY = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPOSITORY / 'scripts'))
 import test_research_batch as research_test
-import researchdesk_batch as research_batch
-import researchdesk_offline as store
+import batch as research_batch
+import offline as store
 
 
 class FakeInsightClient(research_test.FakeMemberClient):
@@ -161,7 +161,7 @@ class InsightLoop(unittest.TestCase):
 
     def run_insight(self, batch_id='first', **kwargs):
         self.write_config()
-        insight = importlib.import_module('researchdesk_insight')
+        insight = importlib.import_module('insight')
         return insight.run(self.root, self.config_path, batch_id, self.client,
                            fetcher=self.fetcher, **kwargs)
 
@@ -497,7 +497,7 @@ class InsightLoop(unittest.TestCase):
         self.assertEqual(len(self.client.calls), 3)
 
     def test_narrow_brace_normalizer_rejects_other_malformed_json(self):
-        insight = importlib.import_module('researchdesk_insight')
+        insight = importlib.import_module('insight')
         valid = json.dumps(FakeInsightClient.synthesis(), ensure_ascii=False)
         invalid = [valid + '}}', valid + valid, valid + ' trailing text',
                    '{"broken": "missing comma" "value": 1}}',
@@ -508,7 +508,7 @@ class InsightLoop(unittest.TestCase):
                 insight.normalize_final_object_brace(raw)
 
     def test_normalized_format_requires_explicit_independent_acknowledgement(self):
-        insight = importlib.import_module('researchdesk_insight')
+        insight = importlib.import_module('insight')
         self.write_config()
         config = insight.inputs.load_config(self.root, self.config_path)
         bundle = insight.inputs.prepare_bundle(self.root, config, fetcher=self.fetcher)
@@ -606,7 +606,7 @@ class InsightLoop(unittest.TestCase):
         self.assertFalse((self.root / 'articles/test/custom-topic/first').exists())
 
     def test_model_cannot_self_approve_or_start_writing(self):
-        insight = importlib.import_module('researchdesk_insight')
+        insight = importlib.import_module('insight')
         self.write_config()
         config = insight.inputs.load_config(self.root, self.config_path)
         bundle = insight.inputs.prepare_bundle(self.root, config, fetcher=self.fetcher)
@@ -637,10 +637,10 @@ class InsightLoop(unittest.TestCase):
         self.assertEqual(generation['evidence_index'], review['evidence_index'])
         self.assertEqual(generation['evidence'], review['evidence'])
         self.assertIn('historical-H1-R2', generation['evidence'][-1]['text'])
-        insight = importlib.import_module('researchdesk_insight')
+        insight = importlib.import_module('insight')
         config = insight.inputs.load_config(self.root, self.config_path)
         bundle = insight.inputs.prepare_bundle(self.root, config, fetcher=self.fetcher)
-        admission = importlib.import_module('researchdesk_admission')
+        admission = importlib.import_module('admission')
         candidate, proof, _, _ = admission._insight_proof(self.root, config, bundle, 'first', True)
         self.assertEqual(candidate, review['candidate'])
         self.assertEqual(proof['status'], 'test_accepted')
@@ -725,7 +725,7 @@ class InsightLoop(unittest.TestCase):
         self.assertEqual(len(self.client.calls), 2)
 
     def test_pass_requires_coverage_and_topic_gate_acknowledgement(self):
-        insight = importlib.import_module('researchdesk_insight')
+        insight = importlib.import_module('insight')
         self.run_insight()
         self.write_config()
         config = insight.inputs.load_config(self.root, self.config_path)
@@ -844,7 +844,7 @@ class InsightLoop(unittest.TestCase):
             self.config['budget'] = original
         self.config['budget'].update(max_calls=100, month_max_calls=100)
         self.write_config()
-        insight = importlib.import_module('researchdesk_insight')
+        insight = importlib.import_module('insight')
         self.assertEqual(insight.inputs.load_config(self.root, self.config_path)['budget']['max_calls'], 100)
         self.config_path.write_text(self.config_path.read_text() + '\nbackend: api_key\n')
         with self.assertRaises((store.OfflineError, ValueError, yaml.YAMLError)):

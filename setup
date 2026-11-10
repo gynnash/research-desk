@@ -50,4 +50,4 @@ if [[ "$(uname -s)" == Darwin ]] && ! command -v gh >/dev/null && command -v bre
   fi
 fi
 
-exec "$setup_python" -B scripts/researchdesk_setup.py "$@"
+exec "$setup_python" -B scripts/setup.py "$@"

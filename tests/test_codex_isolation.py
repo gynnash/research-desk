@@ -12,7 +12,7 @@ import unittest
 from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
-import researchdesk_codex_isolation as isolation
+import codex_isolation as isolation
 
 
 @unittest.skipUnless(platform.system() == 'Darwin', 'Mac profile only')

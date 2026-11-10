@@ -24,12 +24,12 @@ import yaml
 
 REPOSITORY = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPOSITORY / 'scripts'))
-import researchdesk_batch as shared
-import researchdesk_retired as retired
-import researchdesk_confirmation as confirmation
-import researchdesk_membership as membership
-import researchdesk_offline as store
-import researchdesk_sources as sources
+import batch as shared
+import retired
+import confirmation
+import membership
+import offline as store
+import sources
 
 TOPIC = 'agent-memory'
 CYCLE = 'cycle-agent-memory-gh-20261019'
@@ -98,8 +98,8 @@ class RealMemberWriting(unittest.TestCase):
         if not plan.is_file():
             raise unittest.SkipTest('需要已有真实独立审阅及正式准入证明；不联网或伪造 pass 补建')
         cls.plan = yaml.safe_load(plan.read_text(encoding='utf-8'))
-        cls.inputs = importlib.import_module('researchdesk_writing_member_inputs')
-        cls.writing = importlib.import_module('researchdesk_writing_member')
+        cls.inputs = importlib.import_module('writing_member_inputs')
+        cls.writing = importlib.import_module('writing_member')
 
     def git(self, *arguments):
         return subprocess.run(['git', '-C', str(self.root), *arguments], check=True,
@@ -320,7 +320,7 @@ class RealMemberWriting(unittest.TestCase):
             self.assertIn(notes, text)
             self.assertNotIn('**原作者声称', text)
             self.assertNotIn('## 导读', text)
-        job = importlib.import_module('researchdesk_writing_job')
+        job = importlib.import_module('writing_job')
         self.assertEqual(job.verify_result(self.root, bundle)['status'], 'test_accepted')
         progress = self.app.list_confirmations()[0]['writing']
         self.assertEqual(progress['status'], 'test_accepted')
@@ -388,7 +388,7 @@ class RealMemberWriting(unittest.TestCase):
         self.assert_original_unchanged()
 
     def test_job_transfer_rejects_changed_inputs_and_conflicts_then_saves_test_only(self):
-        job = importlib.import_module('researchdesk_writing_job')
+        job = importlib.import_module('writing_job')
         record = self.confirm()
         bundle = self.inputs.prepare_bundle(self.root, record['id'])
         state, artifact = self.root.parent / 'state', self.root.parent / 'artifact'
@@ -453,7 +453,7 @@ class RealMemberWriting(unittest.TestCase):
         return record, result
 
     def test_zero_call_job_verifies_locally_without_any_membership_contact(self):
-        job = importlib.import_module('researchdesk_writing_job')
+        job = importlib.import_module('writing_job')
         record, result = self.complete_synced_batch()
         before = self.hashes()
         host = self.root.parent / 'external-runtime'
@@ -474,7 +474,7 @@ class RealMemberWriting(unittest.TestCase):
         self.assertEqual(len(self.client.calls), result['completed_calls'])
 
     def test_zero_call_actions_receipt_is_exported_verified_and_saved_create_only(self):
-        job = importlib.import_module('researchdesk_writing_job')
+        job = importlib.import_module('writing_job')
         record, result = self.complete_synced_batch()
         before = self.hashes()
         host = self.root.parent / 'external-runtime'

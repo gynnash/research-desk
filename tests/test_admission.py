@@ -21,9 +21,9 @@ import yaml
 
 REPOSITORY = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPOSITORY / 'scripts'))
-import researchdesk_membership as membership
-import researchdesk_offline as store
-import researchdesk_sources as sources
+import membership
+import offline as store
+import sources
 
 TOPIC = 'agent-memory'
 CYCLE = 'cycle-agent-memory-gh-20261019'
@@ -36,7 +36,7 @@ class CreateOnlyAdmission(unittest.TestCase):
         path = REPOSITORY / BASE / 'plan.yaml'
         if not path.is_file():
             raise unittest.SkipTest('需要先对真实 GitHub 轮次完成首次原文复核并保存准入 plan；本测试不联网补建')
-        cls.admission = importlib.import_module('researchdesk_admission')
+        cls.admission = importlib.import_module('admission')
         cls.original_plan = yaml.safe_load(path.read_text(encoding='utf-8'))
         if not cls.original_plan.get('files'):
             raise AssertionError('真实准入计划缺少待创建产物')

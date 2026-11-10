@@ -8,9 +8,9 @@ import yaml
 import test_fulltext_cycle as cycle_fixture
 import test_recovery as recovery_fixture
 from test_insight import FakeInsightClient
-import researchdesk_insight_inputs as inputs
-import researchdesk_offline as store
-import researchdesk_recovery as recovery
+import insight_inputs as inputs
+import offline as store
+import recovery
 
 
 class FulltextRecovery(unittest.TestCase):

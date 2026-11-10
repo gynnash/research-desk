@@ -11,10 +11,10 @@ from unittest import mock
 import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
-import researchdesk_batch as batch
-import researchdesk_membership as membership
-import researchdesk_offline as store
-import researchdesk_workbench as workbench
+import batch
+import membership
+import offline as store
+import workbench
 
 
 class Workbench(unittest.TestCase):
@@ -78,7 +78,7 @@ class Workbench(unittest.TestCase):
         self.assertEqual(self.snapshot(), before)
 
     def test_uninitialized_cloud_schedule_stays_disabled_without_writing(self):
-        import researchdesk_schedule as schedule
+        import schedule
         self.assertEqual(schedule.plan(self.root, 'schedule')['cycle_id'], '')
         self.assertEqual(schedule.plan(self.root, 'workflow_dispatch',
                                        requested_operation='catchup')['cycle_id'], '')

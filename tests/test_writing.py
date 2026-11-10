@@ -20,7 +20,7 @@ import yaml
 
 REPOSITORY = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPOSITORY / 'scripts'))
-import researchdesk_offline as store
+import offline as store
 
 
 class FakeWritingClient:
@@ -90,7 +90,7 @@ class OfflineWritingLoop(unittest.TestCase):
                           side_effect=AssertionError('Network prohibited')).start()
 
     def writing(self):
-        return importlib.import_module('researchdesk_writing')
+        return importlib.import_module('writing')
 
     def write_config(self):
         self.config_path.write_text(yaml.safe_dump(self.config, allow_unicode=True, sort_keys=False))
@@ -407,7 +407,7 @@ class OfflineWritingLoop(unittest.TestCase):
 
     def test_default_fixture_backend_needs_no_membership_client(self):
         self.confirm()
-        with mock.patch.dict(sys.modules, {'researchdesk_membership': None}):
+        with mock.patch.dict(sys.modules, {'membership': None}):
             result = self.writing().run(self.root, self.config_path, 'default-mock', client=None)
         self.assertEqual(result['backend'], 'mock')
         self.assertEqual(result['status'], 'test_accepted')

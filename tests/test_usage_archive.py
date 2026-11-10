@@ -9,8 +9,8 @@ from unittest.mock import patch
 import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
-import researchdesk_batch as batch
-import researchdesk_offline as store
+import batch
+import offline as store
 
 
 class ArchivedUsage(unittest.TestCase):

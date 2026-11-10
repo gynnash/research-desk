@@ -14,8 +14,8 @@ from urllib.error import HTTPError
 
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
-import researchdesk_fulltext as fulltext
-from researchdesk_sources import SafeFetcher, SourceError
+import fulltext
+from sources import SafeFetcher, SourceError
 
 
 PAPER = {'kind': 'paper', 'metadata': {'arxiv_id': '2610.01234', 'source_version': 'v2',

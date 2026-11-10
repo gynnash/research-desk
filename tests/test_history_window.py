@@ -12,13 +12,13 @@ from unittest import mock
 import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
-import researchdesk_cycle_discovery as discovery
-import researchdesk_insight as insight
-import researchdesk_insight_inputs as inputs
-import researchdesk_offline as store
-import researchdesk_recovery as recovery
-import researchdesk_admission as admission
-import researchdesk_cycle as cycle
+import cycle_discovery as discovery
+import insight
+import insight_inputs as inputs
+import offline as store
+import recovery
+import admission
+import cycle
 import test_fulltext_review as fulltext_fixtures
 import test_research_batch as batch_fixtures
 from test_insight import FakeInsightClient

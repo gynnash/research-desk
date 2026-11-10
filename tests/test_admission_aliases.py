@@ -13,12 +13,12 @@ import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'scripts'))
-import researchdesk_admission as admission
-import researchdesk_batch as research
-import researchdesk_identity as identity
-import researchdesk_insight as insight
-import researchdesk_insight_inputs as inputs
-import researchdesk_offline as store
+import admission
+import batch as research
+import identity
+import insight
+import insight_inputs as inputs
+import offline as store
 
 CYCLE = 'agent-memory-20261027-0300'
 FORMAL = 'blog-05c33166-b18e-425e-91e0-36ddd26f21aa'

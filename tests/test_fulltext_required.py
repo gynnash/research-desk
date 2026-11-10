@@ -10,12 +10,12 @@ import yaml
 
 import test_research_batch as fixtures
 from test_fulltext import PAPER, HTML, BODY, FixedFetcher
-import researchdesk_archive as archive
-import researchdesk_batch_inputs as inputs
-import researchdesk_cycle_discovery as discovery
-import researchdesk_fulltext as fulltext
-import researchdesk_offline as store
-from researchdesk_sources import SourceError
+import archive
+import batch_inputs as inputs
+import cycle_discovery as discovery
+import fulltext
+import offline as store
+from sources import SourceError
 
 
 class RequiredFulltext(unittest.TestCase):

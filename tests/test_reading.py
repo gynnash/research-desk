@@ -7,8 +7,8 @@ import unittest
 from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
-import researchdesk_offline as store
-import researchdesk_reading as reading
+import offline as store
+import reading
 
 
 class ReadingHome(unittest.TestCase):

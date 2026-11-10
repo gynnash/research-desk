@@ -16,10 +16,10 @@ from unittest import mock
 import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
-import researchdesk_membership as membership
-import researchdesk_offline as store
-import researchdesk_runner as runner
-import researchdesk_workbench as workbench
+import membership
+import offline as store
+import runner
+import workbench
 
 
 class OneCommandStart(unittest.TestCase):

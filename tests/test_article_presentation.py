@@ -9,15 +9,15 @@ import unittest
 import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
-import researchdesk_batch as batch
-import researchdesk_admission as admission
-import researchdesk_confirmation as confirmation
-import researchdesk_confirmation_inputs as confirmation_inputs
-import researchdesk_cycle_discovery as discovery
-import researchdesk_insight as insight
-import researchdesk_insight_inputs as inputs
-import researchdesk_job as job
-import researchdesk_offline as store
+import batch
+import admission
+import confirmation
+import confirmation_inputs
+import cycle_discovery as discovery
+import insight
+import insight_inputs as inputs
+import job
+import offline as store
 import test_research_batch as research_fixtures
 from test_fulltext_review import FulltextFetcher
 import test_insight as insight_fixtures

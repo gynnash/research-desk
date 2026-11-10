@@ -7,7 +7,7 @@ import unittest
 from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
-import researchdesk_writing_member as writing
+import writing_member as writing
 
 
 class WritingRemoteRefresh(unittest.TestCase):

@@ -71,7 +71,7 @@ def canonical_url(value):
 def check_workspace(root, topics, fail, frontmatter):
     """Check the two public reading trees against their existing fixed receipts."""
     sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
-    from researchdesk_note_paths import summary_ids
+    from note_paths import summary_ids
 
     identity = re.compile(r'[a-z0-9][a-z0-9_-]{0,100}\Z')
     digest = lambda payload: hashlib.sha256(payload).hexdigest()
@@ -224,7 +224,7 @@ def check_workspace(root, topics, fail, frontmatter):
 def check_insight_admissions(root, topics, fail, frontmatter):
     """Check new formal prose through its existing accuracy-review bindings."""
     sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
-    import researchdesk_insight_admission as admission
+    import insight_admission as admission
 
     admitted = {}
     for path in sorted((root / 'reports').glob('*/admissions/*/accepted.yaml')):
@@ -272,7 +272,7 @@ def check_insight_admissions(root, topics, fail, frontmatter):
 def check_writing_admissions(root, topics, fail):
     """Verify saved new-format drafts without granting fresh execution rights."""
     sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
-    import researchdesk_writing_admission as admission
+    import writing_admission as admission
 
     count = 0
     for path in sorted((root / 'reports').glob('*/writing-admissions/*/accepted.yaml')):

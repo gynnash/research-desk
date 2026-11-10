@@ -22,7 +22,7 @@
 3. 不要把 Secret 发到聊天、截图或仓库。下面的交互命令会在本机隐藏输入，只在本次进程使用，不保存到文件。
 
 ```sh
-python3 -B scripts/researchdesk_zhihu.py quota --prompt-secret
+python3 -B scripts/zhihu.py quota --prompt-secret
 ```
 
 后续自托管部署可以由运行环境提供 `ZHIHU_ACCESS_SECRET`；凭证留在仓库和 Obsidian Vault 外。命令不接受直接传入 Secret 的参数，避免进入 shell 历史和进程命令行。不要把凭证粘贴进 YAML 或写进命令示例。
@@ -30,7 +30,7 @@ python3 -B scripts/researchdesk_zhihu.py quota --prompt-secret
 ## 小规模候选验证
 
 ```sh
-python3 -B scripts/researchdesk_zhihu.py search \
+python3 -B scripts/zhihu.py search \
   --query '大模型 Agent 记忆' --count 5 --days 60 --prompt-secret
 ```
 

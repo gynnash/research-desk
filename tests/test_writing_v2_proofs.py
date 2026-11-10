@@ -16,11 +16,11 @@ import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'scripts'))
-import researchdesk_membership as membership
-import researchdesk_offline as store
-import researchdesk_writing_admission as admission
-import researchdesk_writing_job as job
-import researchdesk_writing_member as writing
+import membership
+import offline as store
+import writing_admission as admission
+import writing_job as job
+import writing_member as writing
 
 
 APPROVAL = 'approval-20261019-161304-eeb7d0a7582e'

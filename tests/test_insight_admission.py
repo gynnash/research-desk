@@ -12,9 +12,9 @@ import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'scripts'))
-import researchdesk_harness as harness
-import researchdesk_insight_admission as admission
-import researchdesk_offline as store
+import harness
+import insight_admission as admission
+import offline as store
 import test_codex_harness as codex_fixtures
 import test_research_entry as research_fixtures
 

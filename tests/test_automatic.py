@@ -12,10 +12,10 @@ from unittest.mock import Mock, patch
 import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
-import researchdesk_automatic as automatic
-import researchdesk_membership as membership
-import researchdesk_offline as store
-import researchdesk_workbench as workbench
+import automatic
+import membership
+import offline as store
+import workbench
 
 
 class ScheduledPipeline(unittest.TestCase):
@@ -326,10 +326,10 @@ class ScheduledPipeline(unittest.TestCase):
 
 class RealStageIntegration(unittest.TestCase):
     def test_real_collect_research_and_sdk_harness_replay_fictional_full_text(self):
-        import researchdesk_cycle as cycle
-        import researchdesk_harness as harness
-        import researchdesk_research as research
-        import researchdesk_publish as publish
+        import cycle
+        import harness
+        import research
+        import publish
         import test_research_entry as fixtures
         from test_codex_harness import RecordingBackend
         fixture = fixtures.ResearchEntry('test_collection_to_detailed_reviewed_summaries_and_idempotent_resume')

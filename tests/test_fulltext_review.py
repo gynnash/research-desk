@@ -9,10 +9,10 @@ import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'scripts'))
-import researchdesk_batch as batch
-import researchdesk_insight as insight
-import researchdesk_insight_inputs as insight_inputs
-import researchdesk_offline as store
+import batch
+import insight
+import insight_inputs
+import offline as store
 import test_research_batch as fixtures
 from test_insight import FakeInsightClient
 
