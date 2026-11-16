@@ -1,0 +1,23 @@
+binding: 349364546d81baf9932a73107fa631e4980401c547acf1497e89844a7b40bb34
+result:
+  text: "{\n  \"decision\": \"pass\",\n  \"coverage_acknowledged\": true,\n  \"issues\"\
+    : [\n    {\n      \"severity\": \"info\",\n      \"location\": \"全文阅读范围与 limitations[0]\"\
+    ,\n      \"reason\": \"已按提供的 A1—A124 核对标题性小节、summary、全部 claims 和 limitations。reading_scope\
+    \ 标明抽取文本完整且未截断，包含方法与结果附录；候选明确说明未独立复现实验、未核验代码或原始图像，没有把作者报告写成独立验证结果。此核准仅覆盖所提供的抽取文本，不验证图像、版式或数学公式渲染的忠实性。\"\
+    ,\n      \"suggestion\": \"保留现有阅读范围和未复现实验声明。\"\n    }\n  ],\n  \"checks\": [\n\
+    \    {\n      \"claim_index\": 0,\n      \"verdict\": \"supported\",\n      \"\
+    evidence_ids\": [\"A19\", \"A20\", \"A24\", \"A25\"]\n    },\n    {\n      \"\
+    claim_index\": 1,\n      \"verdict\": \"supported\",\n      \"evidence_ids\":\
+    \ [\"A26\", \"A27\", \"A37\", \"A90\", \"A91\"]\n    },\n    {\n      \"claim_index\"\
+    : 2,\n      \"verdict\": \"supported\",\n      \"evidence_ids\": [\"A43\", \"\
+    A46\", \"A68\", \"A117\"]\n    },\n    {\n      \"claim_index\": 3,\n      \"\
+    verdict\": \"supported\",\n      \"evidence_ids\": [\"A38\", \"A41\", \"A52\"\
+    , \"A53\", \"A120\"]\n    },\n    {\n      \"claim_index\": 4,\n      \"verdict\"\
+    : \"supported\",\n      \"evidence_ids\": [\"A56\", \"A57\", \"A123\", \"A124\"\
+    ]\n    }\n  ]\n}"
+  model: gpt-6-astra
+  response_id: resp_0b21b6d8a3d93e23016afab503d54c87d098545944cb130ab5
+  usage:
+    input_tokens: 50687
+    output_tokens: 447
+    total_tokens: 51134

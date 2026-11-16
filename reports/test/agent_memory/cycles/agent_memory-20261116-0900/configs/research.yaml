@@ -1,0 +1,44 @@
+schema_version: 1
+mode: research_batch_test
+backend: chatgpt_plan
+topic: agent_memory
+topics_file: config/local/automation/agent_memory-20261116-0900/topics.yaml
+models:
+  research: gpt-6.1-sol
+  review: gpt-6-astra
+budget:
+  max_documents: 3
+  max_calls_per_item: 100
+  max_calls_per_batch: 100
+  month_max_calls: 100
+  max_input_chars: 600000
+  max_output_chars: 24000
+  timeout_seconds: 240
+  max_revisions: 1
+prompts:
+  version: research-batch-v5
+sources:
+- id: arxiv-d651dfeeaafe
+  adapter: arxiv
+  kind: paper
+  url: https://arxiv.org/abs/2611.05791v1
+  evidence_max_chars: 200000
+  reading:
+    mode: full_text_required
+  archive: true
+- id: arxiv-b26337f8b588
+  adapter: arxiv
+  kind: paper
+  url: https://arxiv.org/abs/2611.12068v1
+  evidence_max_chars: 200000
+  reading:
+    mode: full_text_required
+  archive: true
+- id: arxiv-5c6ba19e21f2
+  adapter: arxiv
+  kind: paper
+  url: https://arxiv.org/abs/2611.09721v1
+  evidence_max_chars: 200000
+  reading:
+    mode: full_text_required
+  archive: true

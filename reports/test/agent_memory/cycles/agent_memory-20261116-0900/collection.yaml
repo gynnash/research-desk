@@ -1,0 +1,64 @@
+schema_version: 1
+mode: collection_only
+topic: agent_memory
+cycle_id: agent_memory-20261116-0900
+status: collected
+discovery_status: partial
+records:
+- key: arxiv-d651dfeeaafe
+  title: 'FlyHash for LLM Agent Memory: An Empirical Validation and a New Application'
+  source_url: https://arxiv.org/abs/2611.05791
+  source_id: paper-59e26ceb-1278-4ec1-8eba-ec73d927c064
+  candidate_path: reports/test/agent_memory/research-batches/agent_memory-20261116-0900/items/arxiv-d651dfeeaafe/candidate.yaml
+  original_path: collection/agent_memory/agent_memory-20261116-0900/items/arxiv-d651dfeeaafe/original.yaml
+  original_markdown_path: collection/agent_memory/agent_memory-20261116-0900/items/arxiv-d651dfeeaafe/original.md
+  coverage: full_text
+  content_hash: 663b7bf475f1cb639eed119eed77ed72165f29c9afd9d8abb75727177dc33f5e
+- key: arxiv-b26337f8b588
+  title: 'MIRIX-2.0: Multi-Agent Memory System'
+  source_url: https://arxiv.org/abs/2611.12068
+  source_id: paper-4db1ed76-e28a-465f-bd2c-34c1aae2218e
+  candidate_path: reports/test/agent_memory/research-batches/agent_memory-20261116-0900/items/arxiv-b26337f8b588/candidate.yaml
+  original_path: collection/agent_memory/agent_memory-20261116-0900/items/arxiv-b26337f8b588/original.yaml
+  original_markdown_path: collection/agent_memory/agent_memory-20261116-0900/items/arxiv-b26337f8b588/original.md
+  coverage: full_text
+  content_hash: af150868dce061252615c854627174d1c6b34d6561e05d763e6842d12ea72977
+- key: arxiv-5c6ba19e21f2
+  title: 'MemoryDojo: Benchmarking Poisoning Through LLM Agent Memory'
+  source_url: https://arxiv.org/abs/2611.09721
+  source_id: paper-6399c18c-5d59-4775-8dee-b9774985901d
+  candidate_path: reports/test/agent_memory/research-batches/agent_memory-20261116-0900/items/arxiv-5c6ba19e21f2/candidate.yaml
+  original_path: collection/agent_memory/agent_memory-20261116-0900/items/arxiv-5c6ba19e21f2/original.yaml
+  original_markdown_path: collection/agent_memory/agent_memory-20261116-0900/items/arxiv-5c6ba19e21f2/original.md
+  coverage: full_text
+  content_hash: 067a829b7568e617dec7cadcab7e295cff20e17a4a9cbc1fb69431deb02500de
+model_calls: 0
+research_started: false
+insight_started: false
+writing_started: false
+production_accepted: false
+publish_authorized: false
+input_hashes:
+  reports/test/agent_memory/cycles/agent_memory-20261116-0900/manifest.yaml: 88649d38adc9e2ffdc51b3fcce1d431c1ab786d3aaadb262fef7aecf0b4ba634
+  reports/test/agent_memory/cycles/agent_memory-20261116-0900/manifest.yaml.sha256: 52fddcfc1b1379712c694402cbde80a7ba2e5c125b01d1c6696872b50669e465
+  reports/test/agent_memory/cycles/agent_memory-20261116-0900/discovery.yaml: c393e60f02f35f258dc67c9c46ffe8fc1053522cc33dad89efaac30adf333c0f
+  reports/test/agent_memory/cycles/agent_memory-20261116-0900/discovery.yaml.sha256: af42e8d6fca2ebab41a3b2b83979430109fe982ab0ae3885b7a2a4aa013d00b9
+  reports/test/agent_memory/cycles/agent_memory-20261116-0900/selection.yaml: 0591e151676719dcdd8b7ca89e8a3e0433acb32cf310da2876d3cdfa19f33c6e
+  reports/test/agent_memory/cycles/agent_memory-20261116-0900/selection.yaml.sha256: 1e4e6b334f62170a52322e9c92fa42479be3bf3e03f1b3d9d131fb0cf3bd23f0
+output_hashes:
+  reports/test/agent_memory/research-batches/agent_memory-20261116-0900/items/arxiv-d651dfeeaafe/candidate.yaml: e2575a1c20901505f2174511cfc241909c5d4c89717a7549ac868e83ab26fc78
+  reports/test/agent_memory/research-batches/agent_memory-20261116-0900/items/arxiv-d651dfeeaafe/candidate.yaml.sha256: 995961d3406f7d81013681e111cebe1e50d015c49a224d91c6727f7f470d8556
+  collection/agent_memory/agent_memory-20261116-0900/items/arxiv-d651dfeeaafe/original.yaml: 1261a8e82fa9b8151902d9d583198d0254a94ca9f7706835ca3a762659f2ff4b
+  collection/agent_memory/agent_memory-20261116-0900/items/arxiv-d651dfeeaafe/original.yaml.sha256: 135acbced725d2007108c6796232f2389dace09b20f4f7467a8cfff2eb3b8f73
+  collection/agent_memory/agent_memory-20261116-0900/items/arxiv-d651dfeeaafe/original.md: 346213b987ed99af066e3b70c3e670b5bfbc51316fd82819f93fd4e0568e1789
+  reports/test/agent_memory/research-batches/agent_memory-20261116-0900/items/arxiv-b26337f8b588/candidate.yaml: 35805c3b4b26f121aab8793e3fe7c41d8a8ac15959bd1bb9c0039dc4f2b48ba6
+  reports/test/agent_memory/research-batches/agent_memory-20261116-0900/items/arxiv-b26337f8b588/candidate.yaml.sha256: 4d9940bc4515980d020cffc0e06c0459c253a5ec6caf2aa2542b2bd7bdb70950
+  collection/agent_memory/agent_memory-20261116-0900/items/arxiv-b26337f8b588/original.yaml: d83ac0cac83f614d529fcde73c09bd1d292d90e3dc28a70813d407f7a09c8cef
+  collection/agent_memory/agent_memory-20261116-0900/items/arxiv-b26337f8b588/original.yaml.sha256: 2a60f3983376c20fb0134ba9a1b6124eb6e9a4ddb49406666fa1b5b197c3f9ed
+  collection/agent_memory/agent_memory-20261116-0900/items/arxiv-b26337f8b588/original.md: 0350727d4f01ff526b54e9dcf1251896368fb28b6b5215663d90e92ac6fccc3b
+  reports/test/agent_memory/research-batches/agent_memory-20261116-0900/items/arxiv-5c6ba19e21f2/candidate.yaml: 059d2898d9aab09fc5c5bca4735d0d2f7b64b40c15fdcb107f782055a83b48f9
+  reports/test/agent_memory/research-batches/agent_memory-20261116-0900/items/arxiv-5c6ba19e21f2/candidate.yaml.sha256: 75f11429877d025078d94770b3eeaaa3caf27ecca0a62548a05448fb68b54d33
+  collection/agent_memory/agent_memory-20261116-0900/items/arxiv-5c6ba19e21f2/original.yaml: ba73749086bb08e04912559ad0a8e12fc23f08f7823a5651a6dbd7aa476b37ba
+  collection/agent_memory/agent_memory-20261116-0900/items/arxiv-5c6ba19e21f2/original.yaml.sha256: f9b078502e3e0d2c856c70258b2bc01914f3ab5b8a81ffc9f454bf6df7e8c3ed
+  collection/agent_memory/agent_memory-20261116-0900/items/arxiv-5c6ba19e21f2/original.md: 5f4ecdb12a2a6829eda0d480e969ff64cec9716c43e5cd84a002f291701d6ecd
+collection_manifest_path: collection/agent_memory/agent_memory-20261116-0900/manifest.yaml

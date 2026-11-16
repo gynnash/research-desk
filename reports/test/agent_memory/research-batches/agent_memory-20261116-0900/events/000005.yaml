@@ -1,0 +1,9 @@
+type: call_reserved
+key: arxiv-b26337f8b588
+reservation_id: arxiv-b26337f8b588:review:0
+role: review
+revision: 0
+model_id: gpt-6-astra
+month: 2026-11
+at: '2026-11-16T07:46:14.848683+00:00'
+usage_status: unknown

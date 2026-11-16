@@ -1,0 +1,32 @@
+schema_version: 1
+topic: agent_memory
+cycle_id: agent_memory-20261116-0900
+status: research_incomplete
+terminal: false
+receipt_path: null
+writing_started: false
+publish_authorized: false
+production_accepted: false
+config_fingerprint: ca85ef5f94f8cc03d6594312d5665f8f832400340a9c8cd1c2952919ddcbae1d
+stages:
+  collection:
+    status: collected
+    count: 3
+  research:
+    status: partial
+    count: 2
+collection_count: 3
+summary_count: 2
+context_path: reports/test/agent_memory/automation/agent_memory-20261116-0900/context.yaml
+context_sha256: ce6c374164c005b59388dd677a2c13152da0eb7867666a1cf955a1cfbfccf29a
+health:
+  membership_authorized: true
+  configured_models_available: true
+  sdk_live_ready: true
+  model_calls: 0
+research_reserved_calls: 7
+research_completed_calls: 7
+research_reserved_requests: 7
+insight_model_request_count: 0
+reserved_model_requests: 7
+attempt: 1

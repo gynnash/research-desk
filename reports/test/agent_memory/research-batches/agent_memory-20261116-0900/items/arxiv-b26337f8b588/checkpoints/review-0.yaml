@@ -1,0 +1,32 @@
+binding: 094b0ebadf730b53a9e2d1b1890794d2374ad788798f401213c9c8edaa22fe4d
+result:
+  text: "{\n  \"decision\": \"revise\",\n  \"coverage_acknowledged\": true,\n  \"\
+    issues\": [\n    {\n      \"severity\": \"info\",\n      \"location\": \"limitations[0]；reading_scope\"\
+    ,\n      \"reason\": \"已按提供的 A1—A124 核对。阅读范围为未截断的完整抽取文本，包含正文、方法与结果附录及参考文献；这不代表核验原始图像、数学排版、代码或复现实验。候选已明确未独立复现实验，范围声明基本准确。\"\
+    ,\n      \"suggestion\": \"保留现有阅读范围和未复现声明。\"\n    },\n    {\n      \"severity\"\
+    : \"warning\",\n      \"location\": \"summary\",\n      \"reason\": \"“整合只改变证据的连接方式，不改写已存记录”缺少“语义\
+    \ AutoDream”这一适用条件。A33、A37 的不改写保证针对语义整合；A38 明确程序记忆整合可以创建、修改或删除技能。摘要目前将语义分支的性质泛化为整个系统，虽然后文有所区分，摘要本身仍可能误导。\"\
+    ,\n      \"suggestion\": \"改为：“其语义整合只调整实体索引及证据连接，不改写已存证据记录；程序记忆分支则会修改技能。”\"\n\
+    \    },\n    {\n      \"severity\": \"warning\",\n      \"location\": \"summary\
+    \ 首句\",\n      \"reason\": \"A43 明确指定 gpt-4.1-mini 用于回答与抽取，没有同样明确指定六类记忆写入代理均使用该模型。“以\
+    \ gpt-4.1-mini 写入和回答”扩大了已有模型配置证据的范围。\",\n      \"suggestion\": \"将“写入和回答”改为“抽取和回答”，与\
+    \ claims[2] 的准确表述保持一致。\"\n    },\n    {\n      \"severity\": \"warning\",\n  \
+    \    \"location\": \"claims[1] 首句\",\n      \"reason\": \"先经图进入、再读取证据的约束仅适用于情景和语义检索的正常路径。A26\
+    \ 规定图读取报错时回退到直接证据检索；A90—A91 说明其余四类记忆使用各自的直接检索路径。当前“作者将检索限制为……”表述过于笼统。\",\n   \
+    \   \"suggestion\": \"改为：“情景和语义记忆的正常检索路径先选择图锚点，再取得事实及来源记录；仅在图读取报错时回退到直接证据检索，其他记忆类型使用各自的检索路径。”\"\
+    \n    }\n  ],\n  \"checks\": [\n    {\n      \"claim_index\": 0,\n      \"verdict\"\
+    : \"supported\",\n      \"evidence_ids\": [\"A19\", \"A20\", \"A24\", \"A25\"\
+    ]\n    },\n    {\n      \"claim_index\": 1,\n      \"verdict\": \"unsupported\"\
+    ,\n      \"evidence_ids\": [\"A26\", \"A27\", \"A37\", \"A90\", \"A91\"]\n   \
+    \ },\n    {\n      \"claim_index\": 2,\n      \"verdict\": \"supported\",\n  \
+    \    \"evidence_ids\": [\"A43\", \"A46\", \"A68\"]\n    },\n    {\n      \"claim_index\"\
+    : 3,\n      \"verdict\": \"supported\",\n      \"evidence_ids\": [\"A38\", \"\
+    A52\", \"A53\"]\n    },\n    {\n      \"claim_index\": 4,\n      \"verdict\":\
+    \ \"supported\",\n      \"evidence_ids\": [\"A56\", \"A57\", \"A124\"]\n    }\n\
+    \  ]\n}"
+  model: gpt-6-astra
+  response_id: resp_007786efbcca0df8016afab4c7d14087d09ae9385edd342adb
+  usage:
+    input_tokens: 50695
+    output_tokens: 907
+    total_tokens: 51602

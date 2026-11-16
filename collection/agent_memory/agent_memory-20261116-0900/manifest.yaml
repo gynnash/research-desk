@@ -1,0 +1,34 @@
+schema_version: 1
+mode: collection_index
+topic: agent_memory
+cycle_id: agent_memory-20261116-0900
+receipt_path: reports/test/agent_memory/cycles/agent_memory-20261116-0900/collection.yaml
+receipt_sha256: 8907f63a8fb0b2a14e07ba554350f9c9336a0a2b58697c5022876c7cae9f0e45
+records:
+- key: arxiv-d651dfeeaafe
+  title: 'FlyHash for LLM Agent Memory: An Empirical Validation and a New Application'
+  source_url: https://arxiv.org/abs/2611.05791
+  source_id: paper-59e26ceb-1278-4ec1-8eba-ec73d927c064
+  candidate_path: reports/test/agent_memory/research-batches/agent_memory-20261116-0900/items/arxiv-d651dfeeaafe/candidate.yaml
+  original_path: collection/agent_memory/agent_memory-20261116-0900/items/arxiv-d651dfeeaafe/original.yaml
+  original_markdown_path: collection/agent_memory/agent_memory-20261116-0900/items/arxiv-d651dfeeaafe/original.md
+  coverage: full_text
+  content_hash: 663b7bf475f1cb639eed119eed77ed72165f29c9afd9d8abb75727177dc33f5e
+- key: arxiv-b26337f8b588
+  title: 'MIRIX-2.0: Multi-Agent Memory System'
+  source_url: https://arxiv.org/abs/2611.12068
+  source_id: paper-4db1ed76-e28a-465f-bd2c-34c1aae2218e
+  candidate_path: reports/test/agent_memory/research-batches/agent_memory-20261116-0900/items/arxiv-b26337f8b588/candidate.yaml
+  original_path: collection/agent_memory/agent_memory-20261116-0900/items/arxiv-b26337f8b588/original.yaml
+  original_markdown_path: collection/agent_memory/agent_memory-20261116-0900/items/arxiv-b26337f8b588/original.md
+  coverage: full_text
+  content_hash: af150868dce061252615c854627174d1c6b34d6561e05d763e6842d12ea72977
+- key: arxiv-5c6ba19e21f2
+  title: 'MemoryDojo: Benchmarking Poisoning Through LLM Agent Memory'
+  source_url: https://arxiv.org/abs/2611.09721
+  source_id: paper-6399c18c-5d59-4775-8dee-b9774985901d
+  candidate_path: reports/test/agent_memory/research-batches/agent_memory-20261116-0900/items/arxiv-5c6ba19e21f2/candidate.yaml
+  original_path: collection/agent_memory/agent_memory-20261116-0900/items/arxiv-5c6ba19e21f2/original.yaml
+  original_markdown_path: collection/agent_memory/agent_memory-20261116-0900/items/arxiv-5c6ba19e21f2/original.md
+  coverage: full_text
+  content_hash: 067a829b7568e617dec7cadcab7e295cff20e17a4a9cbc1fb69431deb02500de

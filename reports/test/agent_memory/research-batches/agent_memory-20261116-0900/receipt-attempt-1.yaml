@@ -1,0 +1,86 @@
+schema_version: 1
+mode: research_batch_test
+backend: chatgpt_plan
+topic: agent_memory
+batch_id: agent_memory-20261116-0900
+status: partial
+production_accepted: false
+models: &id001
+  research: gpt-6.1-sol
+  review: gpt-6-astra
+authorization:
+  authenticated: true
+  plan_permission: true
+  authorization: official_chatgpt_oauth
+  account_fingerprint: 4be5bc45c39fc32a
+items:
+- key: arxiv-d651dfeeaafe
+  status: deferred
+  reason: OfflineError
+  production_accepted: false
+- key: arxiv-b26337f8b588
+  status: test_accepted
+  source_id: paper-4db1ed76-e28a-465f-bd2c-34c1aae2218e
+  coverage: full_text
+  revision_count: 1
+  models: *id001
+  actual_models:
+  - gpt-6-astra
+  - gpt-6.1-sol
+  reserved_calls: 4
+  completed_calls: 4
+  report_path: reports/test/agent_memory/research-batches/agent_memory-20261116-0900/items/arxiv-b26337f8b588/report.md
+  report_sha256: 45e1b2e39c4b73d14f35701970723799b1b12b7237c9e0859534106d039a5849
+  finished_at: '2026-11-16T07:47:30.803698+00:00'
+  production_accepted: false
+- key: arxiv-5c6ba19e21f2
+  status: test_accepted
+  source_id: paper-6399c18c-5d59-4775-8dee-b9774985901d
+  coverage: full_text
+  revision_count: 0
+  models: *id001
+  actual_models:
+  - gpt-6-astra
+  - gpt-6.1-sol
+  reserved_calls: 2
+  completed_calls: 2
+  report_path: reports/test/agent_memory/research-batches/agent_memory-20261116-0900/items/arxiv-5c6ba19e21f2/report.md
+  report_sha256: cb7ca8c0e97e07851c10489c22cf5567a9f43c522b16d5935d3281a6c9e0e503
+  finished_at: '2026-11-16T07:48:26.075468+00:00'
+  production_accepted: false
+reserved_calls: 7
+completed_calls: 7
+actual_models:
+- gpt-6-astra
+- gpt-6.1-sol
+usage:
+- input_tokens: 23273
+  output_tokens: 1146
+  total_tokens: 24419
+- input_tokens: 49731
+  output_tokens: 1175
+  total_tokens: 50906
+- input_tokens: 50695
+  output_tokens: 907
+  total_tokens: 51602
+- input_tokens: 51575
+  output_tokens: 1162
+  total_tokens: 52737
+- input_tokens: 50687
+  output_tokens: 447
+  total_tokens: 51134
+- input_tokens: 28215
+  output_tokens: 934
+  total_tokens: 29149
+- input_tokens: 28902
+  output_tokens: 508
+  total_tokens: 29410
+monthly_reserved_calls: 68
+effective_month_max_calls: 100
+membership_remaining_quota: null
+api_billed_cost: null
+cost_note: 真实会员共享额度不换算模拟单位或 API 金额；未知请求始终占用预算。
+all_existing_notes_unchanged: true
+formal_notes_unchanged: true
+receipt_path: reports/test/agent_memory/research-batches/agent_memory-20261116-0900/receipt-attempt-1.yaml
+finished_at: '2026-11-16T07:48:26.211801+00:00'

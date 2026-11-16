@@ -1,0 +1,14 @@
+type: call_completed
+key: arxiv-d651dfeeaafe
+reservation_id: arxiv-d651dfeeaafe:research:0
+role: research
+revision: 0
+model_id: gpt-6.1-sol
+at: '2026-11-16T07:45:38.508341+00:00'
+response_path: reports/test/agent_memory/research-batches/agent_memory-20261116-0900/items/arxiv-d651dfeeaafe/checkpoints/research-0.yaml
+response_sha256: aba339aded30df23244343db4897a0abdafd31a0fdc045467ddf5a6654c286ec
+usage:
+  input_tokens: 23273
+  output_tokens: 1146
+  total_tokens: 24419
+usage_status: reported

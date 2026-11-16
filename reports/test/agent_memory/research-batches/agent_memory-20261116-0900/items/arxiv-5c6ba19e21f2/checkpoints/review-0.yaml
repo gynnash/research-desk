@@ -1,0 +1,21 @@
+binding: 56b82f7b83ae0fd021b94de59b303bfb678f88ce4702a9e7e65435d1565fcdfd
+result:
+  text: "{\n  \"decision\": \"pass\",\n  \"coverage_acknowledged\": true,\n  \"issues\"\
+    : [\n    {\n      \"severity\": \"info\",\n      \"location\": \"reading_scope；limitations[0]\"\
+    ,\n      \"reason\": \"已核对所提供的A1—A76完整抽取文本，覆盖正文、附录及参考文献，未截断。候选明确注明未独立复现实验，并将结果归于作者报告。此阅读范围不包含对图像、排版或公式渲染保真度的独立核验；候选所引用的关键数值均有抽取表格支持。\"\
+    ,\n      \"suggestion\": \"保留现有未复现声明；如后续加入仅由图形读取的数值，应另行核验图像。\"\n    },\n    {\n\
+    \      \"severity\": \"info\",\n      \"location\": \"claims[0]：“评测排除注入当次会话”\"\
+    ,\n      \"reason\": \"结合紧随其后的BR和BRT定义，该句有A20支持，但单独阅读容易理解成整个评测都排除注入会话。原文仍报告注入会话ASR，任务效用也包含全部任务会话。\"\
+    ,\n      \"suggestion\": \"可改为“BR和BRT的统计排除注入当次会话”，使指标边界更明确。\"\n    }\n  ],\n \
+    \ \"checks\": [\n    {\n      \"claim_index\": 0,\n      \"verdict\": \"supported\"\
+    ,\n      \"evidence_ids\": [\"A10\", \"A16\", \"A20\", \"A47\"]\n    },\n    {\n\
+    \      \"claim_index\": 1,\n      \"verdict\": \"supported\",\n      \"evidence_ids\"\
+    : [\"A26\", \"A27\", \"A54\", \"A67\"]\n    },\n    {\n      \"claim_index\":\
+    \ 2,\n      \"verdict\": \"supported\",\n      \"evidence_ids\": [\"A22\", \"\
+    A26\", \"A28\", \"A63\"]\n    }\n  ]\n}"
+  model: gpt-6-astra
+  response_id: resp_0a1d0d8b425759af016afab53744c087d0a816193a016cde1c
+  usage:
+    input_tokens: 28902
+    output_tokens: 508
+    total_tokens: 29410

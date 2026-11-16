@@ -1,0 +1,85 @@
+schema_version: 1
+mode: research_batch_test
+production_accepted: false
+backend: chatgpt_plan
+topic: agent_memory
+batch_id: agent_memory-20261116-0900
+created_at: '2026-11-16T07:44:58.802085+00:00'
+fingerprint: 9ace41b3989bb65e48274387dd9150724917b2de45a4ddd5737bdf137faa6476
+config_sha256: d9afeb22848ae5b5498ea304d492d3e5a0654bb592968ffc8087e795dc6f9bed
+topics_sha256: a252b9013b241b2fcf83015269e4c28a9718c0575b62bd6f43b039f2da202c2b
+models:
+  research: gpt-6.1-sol
+  review: gpt-6-astra
+budget:
+  max_documents: 3
+  max_calls_per_item: 100
+  max_calls_per_batch: 100
+  month_max_calls: 100
+  max_input_chars: 600000
+  max_output_chars: 24000
+  timeout_seconds: 240
+  max_revisions: 1
+authorization:
+  authenticated: true
+  plan_permission: true
+  authorization: official_chatgpt_oauth
+  account_fingerprint: 4be5bc45c39fc32a
+catalog:
+- slug: gpt-6.1-sol
+  display_name: GPT-6.1-Sol
+- slug: gpt-6-astra
+  display_name: GPT-6-Astra
+- slug: gpt-6.1-terra
+  display_name: GPT-6.1 Terra
+- slug: gpt-6-sol
+  display_name: GPT-6-Sol
+- slug: gpt-6-luna
+  display_name: GPT-6-Luna
+- slug: gpt-5.6-sol
+  display_name: GPT-5.6-Sol
+- slug: gpt-5.6-terra
+  display_name: GPT-5.6-Terra
+- slug: gpt-5.6-luna
+  display_name: GPT-5.6-Luna
+prompt_version: research-batch-v5
+protected_notes:
+  reports/test/agent_memory/research-batches/agent_memory-20261109-0900/items/arxiv-6f0f57c922e8/report.md: b487f5db366757762a629cc6f6ca7e2ed4278b2f8256f9b4d64f45e7d7964489
+  reports/test/agent_memory/research-batches/agent_memory-20261109-0900/items/langchain-d55b0b25ce79/report.md: 8ae29152d0714e70bdd166b3f0ac61ab643f9395ebad20badcbf33c56923192d
+  reports/test/agent_memory/research-batches/agent_memory-20261109-0900/items/arxiv-c9ee1ae11513/report.md: 76e61c1be8fc6bd17ba2e96ac7173b07880fa6c648909a3f3c238e487e66f753
+  reports/test/agent_memory/research-batches/agent_memory-20261109-0900/items/arxiv-e05d9eb84420/report.md: c3fa49f010a4bfc0b5a51f5b996240443f3338b6c5cac04ef10574128622c7c1
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-310b98d3c9bc/report.md: 068a98bab4dd6b303ae4b09abbe8ab78694bf7a050a848f764489cbe096e70ff
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-244ddaafb793/report.md: a42c424986e7fde6e131e238cb616cacd6a0b874289ba533df3fc975c92a2c5f
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-1b2c6c25ca02/report.md: 87c712a70c3403b12f3c4576914de9daa3946a4c6fa88d3016bcca980f799bc3
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-b3ecb03a2b96/report.md: e98b48cf9fa624351692e2d563ea609631f1b1635e2f99e7f1cff566dc03baff
+  reports/test/agent_memory/research-batches/agent_memory-manual-20261108-145358/items/arxiv-347d26e2053b/report.md: c6feb6ffdeffa4efc3e3983d318efdbb1075c10f8ff1c0a3ee19cf9c54f661f7
+  insights/agent_memory/来源标识应支持证据恢复-而不只是标注出处~agent_memory-20261109-0900/找到记忆之后-还要恢复足够的证据.md: 65231b0783095afb6eb125e0c87651bcb04e7e828a00a890b1d59f892d20de79
+  insights/agent_memory/agent_memory-manual-20261108-145358/report.md: bb83e1ce9e9d1943f8d1124c2ad6dd6d5be69f5865c75ff7f1a106819316543c
+  insights/test/agent_memory/agent_memory-20261109-0900/report.md: 567978eeacf52834f6cdd2d8d75a32e64a45caa94f0f4060feb834c063f500b8
+  insights/test/agent_memory/agent_memory-manual-20261108-145358/report.md: 02f524355fdaa9490bd92249c16d5e89dc4b2757df883dad15c71ebf729cf6d9
+  articles/agent_memory/agent_memory-manual-20261108-145358-topic-1.md: 7f590b2c625a09dd4c79937037044f3e350b6b19d8eb135be8ed79bd53bf8218
+  articles/test/agent_memory/agent_memory-manual-20261108-145358/topic-1.md: c3a8c5b4055888e24ec0f4a54efd1b79346deb4f158f09ddf4cbca34e4aeb652
+  collection/README.md: 6b28ec414625172e2b04864f463ed732671cc939f34dd9bd902e8cefd34e1710
+  collection/agent_memory/README.md: ccf55c9a7f47fe66a2376cf2541708610c13807847d61e1f17f7a531590d205a
+  collection/agent_memory/agent_memory-20261109-0900/items/arxiv-6f0f57c922e8/original.md: 3188a3fb31392918aa24fa7b952543b50a8bd91e243c3772dbd99762e02ccab0
+  collection/agent_memory/agent_memory-20261109-0900/items/langchain-d55b0b25ce79/original.md: 4ac8f9a702154b548e9c819b0cfb026310a2c225c245370a4b2c51a3714258b7
+  collection/agent_memory/agent_memory-20261109-0900/items/arxiv-c9ee1ae11513/original.md: 94be3854d7491405e98e69a221a3cb7b73b194c5840b53fc6f2462c46463a543
+  collection/agent_memory/agent_memory-20261109-0900/items/arxiv-e05d9eb84420/original.md: 96cb74b7c08061b336a9a812fc57b5ab98dda3a19da20fb625fbc3b227ca5c9e
+  collection/agent_memory/agent_memory-20261116-0900/items/arxiv-d651dfeeaafe/original.md: 346213b987ed99af066e3b70c3e670b5bfbc51316fd82819f93fd4e0568e1789
+  collection/agent_memory/agent_memory-20261116-0900/items/arxiv-5c6ba19e21f2/original.md: 5f4ecdb12a2a6829eda0d480e969ff64cec9716c43e5cd84a002f291701d6ecd
+  collection/agent_memory/agent_memory-20261116-0900/items/arxiv-b26337f8b588/original.md: 0350727d4f01ff526b54e9dcf1251896368fb28b6b5215663d90e92ac6fccc3b
+  collection/agent_memory/agent_memory-manual-20261108-145358/items/arxiv-310b98d3c9bc/original.md: d831abb5105ac3921fe1bddd3e2c5326ad2a8d1bc73bb13f98b956ce1fce8bd6
+  collection/agent_memory/agent_memory-manual-20261108-145358/items/arxiv-244ddaafb793/original.md: 4ca3ca50b131b8b4542185625738f146dcc25ebfb109594b2c8e69659817424b
+  collection/agent_memory/agent_memory-manual-20261108-145358/items/arxiv-1b2c6c25ca02/original.md: 184f29dbeca29fb50909609c5760ecbe48fad3293d79b76370bea3c32d770fa7
+  collection/agent_memory/agent_memory-manual-20261108-145358/items/arxiv-b3ecb03a2b96/original.md: d5777c631ffb22fd94f4e7c3ef8b1243677809d3ded17e8fa8b9e5e0a127c061
+  collection/agent_memory/agent_memory-manual-20261108-145358/items/arxiv-347d26e2053b/original.md: c44cfc81f946775ff83e0cb9578661ed5eb16a3cd85aacc48afddfd72945c934
+  summary/README.md: 7f028a3170b0f754c6be7deb8a2c6936ff0f0f045196fbf0a106d9b0ed55b5fd
+  summary/agent_memory/README.md: 327df676215679f716588f4438892a3597cbf64e9fc34cfe1063dce49b1d391c
+  summary/agent_memory/先定位经历-再检查原始证据~agent_memory-20261109-0900/按来源分配预算-再编译证据~arxiv-e05d9eb84420.md: 9efd89ce9f319203632dd72cea417f98510ec9da0021324e0a2fc8ff0a4eefff
+  summary/agent_memory/先定位经历-再检查原始证据~agent_memory-20261109-0900/比较预先抽取与按需读取~arxiv-c9ee1ae11513.md: 0d186d4690d8160d28646b2847faafa632888a69cdfae9f5c0d445a5e8208640
+  summary/agent_memory/先定位经历-再检查原始证据~agent_memory-20261109-0900/先定位经历-再检查原始证据~arxiv-6f0f57c922e8.md: 03365b7d9077122d20daf5a074f9cc4ea06147393d9451220135a252e32da991
+  summary/agent_memory/先定位经历-再检查原始证据~agent_memory-20261109-0900/共享知识与个人上下文分层保存~langchain-d55b0b25ce79.md: 36172f93ff6a6fe6fc2cd571d59cbbf0896b0c4435d245a9affc6715e676e8f0
+  summary/agent_memory/agent_memory-manual-20261108-145358/arxiv-b3ecb03a2b96.md: 0373fc7619ecc41ec2602aa864835f353d289cee04a262a4123fd918ed75ddd0
+  summary/agent_memory/agent_memory-manual-20261108-145358/arxiv-347d26e2053b.md: 8104f7235fc4c4e71b99cd33b2205facaaf90aa5f14e697a769c889a7224c49d
+  summary/agent_memory/agent_memory-manual-20261108-145358/arxiv-1b2c6c25ca02.md: 6213ad55eeff0f5a516fac950622b72d099bf33e315207a165eb0f7b7e9be768
+  summary/agent_memory/agent_memory-manual-20261108-145358/arxiv-244ddaafb793.md: 4ba341d5da201718d7b04bd979c2809403367b18b4a9c0d0f049a16c07f4b7de
