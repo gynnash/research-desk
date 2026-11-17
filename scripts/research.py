@@ -6,6 +6,7 @@ live here. Existing batch checkpoints retain budget reservations and resume.
 """
 
 import argparse
+from collections import Counter
 from pathlib import Path
 import posixpath
 import sys
@@ -20,7 +21,14 @@ import note_paths as notes
 import offline as store
 
 
-SUMMARY_PROMPT_VERSION = 'research-batch-v5'
+SUMMARY_PROMPT_VERSION = batch.ADVISORY_PROMPT
+
+
+def settled_item(item, max_revisions):
+    status = item.get('status')
+    return (status in {'summarized', 'duplicate', 'skipped', 'reject', 'rejected'}
+            or status == 'blocked' and bool(item.get('report_path'))
+            or status == 'revise' and item.get('revision_count') == max_revisions)
 
 
 class _NoSourceFetching:
@@ -76,11 +84,15 @@ def _collection(root, config_path, config, cycle_id):
             or index.get('records') != receipt['records']):
         raise store.OfflineError('collection 索引与已完成采集回执不一致')
     records = receipt['records']
-    if (len(records) > min(5, config['discovery']['max_documents'])
+    limits = config['discovery']
+    if (len(records) > limits['max_documents']
             or (receipt['status'] == 'empty') != (not records)):
         raise store.OfflineError('采集条数或空批次状态无效')
     selection = store.checked_yaml(root, base + '/selection.yaml')
     selected = {item['source']['id']: item['source'] for item in selection['candidates']}
+    if 'max_per_kind' in limits and any(
+            count > limits['max_per_kind'] for count in Counter(source['kind'] for source in selected.values()).values()):
+        raise store.OfflineError('采集条数超过同类资料上限')
     keys = [record.get('key') for record in records if isinstance(record, dict)]
     if len(keys) != len(records) or len(keys) != len(set(keys)) or set(keys) != set(selected):
         raise store.OfflineError('采集索引与固定选材不一致')
@@ -123,10 +135,11 @@ def _approved_material(root, batch_base, result):
     prefix = '%s/items/%s/' % (batch_base, result['key'])
     revision = result['revision_count']
     candidate = store.checked_yaml(root, prefix + 'candidate.yaml')['candidate']
-    research = batch.parse_result(store.checked_yaml(root,
-        prefix + 'checkpoints/research-%s.yaml' % revision)['result']['text'])
-    review = batch.parse_result(store.checked_yaml(root,
-        prefix + 'checkpoints/review-%s.yaml' % revision)['result']['text'])
+    research_text = store.checked_yaml(root,
+        prefix + 'checkpoints/research-%s.yaml' % revision)['result']['text']
+    review_text = store.checked_yaml(root,
+        prefix + 'checkpoints/review-%s.yaml' % revision)['result']['text']
+    research, review = batch.read_item_result(candidate, result, research_text, review_text)
     return candidate, research, review
 
 
@@ -203,8 +216,10 @@ def _verify_summaries(root, batch_base, records, topic, cycle_id):
 
 
 def _render_summary(manifest, candidate, research, review, result, original_path, cycle_id):
-    if review.get('decision') != 'pass' or candidate['evidence']['coverage'] != 'full_text':
-        raise store.OfflineError('只有独立审阅通过的完整原文研究可写入 summary')
+    advisory = batch.advisory_result(result)
+    if (result.get('status') != 'test_accepted' or candidate['evidence']['coverage'] != 'full_text'
+            or (not advisory and review.get('decision') != 'pass')):
+        raise store.OfflineError('只有已完成的完整原文研究可写入 summary')
     metadata = candidate['metadata']
     source_url = metadata['source_url']
     if candidate['kind'] == 'paper' and metadata.get('arxiv_id') and metadata.get('source_version'):
@@ -212,12 +227,13 @@ def _render_summary(manifest, candidate, research, review, result, original_path
     header = {
         'schema_version': 1, 'kind': 'research_summary', 'topic': candidate['topic'], 'cycle_id': cycle_id,
         'title': metadata['title'], 'source_url': source_url, 'source_id': candidate['source_id'],
-        'collection_original': original_path, 'coverage': 'full_text', 'review_status': 'passed',
+        'collection_original': original_path, 'coverage': 'full_text',
+        'review_status': 'advisory' if advisory else 'passed',
         'research_model': manifest['models']['research'], 'review_model': manifest['models']['review'],
         'generated_at': result['finished_at'],
     }
     article = batch.render_article(manifest, candidate, research, review,
-                                   result['revision_count'], test_notice=False)
+                                   result['revision_count'], test_notice=False, result=result)
     summary_dir = posixpath.dirname(_summary_path(candidate['topic'], cycle_id, candidate['key']))
     local_link = posixpath.relpath(original_path, summary_dir)
     return ('---\n' + yaml.safe_dump(header, allow_unicode=True, sort_keys=False).rstrip()
@@ -300,7 +316,10 @@ def run(root, config_path, cycle_id, client=None, profile=None, fail_after=None)
                 item.update(status='summarized', summary_path=path, summary_sha256=sha)
                 paths.append(path)
             items.append(item)
-        status = ('complete' if len(paths) == len(sources) else 'partial' if paths else 'failed')
+        if items and all(settled_item(item, budget['max_revisions']) for item in items):
+            status = 'complete' if paths or all(item['status'] in {'skipped', 'duplicate'} for item in items) else 'rejected'
+        else:
+            status = 'partial' if paths else 'failed'
         return {'schema_version': 1, 'mode': 'research_only', 'topic': topic, 'cycle_id': cycle_id,
                 'status': status, 'items': items, 'summary_paths': paths,
                 'research_receipt_path': receipt['receipt_path'],
@@ -328,7 +347,7 @@ def main(argv=None):
         print('逐篇研究停止：%s' % type(exc).__name__, file=sys.stderr)
         return 2
     print(yaml.safe_dump(result, allow_unicode=True, sort_keys=False))
-    return 0 if result['status'] in {'complete', 'empty'} else 1
+    return 0 if result['status'] in {'complete', 'empty', 'rejected'} else 1
 
 
 if __name__ == '__main__':

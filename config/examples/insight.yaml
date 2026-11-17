@@ -15,7 +15,7 @@ budget:
   timeout_seconds: 240
   max_revisions: 1
 prompts:
-  version: insight-v6
+  version: insight-v7
 research_inputs:
 - receipt: reports/test/example-topic/research-batches/your-batch/receipt-attempt-1.yaml
   config: config/your-research-batch.yaml

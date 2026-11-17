@@ -17,6 +17,7 @@ from uuid import UUID
 import offline as store
 import batch
 import batch_inputs as research_inputs
+from fulltext import paper_body_sections
 from note_paths import component_identity, summary_ids
 
 
@@ -24,6 +25,12 @@ HASH = re.compile(r'[0-9a-f]{64}\Z')
 SOURCE_ID = re.compile(r'(?:paper|blog)-[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\Z')
 SOURCE_ID_IN_TEXT = re.compile(r'\b(?:paper|blog)-[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\b')
 HISTORY_FIELDS = {'historical_origin', 'research_date', 'date_basis', 'published_dates', 'history_window'}
+ADVISORY_PROMPT = 'insight-v7'
+NARRATIVE_PROMPTS = {'insight-v5', 'insight-v6', ADVISORY_PROMPT}
+INITIAL_BATCH_PROMPTS = {'insight-v6', ADVISORY_PROMPT}
+HISTORY_PROMPTS = {'insight-v4', *NARRATIVE_PROMPTS}
+FULLTEXT_PROMPTS = {'insight-v3', *HISTORY_PROMPTS}
+PROMPT_VERSIONS = {'insight-v1', 'insight-v2', *FULLTEXT_PROMPTS}
 
 
 def _date(value):
@@ -185,15 +192,15 @@ def load_config(root, path):
     if config['models']['generation'] == config['models']['review']:
         raise store.OfflineError('Insight 生成与独立审阅须为不同的实际模型')
     ranges = {'max_calls': (2, 100), 'month_max_calls': (2, 1000),
-              'max_input_chars': (1000, 600000 if config.get('prompts', {}).get('version') in {'insight-v3', 'insight-v4', 'insight-v5', 'insight-v6'} else 60000),
-              'max_output_chars': (1000, 24000 if config.get('prompts', {}).get('version') == 'insight-v6' else 12000), 'timeout_seconds': (1, 300 if config.get('prompts', {}).get('version') == 'insight-v6' else 120), 'max_revisions': (0, 1)}
+              'max_input_chars': (1000, 600000 if config.get('prompts', {}).get('version') in FULLTEXT_PROMPTS else 60000),
+              'max_output_chars': (1000, 24000 if config.get('prompts', {}).get('version') in INITIAL_BATCH_PROMPTS else 12000), 'timeout_seconds': (1, 300 if config.get('prompts', {}).get('version') in INITIAL_BATCH_PROMPTS else 120), 'max_revisions': (0, 1)}
     research_inputs.fields(config['budget'], ranges, 'Insight 预算')
     for name, (low, high) in ranges.items():
         research_inputs.positive(config['budget'][name], low, high, name)
     if config['budget']['max_calls'] > config['budget']['month_max_calls']:
         raise store.OfflineError('Insight 请求上限不可超过月度上限')
     research_inputs.fields(config['prompts'], {'version'}, 'Insight 提示词')
-    if config['prompts']['version'] not in {'insight-v1', 'insight-v2', 'insight-v3', 'insight-v4', 'insight-v5', 'insight-v6'}:
+    if config['prompts']['version'] not in PROMPT_VERSIONS:
         raise store.OfflineError('未知 Insight 提示词版本')
     if not isinstance(config['research_inputs'], list) or not 1 <= len(config['research_inputs']) <= 4:
         raise store.OfflineError('须明确登记 1–4 个通过审阅的 Research 批次')
@@ -212,20 +219,20 @@ def load_config(root, path):
         if entry['receipt'] in receipts:
             raise store.OfflineError('Research 输入回执重复')
         receipts.add(entry['receipt'])
-    history_limit = 40 if config['prompts']['version'] in {'insight-v4', 'insight-v5', 'insight-v6'} else 10
-    history_minimum = 0 if config['prompts']['version'] == 'insight-v6' else 1
+    history_limit = 40 if config['prompts']['version'] in HISTORY_PROMPTS else 10
+    history_minimum = 0 if config['prompts']['version'] in INITIAL_BATCH_PROMPTS else 1
     if not isinstance(config['historical_inputs'], list) or not history_minimum <= len(config['historical_inputs']) <= history_limit:
         raise store.OfflineError('须明确登记 %s–%s 份历史资料，不遍历整个知识库' % (history_minimum, history_limit))
     histories = set()
     for entry in config['historical_inputs']:
         research_inputs.fields(entry, {'path', 'sha256', 'origin'} |
-                              (HISTORY_FIELDS if config['prompts']['version'] in {'insight-v4', 'insight-v5', 'insight-v6'} else set()), '历史输入')
+                              (HISTORY_FIELDS if config['prompts']['version'] in HISTORY_PROMPTS else set()), '历史输入')
         _history_path(root, entry['path'], topic)
         if entry['origin'] != 'human_baseline' or not isinstance(entry['sha256'], str) or not HASH.fullmatch(entry['sha256']):
             raise store.OfflineError('历史输入必须明确标为 human_baseline 并固定 SHA-256')
         if entry['path'] in histories:
             raise store.OfflineError('历史输入重复')
-        if config['prompts']['version'] in {'insight-v4', 'insight-v5', 'insight-v6'}:
+        if config['prompts']['version'] in HISTORY_PROMPTS:
             if (entry['historical_origin'] not in {'admitted_ai', 'human_note', 'human_modified'}
                     or entry['date_basis'] not in {'admission_cycle_plan', 'collected_at', 'unknown'}
                     or (entry['research_date'] is not None and _date(entry['research_date']) != entry['research_date'])
@@ -341,9 +348,10 @@ def _checked_research(root, config, entry):
     return base, manifest, original_config, receipt, proof
 
 
-def _checkpoint_binding(root, base, manifest, config, candidate, material, revision_count):
+def _checkpoint_binding(root, base, manifest, config, candidate, material, revision_count, item=None):
+    advisory = batch.advisory_result(item or {})
     previous_research, previous_review = None, None
-    proofs = []
+    proofs, raw = [], {}
     for revision in range(revision_count + 1):
         common = batch.original_request(config, candidate, material)
         request = dict(common)
@@ -360,13 +368,17 @@ def _checkpoint_binding(root, base, manifest, config, candidate, material, revis
                 'instructions': instructions, 'input': json.dumps(request, ensure_ascii=False)})
             if checkpoint.get('binding') != binding:
                 raise store.OfflineError('Research 模型检查点未绑定该份原文、候选和提示词')
-            value = batch.parse_result(checkpoint['result']['text'])
-            if role == 'research':
-                previous_research = value
-            else:
-                previous_review = value
+            raw[role] = checkpoint['result']['text']
+            if not advisory or role == 'research':
+                value = (batch.parse_research_result(raw[role]) if advisory else batch.parse_result(raw[role]))
+                if role == 'research':
+                    previous_research = value
+                else:
+                    previous_review = value
             proofs.append({'role': role, 'revision': revision, 'path': path,
                            'sha256': store.digest(store.safe_path(root, path).read_bytes())})
+    if advisory:
+        previous_research, previous_review = batch.read_item_result(candidate, item, raw['research'], raw['review'])
     return previous_research, previous_review, proofs
 
 
@@ -420,13 +432,15 @@ def _research_evidence(root, config, fetcher, blog_timestamp_revalidations=None)
                     or item.get('coverage') != candidate['evidence'].get('coverage')):
                 raise store.OfflineError('原文、版本或证据范围已变化，须先重新 Research 审阅，不能静默更新 Insight 输入')
             research, review, checkpoints = _checkpoint_binding(root, base, manifest, original_config,
-                candidate, material, item['revision_count'])
-            if store.validate_review(candidate, research, review) != 'pass' or review.get('coverage_acknowledged') is not True:
+                candidate, material, item['revision_count'], item)
+            if not batch.advisory_result(item) and (store.validate_review(candidate, research, review) != 'pass'
+                    or review.get('coverage_acknowledged') is not True):
                 raise store.OfflineError('Research 独立审阅未通过或未确认覆盖范围')
             report = store.safe_path(root, item['report_path'])
             if not report.is_file() or store.digest(report.read_bytes()) != item.get('report_sha256'):
                 raise store.OfflineError('Research 报告已修改，拒绝沿用旧审阅')
-            if report.read_text(encoding='utf-8') != batch.render(manifest, candidate, research, review, item['revision_count']):
+            if report.read_text(encoding='utf-8') != batch.render(manifest, candidate, research, review,
+                                                                 item['revision_count'], result=item):
                 raise store.OfflineError('Research 报告不再对应已审阅的结构化结果')
             # Admission may accept a CMS timestamp-only change, but the exact
             # reviewed candidate still owns the model proof and fingerprint.
@@ -452,7 +466,8 @@ def _research_evidence(root, config, fetcher, blog_timestamp_revalidations=None)
                 'source_url': source_url, 'source_urls': [source_url], 'coverage': candidate['evidence']['coverage'],
                 'identity_keys': candidate['identity_keys'],
                 'source_identities': [{'source_id': source_id, 'identity_keys': candidate['identity_keys']}],
-                'independently_reviewed': True, 'can_support_original_facts': True,
+                'independently_reviewed': True, 'can_support_original_facts': not batch.advisory_result(item) or any(
+                    claim.get('evidence_status') == 'supported' for claim in research['claims']),
                 'metadata': candidate['metadata'], 'text': report.read_text(encoding='utf-8'),
                 'research_summary': research['summary'], 'research_claims': research['claims'],
                 'research_limitations': research['limitations'], 'original_material': material,
@@ -519,7 +534,7 @@ def _historical_evidence(root, config):
                                        for source_id in source_ids],
                  'coverage': 'historical_note', 'independently_reviewed': False, 'can_support_original_facts': False}
         status = '历史人工基线，含 AI 辅助内容；未经本次独立原文审阅。推断与旧主张均不可升格为新核验事实。'
-        if config['prompts']['version'] in {'insight-v4', 'insight-v5', 'insight-v6'}:
+        if config['prompts']['version'] in HISTORY_PROMPTS:
             details = history_details(root, entry['path'], metadata, text.encode(), sources)
             if any(entry[key] != value for key, value in details.items()):
                 raise store.OfflineError('历史类型或日期与正式准入记录及原笔记不一致')
@@ -622,6 +637,8 @@ def evidence_title(record):
 
 
 def model_payload(bundle, prompt_version='insight-v1'):
+    if prompt_version == ADVISORY_PROMPT:
+        prompt_version = 'insight-v6'
     """One shared projection for generation, review and input-size preflight.
 
     Evidence text is never truncated. Research reports duplicate the structured
@@ -733,7 +750,10 @@ def _codex_summary(root, relative, topic, hashes):
             or finished[0].get('result_sha256') != hashes[result_path]):
         raise store.OfflineError('研究缺少与结果配对的通过事件')
     revision = result.get('revision_count')
-    if type(revision) is not int or revision not in (0, 1):
+    advisory = batch.advisory_result(result)
+    if (type(revision) is not int or revision not in (0, 1)
+            or advisory != (manifest.get('prompt_version') == batch.ADVISORY_PROMPT)
+            or (advisory and revision != 0)):
         raise store.OfflineError('研究修订记录无效')
     expected = {(role, number) for number in range(revision + 1) for role in ('research', 'review')}
     completed = [event for event in relevant if event.get('type') == 'call_completed']
@@ -743,6 +763,7 @@ def _codex_summary(root, relative, topic, hashes):
             or len(reservations) != len(reserved)
             or {(event.get('role'), event.get('revision')) for event in completed} != expected):
         raise store.OfflineError('研究与独立审阅未成对完成')
+    responses = {}
     for event in completed:
         reservation = reservations.get(event.get('reservation_id'), {})
         role, number = event['role'], event['revision']
@@ -755,7 +776,9 @@ def _codex_summary(root, relative, topic, hashes):
                 or event.get('model_id') != models[role] or response.get('model') != models[role]
                 or not isinstance(checkpoint.get('binding'), str) or not HASH.fullmatch(checkpoint['binding'])):
             raise store.OfflineError('研究响应未与对应模型和请求配对')
-        if role == 'review':
+        if advisory:
+            responses[role] = response.get('text')
+        if role == 'review' and not advisory:
             review = batch.parse_result(response.get('text'))
             if (review.get('decision') != ('pass' if number == revision else 'revise')
                     or any(issue.get('severity') in {'blocking', 'critical', 'error'}
@@ -770,7 +793,7 @@ def _codex_summary(root, relative, topic, hashes):
             or not isinstance(source_id, str) or not SOURCE_ID.fullmatch(source_id)
             or candidate.get('identity_keys') != store.identities(metadata)):
         raise store.OfflineError('总结、研究和原文来源身份不一致')
-    _, material, _ = load_archive(root, candidate)
+    _, material, snapshot = load_archive(root, candidate)
     original_base = 'collection/%s/%s/items/%s/original' % (topic, cycle_id, key)
     archive = candidate['archive']
     if (archive['path'] != original_base + '.yaml' or archive['markdown_path'] != original_base + '.md'
@@ -785,12 +808,26 @@ def _codex_summary(root, relative, topic, hashes):
         if not result['report_path'].startswith(prefix + '/') or store.digest(report.read_bytes()) != result.get('report_sha256'):
             raise store.OfflineError('已审阅研究报告的散列无效')
         hashes[result['report_path']] = store.digest(report.read_bytes())
+    if advisory:
+        from research import _render_summary
+        research, review = batch.read_item_result(candidate, result, responses['research'], responses['review'])
+        expected_report = batch.render(manifest, candidate, research, review, revision, result=result).encode()
+        expected_summary = _render_summary(manifest, candidate, research, review, result,
+                                           archive['markdown_path'], cycle_id).encode()
+        if (store.digest(expected_report) != result.get('report_sha256') or expected_summary != payload):
+            raise store.OfflineError('研究或审阅响应与已保存的报告和总结不一致')
     url = metadata['source_url']
     if metadata.get('arxiv_id') and metadata.get('source_version'):
         url = 'https://arxiv.org/abs/' + metadata['arxiv_id'] + metadata['source_version']
+    if candidate['kind'] == 'paper':
+        sections = paper_body_sections(snapshot['document'])
+        body = '\n\n'.join('### %s\n\n%s' % (section['title'], section['text']) for section in sections)
+        original_text = '## 抽取正文\n\n已从模型输入中移除可识别的参考文献、致谢和附录。\n\n' + body + '\n'
+    else:
+        original_text = original_path.read_text(encoding='utf-8')
     return {'title': metadata.get('title') or key, 'url': url, 'source_id': source_id,
             'summary_path': relative, 'original_path': archive['markdown_path'],
-            'summary_text': payload.decode('utf-8'), 'original_text': original_path.read_text(encoding='utf-8'),
+            'summary_text': payload.decode('utf-8'), 'original_text': original_text,
             'published_at': _date(metadata.get('published_at')),
             'research_date': _date(result.get('finished_at')) or _date(manifest.get('created_at')),
             'coverage': candidate['evidence']['coverage'], '_identities': set(store.identities(metadata)) | {'source:' + source_id}}

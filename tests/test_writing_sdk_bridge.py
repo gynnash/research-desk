@@ -26,6 +26,7 @@ class FakeWriter(FakeMemberClient):
     def __init__(self):
         super().__init__()
         self.catalog = [{'slug': 'fixture-writer'}, {'slug': 'fixture-writing-review'}]
+        self.sparse_results = False
 
     def infer(self, model, instructions, input_text, **limits):
         request = json.loads(input_text)
@@ -41,7 +42,18 @@ class FakeWriter(FakeMemberClient):
                 'sections': [{'heading': 'Methods and evidence', 'paragraphs': [{
                     'kind': 'author_claim', 'text': '作者讨论如何保留原文证据及解释记忆机制。' * 35,
                     'evidence_ids': [request['evidence'][0]['id']]}]}], 'limitations': []}
-        return {'text': json.dumps(result, ensure_ascii=False), 'model': model,
+        if self.sparse_results:
+            if 'candidate' in request:
+                result = {'decision': {'unexpected': True}, 'checks': [
+                    {'section_index': 0, 'paragraph_index': 0, 'verdict': 'unsupported'}]}
+            else:
+                section = result['sections'][0]
+                section['paragraphs'].append({'kind': ['unknown'], 'text': '这条意见没有提供证据。'})
+                result = {'title': 17, 'sections': [section]}
+        serialized = json.dumps(result, ensure_ascii=False)
+        if self.sparse_results:
+            serialized = '```json\n' + serialized + '\n```'
+        return {'text': serialized, 'model': model,
                 'response_id': 'fictional-writing-%s' % len(self.calls),
                 'usage': {'input_tokens': 10, 'output_tokens': 10, 'total_tokens': 20}}
 
@@ -92,6 +104,8 @@ class WritingSDKBridge(unittest.TestCase):
         bundle = inputs.prepare_bundle(self.root, approval)
         self.assertTrue(bundle['evidence'][0]['original_excerpts'])
         self.assertTrue(bundle['evidence'][0]['claims'])
+        paper = next(item for item in bundle['evidence'] if item['source_ids'][0].startswith('paper-'))
+        self.assertTrue(paper['original_excerpts'][0]['text'].startswith('[S'))
         self.assertEqual(inputs.verify_frozen_bundle(self.root, bundle), bundle)
         result = writing.run(self.root, approval, client=self.client, refresh=lambda: True, max_new_calls=6)
         self.assertEqual(result['status'], 'test_accepted')
@@ -109,6 +123,7 @@ class WritingSDKBridge(unittest.TestCase):
         import writing_deployment as deployed
         import writing_admission as formal
         self.config['writing']['budget'].update(max_calls=100, max_calls_per_stage=100)
+        self.client.sparse_results = True
         (self.root / 'config/confirmation-v2.yaml').write_text(yaml.safe_dump(self.config))
         manager, approval = self.approve()
         bundle = inputs.prepare_bundle(self.root, approval)
@@ -161,6 +176,10 @@ class WritingSDKBridge(unittest.TestCase):
         self.assertFalse((publisher / 'config/confirmation-v2.yaml').exists())
         self.assertEqual(deployed.apply(publisher, artifact, push=False)['saved_files'], 0)
         target = publisher / documents['documents'][-1]['path']
+        content = target.read_text()
+        self.assertIn('证据引用未支持该结论', content)
+        self.assertIn('没有提供可追溯的证据', content)
+        self.assertIn('这条意见没有提供证据。', content)
         target.write_text(target.read_text() + '\nHuman edits are preserved.\n')
         with self.assertRaises(Exception):
             deployed.apply(publisher, artifact, push=False)

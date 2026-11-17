@@ -13,11 +13,14 @@ from urllib.parse import parse_qs, urlsplit
 from uuid import uuid4
 
 import offline as store
-from sources import (SourceError, SOURCE_HOSTS, SafeFetcher, validate_url,
+from fulltext import (PAPER_READING_LEGACY, PAPER_READING_NORMALIZED,
+                      PaperInputTooLarge, acquire_paper, paper_body_sections)
+from sources import (SourceError, SourceResponseTooLarge, SOURCE_HOSTS, SafeFetcher, validate_url,
                                  parse_arxiv_feed, parse_arxiv_abstract, parse_blog_article)
 
 
-FULLTEXT_PROMPT_VERSIONS = {'research-batch-v2', 'research-batch-v3', 'research-batch-v4', 'research-batch-v5'}
+SECTIONED_PROMPT_VERSIONS = {'research-batch-v4', 'research-batch-v5', 'research-batch-v6', 'research-batch-v7'}
+FULLTEXT_PROMPT_VERSIONS = {'research-batch-v2', 'research-batch-v3', *SECTIONED_PROMPT_VERSIONS}
 
 
 def config_path(root, relative):
@@ -89,7 +92,7 @@ def load_config(root, path):
     version = config['prompts']['version']
     if not isinstance(version, str) or version not in {'research-batch-v1', *FULLTEXT_PROMPT_VERSIONS}:
         raise store.OfflineError('未知提示词版本')
-    max_timeout = 300 if version in {'research-batch-v4', 'research-batch-v5'} else 120
+    max_timeout = 300 if version in SECTIONED_PROMPT_VERSIONS else 120
     ranges = {'max_documents': (1, 10), 'max_calls_per_item': (2, 1000), 'max_calls_per_batch': (2, 1000),
               'month_max_calls': (2, 1000), 'max_input_chars': (1000, 600000),
               'max_output_chars': (1000, 24000), 'timeout_seconds': (1, max_timeout), 'max_revisions': (0, 1)}
@@ -185,7 +188,7 @@ def default_fetcher(sources):
     return SafeFetcher(retries=0, **({'allowed_hosts': set(HOSTS) | extra} if extra else {}))
 
 
-def _section_material(sections, cap):
+def _section_material(sections, cap, allow_excerpt=True):
     """Keep every section in order; long documents receive balanced excerpts.
 
     All headers and A locators count toward the configured input bound. Full
@@ -225,6 +228,8 @@ def _section_material(sections, cap):
     full = project()
     if len(full[0]) <= cap:
         return (*full, False)
+    if not allow_excerpt:
+        raise PaperInputTooLarge('Normalized paper body exceeds evidence_max_chars')
     low, high, best = 0, max(len(s['text']) for s in sections), None
     while low <= high:
         quota = (low + high) // 2
@@ -238,7 +243,7 @@ def _section_material(sections, cap):
     return (*best, True)
 
 
-def project_material(record, document, source):
+def project_material(record, document, source, reading_profile=None):
     """Rebuild exact reading evidence from an immutable extracted original."""
     text = record['body_text']
     cap = source['evidence_max_chars']
@@ -271,9 +276,8 @@ def project_material(record, document, source):
                 'content_hash': content_hash, 'evidence_sha256': store.digest(material.encode()),
                 'locators': locators}
     if required and record['kind'] == 'blog' and document is None:
-        if (record['coverage'] != 'fulltext' or store.digest(text.encode()) != record['content_hash']
-                or len(text) < 800):
-            raise SourceError('Full blog body required; extracted article is incomplete or too short')
+        if record['coverage'] != 'fulltext' or store.digest(text.encode()) != record['content_hash']:
+            raise SourceError('Full blog body required; extracted article is incomplete')
         material, locators, sections, selected_chars, truncated = _section_material([
             {'id': 'S1', 'title': record['metadata']['title'], 'text': text,
              'location': record['metadata']['source_url']}], cap)
@@ -289,22 +293,34 @@ def project_material(record, document, source):
                          'external links, and inaccessible content are not verified.'])
     if document is not None:
         abstract_content_hash = record['content_hash']
+        if reading_profile is None:
+            reading_profile = (PAPER_READING_LEGACY if document['format'] == 'abstract'
+                               else PAPER_READING_NORMALIZED)
+        normalized = reading_profile == PAPER_READING_NORMALIZED
+        paper_sections = paper_body_sections(document) if normalized else document['sections']
+        if not paper_sections:
+            raise SourceError('No paper body remains after removing back matter')
         material, locators, sections, selected_chars, truncated = _section_material(
-            document['sections'], cap)
+            paper_sections, cap, allow_excerpt=not normalized)
         if document['format'] == 'abstract' and truncated:
             raise SourceError('Abstract exceeds evidence bound; cannot claim complete abstract coverage')
         coverage = ('abstract_only' if document['format'] == 'abstract' else
                     'excerpt' if truncated or document['coverage'] != 'full_text' else 'full_text')
         if required and coverage != 'full_text':
             raise SourceError('Full paper text exceeds evidence_max_chars or extraction is incomplete; no excerpt accepted')
+        extraction_scope = document.get('extraction_scope', 'extracted text')
+        if normalized:
+            extraction_scope = ('complete extracted paper body' if coverage == 'full_text'
+                                else 'readable extracted paper body pages')
+            extraction_scope += '; references, acknowledgments, and appendices omitted when identified'
         content_hash = document['text_sha256']
         evidence.update(coverage=coverage, extraction_coverage=document['coverage'],
             abstract_content_hash=abstract_content_hash,
             content_hash=content_hash, evidence_sha256=store.digest(material.encode()),
-            locators=locators, reading_profile='arxiv-fulltext-v1', format=document['format'],
+            locators=locators, reading_profile=reading_profile, format=document['format'],
             document_url=document['source_url'], sections=sections,
-            total_chars=document['total_chars'], selected_chars=selected_chars, truncated=truncated,
-            extraction_scope=document.get('extraction_scope', 'extracted text'),
+            total_chars=sum(len(section['text']) for section in paper_sections),
+            selected_chars=selected_chars, truncated=truncated, extraction_scope=extraction_scope,
             limitations=document.get('limitations', []))
     return evidence, material, content_hash
 
@@ -346,7 +362,12 @@ def fetch_candidate(root, config, source, fetcher, binding=None, capture=None):
         fetcher = _CaptureFetcher(fetcher, capture['responses'])
     required = source.get('reading', {}).get('mode') == 'full_text_required'
     retain_full = source.get('archive') is True or required
-    response = fetcher.fetch(source['url'])
+    try:
+        response = fetcher.fetch(source['url'])
+    except SourceResponseTooLarge as exc:
+        if source['adapter'] == 'arxiv':
+            raise PaperInputTooLarge(str(exc)) from exc
+        raise
     content_type = response.get('content_type', '').split(';')[0].strip().lower()
     if source['adapter'] == 'arxiv':
         if urlsplit(source['url']).path == '/api/query':
@@ -384,6 +405,7 @@ def fetch_candidate(root, config, source, fetcher, binding=None, capture=None):
     if record['kind'] != source['kind']:
         raise SourceError('Parsed source kind changed')
     document = None
+    reading_profile = None
     if required and record['kind'] == 'blog':
         # A publisher article boundary is required by the parser. Reject known
         # access gates instead of calling a publicly visible teaser "full text".
@@ -393,13 +415,14 @@ def fetch_candidate(root, config, source, fetcher, binding=None, capture=None):
         if re.search(r'"isAccessibleForFree"\s*:\s*(?:false|"false")', response['text'], re.I):
             raise SourceError('Full blog body unavailable: publisher declares restricted article access')
     if 'reading' in source and record['kind'] == 'paper':
-        from fulltext import acquire_paper
         bound_evidence = (binding or {}).get('evidence', {})
         expected = bound_evidence.get('format') if binding is not None else None
-        if binding is not None and bound_evidence.get('reading_profile') != 'arxiv-fulltext-v1':
+        reading_profile = bound_evidence.get('reading_profile')
+        if binding is not None and reading_profile not in {PAPER_READING_LEGACY, PAPER_READING_NORMALIZED}:
             raise SourceError('Bound paper does not match the full-text reading profile')
-        document = acquire_paper(record, fetcher, expected_format=expected, require_full=required)
-    evidence, material, content_hash = project_material(record, document, source)
+        document = acquire_paper(record, fetcher, expected_format=expected, require_full=required,
+                                 legacy=reading_profile == PAPER_READING_LEGACY)
+    evidence, material, content_hash = project_material(record, document, source, reading_profile=reading_profile)
     metadata = record['metadata']
     identity_keys = store.identities(metadata)
     matches = {}

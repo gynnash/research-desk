@@ -62,10 +62,10 @@ class RequiredFulltext(unittest.TestCase):
         with self.assertRaisesRegex(SourceError, 'no excerpt accepted'):
             inputs.fetch_candidate(self.root, self.config, source, self.fetcher)
 
-    def test_short_or_access_gated_blog_is_not_called_full_text(self):
+    def test_complete_short_blog_is_full_text_and_an_access_gate_still_blocks(self):
         source = dict(self.config['sources'][1], reading={'mode': 'full_text_required'}, archive=True)
-        with self.assertRaisesRegex(SourceError, 'incomplete or too short'):
-            inputs.fetch_candidate(self.root, self.config, source, self.fetcher)
+        candidate, _ = inputs.fetch_candidate(self.root, self.config, source, self.fetcher)
+        self.assertEqual(candidate['evidence']['coverage'], 'full_text')
         self.fetcher.blog = self.fetcher.blog.replace('</article>', '<p>' + BODY * 8 +
             ' Subscribe to continue reading.</p></article>')
         with self.assertRaisesRegex(SourceError, 'access gate'):

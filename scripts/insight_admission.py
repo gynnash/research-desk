@@ -85,14 +85,16 @@ def _verify_sdk(root, topic, cycle_id, supplied_snapshots=None):
     prefix = 'reports/test/%s/codex-insight/%s/' % (topic, cycle_id)
     accepted_path = prefix + 'accepted.yaml'
     receipt = _checked(root, accepted_path)
+    policy = receipt.get('review_policy')
+    advisory = policy == harness.ADVISORY_REVIEW
     if (receipt.get('topic') != topic or receipt.get('cycle_id') != cycle_id
             or receipt.get('backend') != 'codex' or receipt.get('simulation') is not False
             or receipt.get('status') not in {'complete', 'no_insight'}
-            or receipt.get('review_policy') != 'accuracy_only'
-            or receipt.get('review_decision') != 'pass'
+            or policy not in ('accuracy_only', harness.ADVISORY_REVIEW)
+            or (not advisory and receipt.get('review_decision') != 'pass')
             or receipt.get('writing_started') is not False
             or receipt.get('production_accepted') is not False):
-        raise store.OfflineError('只有真实后端且独立审阅通过的 Insight 可以正式准入')
+        raise store.OfflineError('只有真实后端且具有有效生成与审阅记录的 Insight 可以正式准入')
     input_hashes, output_hashes = receipt.get('input_hashes'), receipt.get('output_hashes')
     if (not isinstance(input_hashes, dict) or not isinstance(output_hashes, dict)
             or set(receipt.get('outputs', [])) != set(output_hashes)):
@@ -104,8 +106,8 @@ def _verify_sdk(root, topic, cycle_id, supplied_snapshots=None):
         raise store.OfflineError('Insight 候选或独立审阅证明缺失')
     candidate = store.load_yaml(legacy._location(root, prefix + 'candidate.yaml'))
     review = store.load_yaml(legacy._location(root, prefix + 'review.yaml'))
-    decision = harness._review(json.dumps(review.get('review'), ensure_ascii=False))
-    if (review.get('policy') != 'accuracy_only' or decision.get('decision') != 'pass'
+    decision = harness._review(json.dumps(review.get('review'), ensure_ascii=False), advisory)
+    if (review.get('policy') != policy or (not advisory and decision.get('decision') != 'pass')
             or review.get('candidate_sha256') != harness._sha(candidate)):
         raise store.OfflineError('独立准确性审阅没有绑定此 Insight 候选')
     model_proofs = receipt.get('models', {})
@@ -134,9 +136,9 @@ def _verify_sdk(root, topic, cycle_id, supplied_snapshots=None):
                for role, values in [('current', current), ('history', historical)]
                for number, source in enumerate(values, 1)]
     bundle = {'topic': topic, 'cycle_id': cycle_id, 'sources': sources}
-    if harness._candidate(json.dumps(candidate, ensure_ascii=False), bundle) != candidate:
+    if harness._candidate(json.dumps(candidate, ensure_ascii=False), bundle, advisory) != candidate:
         raise store.OfflineError('Insight 候选不符合其固定原文集合')
-    state = {'backend': 'codex', 'review': decision, 'tasks': {'review': {'result': {
+    state = {'backend': 'codex', 'review': decision, 'review_policy': policy, 'tasks': {'review': {'result': {
         'requested_model': review.get('requested_model'), 'observed_model': review.get('observed_model'),
         'thread_id': review.get('thread_id'), 'turn_id': review.get('turn_id'), 'final_response': '{}'}}}}
     rendered = harness._render(candidate, bundle, state, False)
@@ -146,6 +148,7 @@ def _verify_sdk(root, topic, cycle_id, supplied_snapshots=None):
         if relative.endswith('.md') and _read(root, relative) != text.encode():
             raise store.OfflineError('Insight 可读输出已变化，保留人工内容')
     return {'candidate': candidate, 'bundle': bundle, 'models': models,
+            **({'review_policy': policy, 'review': decision} if advisory else {}),
             'input_hashes': input_hashes, 'sdk_output_hashes': output_hashes,
             'configuration_snapshots': snapshots, 'sdk_accepted_path': accepted_path,
             'sdk_proof_paths': [accepted_path, accepted_path + '.sha256',
@@ -155,9 +158,12 @@ def _verify_sdk(root, topic, cycle_id, supplied_snapshots=None):
 def _render(value):
     topic, cycle = value['topic'], value['cycle_id']
     bundle, candidate = value['bundle'], value['candidate']
+    policy = value.get('review_policy', 'accuracy_only')
+    advisory = policy == harness.ADVISORY_REVIEW
+    review = value.get('review', {})
     dates = [source.get('research_date') for source in bundle['sources'] if source.get('research_date')]
     common = {'schema_version': 2, 'topic': topic, 'topics': [topic], 'cycle_id': cycle,
-              'backend': 'codex', 'review_status': 'passed', 'review_policy': 'accuracy_only',
+              'backend': 'codex', 'review_status': 'advisory' if advisory else 'passed', 'review_policy': policy,
               'production_accepted': True, 'created_at': max(dates) if dates else None}
 
     def markdown(metadata, body):
@@ -171,20 +177,13 @@ def _render(value):
         report_path = 'insights/%s/%s/%s.md' % (topic, folder, name)
     else:
         report_path = 'insights/%s/%s/report.md' % (topic, cycle)
-    body = '# ' + report['title'] + '\n\n' + report['body']
-    for insight in candidate['insights']:
-        body += '\n\n## ' + insight['title'] + '\n\n' + insight['body']
-    body += '\n\n' + harness._sources(bundle, report_path)
+    body = harness._report_body(candidate, bundle, report_path, review, advisory)
     files = {report_path: markdown({**common, 'kind': 'insight_report', 'title': report['title'],
                                    'outcome': candidate['outcome']}, body)}
     for number, card in enumerate(candidate['topics'], 1):
         relative = 'articles/%s/%s-topic-%s.md' % (topic, cycle, number)
-        identifiers = card.get('source_ids') or [source['id'] for source in bundle['sources']]
-        body = '# ' + card['title'] + '\n\n' + card['angle'] + '\n\n目标读者：' + card['audience']
-        for key, label in [('key_questions', '拟回答的问题'), ('evidence_gaps', '写作前待核实')]:
-            if isinstance(card.get(key), list) and card[key]:
-                body += '\n\n## ' + label + '\n\n' + '\n'.join('- ' + str(item) for item in card[key])
-        body += '\n\n' + harness._sources(bundle, relative, identifiers)
+        identifiers = card['source_ids'] if advisory else card.get('source_ids') or [source['id'] for source in bundle['sources']]
+        body = harness._topic_body(card, bundle, relative, number, review, advisory)
         files[relative] = markdown({**common, 'kind': 'topic_proposal',
             'id': 'formal-topic-%s-%s-%s' % (topic, cycle, number), 'title': card['title'],
             'status': 'proposed', 'evidence_ids': identifiers, 'approval_required': True,
@@ -213,9 +212,12 @@ def _plan(root, topic, cycle_id, configuration_snapshots=None, *, path_scheme=PA
 
 
 def _receipt(plan, plan_path, plan_sha256):
+    policy = plan.get('review_policy', 'accuracy_only')
+    decision = (harness._text(plan['review'].get('decision')) or None
+                if policy == harness.ADVISORY_REVIEW else 'pass')
     return {'schema_version': 2, 'mode': MODE, 'topic': plan['topic'], 'cycle_id': plan['cycle_id'],
             'status': 'accepted', 'production_accepted': True, 'simulation': False,
-            'review_policy': 'accuracy_only', 'review_decision': 'pass', 'models': plan['models'],
+            'review_policy': policy, 'review_decision': decision, 'models': plan['models'],
             'plan_path': plan_path, 'plan_sha256': plan_sha256,
             'input_hashes': plan['input_hashes'], 'output_hashes': plan['output_hashes'],
             'proof_hashes': plan['proof_hashes'], 'writing_started': False, 'publish_authorized': False}

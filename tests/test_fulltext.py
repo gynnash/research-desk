@@ -15,7 +15,7 @@ from urllib.error import HTTPError
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
 import fulltext
-from sources import SafeFetcher, SourceError
+from sources import SafeFetcher, SourceError, SourceResponseTooLarge
 
 
 PAPER = {'kind': 'paper', 'metadata': {'arxiv_id': '2610.01234', 'source_version': 'v2',
@@ -76,6 +76,14 @@ class FulltextAcceptance(unittest.TestCase):
         self.assertEqual(result['sections'][2]['location'], HTML_URL + '#S1.S1')
         self.assertEqual(result['total_chars'], sum(len(s['text']) for s in result['sections']))
         self.assertEqual(len(result['text_sha256']), 64)
+
+    def test_html_back_matter_heading_covers_lower_heading_siblings(self):
+        html = HTML.replace('</article>', '<h2>Appendix B</h2><p>Supplemental setup.</p>'
+            '<h3 id="extras">Additional experiments</h3><p>Supplemental results.</p>'
+            '<h2>Postscript</h2><p>The main paper adds a scope clarification.</p></article>')
+        result = fulltext.acquire_paper(PAPER, FixedFetcher(html=html))
+        self.assertEqual([s['title'] for s in fulltext.paper_body_sections(result)],
+                         ['Abstract', '1 Introduction', '1.1 Evidence', 'Postscript'])
 
     def test_pdf_fallback_uses_page_locations_and_detected_section_titles(self):
         reader = SimpleNamespace(is_encrypted=False, pages=[
@@ -157,12 +165,42 @@ class FulltextAcceptance(unittest.TestCase):
         self.assertEqual(result['format'], 'abstract')
         self.assertIn('LaTeXML', result['attempts'][0]['reason'])
 
-    def test_extraction_limit_falls_back_without_truncating_or_claiming_fulltext(self):
+    def test_extraction_limit_is_a_size_skip_and_legacy_replay_keeps_abstract_fallback(self):
         with mock.patch.object(fulltext, 'MAX_EXTRACT_CHARS', 120):
-            result = fulltext.acquire_paper(PAPER, FixedFetcher(html=HTML))
+            with self.assertRaisesRegex(fulltext.PaperInputTooLarge, 'extraction limit'):
+                fulltext.acquire_paper(PAPER, FixedFetcher(html=HTML))
+            result = fulltext.acquire_paper(PAPER, FixedFetcher(html=HTML), legacy=True)
         self.assertEqual(result['format'], 'abstract')
         self.assertIn('extraction limit', result['attempts'][0]['reason'])
         self.assertEqual(result['sections'][0]['text'], PAPER['body_text'])
+
+    def test_transport_size_skip_does_not_hide_an_alternative_network_failure(self):
+        oversize = SourceResponseTooLarge('Source response exceeds byte limit')
+        network_error = SourceError('Public source request failed: URLError')
+        with self.assertRaises(fulltext.PaperInputTooLarge):
+            fulltext.acquire_paper(PAPER, FixedFetcher(html=oversize, pdf=oversize), require_full=True)
+        with self.assertRaisesRegex(SourceError, 'URLError') as raised:
+            fulltext.acquire_paper(PAPER, FixedFetcher(html=oversize, pdf=network_error), require_full=True)
+        self.assertNotIsInstance(raised.exception, fulltext.PaperInputTooLarge)
+
+    def test_pdf_body_removes_back_matter_and_its_continuations(self):
+        pages = [
+            'Acknowledgements\nFictional funding credit is separate from the paper body.\n'
+            '1 Introduction\n' + BODY + '\nA Better Baseline\nThis describes the baseline, in the body.\n'
+            '2 Conclusion\nThe main findings conclude here.\nA Additional Experiments\n'
+            'Some supplemental evidence belongs to the appendix.\nResults\nA supplemental finding.',
+            'The appendices continued on this page with their own supplemental findings.\n'
+            'Acknowledgments\nAdditional credit.\n2 Methods\nAdditional supplemental methods.\n'
+            'References\n1 Cited bibliography entry.',
+            'Another bibliography entry continues here.',
+        ]
+        reader = SimpleNamespace(is_encrypted=False, pages=[
+            SimpleNamespace(extract_text=lambda text=text: text) for text in pages])
+        with mock.patch.dict(sys.modules, {'pypdf': SimpleNamespace(PdfReader=lambda *a, **kw: reader)}):
+            result = fulltext.acquire_paper(PAPER, FixedFetcher(pdf=b'%PDF-fixture'), require_full=True)
+        sections = fulltext.paper_body_sections(result)
+        self.assertEqual([s['title'] for s in sections], ['1 Introduction', 'A Better Baseline', '2 Conclusion'])
+        self.assertEqual(sections[0]['text'], '1 Introduction\n' + BODY.strip())
 
     def test_unversioned_paper_cannot_use_latest_fulltext(self):
         paper = dict(PAPER, metadata=dict(PAPER['metadata'], source_version=None))

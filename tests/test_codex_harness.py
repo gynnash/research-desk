@@ -235,7 +235,7 @@ class CodexHarnessAcceptance(unittest.TestCase):
             self.assertEqual(self.run_harness(backend)['status'], 'complete')
         self.assertEqual(backend.calls.count(('start', 'generation')), 1)
         tasks = {task.phase: task for task in backend.tasks.values()}
-        self.assertTrue(tasks['review'].instructions.startswith(harness.ACCURACY_REVIEW + '\n候选：'))
+        self.assertTrue(tasks['review'].instructions.startswith(harness.EVIDENCE_REVIEW + '\n候选：'))
 
     def test_export_retry_reuses_review(self):
         backend = RecordingBackend()
@@ -256,7 +256,7 @@ class CodexHarnessAcceptance(unittest.TestCase):
         self.assertEqual(selected.read_text(encoding='utf-8'), '人工补充，必须保留。')
         self.assertEqual(backend.calls, [('start', 'generation'), ('start', 'review')])
 
-    def test_one_accuracy_revision_then_review_in_a_new_thread(self):
+    def test_revision_opinion_is_published_without_a_new_turn(self):
         config = yaml.safe_load(self.config.read_text(encoding='utf-8'))
         config['prompts'] = {'version': harness.CONCISE_PROMPT_VERSION}
         config['generation']['target_words'] = list(harness.CONCISE_TARGET_WORDS)
@@ -269,20 +269,33 @@ class CodexHarnessAcceptance(unittest.TestCase):
             'revision': candidate(1),
             'review_revision': {'decision': 'pass'},
         })
-        self.assertEqual(self.run_harness(backend)['status'], 'complete')
-        self.assertEqual(backend.calls, [
-            ('start', 'generation'), ('start', 'review'),
-            ('continue_turn', 'revision'), ('start', 'review_revision'),
-        ])
+        result = self.run_harness(backend)
+        self.assertEqual(result['status'], 'complete')
+        self.assertEqual(result['review_decision'], 'revise')
+        self.assertEqual(backend.calls, [('start', 'generation'), ('start', 'review')])
         tasks = {task.phase: task for task in backend.tasks.values()}
         self.assertIn('正文和洞察合计参考 700–1200 字', tasks['generation'].instructions)
         self.assertIn('只保留会改变判断或验证方法的细节', tasks['generation'].instructions)
         self.assertIn('自然、合乎语法的现代中文', tasks['generation'].instructions)
-        for phase in ('review', 'review_revision'):
-            self.assertIn('中文若因语序、指代或修饰关系不明', tasks[phase].instructions)
-        self.assertIn('用自然、合乎语法的中文消除歧义', tasks['revision'].instructions)
+        report = (self.root / result['outputs'][0]).read_text()
+        self.assertIn('应明确这是推测', report)
         self.assertEqual(self.run_harness(backend)['status'], 'complete')
-        self.assertEqual(len(backend.calls), 4)
+        self.assertEqual(len(backend.calls), 2)
+
+    def test_partial_structure_and_individual_evidence_gaps_preserve_other_insights(self):
+        backend = RecordingBackend(scripts={
+            'generation': {'outcome': 9, 'report': {'body': '报告正文'}, 'topics': 1,
+                'insights': [{'title': '可用的观点', 'body': '仍然保留', 'source_ids': ['R1']},
+                             {'title': '待核验的观点', 'body': '已有提及', 'source_ids': ['R9']}]},
+            'review': {'decision': ['无效的判断格式'], 'issues': [
+                {'location': 'insights[1]', 'evidence_status': 'unsupported', 'reason': '样本不适用'}]},
+        })
+        result = self.run_harness(backend)
+        self.assertEqual(result['status'], 'complete')
+        self.assertIsNone(result['review_decision'])
+        report = (self.root / result['outputs'][0]).read_text()
+        for phrase in ('报告正文', '仍然保留', '已有提及', '未提供可核验的证据', '所引证据未支持该结论', '样本不适用'):
+            self.assertIn(phrase, report)
 
     def test_style_only_feedback_does_not_reject_or_rewrite(self):
         backend = RecordingBackend(scripts={

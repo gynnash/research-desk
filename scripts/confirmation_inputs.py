@@ -246,7 +246,10 @@ def _load_topic(root, config, topic_id):
         raise store.OfflineError('选题序号不属于原审阅候选')
     card = candidates[number]
     if value.get('mode') == 'codex_insight_admission':
-        card = dict(card, evidence_ids=card.get('source_ids') or [item['id'] for item in value['bundle']['sources']])
+        references = card.get('source_ids', [])
+        if value.get('review_policy') != 'advisory_review' and not references:
+            references = [item['id'] for item in value['bundle']['sources']]
+        card = dict(card, evidence_ids=references)
     expected_id = 'formal-topic-%s-%s-%s' % (topic, cycle_id, number + 1)
     if (metadata['id'] != expected_id or metadata.get('title') != card['title']
             or metadata.get('evidence_ids') != card['evidence_ids']):
@@ -360,19 +363,29 @@ def _sdk_evidence(root, value, selected, writing_v2=False):
             raise store.OfflineError('总结未绑定有效的研究批次')
         research_base = 'reports/test/%s/research-batches/%s/items/%s' % summary_identity
         research_result = store.checked_yaml(root, research_base + '/result.yaml')
-        from batch import parse_result
-        research = parse_result(store.checked_yaml(root, research_base + '/checkpoints/research-%s.yaml' % research_result['revision_count'])['result']['text'])
+        from batch import advisory_result, read_item_result
+        candidate = store.checked_yaml(root, research_base + '/candidate.yaml')['candidate']
+        checkpoints = [store.checked_yaml(root, research_base + '/checkpoints/%s-%s.yaml' % (
+            role, research_result['revision_count']))['result']['text'] for role in ('research', 'review')]
+        research, _ = read_item_result(candidate, research_result, *checkpoints)
+        advisory = advisory_result(research_result)
         evidence = {'id': identifier, 'title': item['title'], 'path': item['summary_path'],
             'origin': 'reviewed_research', 'coverage': item['coverage'],
             'source_ids': [item['source_id']], 'source_paths': [item['original_path']],
             'source_urls': [item['url']], 'source_version': None,
-            'independently_reviewed': True, 'can_support_original_facts': True,
+            'independently_reviewed': True, 'can_support_original_facts': not advisory or any(
+                claim.get('evidence_status') == 'supported' for claim in research['claims']),
             'sha256': store.digest(summary.read_bytes()), 'text': item['summary_text'],
             'summary': research['summary'], 'claims': research['claims'], 'limitations': research['limitations'],
             'locators': []}
         if writing_v2:
             # Bound excerpts keep the confirmed Writing input manageable.
-            original_text = item['original_text'][:min(2400, remaining)]
+            original_text = item['original_text']
+            from fulltext import PAPER_READING_NORMALIZED
+            if candidate['evidence'].get('reading_profile') == PAPER_READING_NORMALIZED:
+                import archive
+                _, original_text, _ = archive.load(root, candidate)
+            original_text = original_text[:min(2400, remaining)]
             remaining -= len(original_text)
             evidence.update(original_excerpts=[{'locator_id': identifier, 'location': '已归档原文',
                 'text': original_text, 'reading_scope': item['coverage'],
@@ -385,7 +398,10 @@ def _sdk_evidence(root, value, selected, writing_v2=False):
 
 def _sdk_preview(root, config, topic_id, choices=None, frozen=None):
     topic, cycle_id, relative, metadata, value, effective, raw = _load_topic(root, config, topic_id)
-    sources = raw.get('source_ids') or [source['id'] for source in value['bundle']['sources']]
+    advisory = value.get('review_policy') == 'advisory_review'
+    sources = raw.get('source_ids', [])
+    if not advisory and not sources:
+        sources = [source['id'] for source in value['bundle']['sources']]
     card = dict(raw, evidence_ids=sources)
     selected = _choices(config, card, choices)
     profile = frozen.get('style_profile') if frozen is not None else style_profile(root, config['writing'])
@@ -408,7 +424,8 @@ def _sdk_preview(root, config, topic_id, choices=None, frozen=None):
         raise store.OfflineError('选题缺少已准入的洞察报告')
     insights = [dict(item, id='formal-insight-%s-%s-%s' % (topic, cycle_id, number), path=reports[0])
                 for number, item in enumerate(value['candidate']['insights'], 1)]
-    coverage_note = '基于已采集正文、独立审阅通过的逐篇总结及实际历史资料；未复现实验，不把研究线索写成已成立趋势。'
+    coverage_note = ('基于已采集正文、逐篇总结及实际历史资料。审阅提示随结果保留，证据缺口仍须核实。'
+                     if advisory else '基于已采集正文、独立审阅通过的逐篇总结及实际历史资料；未复现实验，不把研究线索写成已成立趋势。')
     result = {'schema_version': 1, 'mode': 'real_topic_preview', 'admission_mode': value['mode'],
         'workbench_id': config['workbench_id'], 'topic_id': topic_id, 'id': topic_id,
         'topic': topic, 'path': relative, 'cycle_id': cycle_id, 'status': 'proposed',
@@ -417,7 +434,7 @@ def _sdk_preview(root, config, topic_id, choices=None, frozen=None):
         'questions': card.get('key_questions', []), 'key_questions': card.get('key_questions', []),
         'gaps': card.get('evidence_gaps', []), 'evidence_gaps': card.get('evidence_gaps', []),
         'coverage_note': coverage_note, 'evidence': evidence, 'insights': insights,
-        'review': {'status': 'pass', 'models': value['models'], 'independent': True,
+        'review': {'status': 'advisory' if advisory else 'pass', 'models': value['models'], 'independent': True,
                    'accepted_path': value['accepted_path']},
         'writing': config['writing'], 'stages': ['outline', 'draft', 'candidate'],
         'output_mode': 'test_only', 'approval_required': True, 'writing_started': False,
@@ -479,6 +496,7 @@ def prepare_preview(root, config, topic_id, choices=None):
         hashes[profile['path']] = profile['sha256']
     generation_base = 'reports/test/%s/insight-runs/%s' % (topic, cycle_id)
     manifest = store.checked_yaml(root, generation_base + '/manifest.yaml')
+    advisory = store.checked_yaml(root, generation_base + '/receipt.yaml').get('review_policy') == 'advisory_review'
     insights = [dict(value['candidate']['insights'][number],
                      id='formal-insight-%s-%s-%s' % (topic, cycle_id, number + 1),
                      path='insights/%s/%s-insight-%s.md' % (topic, cycle_id, number + 1))
@@ -495,7 +513,7 @@ def prepare_preview(root, config, topic_id, choices=None):
         'gaps': card['evidence_gaps'], 'evidence_gaps': card['evidence_gaps'],
         'coverage_note': value['candidate']['coverage_note'],
         'evidence': evidence, 'insights': insights,
-        'review': {'status': 'pass', 'models': manifest['models'],
+        'review': {'status': 'advisory' if advisory else 'pass', 'models': manifest['models'],
                    'independent': True, 'accepted_path': base + '/accepted.yaml'},
         'writing': config['writing'], 'stages': ['outline', 'draft', 'candidate'],
         'output_mode': 'test_only', 'approval_required': True,

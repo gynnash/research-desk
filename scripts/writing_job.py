@@ -15,6 +15,7 @@ import batch as shared
 import runner as runtime
 import writing_member as member
 import writing_member_inputs as inputs
+import writing_results as results
 import confirmation_inputs
 
 
@@ -200,6 +201,7 @@ def export(root, state, destination):
 
 
 def _verify_bindings(root, base, events, manifest, bundle):
+    advisory = results.enabled(manifest)
     completed, accepted = {}, {}
     for event in events:
         if event['type'] == 'stage_accepted':
@@ -212,18 +214,19 @@ def _verify_bindings(root, base, events, manifest, bundle):
             request.update(previous_candidate=completed['%s-writing-%s' % (stage, revision - 1)],
                            previous_review=completed['%s-review-%s' % (stage, revision - 1)])
         if role == 'review':
-            request['candidate'] = completed['%s-writing-%s' % (stage, revision)]
-        instructions = member.instructions(bundle, role)
+            request['candidate'] = member.candidate_for_review(
+                completed['%s-writing-%s' % (stage, revision)], bundle, stage, manifest)
+        instructions = member.instructions(bundle, role, manifest)
         serialized = json.dumps(request, ensure_ascii=False)
         expected = store.digest({'fingerprint': manifest['fingerprint'], 'stage': stage, 'role': role,
             'revision': revision, 'instructions': instructions, 'input': serialized})
         checkpoint = store.checked_yaml(root, event['response_path'])
         if checkpoint.get('binding') != expected or len(instructions) + len(serialized) > manifest['budget']['max_input_chars']:
             raise JobError('writing_model_input_binding_invalid')
-        parsed = member._parse(checkpoint['result']['text'])
+        parsed = member._parse(checkpoint['result']['text'], advisory=advisory)
         if role == 'writing':
-            member.validate_candidate(parsed, bundle, stage)
-        else:
+            member.candidate_for_review(parsed, bundle, stage, manifest)
+        elif not advisory:
             member.validate_review(request['candidate'], parsed, bundle)
         completed[event['reservation_id']] = parsed
     return accepted
@@ -243,22 +246,14 @@ def _verify(root, value, bundle=None, public=False):
             raise JobError('writing_transfer_missing_run_manifest')
         return {'status': 'no_checkpoints', 'completed_calls': 0}
     manifest = store.checked_yaml(root, base + '/manifest.yaml')
+    advisory = results.enabled(manifest)
     authorization = manifest.get('authorization', {})
     if (set(authorization) != {'authenticated', 'plan_permission', 'authorization', 'account_fingerprint'}
             or authorization['authenticated'] is not True or authorization['plan_permission'] is not True
             or authorization['authorization'] != 'official_chatgpt_oauth'
             or not isinstance(authorization['account_fingerprint'], str) or not authorization['account_fingerprint']):
         raise JobError('writing_membership_authorization_proof_invalid')
-    budget = dict(bundle['budget'], month_max_calls=bundle['month_max_calls'])
-    fingerprint = store.digest({'input_fingerprint': bundle['input_fingerprint'], 'models': bundle['models'],
-        'budget': budget, 'authorization': authorization,
-        'writing_prompt': member.instructions(bundle, 'writing'),
-        'review_prompt': member.instructions(bundle, 'review')})
-    expected = {'schema_version': 1, 'mode': 'writing_member_test', 'backend': 'chatgpt_plan',
-        'topic': value['topic'], 'batch_id': value['batch_id'], 'approval_id': value['approval_id'],
-        'fingerprint': fingerprint, 'input_fingerprint': bundle['input_fingerprint'], 'models': bundle['models'],
-        'budget': budget, 'authorization': authorization, 'confirmation_path': bundle['confirmation_path'],
-        'confirmation_sha256': bundle['confirmation_sha256'], 'publish_authorized': False}
+    expected = member.bound_manifest(bundle, authorization, manifest)
     if set(manifest) != set(expected) | {'created_at', 'protected_notes'} or any(manifest.get(k) != v for k, v in expected.items()):
         raise JobError('writing_frozen_manifest_invalid')
     notes = manifest['protected_notes']
@@ -306,7 +301,7 @@ def _verify(root, value, bundle=None, public=False):
             checkpoint = '%s/stages/%s.yaml' % (base, stage)
             expected_stages[stage] = {'status': 'test_accepted',
                 'revision_count': store.checked_yaml(root, checkpoint)['revision'], 'checkpoint': checkpoint}
-        elif receipt.get('status') != 'test_accepted':
+        elif receipt.get('status') != 'test_accepted' and not advisory:
             reviews = [event for event in finished if event['stage'] == stage and event['role'] == 'review']
             if not reviews:
                 raise JobError('writing_nonaccepted_receipt_missing_final_review')
@@ -330,7 +325,8 @@ def _verify(root, value, bundle=None, public=False):
                 or set(receipt.get('stages', {})) != set(member.STAGES)
                 or any(receipt['stages'][stage].get('status') != 'test_accepted' for stage in member.STAGES)):
             raise JobError('writing_acceptance_missing_three_reviewed_artifacts')
-    elif receipt.get('status') not in {'rejected', 'blocked', 'revision_required'} or receipt.get('output_hashes') or plan_exists:
+    elif (advisory or receipt.get('status') not in {'rejected', 'blocked', 'revision_required'}
+            or receipt.get('output_hashes') or plan_exists):
         raise JobError('writing_nonaccepted_receipt_has_artifacts')
     return {'status': receipt['status'], 'completed_calls': len(finished), 'unknown_requests': False}
 

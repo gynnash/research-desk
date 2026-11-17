@@ -324,11 +324,13 @@ class MembershipTests(unittest.TestCase):
         with self.assertRaisesRegex(membership.MembershipError, "actual_model_mismatch"):
             self.client.infer("model-research", "Rules", "Evidence")
 
-    def test_output_cap_interrupts_and_never_retries(self):
+    def test_completed_output_can_exceed_the_configured_character_target(self):
         self.ready()
-        self.stream({"type": "response.output_text.delta", "delta": "a" * 20}, self.completed())
-        with self.assertRaisesRegex(membership.MembershipError, "output_limit_interrupted"):
-            self.client.infer("model-research", "Rules", "Evidence", max_output_chars=10)
+        prose = "完整输出" * 20
+        output = [{"type": "message", "content": [{"type": "output_text", "text": prose}]}]
+        self.stream({"type": "response.output_text.delta", "delta": prose}, self.completed(output=output))
+        result = self.client.infer("model-research", "Rules", "Evidence", max_output_chars=10)
+        self.assertEqual(result["text"], prose)
         self.assertEqual(len(self.opener.calls), 1)
 
     def test_missing_usage_stays_unknown(self):

@@ -151,6 +151,21 @@ class CollectionOnly(unittest.TestCase):
         self.fetcher.fetch_pdf.assert_not_called()
         self.assert_no_models()
 
+    def test_oversized_paper_is_skipped_while_blog_is_archived(self):
+        self.config['reading']['paper_max_chars'] = 2000
+        self.fetcher.body *= 4
+        self.config_path.write_text(yaml.safe_dump(self.config))
+        receipt = self.collect()
+        self.assertEqual(receipt['status'], 'collected')
+        self.assertEqual(receipt['skipped_papers'], 1)
+        self.assertNotIn('source_failures', receipt)
+        paper = store.checked_yaml(self.root,
+            'reports/test/custom-topic/cycles/first/selection.yaml')['skipped'][0]
+        self.assertEqual((paper['source']['kind'], paper['reason']), ('paper', 'paper_input_too_large'))
+        self.assertEqual([self.read_candidate(record)['kind'] for record in receipt['records']], ['blog'])
+        self.assertTrue(self.collect()['cached'])
+        self.assert_no_models()
+
     def test_modified_collection_index_is_preserved_without_network_repair(self):
         receipt = self.collect()
         index_path = self.root / receipt['collection_manifest_path']

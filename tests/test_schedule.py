@@ -32,6 +32,7 @@ class BeijingSchedule(unittest.TestCase):
         # baseline independent of resets in the live research workspace.
         automation = self.root / 'config/automation.yaml'
         fixture = yaml.safe_load(automation.read_text(encoding='utf-8'))
+        fixture.pop('weekly', None)
         fixture['activated_at'] = '2026-10-19T00:00:00+08:00'
         fixture['enabled'] = True
         fixture['cycle_config'] = 'config/cycles/default.yaml'
@@ -58,11 +59,17 @@ class BeijingSchedule(unittest.TestCase):
         path.write_text('production_accepted: true\n', encoding='utf-8')
         Path(str(path) + '.sha256').write_text(store.digest(path.read_bytes()) + '\n', encoding='utf-8')
 
-    def test_workflow_and_config_use_previous_utc_day(self):
+    def test_default_workflow_and_config_use_one_weekly_slot(self):
         workflow = yaml.load((REPOSITORY / '.github/workflows/researchdesk-manual.yml').read_text(),
                              Loader=yaml.BaseLoader)
+        automation = yaml.safe_load((REPOSITORY / 'config/system.yaml').read_text())['automation']
+        weekly = schedule.weekly(automation)
+        self.assertEqual(weekly, {'weekdays': [1], 'time': '09:00', 'timezone': 'Asia/Shanghai'})
+        self.assertEqual(workflow['on']['schedule'], [{'cron': schedule.workflow_cron(weekly),
+                                                     'timezone': weekly['timezone']}])
+
+    def test_legacy_schedule_fields_are_validated(self):
         self.assertEqual(self.config['schedule_utc'], '0 19 * * 1,4')
-        self.assertEqual(workflow['on']['schedule'], [{'cron': self.config['schedule_utc'], 'timezone': 'UTC'}])
         self.assertEqual(self.config['catchup'], {'lookback_days': 14, 'max_slots_per_run': 1})
         self.config['schedule_utc'] = '0 1 * * 2,5'
         (self.root / 'config/automation.yaml').write_text(yaml.safe_dump(self.config), encoding='utf-8')

@@ -236,7 +236,7 @@ python3 -B scripts/harness.py preflight --config config/local/codex-insight.yaml
 python3 -B scripts/harness.py insight --config config/local/codex-insight.yaml --cycle-id '<已完成逐篇研究的批次>'
 ```
 
-`preflight` 不推理，`insight` 会执行真实任务。新批次使用 `codex-insight-v2`，报告和洞察合计参考 700–1200 字，通常提炼 1–3 条证据最充分的发现。只保留影响判断的机制、数据和适用条件，用自然、指代清楚的中文表达。已有批次沿用固定提示词。公开[示例](../config/examples/codex-insight.yaml)列出了可执行字段。以下为原总体配置草案，旧 cycle loader 不接受 `backend: codex`：
+`preflight` 不推理，`insight` 会执行真实任务。新批次使用 `codex-insight-v3`，篇幅和结构根据材料调整。系统接受整体可读的结果，按条目标注缺失或不支持结论的证据，审阅意见供读者参考。已有批次沿用固定提示词。公开[示例](../config/examples/codex-insight.yaml)列出了可执行字段。以下为配置草案，旧 cycle loader 使用自己的后端配置。
 
 ```yaml
 backend: codex
@@ -250,7 +250,7 @@ models:
   research: gpt-6.1-sol
   insight: gpt-6.1-sol
   review: gpt-6-astra
-review_policy: accuracy_only
+review_policy: advisory_review
 insight:
   history_lookback_days: 180
   min_insights: 1  # 生成目标；确无依据时记录 no_insight，不伪造观点
@@ -270,7 +270,7 @@ articles/<topic>/<cycle>/topic-N.md
 
 洞察、比较、趋势和深入研究方向组织在同一篇综合文章中；选题卡单列，待页面人工确认。Writing 继续受确认 ID、选题/证据散列和写作要求约束，生成大纲、初稿和候选稿，分别独立审阅。
 
-Harness 首先导出到 `insights/test/<topic>/<cycle>/`、`articles/test/<topic>/<cycle>/`，脱敏证明沿用 `reports/test/<topic>/` 内部记录。现已提供零模型调用的 `insight_admission.py admit/check`：真实且独立准确性审阅通过后，新增正式综合文章、待确认选题及版本 2 准入回执，保留 test 和人工笔记。自动入口遵守 `admission.enabled`；关闭时不正式晋级。新旧准入格式分流，正式选题可进入同一确认页面与 Writing。
+Harness 首先导出到 `insights/test/<topic>/<cycle>/`、`articles/test/<topic>/<cycle>/`。`insight_admission.py admit/check` 验证真实运行证明与输出文件散列，并在启用 `admission.enabled` 时新增正式综合文章、待确认选题和准入回执。正式选题可进入确认页面，由用户决定是否启动 Writing。
 
 GitHub Actions 保留触发和结果回存框架；授权与 Codex 使用用户自己的执行主机。个人配置不进入 Git；执行 `python scripts/workbench.py start` 后，计划与执行在绑定的持久 Mac 工作台中加载两层配置。GitHub 使用非敏感部署开关派发，独立回存 job 验证公开证据和产物后保存。Git 凭据不进入模型工具环境，回存使用允许路径清单。GitHub 与 Obsidian 共享 Markdown；runtime 会话、凭据和原始事件不进入 Vault。
 

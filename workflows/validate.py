@@ -191,7 +191,7 @@ def check_workspace(root, topics, fail, frontmatter):
             data = frontmatter(text, relative)
             require(type(data.get('schema_version')) is int and data.get('schema_version') == 1 and data.get('kind') == 'research_summary'
                     and data.get('topic') == topic and data.get('cycle_id') == cycle_id
-                    and data.get('coverage') == 'full_text' and data.get('review_status') == 'passed',
+                    and data.get('coverage') == 'full_text' and data.get('review_status') in {'passed', 'advisory'},
                     '总结类型、主题、全文范围或审阅状态无效')
             models = {role: data.get(role + '_model') for role in ('research', 'review')}
             require(all(isinstance(value, str) and value.strip() for value in models.values())
@@ -212,10 +212,15 @@ def check_workspace(root, topics, fail, frontmatter):
             require(binding.get('research_result_sha256') == digest(safe(prefix + 'result.yaml').read_bytes())
                     and result.get('key') == key and result.get('source_id') == data['source_id']
                     and result.get('status') == 'test_accepted' and result.get('coverage') == 'full_text'
-                    and result.get('models') == models and result.get('revision_count') in (0, 1), '总结缺少对应的审阅通过结果证明')
+                    and result.get('models') == models and result.get('revision_count') in (0, 1), '总结缺少对应的结果证明')
             review = checked(prefix + 'checkpoints/review-%s.yaml' % result['revision_count'])
-            review_body = json.loads(review.get('result', {}).get('text', ''))
-            require(isinstance(review_body, dict) and review_body.get('decision') == 'pass', '独立审阅检查点没有通过')
+            advisory = result.get('result_policy') == 'advisory_review'
+            require(data['review_status'] == ('advisory' if advisory else 'passed'), '总结与审阅策略不一致')
+            if advisory:
+                require(review.get('result', {}).get('model') == models['review'], '缺少已执行的审阅模型记录')
+            else:
+                review_body = json.loads(review.get('result', {}).get('text', ''))
+                require(isinstance(review_body, dict) and review_body.get('decision') == 'pass', '历史独立审阅检查点没有通过')
         except (ValueError, OSError, UnicodeError, yaml.YAMLError, TypeError, KeyError, AttributeError) as exc:
             fail(relative, str(exc))
     return len(originals), summary_count

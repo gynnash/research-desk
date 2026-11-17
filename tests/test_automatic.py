@@ -134,6 +134,7 @@ class ScheduledPipeline(unittest.TestCase):
         current = system.read_bytes()
         previous = workbench._read(system)
         previous['insight'].pop('prompts')
+        previous['insight']['review_policy'] = 'accuracy_only'
         previous['insight']['generation']['target_words'] = [3000, 4500]
         workbench._write(system, workbench._yaml(previous))
 
@@ -151,6 +152,21 @@ class ScheduledPipeline(unittest.TestCase):
         self.assertEqual(context_path.read_bytes(), saved_context)
         self.assertEqual(frozen_path.read_bytes(), saved_prompt)
 
+    def test_advisory_default_preserves_an_explicit_concise_insight_cycle(self):
+        system = self.root / workbench.SYSTEM_CONFIG
+        current = workbench._read(system)
+        previous = workbench.merge_config(current, {'insight': {'prompts': {'version': 'codex-insight-v2'},
+                                                               'review_policy': 'accuracy_only'}})
+        workbench._write(system, workbench._yaml(previous))
+        cycle_id = 'concise-insight-prompt'
+        first = self.run_pipeline(event='manual', operation='collect', cycle_id=cycle_id)
+        workbench._write(system, workbench._yaml(current))
+        resumed = self.run_pipeline(event='manual', operation='run', cycle_id=cycle_id)
+        self.assertEqual(resumed['status'], 'complete')
+        self.assertEqual(first['context_sha256'], resumed['context_sha256'])
+        frozen = workbench._read(self.root / self.insight.call_args.args[1])
+        self.assertEqual(frozen['prompts']['version'], 'codex-insight-v2')
+
     def test_latest_slot_runs_once_and_freezes_selected_topic_without_private_configuration(self):
         private_profile = str(self.root.parent / 'private-member-profile')
         self.update({'automation': {'enabled': True},
@@ -163,7 +179,7 @@ class ScheduledPipeline(unittest.TestCase):
         result = self.run_pipeline()
         self.assertEqual(result['status'], 'complete')
         self.assertTrue(result['terminal'])
-        self.assertEqual(result['cycle_id'], 'agent_memory-20261106-0300')
+        self.assertEqual(result['cycle_id'], 'agent_memory-20261102-0900')
         self.assertEqual(result['collection_count'], 1)
         self.assertEqual(result['summary_count'], 1)
         self.assertFalse(result['production_accepted'])
@@ -296,6 +312,33 @@ class ScheduledPipeline(unittest.TestCase):
         self.assertEqual(missing['status'], 'collection_incomplete')
         self.assertFalse(missing['terminal'])
 
+    def test_all_oversized_papers_are_terminal_without_insight(self):
+        self.researcher.return_value = {'status': 'complete', 'summary_paths': [],
+            'items': [{'status': 'skipped', 'reason': 'paper_input_too_large'}]}
+        skipped = self.run_pipeline(event='manual', cycle_id='oversized')
+        self.assertEqual(skipped['status'], 'no_insight')
+        self.assertTrue(skipped['terminal'])
+        self.assertEqual(skipped['stages']['research']['skipped_papers'], 1)
+        self.insight.assert_not_called()
+
+    def test_empty_bounded_scan_is_terminal_when_all_papers_are_oversized(self):
+        self.collector.return_value = {'status': 'empty', 'records': [], 'discovery_status': 'partial',
+                                       'skipped_papers': 2}
+        result = self.run_pipeline(event='manual', cycle_id='oversized-at-collection')
+        self.assertEqual(result['status'], 'no_new')
+        self.assertTrue(result['terminal'])
+        self.assertEqual(result['stages']['collection']['skipped_papers'], 2)
+        self.health.assert_not_called()
+        self.researcher.assert_not_called()
+
+    def test_research_error_remains_incomplete_with_a_healthy_summary(self):
+        self.researcher.return_value = {'status': 'partial', 'summary_paths': ['summary.md'],
+            'items': [{'status': 'summarized'}, {'status': 'blocked', 'reason': 'unknown_request'}]}
+        failed = self.run_pipeline(event='manual', cycle_id='network-error')
+        self.assertEqual(failed['status'], 'research_incomplete')
+        self.assertFalse(failed['terminal'])
+        self.insight.assert_not_called()
+
     def test_sdk_or_authorization_failure_stops_before_spending_research_calls(self):
         self.health.side_effect = store.OfflineError('SDK not ready')
         result = self.run_pipeline(event='manual', cycle_id='not-ready')
@@ -311,21 +354,31 @@ class ScheduledPipeline(unittest.TestCase):
 
     def test_deployment_start_marker_prevents_historical_startup_and_explicit_catchup_uses_oldest_slot(self):
         self.update({'automation': {'enabled': True, 'activated_at': '2026-10-01T00:00:00+08:00'}})
+        self.now = datetime.fromisoformat('2026-11-09T09:00:00+08:00')
         marker = self.root / 'config/local/deployment-started-at.json'
-        marker.write_text(json.dumps({'started_at': '2026-11-05T12:00:00+08:00'}))
+        marker.write_text(json.dumps({'started_at': '2026-11-08T12:00:00+08:00'}))
         result = self.run_pipeline()
-        self.assertEqual(result['cycle_id'], 'agent_memory-20261106-0300')
-        marker.write_text(json.dumps({'started_at': '2026-11-06T12:00:00+08:00'}))
+        self.assertEqual(result['cycle_id'], 'agent_memory-20261109-0900')
+        marker.write_text(json.dumps({'started_at': '2026-11-09T12:00:00+08:00'}))
         future = self.run_pipeline()
         self.assertEqual(future['reason'], 'no_due_slot')
         marker.unlink()
         historical = self.run_pipeline(event='manual', operation='catchup')
-        self.assertEqual(historical['cycle_id'], 'agent_memory-20261027-0300')
+        self.assertEqual(historical['cycle_id'], 'agent_memory-20261026-0900')
         self.assertEqual(self.insight.call_args.kwargs, {'retry_failed': True})
 
 
 class RealStageIntegration(unittest.TestCase):
     def test_real_collect_research_and_sdk_harness_replay_fictional_full_text(self):
+        self.run_real_stages()
+
+    def test_context_limit_from_provider_does_not_block_publishing(self):
+        self.run_real_stages(skip_oversized=True)
+
+    def test_partial_model_fields_and_advisory_reviews_survive_publication(self):
+        self.run_real_stages(advisory_feedback=True)
+
+    def run_real_stages(self, skip_oversized=False, advisory_feedback=False):
         import cycle
         import harness
         import research
@@ -336,6 +389,31 @@ class RealStageIntegration(unittest.TestCase):
         fixture.setUp()
         self.addCleanup(fixture.doCleanups)
         root = fixture.root
+        if advisory_feedback:
+            def imperfect_research(result):
+                result.clear()
+                result['claims'] = [
+                    {'text': '缺少引用的研究判断', 'evidence_ids': ['A999']},
+                    {'text': '已引用但依据不足的研究判断', 'evidence_ids': ['A1']},
+                ]
+
+            def advisory_research_review(result):
+                result.update(decision='reject', coverage_acknowledged=False, checks=[
+                    {'claim_index': 1, 'verdict': 'unsupported', 'evidence_ids': ['A1']},
+                ])
+
+            fixture.client.research_mutator = imperfect_research
+            fixture.client.review_mutator = advisory_research_review
+        if skip_oversized:
+            infer = fixture.client.infer
+
+            def reject_oversized_paper(model, instructions, input_text, **limits):
+                result = infer(model, instructions, input_text, **limits)
+                if json.loads(input_text)['metadata']['source'] == 'arXiv':
+                    raise membership.MembershipError('context_length_exceeded', 400)
+                return result
+
+            fixture.client.infer = reject_oversized_paper
         # This source fixture does not emulate attention providers, so its
         # explicit system policy leaves the optional attention ranking off.
         system = workbench._read(workbench.REPOSITORY / workbench.SYSTEM_CONFIG)
@@ -344,6 +422,14 @@ class RealStageIntegration(unittest.TestCase):
         workbench.initialize(root, adopt_existing=True)
         with tempfile.TemporaryDirectory(prefix='researchdesk-integration-sdk-') as outside:
             backend = RecordingBackend()
+            if advisory_feedback:
+                backend.scripts = {
+                    'generation': {'report': {'body': '正文可读', 'source_ids': None},
+                        'insights': [{'body': '有待核查的结论', 'source_ids': ['R1']}]},
+                    'review': {'decision': 'reject', 'issues': [
+                        {'location': 'insights[0]', 'evidence_status': 'unsupported', 'reason': '材料未支持该结论'},
+                    ]},
+                }
             dependencies = {
                 'collector': lambda root, path, identity: cycle.collect_originals(
                     root, path, identity, fetcher=fixture.fetcher),
@@ -356,16 +442,21 @@ class RealStageIntegration(unittest.TestCase):
             result = automatic.run(root, event='manual', cycle_id='first', **dependencies)
             self.assertEqual(result['status'], 'complete', result)
             self.assertEqual(result['collection_count'], 2)
-            self.assertEqual(result['summary_count'], 2)
-            self.assertEqual(len(fixture.client.calls), 4)
+            summary_count, research_calls = (1, 3) if skip_oversized else (2, 4)
+            self.assertEqual(result['summary_count'], summary_count)
+            self.assertEqual(len(fixture.client.calls), research_calls)
+            if skip_oversized:
+                self.assertEqual(result['stages']['research']['skipped_papers'], 1)
+                self.assertEqual(result['research_reserved_calls'], 3)
+                self.assertEqual(result['research_completed_calls'], 2)
             self.assertEqual(len(backend.calls), 2)
             context = store.checked_yaml(root, result['context_path'])
             accepted = store.checked_yaml(root, 'reports/test/agent_memory/codex-insight/first/accepted.yaml')
             self.assertIn(context['topics_path'], accepted['input_hashes'])
-            self.assertEqual(accepted['review_decision'], 'pass')
+            self.assertEqual(accepted['review_policy'], harness.ADVISORY_REVIEW)
             cached = automatic.run(root, event='manual', cycle_id='first', **dependencies)
             self.assertTrue(cached['cached'])
-            self.assertEqual(len(fixture.client.calls), 4)
+            self.assertEqual(len(fixture.client.calls), research_calls)
             self.assertEqual(len(backend.calls), 2)
             fixture.member.assert_not_called()
             fixture.writer.assert_not_called()
@@ -378,8 +469,18 @@ class RealStageIntegration(unittest.TestCase):
                 self.assertEqual(applied['saved_files'], exported['exported_files'])
                 self.assertTrue((publisher / 'collection/agent_memory/first/manifest.yaml').is_file())
                 self.assertTrue((publisher / 'insights/test/agent_memory/first/report.md').is_file())
+                if advisory_feedback:
+                    for path in (publisher / 'summary/agent_memory').rglob('*.md'):
+                        summary = path.read_text()
+                        self.assertIn('review_status: advisory', summary)
+                        self.assertIn('缺少引用的研究判断\n\n> 证据提示：没有可定位的证据', summary)
+                        self.assertIn('已引用但依据不足的研究判断\n\n> 证据提示：审阅指出所引证据未支持该结论', summary)
+                    insight_text = '\n'.join(path.read_text() for path in
+                        (publisher / 'insights/test/agent_memory/first').rglob('*.md'))
+                    self.assertIn('正文可读', insight_text)
+                    self.assertIn('材料未支持该结论', insight_text)
                 self.assertFalse((publisher / 'config').exists())
-                self.assertEqual(len(fixture.client.calls), 4)
+                self.assertEqual(len(fixture.client.calls), research_calls)
                 self.assertEqual(len(backend.calls), 2)
 
 

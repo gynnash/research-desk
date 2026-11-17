@@ -104,13 +104,12 @@ class FulltextReview(unittest.TestCase):
         self.assertIn('未独立复现实验', report)
         self.assertNotIn('仅论文摘要', report)
 
-    def test_excerpt_and_abstract_fallback_are_not_claimed_as_fulltext(self):
+    def test_oversized_fulltext_is_skipped_and_abstract_fallback_remains_explicit(self):
         self.enable_fulltext(cap=700)
-        excerpt = self.run_batch('excerpt')
-        self.assertEqual(excerpt['items'][0]['coverage'], 'excerpt')
-        report = (self.root / excerpt['items'][0]['report_path']).read_text()
-        self.assertIn('仅阅读按章节组织的正文节选', report)
-        self.assertIn('按预算截断：是', report)
+        oversized = self.run_batch('oversized')
+        self.assertEqual(oversized['status'], 'skipped')
+        self.assertEqual(oversized['items'][0]['reason'], 'paper_input_too_large')
+        self.assertEqual(self.client.calls, [])
         self.fetcher.fulltext_unavailable = True
         fallback = self.run_batch('fallback')
         self.assertEqual(fallback['items'][0]['coverage'], 'abstract_only')
@@ -138,7 +137,7 @@ class FulltextReview(unittest.TestCase):
         self.run_batch('profile')
         candidate = self.plan('profile')['candidate']
         changed = copy.deepcopy(candidate)
-        changed['evidence']['reading_profile'] = 'arxiv-fulltext-v2'
+        changed['evidence']['reading_profile'] = 'arxiv-fulltext-v1'
         self.assertFalse(batch.same_evidence(candidate, changed))
 
     def test_failed_deepening_of_legacy_abstract_spends_no_model_calls(self):

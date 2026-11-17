@@ -21,7 +21,7 @@ python3 -B scripts/workbench.py check
 
 `init` 复制短用户模板，与系统默认合并并生成现有入口需要的配置，按主题准备 `collection/`、`summary/`、`insights/`、`articles/` 目录。新工作台没有维护者的研究资料、实际用量或真实 SDK 验收回执。公开 `config/examples/`、`config/test/` 和虚构测试样例仍可用于离线验收。
 
-默认研究方向为 `agent_memory`，采集窗口为过去 60 天，每轮最多 5 份资料。`membership_budget.month_max_calls` 是用户自己设置的工作台月度请求上限，默认 100，不能代表 ChatGPT 官方剩余额度。模型名为配置示例，使用前应根据本人账户实际可用模型调整。
+默认研究方向为 `agent_memory`，采集窗口为过去 60 天，每轮最多采集 5 篇论文和 5 篇博客。`membership_budget.month_max_calls` 是用户自己设置的工作台月度请求上限，默认 100，不能代表 ChatGPT 官方剩余额度。模型名为配置示例，使用前应根据本人账户实际可用模型调整。
 
 初始化只准备本地文件，不登录、不调用模型、不安装或启动 runner、不启用定时任务，不创建提交或推送。两层合并后的默认 `automation.enabled` 和 `admission.enabled` 均为 `false`；不会触发研究、写作或公众号发布。
 

@@ -158,16 +158,7 @@ def _test_proof(root, bundle, historical=False):
     base = 'reports/test/%s/writing-runs/%s' % (bundle['topic'], bundle['batch_id'])
     manifest = store.checked_yaml(root, base + '/manifest.yaml')
     auth = manifest.get('authorization', {})
-    budget = dict(bundle['budget'], month_max_calls=bundle['month_max_calls'])
-    fingerprint = store.digest({'input_fingerprint': bundle['input_fingerprint'], 'models': bundle['models'],
-        'budget': budget, 'authorization': auth,
-        'writing_prompt': writing.instructions(bundle, 'writing'),
-        'review_prompt': writing.instructions(bundle, 'review')})
-    expected = {'schema_version': 1, 'mode': 'writing_member_test', 'backend': 'chatgpt_plan',
-        'topic': bundle['topic'], 'batch_id': bundle['batch_id'], 'approval_id': bundle['approval_id'],
-        'fingerprint': fingerprint, 'input_fingerprint': bundle['input_fingerprint'], 'models': bundle['models'],
-        'budget': budget, 'authorization': auth, 'confirmation_path': bundle['confirmation_path'],
-        'confirmation_sha256': bundle['confirmation_sha256'], 'publish_authorized': False}
+    expected = writing.bound_manifest(bundle, auth, manifest)
     if (set(auth) != {'authenticated', 'plan_permission', 'authorization', 'account_fingerprint'}
             or auth.get('authenticated') is not True or auth.get('plan_permission') is not True
             or auth.get('authorization') != 'official_chatgpt_oauth'

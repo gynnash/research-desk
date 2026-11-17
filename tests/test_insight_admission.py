@@ -27,7 +27,7 @@ class LiveFixtureBackend(codex_fixtures.RecordingBackend):
         return {'live_ready': True, 'offline_ready': True, 'backend': self.name}
 
 
-def prepare_cycle(testcase, admit=True):
+def prepare_cycle(testcase, admit=True, scripts=None):
     """Reusable complete portable proofs without an initialized real workspace."""
     temporary = tempfile.TemporaryDirectory(prefix='researchdesk-admission-fixtures-')
     testcase.addCleanup(temporary.cleanup)
@@ -46,7 +46,8 @@ def prepare_cycle(testcase, admit=True):
     config = yaml.safe_load((ROOT / 'config/examples/codex-insight.yaml').read_text())
     config['models'] = {'generation': 'fixture-generator', 'review': 'fixture-independent-reviewer'}
     (fixture.root / 'config/codex-insight.yaml').write_text(yaml.safe_dump(config))
-    backend = LiveFixtureBackend(observed={'generation': 'fixture-generator', 'review': 'fixture-independent-reviewer'})
+    backend = LiveFixtureBackend(scripts=scripts,
+        observed={'generation': 'fixture-generator', 'review': 'fixture-independent-reviewer'})
     result = harness.run(fixture.root, 'config/codex-insight.yaml', 'first', backend=backend,
                          state_root=external / 'runtime')
     testcase.assertEqual(result['status'], 'complete')
@@ -57,7 +58,11 @@ def prepare_cycle(testcase, admit=True):
 
 class InsightAdmission(unittest.TestCase):
     def setUp(self):
-        self.fixture, self.backend = prepare_cycle(self, admit=False)
+        generated = codex_fixtures.candidate()
+        generated['topics'][0]['source_ids'] = ['R99']
+        self.fixture, self.backend = prepare_cycle(self, admit=False, scripts={
+            'generation': generated, 'review': {'decision': 'reject', 'issues': [
+                {'location': 'topics[0]', 'evidence_status': 'unsupported', 'reason': '未验证该判断'}]}})
         self.root = self.fixture.root
         self.calls = (len(self.fixture.client.calls), list(self.backend.calls))
 
@@ -94,6 +99,9 @@ class InsightAdmission(unittest.TestCase):
         self.assertTrue(topic['approval_required'])
         self.assertFalse(topic['writing_started'])
         self.assertFalse(topic['publish_authorized'])
+        self.assertEqual(topic['evidence_ids'], [])
+        self.assertEqual(topic['review_status'], 'advisory')
+        self.assertIn('所引证据未支持该结论', topic_path.read_text())
         self.assertTrue(all(source['original_text'] for source in value['bundle']['sources']))
         stored = admission._checked(self.root, admission.base_path('agent_memory', 'first') + '/plan.yaml')
         self.assertNotIn('original_text', stored['bundle']['sources'][0])

@@ -52,7 +52,12 @@ class ScheduledPublication(unittest.TestCase):
         for name in ('topics', 'research_config'):
             self.context[name + '_sha256'] = store.digest(self.context[name + '_yaml_text'].encode())
         self.save_context()
-        result = harness.run(self.root, path, 'first', backend=codex_fixtures.RecordingBackend(),
+        generated = codex_fixtures.candidate()
+        generated['insights'][0]['source_ids'] = ['R99']
+        backend = codex_fixtures.RecordingBackend(scripts={'generation': generated,
+            'review': {'decision': 'reject', 'issues': [{'location': 'insights[0]',
+                'evidence_status': 'unsupported', 'reason': '该原文没有提供支撑。'}]}})
+        result = harness.run(self.root, path, 'first', backend=backend,
                              state_root=self.state)
         self.assertEqual(result['status'], 'complete')
         self.calls = len(fixture.client.calls)
@@ -89,6 +94,9 @@ class ScheduledPublication(unittest.TestCase):
         self.assertFalse(any(path.startswith('config/') or 'codex-requests' in path for path in manifest['files']))
         saved = publish.apply(self.publisher, self.artifact)
         self.assertEqual(saved['saved_files'], result['exported_files'])
+        report = (self.publisher / 'insights/test/agent_memory/first/report.md').read_text()
+        self.assertIn('所引证据未支持该结论', report)
+        self.assertIn('观察1', report)
         self.assertFalse((self.publisher / 'config').exists())
         before = self.snapshot(self.publisher)
         self.assertEqual(publish.apply(self.publisher, self.artifact)['saved_files'], 0)
@@ -169,6 +177,14 @@ class ScheduledPublication(unittest.TestCase):
                     publish.apply(self.publisher, self.artifact)
                 self.assertEqual(self.snapshot(self.publisher), {})
         self.assert_no_new_calls()
+
+    def test_technical_prose_can_include_public_example_paths(self):
+        relative = 'summary/agent_memory/first/example.md'
+        publish._guard(b'The documented example uses /home/agent/.cache/memory.', relative,
+                       self.root, execution_root=self.root)
+        with self.assertRaisesRegex(publish.PublishError, 'private_host_path_in_transfer'):
+            publish._guard(('The host path is ' + str(self.root / 'config/local')).encode(),
+                           relative, self.root, execution_root=self.root)
 
     def test_base_change_and_existing_staged_changes_stop_before_writes(self):
         self.export()

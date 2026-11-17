@@ -19,7 +19,7 @@
     save_topics: '正在保存研究方向',
   };
   const problemStates = new Set(['blocked', 'failed', 'error']);
-  const defaultSchedule = {weekdays: [2, 5], time: '03:00', timezone: 'Asia/Shanghai'};
+  const defaultSchedule = {weekdays: [1], time: '09:00', timezone: 'Asia/Shanghai'};
   const weekdayNames = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
   const maxTopics = 8;
   const maxTopicLength = 80;

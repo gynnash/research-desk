@@ -47,7 +47,7 @@ python scripts/workbench.py start
 
 ## 定时与手动检查
 
-[研究 workflow](../.github/workflows/researchdesk-manual.yml) 的默认时间为每周二、周五北京时间 03:00。用 `./setup` 在「定时研究」创建或更新日程时，向导同时更新 GitHub 触发时间与本地 `automation.weekly`。任务在 Mac 上读取本人配置和授权，使用 `<topic>-YYYYMMDD-HHMM` 稳定批次 ID。首次部署或修改日程时从启用时间起算。已完成或无新资料的轮次复用原批次。
+[研究 workflow](../.github/workflows/researchdesk-manual.yml) 的默认时间为每周一北京时间 09:00。用 `./setup` 在「定时研究」创建或更新日程时，向导同时更新 GitHub 触发时间与本地 `automation.weekly`。任务在 Mac 上读取本人配置和授权，使用 `<topic>-YYYYMMDD-HHMM` 稳定批次 ID。首次部署或修改日程时从启用时间起算。已完成或无新资料的轮次复用原批次。
 
 部署完成后，可先手动派发健康检查：
 
@@ -59,7 +59,7 @@ gh workflow run researchdesk-manual.yml --ref main -f operation=health
 
 ## 结果保存与边界
 
-新版执行顺序为采集原文、逐篇 Research、独立审阅、Codex Insight 及独立审阅。采集原文与审阅通过的逐篇总结回存 `collection/`、`summary/`；SDK 原结果与证明保存在测试区。开启 `admission.enabled` 后，真实且通过审阅的结果自动新增到 `insights/<主题>/`、`articles/<主题>/`，保留 test，并回存正式准入回执。模拟产物不能晋级。用户在页面亲自确认正式选题后，才能另行启动 Writing；研究任务不代为确认或发布公众号。
+执行顺序为采集原文、逐篇 Research、独立审阅、Codex Insight 及独立审阅。采集原文与逐篇总结回存 `collection/`、`summary/`，SDK 结果与证明保存在测试区。新批次在对应段落标注证据缺失或证据不支持结论，保留审阅反馈。开启 `admission.enabled` 后，真实且具有完整运行证明的结果自动新增到 `insights/<主题>/`、`articles/<主题>/`，并回存正式准入回执。用户在页面亲自确认正式选题后，才能另行启动 Writing。
 
 分析 job 使用只读 GitHub token；独立保存 job 复核允许路径、散列和证明后取得写权限，新增文件并普通推送。同名人工修改发生冲突时保留文件并停止覆盖，不强推。会员授权、真实请求账本、SDK 原始会话和个人配置继续留在本机，不随结果导出。
 

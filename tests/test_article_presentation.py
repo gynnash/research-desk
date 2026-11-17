@@ -99,14 +99,12 @@ class ArticleResearch(unittest.TestCase):
         for internal in ('研究模型', '独立审阅', '字符', '散列', '修订次数', '获取失败：', 'A1', 'S1'):
             self.assertNotIn(internal, report)
 
-    def test_excerpt_and_failed_fulltext_boundaries_survive_article_rendering(self):
+    def test_oversized_paper_is_skipped_and_abstract_fallback_discloses_its_scope(self):
         self.config['sources'][0]['evidence_max_chars'] = 700
-        result = self.run_batch('excerpt')
-        report = (self.root / result['items'][0]['report_path']).read_text()
-        self.assertIn('仅阅读正文节选', report)
-        candidate = store.checked_yaml(self.root,
-            'reports/test/custom-topic/research-batches/excerpt/items/paper-one/candidate.yaml')['candidate']
-        self.assertTrue(candidate['evidence']['truncated'])
+        result = self.run_batch('oversized')
+        self.assertEqual(result['status'], 'skipped')
+        self.assertEqual(result['items'][0]['reason'], batch.PAPER_INPUT_SKIP)
+        self.assertEqual(self.client.calls, [])
         self.fetcher.fulltext_unavailable = True
         result = self.run_batch('fallback')
         report = (self.root / result['items'][0]['report_path']).read_text()

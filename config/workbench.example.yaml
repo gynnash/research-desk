@@ -15,7 +15,6 @@ research:
   window:
     days: 60
   discovery:
-    max_documents: 5
     # Sources merge by ID with the built-ins. [] keeps them all.
     sources: []
     # sources:
@@ -30,7 +29,7 @@ research:
 membership_budget:
   month_max_calls: 100
 
-# Set true before start() to enable Tuesday/Friday 03:00 Asia/Shanghai research.
+# Set true before start() to enable Monday 09:00 Asia/Shanghai research.
 # Later edits are reloaded automatically at the beginning of the next run.
 automation:
   enabled: false

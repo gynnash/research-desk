@@ -63,6 +63,24 @@ class FulltextCycle(unittest.TestCase):
         self.assertEqual(insight['budget']['max_input_chars'], 500000)
         self.client.infer.assert_not_called()
 
+    def test_full_text_required_uses_flexible_prompt_and_resumes_frozen_version(self):
+        self.config['archive'] = True
+        self.config['reading'].update(mode='full_text_required', blog_max_chars=80000)
+        self.config_path.write_text(yaml.safe_dump(self.config, allow_unicode=True, sort_keys=False))
+        with self.assertRaises(store.SimulatedInterruption):
+            self.run_cycle(fail_after='after_research')
+        relative = 'reports/test/custom-topic/cycles/first/configs/research.yaml'
+        config = store.checked_yaml(self.root, relative)
+        self.assertEqual(config['prompts']['version'], 'research-batch-v7')
+        config['prompts']['version'] = 'research-batch-v4'
+        path = self.root / relative
+        old_config = yaml.safe_dump(config, allow_unicode=True, sort_keys=False).encode()
+        path.write_bytes(old_config)
+        path.with_suffix('.yaml.sha256').write_text(store.digest(old_config) + '\n')
+        self.run_cycle()
+        self.assertEqual(path.read_bytes(), old_config)
+        self.research_run.assert_called_once()
+
     def test_pdf_fallback_is_cached_across_real_stages_and_completed_replay(self):
         self.research_run.side_effect = self.real_research_run
         self.insight_run.side_effect = self.real_insight_run

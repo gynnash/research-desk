@@ -14,6 +14,7 @@ from test_fulltext_review import FulltextFetcher
 import archive
 import batch
 import batch_inputs as inputs
+from fulltext import PAPER_READING_LEGACY, PAPER_READING_NORMALIZED
 import insight_inputs
 import offline as store
 
@@ -60,21 +61,56 @@ class OriginalArchives(unittest.TestCase):
         self.fetcher.fetch.assert_not_called()
         self.assertEqual(len(self.client.calls), 4)
 
-    def test_full_extraction_survives_smaller_model_reading_budget(self):
+    def test_back_matter_stays_in_original_and_is_removed_before_model_budget(self):
         self.config['sources'] = self.config['sources'][:1]
-        self.config['sources'][0].update(reading={'mode': 'full_text_preferred'}, evidence_max_chars=700)
+        self.config['sources'][0].update(reading={'mode': 'full_text_required'}, evidence_max_chars=3000)
         self.config['budget'].update(max_documents=1, max_calls_per_batch=4)
         self.config['prompts']['version'] = 'research-batch-v2'
-        self.client.research_mutator = lambda result: result.update(limitations=['仅读取正文节选，未复现实验。'])
+        self.client.research_mutator = lambda result: result.update(limitations=['读取全文，未复现实验。'])
+        fetch = self.fetcher.fetch
+        def add_back_matter(url):
+            response = fetch(url)
+            if '/html/' in url:
+                acknowledgment = '<div class="ltx_acknowledgements">Funding credit.</div>'
+                back_matter = ('<section class="ltx_bibliography" id="bib"><h2>Cited works</h2><p>' +
+                               'Bibliography entry. ' * 200 + '</p></section>'
+                               '<section id="appendix"><h2>Appendix A</h2>'
+                               '<section id="proof"><h3>Supplemental proof</h3><p>Extra experiment.</p>'
+                               '</section></section>')
+                response['text'] = response['text'].replace(
+                    '</p></section><section', '</p>' + acknowledgment + '<p>Body after credits.</p></section><section',
+                    1).replace('</article>', back_matter + '</article>')
+            return response
+        self.fetcher.fetch = add_back_matter
         receipt = self.run_batch()
         self.assertEqual(receipt['status'], 'test_accepted')
         candidate = self.plan()['candidate']
         _, material, snapshot = archive.load(self.root, candidate)
-        self.assertEqual(candidate['evidence']['coverage'], 'excerpt')
+        self.assertEqual(candidate['evidence']['coverage'], 'full_text')
+        self.assertEqual(candidate['evidence']['reading_profile'], PAPER_READING_NORMALIZED)
         self.assertGreater(snapshot['document']['total_chars'], len(material))
-        self.assertIn(self.fetcher.body.strip(), archive.render_markdown(snapshot))
+        self.assertLess(len(material), self.config['sources'][0]['evidence_max_chars'])
+        model_materials = [item['payload']['original_material'] for item in self.client.calls]
+        self.assertEqual(model_materials, [material, material])
+        self.assertIn('Body after credits.', material)
+        view = archive.render_markdown(snapshot)
+        for back_matter in ('Funding credit.', 'Bibliography entry.', 'Extra experiment.'):
+            self.assertIn(back_matter, view)
+            self.assertNotIn(back_matter, material)
         self.assertEqual(snapshot['document']['format'], 'html')
         self.assertTrue(all(item.get('sha256') for item in snapshot['responses']))
+
+    def test_legacy_archive_replays_same_excerpt_after_normalization_is_enabled(self):
+        source = self.config['sources'][0]
+        source.update(reading={'mode': 'full_text_preferred'}, evidence_max_chars=700)
+        binding = {'evidence': {'reading_profile': PAPER_READING_LEGACY, 'format': 'html'}}
+        capture = {}
+        candidate, material = inputs.fetch_candidate(
+            self.root, self.config, source, self.fetcher, binding=binding, capture=capture)
+        archived = archive.save(self.root, 'collection/custom-topic/legacy', candidate, material, source, capture)
+        restored, replay, _ = archive.load(self.root, archived)
+        self.assertEqual(restored['evidence']['coverage'], 'excerpt')
+        self.assertEqual(replay, material)
 
     def test_model_failure_before_reservation_resumes_archived_original(self):
         self.config['sources'] = self.config['sources'][:1]

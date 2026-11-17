@@ -25,6 +25,10 @@ class SourceError(ValueError):
     """Source fetching or parsing failed; this is not an empty search result."""
 
 
+class SourceResponseTooLarge(SourceError):
+    """The source response exceeds a transport or parser size bound."""
+
+
 HOSTS = frozenset({'arxiv.org', 'export.arxiv.org', 'www.letta.com', 'letta.com',
                    'www.langchain.com', 'langchain.com', 'blog.langchain.com',
                    'huggingface.co', 'hn.algolia.com'})
@@ -214,11 +218,18 @@ class SafeFetcher:
                 if encoding not in {'', 'identity'}:
                     raise SourceError('Unexpected compressed source response')
                 length = response.headers.get('Content-Length')
-                if length and (not length.isdigit() or int(length) > max_bytes):
-                    raise SourceError('Source response exceeds byte limit or has invalid length')
+                if length is not None:
+                    try:
+                        if not length.isascii() or not length.isdecimal():
+                            raise ValueError
+                        announced_bytes = int(length)
+                    except ValueError as exc:
+                        raise SourceError('Source response has invalid Content-Length') from exc
+                    if announced_bytes > max_bytes:
+                        raise SourceResponseTooLarge('Source response exceeds byte limit')
                 raw = response.read(max_bytes + 1)
                 if len(raw) > max_bytes:
-                    raise SourceError('Source response exceeds byte limit')
+                    raise SourceResponseTooLarge('Source response exceeds byte limit')
                 if not raw:
                     raise SourceError('Empty source response')
                 result = {'url': current, 'requested_url': requested, 'content_type': content_type,
@@ -347,14 +358,18 @@ class _Document(HTMLParser):
         try:
             self.feed(text)
             self.close()
+        except SourceResponseTooLarge:
+            raise
         except (ValueError, RecursionError) as exc:
             raise SourceError('Malformed or excessively nested HTML') from exc
         self.nodes = list(self.root.walk())
 
     def handle_starttag(self, tag, attrs):
         self.node_count += 1
-        if len(self.stack) > 100 or self.node_count > 30_000:
+        if len(self.stack) > 100:
             raise SourceError('Source HTML exceeds parser structure limit')
+        if self.node_count > 30_000:
+            raise SourceResponseTooLarge('Source HTML exceeds parser node count limit')
         node = _Node(tag, attrs, self.stack[-1])
         self.stack[-1].children.append(node)
         if tag not in self.VOID:

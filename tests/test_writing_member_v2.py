@@ -60,6 +60,13 @@ class WritingV2Paragraphs(unittest.TestCase):
         with self.assertRaises(store.OfflineError):
             member.validate_review(self.candidate, unsupported, self.bundle)
 
+    def test_confirmed_target_is_not_a_character_gate(self):
+        self.candidate['sections'][1]['paragraphs'][0]['text'] = (
+            '材料列出了 `List<T>` 的输入，详见[实现](https://example.org/code)。')
+        for stage in ('draft', 'candidate'):
+            self.assertEqual(member.validate_candidate(self.candidate, self.bundle, stage), self.candidate)
+        self.assertEqual(member.validate_review(self.candidate, self.review(), self.bundle), 'pass')
+
     def test_v1_does_not_silently_accept_v2_or_unknown_profile(self):
         legacy = deepcopy(self.bundle)
         legacy.pop('style_profile')

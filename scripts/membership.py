@@ -577,6 +577,8 @@ class MembershipClient:
               timeout_seconds=120):
         if not isinstance(instructions, str) or not isinstance(input_text, str):
             raise MembershipError("invalid_inference_input")
+        # Keep accepting the historical caller budget. Stream safety is
+        # bounded by bytes and time, independently of the output's writing.
         if not 1 <= max_output_chars <= 50000 or not 1 <= timeout_seconds <= 300:
             raise MembershipError("invalid_inference_limits")
         # Per-stage YAML budgets still preflight the exact JSON request. This
@@ -613,8 +615,6 @@ class MembershipClient:
                 if not isinstance(delta, str):
                     raise MembershipError("invalid_stream_event")
                 chunks.append(delta)
-                if sum(len(chunk) for chunk in chunks) > max_output_chars:
-                    raise MembershipError("output_limit_interrupted")
             elif kind in ("response.failed", "response.incomplete", "error"):
                 failed_response = event.get("response")
                 detail = failed_response.get("error") if isinstance(failed_response, dict) else None
@@ -666,7 +666,7 @@ class MembershipClient:
         if completed["model"] != model:
             raise MembershipError("actual_model_mismatch")
         text = self._completed_output(completed) or "".join(chunks)
-        if not text or len(text) > max_output_chars:
+        if not text.strip():
             raise MembershipError("completed_output_invalid")
         usage = completed.get("usage")
         if not isinstance(usage, dict):

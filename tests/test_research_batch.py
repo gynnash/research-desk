@@ -22,6 +22,7 @@ REPOSITORY = Path(__file__).resolve().parents[1]
 FIXTURES = REPOSITORY / 'workflows/test/example-topic/fixtures/collection'
 sys.path.insert(0, str(REPOSITORY / 'scripts'))
 import batch
+from fulltext import PaperInputTooLarge
 import offline as store
 from sources import SourceError, parse_arxiv_abstract
 
@@ -311,6 +312,35 @@ class ConfigDrivenResearchBatch(unittest.TestCase):
         self.assertEqual(len(self.client.calls), 4)
         self.assertGreaterEqual(len(list(self.directory().glob('receipt-attempt-*.yaml'))), 2)
 
+    def test_oversized_paper_request_is_skipped_before_reservation(self):
+        original_request = batch.original_request
+
+        def make_request(config, candidate, material):
+            if candidate['kind'] == 'paper':
+                material += 'x' * config['budget']['max_input_chars']
+            return original_request(config, candidate, material)
+
+        with mock.patch.object(batch, 'original_request', side_effect=make_request):
+            first = self.run_batch()
+            second = self.run_batch()
+        self.assertEqual(first['status'], 'test_accepted')
+        self.assertEqual([item['status'] for item in first['items']], ['skipped', 'test_accepted'])
+        self.assertEqual(first['items'][0]['reason'], batch.PAPER_INPUT_SKIP)
+        self.assertEqual(first['reserved_calls'], 2)
+        self.assertTrue(second['cached'])
+        self.assertEqual(len(self.client.calls), 2)
+
+    def test_batch_with_only_oversized_source_finishes_without_a_candidate(self):
+        self.config['sources'] = self.config['sources'][:1]
+        with mock.patch.object(batch.inputs, 'fetch_candidate', side_effect=PaperInputTooLarge('fixture')) as fetch:
+            first = self.run_batch()
+            second = self.run_batch()
+        self.assertEqual(first['status'], 'skipped')
+        self.assertEqual(first['reserved_calls'], 0)
+        self.assertEqual(first['items'][0]['reason'], batch.PAPER_INPUT_SKIP)
+        self.assertTrue(second['cached'])
+        fetch.assert_called_once()
+
     def test_arxiv_response_must_match_configured_paper_and_version(self):
         self.fetcher.paper = self.fetcher.paper.replace('01234v2', '09999v3')
         result = self.run_batch()
@@ -488,11 +518,11 @@ class ConfigDrivenResearchBatch(unittest.TestCase):
         self.assertNotEqual(result['status'], 'test_accepted')
         self.assertTrue(all(c['model'] == 'fixture-research' for c in self.client.calls))
 
-    def test_research_without_explicit_coverage_limitation_cannot_pass(self):
+    def test_scope_wording_is_left_to_the_review_model(self):
         self.client.research_mutator = lambda result: result.update(limitations=['更多研究仍有必要。'])
         result = self.run_batch()
-        self.assertNotEqual(result['status'], 'test_accepted')
-        self.assertFalse(any(x['status'] == 'test_accepted' for x in result['items']))
+        self.assertEqual(result['status'], 'test_accepted')
+        self.assertEqual(result['completed_calls'], 4)
 
     def test_pass_with_blocking_issue_cannot_be_accepted(self):
         def blocking_issue(result):

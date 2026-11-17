@@ -41,7 +41,7 @@ def _prompt_version(config):
     version = config.get('prompts', {}).get('version')
     if version in {'insight-v1', 'insight-v2'}:
         return 'insight-v2'
-    if version in {'insight-v3', 'insight-v4', 'insight-v5', 'insight-v6'}:
+    if version in inputs.FULLTEXT_PROMPTS:
         return version
     raise store.OfflineError('恢复原始 Insight 提示词版本无效')
 
@@ -172,9 +172,9 @@ def _original_compact(root, config, manifest):
                 continue
             plan = store.checked_yaml(root, '%s/items/%s/candidate.yaml' % (base, item['key']))
             candidate = plan['candidate']
-            checkpoint = store.checked_yaml(root, '%s/items/%s/checkpoints/research-%s.yaml' % (
-                base, item['key'], item['revision_count']))
-            result = research.parse_result(checkpoint['result']['text'])
+            texts = [store.checked_yaml(root, '%s/items/%s/checkpoints/%s-%s.yaml' % (
+                base, item['key'], role, item['revision_count']))['result']['text'] for role in ('research', 'review')]
+            result, _ = research.read_item_result(candidate, item, *texts)
             source_id = candidate['source_id']
             url = candidate['metadata']['source_url']
             if candidate['kind'] == 'paper' and candidate['metadata'].get('arxiv_id'):
@@ -184,7 +184,8 @@ def _original_compact(root, config, manifest):
                 'source_ids': [source_id], 'source_id': source_id, 'source_url': url, 'source_urls': [url],
                 'coverage': candidate['evidence']['coverage'], 'identity_keys': candidate['identity_keys'],
                 'source_identities': [{'source_id': source_id, 'identity_keys': candidate['identity_keys']}],
-                'independently_reviewed': True, 'can_support_original_facts': True,
+                'independently_reviewed': True, 'can_support_original_facts': not research.advisory_result(item) or any(
+                    claim.get('evidence_status') == 'supported' for claim in result['claims']),
                 'metadata': candidate['metadata'], 'research_summary': result['summary'],
                 'research_claims': result['claims'], 'research_limitations': result['limitations'],
                 'locators': candidate['evidence']['locators']})

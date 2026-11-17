@@ -1,5 +1,6 @@
 """Collection -> detailed per-source summary; all sources/models are fictional."""
 
+import json
 from pathlib import Path
 import sys
 import unittest
@@ -71,7 +72,7 @@ class ResearchEntry(unittest.TestCase):
         self.client.review_decisions = ['revise', 'pass', 'pass']
         result = self.run_research()
         self.assertEqual(result['status'], 'complete')
-        self.assertEqual(result['completed_calls'], 6)
+        self.assertEqual(result['completed_calls'], 4)
         self.assertEqual(len(result['summary_paths']), 2)
         self.assertFalse(result['insight_started'])
         self.assertFalse(result['writing_started'])
@@ -92,7 +93,7 @@ class ResearchEntry(unittest.TestCase):
             self.assertEqual(metadata['topic'], 'agent_memory')
             self.assertEqual(metadata['cycle_id'], 'first')
             self.assertEqual(metadata['coverage'], 'full_text')
-            self.assertEqual(metadata['review_status'], 'passed')
+            self.assertEqual(metadata['review_status'], 'advisory')
             self.assertEqual(metadata['collection_original'], originals[item['key']])
             self.assertNotIn('TEST', text)
             self.assertIn('## 保存引用为何有助于核对', text)
@@ -104,7 +105,7 @@ class ResearchEntry(unittest.TestCase):
                   for path in self.root.rglob('*') if path.is_file()}
         cached = self.run_research()
         self.assertTrue(cached['cached'])
-        self.assertEqual(len(self.client.calls), 6)
+        self.assertEqual(len(self.client.calls), 4)
         self.assertEqual(before, {path.relative_to(self.root): path.read_bytes()
                                   for path in self.root.rglob('*') if path.is_file()})
 
@@ -121,7 +122,7 @@ class ResearchEntry(unittest.TestCase):
         self.assertEqual(batch_config['budget']['max_calls_per_batch'], 100)
         self.assertEqual(len(self.client.calls), 4)
 
-    def test_new_batches_use_concise_generation_and_review_prompts(self):
+    def test_new_batches_use_advisory_review_prompts(self):
         self.collect()
         concise = detailed_response()
         concise['claims'] = concise['claims'][:3]
@@ -130,7 +131,7 @@ class ResearchEntry(unittest.TestCase):
         result = self.run_research()
 
         self.assertEqual(result['status'], 'complete')
-        generation, review = batch.instructions_for('research-batch-v5')
+        generation, review = batch.instructions_for(batch.ADVISORY_PROMPT)
         self.assertEqual([call['instructions'] for call in self.client.calls], [generation, review] * 2)
         self.assertEqual(len(self.client.calls[1]['payload']['candidate']['claims']), 3)
 
@@ -150,16 +151,66 @@ class ResearchEntry(unittest.TestCase):
         self.assertEqual(len(self.client.calls), 4)
         self.assertEqual({path: path.read_bytes() for path in paths}, before)
 
-    def test_rejected_sources_never_become_public_summaries(self):
+    def test_review_rejection_is_recorded_without_blocking_summaries(self):
         self.collect()
         self.client.review_decisions = ['reject', 'reject']
+        infer = self.client.infer
+
+        def reply(model, instructions, input_text, **kwargs):
+            response = infer(model, instructions, input_text, **kwargs)
+            if 'candidate' in json.loads(input_text) and len(self.client.calls) == 4:
+                response['text'] = '审阅只返回了自然语言说明。'
+            return response
+
+        self.client.infer = reply
+        result = self.run_research()
+        self.assertEqual(result['status'], 'complete')
+        self.assertEqual(len(result['summary_paths']), 2)
+        self.assertEqual([item['status'] for item in result['items']], ['summarized', 'summarized'])
+        self.assertIn('审阅结论：reject', (self.root / result['summary_paths'][0]).read_text())
+        self.assertIn('审阅只返回了自然语言说明。', (self.root / result['summary_paths'][1]).read_text())
+        self.assertEqual(len(self.client.calls), 4)
+        self.assert_research_only()
+
+    def test_partial_fields_and_review_add_per_claim_evidence_notes(self):
+        self.collect()
+        generated = {'summary': 98, 'body': '可阅读的概述', 'limitations': False,
+                     'claims': [None, {'text': '待验证的第一条结论', 'kind': 'unknown'},
+                                {'text': '引文未支持的第二条结论', 'evidence_ids': ['A1']},
+                                {'text': '有依据的第三条结论', 'kind': 'fact', 'evidence_ids': 'A1'}]}
+        checked = {'decision': {}, 'coverage_acknowledged': False,
+                   'checks': [False, {'claim_index': '2', 'verdict': 'unsupported'},
+                              {'claim_index': 3, 'verdict': 'supported', 'evidence_ids': ['A1']}],
+                   'issues': [{'reason': '单独保留审阅意见。'}]}
+
+        def infer(model, instructions, input_text, **kwargs):
+            payload = json.loads(input_text)
+            self.client.calls.append({'payload': payload})
+            text = json.dumps(checked if 'candidate' in payload else generated, ensure_ascii=False)
+            return {'model': model, 'text': '```json\n' + text + '\n```'}
+
+        self.client.infer = infer
+        result = self.run_research()
+        self.assertEqual(result['status'], 'complete')
+        self.assertEqual(result['completed_calls'], 4)
+        for path in result['summary_paths']:
+            summary = (self.root / path).read_text()
+            self.assertIn('可阅读的概述', summary)
+            self.assertIn('待验证的第一条结论\n\n> 证据提示：没有可定位的证据。', summary)
+            self.assertIn('引文未支持的第二条结论\n\n> 证据提示：审阅指出所引证据未支持该结论。', summary)
+            self.assertIn('有依据的第三条结论\n\n## 独立审阅意见', summary)
+            self.assertIn('单独保留审阅意见。', summary)
+        self.assertEqual(self.run_research()['summary_paths'], result['summary_paths'])
+        self.assertEqual(len(self.client.calls), 4)
+
+    def test_wrong_overall_generation_shape_fails_before_review(self):
+        self.collect()
+        self.client.infer = mock.Mock(return_value={'model': 'fixture-research', 'text': '[]'})
         result = self.run_research()
         self.assertEqual(result['status'], 'failed')
         self.assertEqual(result['summary_paths'], [])
-        self.assertEqual([item['status'] for item in result['items']], ['reject', 'reject'])
-        self.assertFalse((self.root / 'summary').exists())
-        self.assertEqual(len(self.client.calls), 4)
-        self.assert_research_only()
+        self.assertEqual(result['completed_calls'], 2)
+        self.assertEqual(self.client.infer.call_count, 2)
 
     def test_missing_collection_and_empty_collection_do_not_construct_membership_client(self):
         with self.assertRaisesRegex(store.OfflineError, '请先执行'):
@@ -233,10 +284,7 @@ class ResearchEntry(unittest.TestCase):
         manifest = store.checked_yaml(self.root, base + '/manifest.yaml')
         result = store.checked_yaml(self.root, prefix + 'result.yaml')
         candidate = store.checked_yaml(self.root, prefix + 'candidate.yaml')['candidate']
-        research_result = batch.parse_result(store.checked_yaml(
-            self.root, prefix + 'checkpoints/research-0.yaml')['result']['text'])
-        review = batch.parse_result(store.checked_yaml(
-            self.root, prefix + 'checkpoints/review-0.yaml')['result']['text'])
+        _, research_result, review = research._approved_material(self.root, base, result)
         original = research._render_summary(manifest, candidate, research_result, review, result,
                                             record['original_markdown_path'], 'first')
         path = self.root / ('summary/agent_memory/first/' + record['key'] + '.md')

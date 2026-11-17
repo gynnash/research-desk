@@ -19,6 +19,7 @@ from urllib.parse import quote, unquote, urlsplit
 import yaml
 
 import admission
+from insight_inputs import NARRATIVE_PROMPTS
 import offline as store
 import reading_text as prose
 
@@ -135,7 +136,8 @@ def _research_cycles(root, files, warnings):
             raise store.OfflineError('阅读入口缺少唯一正式综合')
         original = summaries[0]
         synthesis = original
-        narrative = store.load_yaml(admission._location(root, value['insight_config']))['prompts']['version'] in {'insight-v5', 'insight-v6'}
+        narrative = (store.load_yaml(admission._location(root, value['insight_config']))['prompts']['version']
+                     in NARRATIVE_PROMPTS)
         if not narrative:
             synthesis = 'insights/%s/综述/%s-%s.md' % (topic, cycle_id, _slug(candidate['report']['title']))
             files[synthesis] = _reading(root, synthesis, prose.synthesis(candidate, evidence), original,

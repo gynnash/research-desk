@@ -184,6 +184,9 @@ def _insight_proof(root, config, bundle, cycle_id, bind_requests, allow_failure=
     if type(final_revision) is not int or final_revision not in (0, 1):
         raise store.OfflineError('Insight 修订次数无效')
     model_payload = inputs.model_payload(bundle, config['prompts']['version']) if bind_requests else None
+    advisory = config['prompts']['version'] == inputs.ADVISORY_PROMPT
+    if advisory and (final_revision != 0 or len(completed) != 2 or allow_failure):
+        raise store.OfflineError('Insight 审阅意见证明与请求序列不一致')
     previous_candidate = previous_review = None
     for revision in range(final_revision + 1):
         generation = store.checked_yaml(root, '%s/checkpoints/generation-%s.yaml' % (base, revision))
@@ -199,6 +202,11 @@ def _insight_proof(root, config, bundle, cycle_id, bind_requests, allow_failure=
                     raise store.OfflineError('Insight 检查点未绑定同一份原文和候选')
             return checkpoint['result']['text']
         raw = read('generation', generation_instructions, request)
+        if advisory:
+            candidate = insight.harness._parse(raw)
+            review_payload = dict(model_payload, candidate=candidate) if bind_requests else None
+            review = insight.harness._review(read('review', review_instructions, review_payload), True)
+            return insight.advisory_candidate(candidate, bundle, review), receipt, manifest, base
         recovery = {}
         try:
             candidate = insight.parse_response(raw, 'generation')
@@ -457,7 +465,7 @@ def _render(root, topic, cycle_id, config, bundle, candidate, records, source_ma
                        if Path(value[0]).parts[2:3] != ('test',)}
     source_map = dict(source_map or {})
     path_map, sources = {}, {}
-    simple = config['prompts']['version'] in {'insight-v5', 'insight-v6'}
+    simple = config['prompts']['version'] in inputs.NARRATIVE_PROMPTS
     synthesis_path = '%s/%s/%s-synthesis.md' % ('insights' if simple else 'reports', topic, cycle_id)
     accepted_path = _base(topic, cycle_id) + '/accepted.yaml'
     for record in records:
@@ -544,7 +552,8 @@ def _render(root, topic, cycle_id, config, bundle, candidate, records, source_ma
             'kind': 'research_update' if target['existing'] else 'research_report',
             'title': original['metadata']['title'], 'topic': topic, 'topics': [topic],
             'status': 'accepted', 'source_id': target['id'], 'coverage': original['evidence']['coverage']}
-        body = research.render(record['manifest'], original, result, record['review'], record['revision'])
+        body = research.render(record['manifest'], original, result, record['review'], record['revision'],
+                               result=record.get('result'))
         lines = body.splitlines()
         lines[0] = '# ' + original['metadata']['title']
         lines = [NOTICE if line.startswith('> TEST：') else line for line in lines
@@ -569,7 +578,7 @@ def _render(root, topic, cycle_id, config, bundle, candidate, records, source_ma
                 'published_at': original['metadata'].get('published_at'), 'collected_at': collected,
                 'updated_at': collected, 'topics': [topic], 'status': 'inbox',
                 'related_sources': [], 'related_notes': [target['report'], synthesis_path]}
-            if config['prompts']['version'] in {'insight-v4', 'insight-v5', 'insight-v6'}:
+            if config['prompts']['version'] in inputs.HISTORY_PROMPTS:
                 files[target['path']] = _source_card(source, original, target['path'], target['report'],
                                                      synthesis_path, accepted_path)
             else:
@@ -713,8 +722,10 @@ def _plan(root, topic, cycle_id, fetcher=None):
         _auth(research_manifest)
         research_result = store.checked_yaml(root, '%s/items/%s/checkpoints/research-%s.yaml' % (research_base, original['key'], result['revision_count']))
         review_result = store.checked_yaml(root, '%s/items/%s/checkpoints/review-%s.yaml' % (research_base, original['key'], result['revision_count']))
-        records.append({'candidate': original, 'research': research.parse_result(research_result['result']['text']),
-            'review': research.parse_result(review_result['result']['text']), 'revision': result['revision_count'],
+        research_value, review_value = research.read_item_result(
+            original, result, research_result['result']['text'], review_result['result']['text'])
+        records.append({'candidate': original, 'research': research_value,
+            'review': review_value, 'revision': result['revision_count'], 'result': result,
             'report_path': evidence['path'], 'manifest': research_manifest})
     files, source_map = _render(root, topic, cycle_id, config, bundle, candidate, records)
     paths = set(cycle['input_hashes']) | set(cycle['output_hashes']) | {cycle_base + '/receipt.yaml', config_path}

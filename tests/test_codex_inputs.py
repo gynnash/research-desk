@@ -68,6 +68,28 @@ class CodexInputs(unittest.TestCase):
         self.assertEqual(result['sources'][0]['role'], 'current')
         self.assertIn('没有可核实的相关历史', result['history_note'])
 
+    def test_insight_reads_normalized_paper_body_while_archive_keeps_back_matter(self):
+        fetch = self.fetcher.fetch
+        markers = ('BIBLIOGRAPHY_MARKER', 'ACKNOWLEDGMENTS_MARKER', 'APPENDIX_MARKER')
+
+        def with_back_matter(url):
+            response = fetch(url)
+            if 'arxiv.org/html/' in url:
+                tail = ('<section class="ltx_bibliography"><h2>References</h2><p>%s</p></section>'
+                        '<section class="ltx_section"><h2>Acknowledgements</h2><p>%s</p></section>'
+                        '<section class="ltx_appendix"><h2>Appendix A</h2><p>%s</p></section>') % markers
+                response['text'] = response['text'].replace('</article>', tail + '</article>')
+            return response
+
+        with mock.patch.object(self.fetcher, 'fetch', side_effect=with_back_matter):
+            self.prepared()
+        source = next(source for source in self.bundle()['sources'] if 'arxiv.org' in source['url'])
+        archive = (self.root / source['original_path']).read_text()
+        self.assertIn(self.fetcher.body.strip(), source['original_text'])
+        for marker in markers:
+            self.assertIn(marker, archive)
+            self.assertNotIn(marker, source['original_text'])
+
     def test_explicit_topics_snapshot_is_used_instead_of_live_private_topics(self):
         self.prepared()
         relative = 'config/local/automation/first/topics.yaml'
@@ -118,7 +140,7 @@ class CodexInputs(unittest.TestCase):
         self.assertEqual(historical['sources'], [])
         self.assertIn('跳过未能验证的历史', historical['history_note'])
 
-    def test_rejected_review_is_detected_even_if_its_yaml_hash_is_repaired(self):
+    def test_changed_review_is_detected_even_if_its_yaml_hash_is_repaired(self):
         self.prepared()
         base = 'reports/test/agent_memory/research-batches/first'
         event_path = next(path for path in (self.root / base / 'events').glob('*.yaml')
@@ -133,7 +155,7 @@ class CodexInputs(unittest.TestCase):
         self.rewrite_yaml(event['response_path'], checkpoint)
         event['response_sha256'] = store.digest((self.root / event['response_path']).read_bytes())
         self.rewrite_yaml(event_path.relative_to(self.root).as_posix(), event)
-        with self.assertRaisesRegex(store.OfflineError, '独立审阅未通过'):
+        with self.assertRaisesRegex(store.OfflineError, '研究或审阅响应与已保存的报告和总结不一致'):
             self.bundle()
 
     def test_history_has_no_document_count_cap_and_identity_aliases_are_deduplicated(self):

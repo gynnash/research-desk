@@ -20,6 +20,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import offline as store
 import batch as shared
 import writing as offline
+import writing_results as results
 import writing_member_inputs as inputs
 import writing_style as style
 
@@ -45,12 +46,31 @@ def _v2(bundle):
     return True
 
 
-def instructions(bundle, role):
+def instructions(bundle, role, manifest=None):
     if role not in {'writing', 'review'}:
         raise store.OfflineError('未知 Writing 模型角色')
+    if results.enabled(manifest or {}):
+        prompt = results.GENERATION if role == 'writing' else results.REVIEW
+        if _v2(bundle):
+            prompt += '\n以下是已确认的表达偏好。仅供写法参考：\n' + bundle['style_profile']['text']
+        return prompt
     if _v2(bundle):
         return style.instructions(bundle, role)
     return WRITING_INSTRUCTIONS if role == 'writing' else REVIEW_INSTRUCTIONS
+
+
+def bound_manifest(bundle, authorization, policy):
+    budget = dict(bundle['budget'], month_max_calls=bundle['month_max_calls'])
+    fingerprint = store.digest({'input_fingerprint': bundle['input_fingerprint'], 'models': bundle['models'],
+        'budget': budget, 'authorization': authorization,
+        'writing_prompt': instructions(bundle, 'writing', policy),
+        'review_prompt': instructions(bundle, 'review', policy)})
+    return {'schema_version': 1, 'mode': 'writing_member_test', 'backend': 'chatgpt_plan',
+        'topic': bundle['topic'], 'batch_id': stable_batch_id(bundle['approval_id']), 'approval_id': bundle['approval_id'],
+        'fingerprint': fingerprint, 'input_fingerprint': bundle['input_fingerprint'], 'models': bundle['models'],
+        'budget': budget, 'authorization': authorization, 'confirmation_path': bundle['confirmation_path'],
+        'confirmation_sha256': bundle['confirmation_sha256'], 'publish_authorized': False,
+        **({'result_policy': results.POLICY} if results.enabled(policy) else {})}
 
 
 def stable_batch_id(approval_id):
@@ -86,13 +106,7 @@ def _references(value, evidence, allow_empty=False):
     return offline.refs(value, evidence)
 
 
-def _text(value, name):
-    offline.text(value, name)
-    if re.search(r'\[\[|(?:^|\s)(?:sources|reports|insights|articles|config|workflows)/|<[^>]+>', value):
-        raise store.OfflineError(name + ' 不接受自行构造的引用或 HTML')
-
-
-def _parse(value):
+def _parse(value, advisory=False):
     def unique(pairs):
         result = {}
         for key, item in pairs:
@@ -104,6 +118,8 @@ def _parse(value):
     def finite(_):
         raise ValueError('non-finite JSON number')
 
+    if advisory:
+        value = results.unwrap_json(value)
     try:
         result = json.loads(value, object_pairs_hook=unique, parse_constant=finite)
     except (ValueError, TypeError) as exc:
@@ -119,26 +135,23 @@ def validate_candidate(value, bundle, stage):
     if value['title'] != bundle['topic_card']['title']:
         raise store.OfflineError('写作标题与用户页面确认不同')
     for key in ('title', 'summary'):
-        _text(value[key], key)
+        offline.text(value[key], key)
     if not (version2 and isinstance(value['limitations'], list) and not value['limitations']):
         offline.strings(value['limitations'], '写作局限')
-    for item in value['limitations']:
-        _text(item, '写作局限')
     sections = value['sections']
-    if not isinstance(sections, list) or not 1 <= len(sections) <= 8:
-        raise store.OfflineError('Writing 须有 1 至 8 节')
+    if not isinstance(sections, list) or not sections:
+        raise store.OfflineError('Writing 须有正文')
     evidence = {item['id']: item for item in bundle['evidence']}
-    total = 0
-    for section_index, section in enumerate(sections):
+    for section in sections:
         offline.fields(section, {'heading', 'paragraphs'}, '写作章节')
-        if not (version2 and section_index == 0 and section['heading'] == ''):
-            _text(section['heading'], '章节标题')
+        if not (version2 and section['heading'] == ''):
+            offline.text(section['heading'], '章节标题')
         paragraphs = section['paragraphs']
-        if not isinstance(paragraphs, list) or not 1 <= len(paragraphs) <= 8:
-            raise store.OfflineError('章节须有 1 至 8 段')
+        if not isinstance(paragraphs, list) or not paragraphs:
+            raise store.OfflineError('章节须有正文段落')
         for paragraph in paragraphs:
             offline.fields(paragraph, {'kind', 'text', 'evidence_ids'}, '写作段落')
-            _text(paragraph['text'], '段落')
+            offline.text(paragraph['text'], '段落')
             kind = paragraph['kind']
             optional = version2 and kind in {'commentary', 'author_experience'}
             used = _references(paragraph['evidence_ids'], evidence, allow_empty=optional)
@@ -152,10 +165,6 @@ def validate_candidate(value, bundle, stage):
                 raise store.OfflineError('未经原文核验的材料不能支持原文事实')
             if kind == 'fact' and any(not any(c.get('kind') == 'fact' for c in evidence[key].get('claims', [])) for key in used):
                 raise store.OfflineError('作者主张与研究推断不能冒充原文事实')
-            total += len(re.sub(r'\s', '', paragraph['text']))
-    target = bundle['topic_card']['target_words']
-    if stage != 'outline' and not target * .5 <= total <= target * 1.6:
-        raise store.OfflineError('正文长度偏离页面确认的目标字数范围')
     return value
 
 
@@ -166,15 +175,14 @@ def validate_review(candidate, review, bundle):
     offline.fields(review, {'decision', 'coverage_acknowledged', 'issues', 'checks'}, '独立写作审阅')
     if (review['decision'] not in {'pass', 'revise', 'reject', 'blocked'}
             or type(review['coverage_acknowledged']) is not bool
-            or not isinstance(review['issues'], list) or len(review['issues']) > 40
-            or not isinstance(review['checks'], list) or len(review['checks']) > 64):
+            or not isinstance(review['issues'], list) or not isinstance(review['checks'], list)):
         raise store.OfflineError('独立写作审阅状态或范围无效')
     for issue in review['issues']:
         offline.fields(issue, {'severity', 'location', 'reason', 'suggestion'}, '审阅问题')
         if issue['severity'] not in {'info', 'warning', 'blocking', 'critical', 'error'}:
             raise store.OfflineError('未知写作审阅严重程度')
         for key in ('location', 'reason', 'suggestion'):
-            _text(issue[key], '审阅' + key)
+            offline.text(issue[key], '审阅' + key)
     expected = {(si, pi): set(p['evidence_ids']) for si, section in enumerate(candidate['sections'])
                 for pi, p in enumerate(section['paragraphs'])}
     seen = set()
@@ -196,6 +204,20 @@ def validate_review(candidate, review, bundle):
             any(issue['severity'] in {'blocking', 'critical', 'error'} for issue in review['issues'])):
         raise store.OfflineError('独立审阅缺少范围确认或仍有阻塞问题')
     return review['decision']
+
+
+def candidate_for_review(value, bundle, stage, manifest):
+    if results.enabled(manifest):
+        return results.normalize(value, bundle['topic_card']['title'])
+    return validate_candidate(value, bundle, stage)
+
+
+def candidate_with_review(candidate, review, bundle, manifest):
+    if results.enabled(manifest):
+        return results.annotate(candidate, review, bundle['evidence'], bundle['topic_card'].get('author_notes', ''))
+    if validate_review(candidate, review, bundle) != 'pass':
+        raise store.OfflineError('阶段独立审阅没有通过')
+    return candidate
 
 
 def _active(root, bundle, refresh):
@@ -268,9 +290,9 @@ def _usage(result):
     return used or None
 
 
-def _result(result, model, maximum):
+def _result(result, model):
     if (not isinstance(result, dict) or result.get('model') != model or
-            not isinstance(result.get('text'), str) or not result['text'].strip() or len(result['text']) > maximum or
+            not isinstance(result.get('text'), str) or not result['text'].strip() or
             not isinstance(result.get('response_id'), str) or not re.fullmatch(r'[A-Za-z0-9_.:-]{1,200}', result['response_id'])):
         raise store.OfflineError('会员完成响应的实际模型、身份或正文无效')
     return {'text': result['text'], 'model': model, 'response_id': result['response_id'], 'usage': _usage(result)}
@@ -279,7 +301,7 @@ def _result(result, model, maximum):
 def _call(root, base, events, client, manifest, config, bundle, stage, role, revision,
           request, refresh, invocation_start, max_new_calls):
     _active(root, bundle, refresh)
-    prompt = instructions(bundle, role)
+    prompt = instructions(bundle, role, manifest)
     serialized = json.dumps(request, ensure_ascii=False)
     binding = store.digest({'fingerprint': manifest['fingerprint'], 'stage': stage, 'role': role,
                             'revision': revision, 'instructions': prompt, 'input': serialized})
@@ -291,10 +313,10 @@ def _call(root, base, events, client, manifest, config, bundle, stage, role, rev
         checkpoint = store.checked_yaml(root, completed[0]['response_path'])
         if checkpoint.get('binding') != binding:
             raise store.OfflineError('冻结输入、提示或响应绑定发生变化')
-        result = _result(checkpoint['result'], config['models'][role], config['budget']['max_output_chars'])
+        result = _result(checkpoint['result'], config['models'][role])
         if result['usage'] != completed[0].get('usage'):
             raise store.OfflineError('模型响应与用量账本不一致')
-        return _parse(result['text'])
+        return _parse(result['text'], advisory=results.enabled(manifest))
     finished = {event['reservation_id'] for event in events if event['type'] == 'call_completed'}
     if any(event['reservation_id'] not in finished for event in events if event['type'] == 'call_reserved'):
         raise store.OfflineError('存在结果未知的真实 Writing 请求，不自动重发')
@@ -308,18 +330,18 @@ def _call(root, base, events, client, manifest, config, bundle, stage, role, rev
     # matching. It never retries interrupted/unknown requests.
     result = client.infer(config['models'][role], prompt, serialized,
         max_output_chars=config['budget']['max_output_chars'], timeout_seconds=config['budget']['timeout_seconds'])
-    result = _result(result, config['models'][role], config['budget']['max_output_chars'])
+    result = _result(result, config['models'][role])
     path = '%s/checkpoints/%s.yaml' % (base, identity)
     sha = store.save_yaml(root, path, {'binding': binding, 'result': result})
     store.append_event(root, base, events, {'type': 'call_completed', 'reservation_id': identity,
         'stage': stage, 'role': role, 'revision': revision, 'model_id': result['model'],
         'response_path': path, 'response_sha256': sha, 'usage': result['usage'], 'at': shared.now()})
     _active(root, bundle, refresh)
-    # Deliberately ordinary JSON parsing: no repair of a real failed response.
-    return _parse(result['text'])
+    return _parse(result['text'], advisory=results.enabled(manifest))
 
 
 def verify_ledger(root, base, events, manifest, bundle):
+    advisory = results.enabled(manifest)
     reserved, completed, accepted, interrupted = {}, {}, {}, set()
     for event in events:
         kind = event.get('type')
@@ -336,10 +358,9 @@ def verify_ledger(root, base, events, manifest, bundle):
             writer, reviewer = '%s-writing-%s' % (stage, revision), '%s-review-%s' % (stage, revision)
             if writer not in completed or reviewer not in completed:
                 raise store.OfflineError('阶段缺少唯一生成及独立审阅')
-            candidate, review = completed[writer], completed[reviewer]
-            validate_candidate(candidate, bundle, stage)
-            if validate_review(candidate, review, bundle) != 'pass':
-                raise store.OfflineError('阶段独立审阅没有通过')
+            review = completed[reviewer]
+            candidate = candidate_for_review(completed[writer], bundle, stage, manifest)
+            candidate = candidate_with_review(candidate, review, bundle, manifest)
             path = '%s/stages/%s.yaml' % (base, stage)
             if event.get('result_path') != path or event.get('result_sha256') != store.digest(store.safe_path(root, path).read_bytes()):
                 raise store.OfflineError('阶段检查点路径或散列失配')
@@ -351,7 +372,7 @@ def verify_ledger(root, base, events, manifest, bundle):
             raise store.OfflineError('未知 Writing 账本事件')
         stage, role, revision = event.get('stage'), event.get('role'), event.get('revision')
         if (stage not in STAGES or role not in {'writing', 'review'} or type(revision) is not int
-                or not 0 <= revision <= manifest['budget']['max_revisions']):
+                or not 0 <= revision <= (0 if advisory else manifest['budget']['max_revisions'])):
             raise store.OfflineError('Writing 账本的阶段、角色或修订不合法')
         identity = '%s-%s-%s' % (stage, role, revision)
         if event.get('reservation_id') != identity or event.get('model_id') != manifest['models'][role]:
@@ -375,10 +396,10 @@ def verify_ledger(root, base, events, manifest, bundle):
             path = '%s/checkpoints/%s.yaml' % (base, identity)
             if identity not in reserved or identity in completed or event.get('response_path') != path:
                 raise store.OfflineError('Writing 完成记录缺少唯一前置预留')
-            result = _result(store.checked_yaml(root, path)['result'], manifest['models'][role], manifest['budget']['max_output_chars'])
+            result = _result(store.checked_yaml(root, path)['result'], manifest['models'][role])
             if (result['usage'] != event.get('usage') or event.get('response_sha256') != store.digest(store.safe_path(root, path).read_bytes())):
                 raise store.OfflineError('Writing 响应检查点与账本不一致')
-            completed[identity] = _parse(result['text'])
+            completed[identity] = _parse(result['text'], advisory=advisory)
     if len(reserved) > manifest['budget']['max_calls'] or any(
             sum(event['stage'] == stage for event in reserved.values()) > manifest['budget']['max_calls_per_stage'] for stage in STAGES):
         raise store.OfflineError('历史 Writing 请求超过已确认预算')
@@ -406,10 +427,14 @@ def render(stage, candidate, bundle, batch_id):
     labels = {'fact': '原文直接确认的事实', 'author_claim': '原作者声称，未经我们独立复现实验',
               'inference': '我们的推断', 'analogy': '解释性类比，非原文事实'}
     for section in candidate['sections']:
-        lines += ['## ' + section['heading'], '']
+        if section['heading']:
+            lines += ['## ' + section['heading'], '']
         for paragraph in section['paragraphs']:
             citations = '、'.join('[%s](%s)' % (key, posixpath.relpath(evidence[key]['path'], directory)) for key in paragraph['evidence_ids'])
-            lines += ['**%s**：%s（%s）' % (labels[paragraph['kind']], paragraph['text'], citations), '']
+            label = '待核实' if paragraph.get('evidence_warnings') else labels.get(paragraph['kind'])
+            prose = ('**%s**：' % label if label else '') + paragraph['text']
+            lines += [prose + ('（%s）' % citations if citations else ''), '']
+            lines.extend(results.warning_lines(paragraph))
     lines += ['## 来源与核验范围', '']
     for item in bundle['evidence']:
         formal = '[正式研究资料](%s)' % posixpath.relpath(item['path'], directory)
@@ -454,17 +479,10 @@ def run(root, approval_id, config_path=inputs.confirmation.DEFAULT_CONFIG, clien
     authorization, _ = shared.authorization(client, 'chatgpt_plan', {'research': config['models']['writing'], 'review': config['models']['review']})
     with shared.global_budget_lock(root), store.topic_lock(root, bundle['topic']):
         _active(root, bundle, refresh)
-        fingerprint = store.digest({'input_fingerprint': bundle['input_fingerprint'], 'models': config['models'],
-            'budget': config['budget'], 'authorization': authorization,
-            'writing_prompt': instructions(bundle, 'writing'), 'review_prompt': instructions(bundle, 'review')})
-        bound = {'schema_version': 1, 'mode': 'writing_member_test', 'backend': 'chatgpt_plan',
-            'topic': bundle['topic'], 'batch_id': batch_id, 'approval_id': approval_id,
-            'fingerprint': fingerprint, 'input_fingerprint': bundle['input_fingerprint'], 'models': config['models'],
-            'budget': config['budget'], 'authorization': authorization, 'confirmation_path': bundle['confirmation_path'],
-            'confirmation_sha256': bundle['confirmation_sha256'], 'publish_authorized': False}
         manifest_path = base + '/manifest.yaml'
         if store.safe_path(root, manifest_path).exists():
             manifest = store.checked_yaml(root, manifest_path)
+            bound = bound_manifest(bundle, authorization, manifest)
             if any(manifest.get(key) != value for key, value in bound.items()):
                 raise store.OfflineError('授权、证据、账户、模型或预算已变化，不能重置 Writing 批次')
             shared.verify_notes(root, manifest['protected_notes'])
@@ -473,8 +491,11 @@ def run(root, approval_id, config_path=inputs.confirmation.DEFAULT_CONFIG, clien
                 previous = store.checked_yaml(root, target.relative_to(root))
                 if previous.get('backend') == 'chatgpt_plan' and previous.get('approval_id') == approval_id:
                     raise store.OfflineError('本确认已有稳定 Writing 批次，不能换批次重置请求预算')
-            manifest = dict(bound, created_at=shared.now(), protected_notes=shared.notes_snapshot(root))
+            policy = {'result_policy': results.POLICY}
+            manifest = dict(bound_manifest(bundle, authorization, policy),
+                            created_at=shared.now(), protected_notes=shared.notes_snapshot(root))
             store.save_yaml(root, manifest_path, manifest)
+        advisory = results.enabled(manifest)
         events = store.read_events(root, base)
         invocation_start = sum(event['type'] == 'call_reserved' for event in events)
         accepted, stages, status, outputs = {}, {}, 'test_accepted', {}
@@ -483,7 +504,7 @@ def run(root, approval_id, config_path=inputs.confirmation.DEFAULT_CONFIG, clien
                 raise store.OfflineError('存在结果未知的真实 Writing 请求，不自动重发')
             for stage in STAGES:
                 candidate, review = None, None
-                for revision in range(config['budget']['max_revisions'] + 1):
+                for revision in range(1 if advisory else config['budget']['max_revisions'] + 1):
                     done = any(event['type'] == 'call_completed' and event['reservation_id'] == '%s-writing-%s' % (stage, revision) for event in events)
                     if not done:
                         _room(root, config, events, stage, 2, invocation_start, max_new_calls)
@@ -492,15 +513,16 @@ def run(root, approval_id, config_path=inputs.confirmation.DEFAULT_CONFIG, clien
                         request.update(previous_candidate=candidate, previous_review=review)
                     candidate = _call(root, base, events, client, manifest, config, bundle, stage, 'writing', revision,
                         request, refresh, invocation_start, max_new_calls)
-                    validate_candidate(candidate, bundle, stage)
+                    candidate = candidate_for_review(candidate, bundle, stage, manifest)
                     review = _call(root, base, events, client, manifest, config, bundle, stage, 'review', revision,
                         dict(request, candidate=candidate), refresh, invocation_start, max_new_calls)
-                    if validate_review(candidate, review, bundle) != 'revise':
+                    if advisory or validate_review(candidate, review, bundle) != 'revise':
                         break
-                if review['decision'] != 'pass':
+                if not advisory and review['decision'] != 'pass':
                     status = {'revise': 'revision_required', 'reject': 'rejected', 'blocked': 'blocked'}[review['decision']]
                     stages[stage] = {'status': status, 'revision_count': revision}
                     break
+                candidate = candidate_with_review(candidate, review, bundle, manifest)
                 accepted[stage] = candidate
                 _active(root, bundle, refresh)
                 path = '%s/stages/%s.yaml' % (base, stage)

@@ -12,6 +12,7 @@ from urllib.parse import quote, urlsplit
 import yaml
 
 import offline as store
+from writing_results import warning_lines
 
 
 VERSION = 'writing-v2'
@@ -119,6 +120,8 @@ def render(stage, candidate, bundle, batch_id, notice):
 
     lines = ['---', yaml.safe_dump(metadata, allow_unicode=True, sort_keys=False).rstrip(),
              '---', '', notice, '', '# ' + candidate['title'], '']
+    if not candidate['sections'] and candidate.get('summary'):
+        lines += [candidate['summary'], '']
     for section in candidate['sections']:
         if section['heading']:
             lines += ['## ' + section['heading'], '']
@@ -129,6 +132,7 @@ def render(stage, candidate, bundle, batch_id, notice):
                 marks = '、'.join('[%s](%s)' % (number, references[number - 1][1]) for number in numbers)
                 text += '〔' + marks + '〕'
             lines += [text, '']
+            lines.extend(warning_lines(paragraph))
     limits = list(dict.fromkeys(item.strip() for item in candidate['limitations'] if item.strip()))
     if limits:
         lines += ['阅读范围：' + '；'.join(limits), '']

@@ -113,7 +113,7 @@ class ResearchDepth(unittest.TestCase):
         def natural_scope(result):
             result.clear()
             result.update(detailed_response())
-            result['limitations'] = ['已阅读提供的完整抽取文本，未独立复现实验。']
+            result['limitations'] = ['已阅读提供的完整抽取文本，未独立运行代码或复现实验。']
 
         self.client.research_mutator = natural_scope
         result = self.run_batch('natural-scope')
@@ -135,22 +135,34 @@ class ResearchDepth(unittest.TestCase):
         self.assertEqual(result['completed_calls'], 2)
         self.assertIn('S0、S1 与 S2', self.client.calls[1]['payload']['candidate']['claims'][1]['text'])
 
-    def test_prose_structure_and_internal_reference_leaks_are_checked(self):
+    def test_prose_structure_and_characters_do_not_block_independent_review(self):
+        def freeform(result):
+            result.clear()
+            result.update(detailed_response())
+            result['summary'] += ' 原文将一种变体标为 [A1]。'
+            result['claims'] = [{'kind': 'author_claim',
+                                 'text': '作者给出[实现地址](https://example.org/implementation)。[^note]',
+                                 'evidence_ids': ['A1']}]
+            result['limitations'] = ['结论来自提供的材料，实验由原作者完成。']
+
+        self.client.research_mutator = freeform
+        result = self.run_batch('freeform')
+        self.assertEqual(result['items'][0]['status'], 'test_accepted')
+        self.assertEqual(result['completed_calls'], 2)
+        self.assertIn('[A1]', self.client.calls[1]['payload']['candidate']['summary'])
+        self.assertIn('[^note]', (self.root / result['items'][0]['report_path']).read_text())
+
+    def test_research_still_needs_supporting_evidence_and_full_text(self):
         candidate = {'evidence': {'coverage': 'full_text', 'locators': [{'id': 'A1'}]}}
         valid = detailed_response()
-        batch.validate_research(candidate, valid, 'research-batch-v4')
-        terse = deepcopy(valid)
-        terse['claims'] = terse['claims'][:3]
-        with self.assertRaises(store.OfflineError):
-            batch.validate_research(candidate, terse, 'research-batch-v4')
-        for field in ('summary', 'text'):
-            leaked = deepcopy(valid)
-            if field == 'summary':
-                leaked[field] += ' 详见 [A1]。'
-            else:
-                leaked['claims'][0][field] += ' [^source]'
-            with self.assertRaises(store.OfflineError):
-                batch.validate_research(candidate, leaked, 'research-batch-v4')
+        batch.validate_research(candidate, valid, 'research-batch-v6')
+        invalid = deepcopy(valid)
+        invalid['claims'][0]['evidence_ids'] = ['A99']
+        with self.assertRaisesRegex(store.OfflineError, '主张引用缺失证据'):
+            batch.validate_research(candidate, invalid, 'research-batch-v6')
+        candidate['evidence']['coverage'] = 'excerpt'
+        with self.assertRaisesRegex(store.OfflineError, '需要完整原文'):
+            batch.validate_research(candidate, valid, 'research-batch-v6')
 
 
 if __name__ == '__main__':

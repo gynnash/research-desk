@@ -799,8 +799,8 @@ class GitHubScheduleTest(unittest.TestCase):
         github = setup.GitHubSetup(workbench.REPOSITORY)
         workflow = workbench.REPOSITORY / '.github/workflows/researchdesk-manual.yml'
         source = workflow.read_text(encoding='utf-8')
-        updated = source.replace("cron: '0 19 * * 1,4'", "cron: '35 9 * * 1,4'").replace(
-            "timezone: 'UTC'", "timezone: 'America/New_York'")
+        updated = source.replace("cron: '0 9 * * 1'", "cron: '35 9 * * 1,4'").replace(
+            "timezone: 'Asia/Shanghai'", "timezone: 'America/New_York'")
         target = ('fixture/workbench', {'researchdesk-manual.yml': 'active'})
         sha = 'a' * 40
         with (mock.patch.object(github, '_deployment_target', return_value=target),

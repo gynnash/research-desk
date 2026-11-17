@@ -22,7 +22,7 @@ class ArchivedFormalCycle(unittest.TestCase):
     def setUp(self):
         batch_fixtures.ConfigDrivenResearchBatch.setUp(self)
 
-    def run_archived_cycle(self, presentation=None):
+    def run_archived_cycle(self, presentation=None, require_full_text=False):
         class CombinedClient(FakeInsightClient):
             def infer(self, model, instructions, input_text, **limits):
                 if 'evidence' not in json.loads(input_text):
@@ -30,6 +30,8 @@ class ArchivedFormalCycle(unittest.TestCase):
                 return super().infer(model, instructions, input_text, **limits)
 
         client = CombinedClient()
+        if require_full_text:
+            client.review_decisions = ['reject', 'reject']
         def scope(result):
             if 'evidence' not in client.calls[-1]['payload']:
                 result['limitations'] = ['已阅读虚构抽取全文，未独立复现实验。']
@@ -37,6 +39,8 @@ class ArchivedFormalCycle(unittest.TestCase):
                 result['coverage_note'] = 'R1读取虚构抽取正文，历史材料采集于6月与10月，未经本轮原文复核。'
                 result['report']['comparisons'][1]['evidence_ids'] = ['R1']
                 result['report']['limitations'] = ['给定历史窗口只覆盖已有资料，不代表行业趋势。']
+                if require_full_text:
+                    result['report']['comparisons'][0]['evidence_ids'] = ['R999']
         client.research_mutator = scope
         fetcher = fulltext_fixtures.FulltextFetcher()
         for number, day in enumerate(('2026-06-01', '2026-10-01'), 1):
@@ -63,6 +67,8 @@ class ArchivedFormalCycle(unittest.TestCase):
             'history': {'lookback_days': 180, 'max_documents': 30}}
         if presentation:
             config['presentation'] = presentation
+        if require_full_text:
+            config['reading']['mode'] = 'full_text_required'
         path = self.root / 'config/cycles/custom-topic.yaml'
         path.parent.mkdir()
         path.write_text(yaml.safe_dump(config, sort_keys=False))
@@ -90,9 +96,10 @@ class ArchivedFormalCycle(unittest.TestCase):
                           datetime.fromisoformat(receipt['window_start'])).days, 60)
         base = 'reports/test/custom-topic/cycles/' + identifier
         child = store.checked_yaml(self.root, base + '/configs/insight.yaml')
-        self.assertEqual(child['prompts']['version'], 'insight-v5' if presentation else 'insight-v4')
+        self.assertEqual(child['prompts']['version'], 'insight-v7' if require_full_text else
+                         'insight-v5' if presentation else 'insight-v4')
         self.assertEqual(store.checked_yaml(self.root, base + '/configs/research.yaml')['prompts']['version'],
-                         'research-batch-v3' if presentation else 'research-batch-v2')
+                         'research-batch-v7' if require_full_text else 'research-batch-v3' if presentation else 'research-batch-v2')
         research_calls = [call['payload'] for call in client.calls if 'evidence' not in call['payload']]
         self.assertEqual(research_calls[0]['coverage'], 'full_text')
         self.assertEqual(research_calls[0], {key: value for key, value in research_calls[1].items() if key != 'candidate'})
@@ -127,6 +134,9 @@ class ArchivedFormalCycle(unittest.TestCase):
         if not presentation:
             self.assertIn('跨度 122 天', synthesis)
         self.assertIn('## 资料来源与阅读范围' if presentation else '## 历史覆盖', synthesis)
+        if require_full_text:
+            self.assertIn('无法支持该结论', synthesis)
+            self.assertIn('审阅结论：reject', synthesis)
         source_cards = [content for relative, content in plan['files'].items() if relative.startswith('sources/papers/')]
         self.assertEqual(len(source_cards), 1)
         self.assertIn('单篇详细研究', source_cards[0])
@@ -137,6 +147,9 @@ class ArchivedFormalCycle(unittest.TestCase):
         self.assertEqual(receipt, frozen)
 
         return plan, accepted, identifier, client, fetcher
+
+    def test_required_full_text_admits_advisory_results_without_requiring_pass(self):
+        self.run_archived_cycle(presentation='technical_article', require_full_text=True)
 
     def test_offline_admission_links_replay_and_tamper_protection(self):
         plan, accepted, identifier, client, fetcher = self.run_archived_cycle()

@@ -8,18 +8,94 @@ written by this module. The caller controls the model's eventual reading scope.
 import hashlib
 from io import BytesIO
 import re
+import unicodedata
 from urllib.parse import urlsplit
 
-from sources import ARXIV_ID, SourceError, _Document, _clean, validate_url
+from sources import ARXIV_ID, SourceError, SourceResponseTooLarge, _Document, _clean, validate_url
 
 
 MAX_EXTRACT_CHARS = 500_000
 MAX_PDF_PAGES = 500
 MIN_FULLTEXT_CHARS = 160
+PAPER_READING_LEGACY = 'arxiv-fulltext-v1'
+PAPER_READING_NORMALIZED = 'arxiv-fulltext-v2'
+_HTML_BACK_MATTER = {
+    'ltx_bibliography': 'References',
+    'ltx_acknowledgements': 'Acknowledgments',
+    'ltx_acknowledgments': 'Acknowledgments',
+    'ltx_appendix': 'Appendix',
+}
+
+
+class PaperInputTooLarge(SourceError):
+    """The paper exceeded a source, extraction, archive, or model input bound."""
 
 
 class _IdentityError(SourceError):
     """A response explicitly identifies a different paper or version."""
+
+
+def _back_matter_heading(title):
+    title = unicodedata.normalize('NFKC', title).strip()
+    title = re.sub(r'\s+\(continued\)$', '', title, flags=re.I)
+    title = re.sub(r'^\d+(?:\.\d+)*[.)]?\s+', '', title).rstrip(':：.')
+    if re.fullmatch(r'references(?:\s+and\s+(?:bibliography|notes))?|(?:literature\s+)?cited\s+references|'
+                    r'bibliography|works cited|references cited|参考文献', title, re.I):
+        return 'references'
+    if re.fullmatch(r'acknowledg(?:e)?ments?(?:\s+and\s+funding)?|致谢|鸣谢', title, re.I):
+        return 'acknowledgments'
+    if re.fullmatch(r'(?:appendix|appendices)(?:\s+.*|[:.–—].*)?|'
+                    r'supplementary (?:material|materials|information)|附录.*', title, re.I):
+        return 'appendix'
+    return None
+
+
+def _lettered_pdf_appendix(title, allow_bare_letter=False):
+    if len(title.split()) > 12 or title.endswith(('.', ';', '?', '!')):
+        return False
+    if allow_bare_letter and re.fullmatch(r'A\s+[A-Z].*', title):
+        return True
+    return bool(re.fullmatch(r'(?:[A-Z](?:\.\d+)+[.)]?|[A-Z][.)])\s+[A-Z].*', title))
+
+
+def _paper_body_heading(title):
+    title = re.sub(r'^\d+(?:\.\d+)*[.)]?\s+', '', title).rstrip(':')
+    return bool(re.fullmatch(r'(?:abstract|introduction|background|related work|materials and methods|'
+                             r'methods?|methodology|experiments?|evaluation|results?(?: and discussion)?|'
+                             r'discussion|conclusions?|limitations)', title, re.I))
+
+
+def paper_body_sections(document):
+    """Project the research body while retaining the original extracted locations."""
+    structural = set(document.get('back_matter_sections', []))
+    kept = []
+    pdf_back_matter, pdf_body_started, pdf_body_ended = None, False, False
+    for section in document['sections']:
+        kind = _back_matter_heading(section['title'])
+        if document['format'] == 'pdf':
+            if pdf_back_matter in {'references', 'appendix'}:
+                continue
+            body_heading = _paper_body_heading(section['title'])
+            if pdf_body_started and _lettered_pdf_appendix(section['title'], allow_bare_letter=pdf_body_ended):
+                kind = 'appendix'
+            if kind:
+                pdf_back_matter = kind
+            elif body_heading:
+                pdf_back_matter = None
+                pdf_body_started = pdf_body_started or section['title'].casefold() != 'abstract'
+                if re.fullmatch(r'(?:\d+(?:\.\d+)*[.)]?\s+)?conclusions?:?', section['title'], re.I):
+                    pdf_body_ended = True
+            # Acknowledgments can also sit between independently recognized
+            # numbered body sections. References and appendices can contain
+            # numbered entries which split into sections during PDF extraction.
+            elif pdf_back_matter == 'acknowledgments' and re.match(r'^\d', section['title']):
+                pdf_back_matter = None
+            if pdf_back_matter is not None:
+                continue
+        elif kind or section['id'] in structural:
+            continue
+        kept.append(section)
+    return kept
 
 
 def _identity(record):
@@ -81,7 +157,7 @@ def _result(sections, fmt, coverage, url, attempts, limitations):
         raise SourceError('Full-text extraction produced no readable sections')
     total = sum(len(section['text']) for section in sections)
     if total > MAX_EXTRACT_CHARS:
-        raise SourceError('Extracted text exceeds the bounded extraction limit; no partial text accepted')
+        raise PaperInputTooLarge('Extracted text exceeds the bounded extraction limit; no partial text accepted')
     return {'sections': sections, 'format': fmt, 'coverage': coverage,
             'source_url': url, 'attempts': attempts, 'text_sha256': _digest(sections),
             'total_chars': total, 'limitations': limitations,
@@ -91,7 +167,7 @@ def _result(sections, fmt, coverage, url, attempts, limitations):
                                  if fmt == 'pdf' else 'parsed source abstract only')}
 
 
-def _html_sections(response, url, base, version):
+def _html_sections(response, url, base, version, legacy=False):
     _check_response(response, url, base, version, 'html')
     if response.get('content_type', 'text/html') not in {'text/html', 'application/xhtml+xml'}:
         raise SourceError('Official HTML response has an unexpected Content-Type')
@@ -107,7 +183,9 @@ def _html_sections(response, url, base, version):
     roots = [node for node in doc.nodes if node.has_class('ltx_document')]
     if len(roots) != 1:
         raise SourceError('Official HTML lacks one unambiguous LaTeXML document')
-    sections, current, chunks = [], {'title': 'Front matter', 'location': url}, []
+    sections, back_matter, chunks = [], [], []
+    current, total = {'title': 'Front matter', 'location': url}, 0
+    back_matter_level = None
     excluded = {'script', 'style', 'noscript', 'nav', 'footer', 'form', 'svg'}
     blocks = {'p', 'div', 'section', 'article', 'li', 'dt', 'dd', 'tr', 'figure', 'figcaption', 'pre'}
     skipped_classes = {'ltx_page_navbar', 'ltx_page_footer', 'ltx_page_header', 'ltx_TOC'}
@@ -135,31 +213,66 @@ def _html_sections(response, url, base, version):
             return ''
         return ' '.join(inline(child) for child in node.children)
 
-    def flush():
+    def flush(in_back_matter=False):
+        nonlocal total
         text = '\n\n'.join(_clean(part) for part in ''.join(chunks).split('\n') if _clean(part))
         if text:
             sections.append({'id': 'S%d' % (len(sections) + 1), 'title': current['title'],
                              'text': text, 'location': current['location']})
-            if sum(len(item['text']) for item in sections) > MAX_EXTRACT_CHARS:
-                raise SourceError('Extracted HTML exceeds the bounded extraction limit')
+            if in_back_matter or back_matter_level is not None:
+                back_matter.append(sections[-1]['id'])
+            total += len(text)
+            if total > MAX_EXTRACT_CHARS:
+                raise PaperInputTooLarge('Extracted HTML exceeds the bounded extraction limit')
         chunks.clear()
 
-    def visit(node):
-        nonlocal current
+    def location(node):
+        while node is not None and not node.attrs.get('id'):
+            node = node.parent
+        return url + ('#' + node.attrs['id'] if node is not None else '')
+
+    def is_heading(node):
+        return re.fullmatch(r'h[1-6]', node.tag) or node.has_class('ltx_title')
+
+    def back_matter_label(node):
+        label = next((title for token, title in _HTML_BACK_MATTER.items() if node.has_class(token)), None)
+        if label:
+            return label
+        if node.tag == 'section' or node.has_class('ltx_section') or node.has_class('ltx_subsection'):
+            heading = next((child for child in node.children if not isinstance(child, str)
+                            and visible(child) and is_heading(child)), None)
+            if heading is not None:
+                title = _clean(inline(heading))
+                if _back_matter_heading(title):
+                    return title
+        return None
+
+    def visit(node, in_back_matter=False):
+        nonlocal current, back_matter_level
         if isinstance(node, str):
             chunks.append(node)
             return
         if not visible(node):
             return
-        if re.fullmatch(r'h[1-6]', node.tag) or node.has_class('ltx_title'):
+        if not legacy and not in_back_matter:
+            label = back_matter_label(node)
+            if label:
+                flush()
+                previous = current
+                current = {'title': label, 'location': location(node)}
+                visit(node, in_back_matter=True)
+                flush(in_back_matter=True)
+                current = previous
+                return
+        if is_heading(node):
             title = _clean(inline(node))
             if title:
-                flush()
-                ancestor = node
-                while ancestor is not None and not ancestor.attrs.get('id'):
-                    ancestor = ancestor.parent
-                anchor = ancestor.attrs.get('id') if ancestor is not None else None
-                current = {'title': title, 'location': url + ('#' + anchor if anchor else '')}
+                flush(in_back_matter)
+                if not legacy and not in_back_matter:
+                    level = int(node.tag[1]) if re.fullmatch(r'h[1-6]', node.tag) else 2
+                    if back_matter_level is None or level <= back_matter_level:
+                        back_matter_level = level if _back_matter_heading(title) else None
+                current = {'title': title, 'location': location(node)}
             return
         if node.tag == 'math':
             chunks.append(' ' + inline(node) + ' ')
@@ -169,7 +282,7 @@ def _html_sections(response, url, base, version):
         if node.tag == 'br':
             chunks.append('\n')
         for child in node.children:
-            visit(child)
+            visit(child, in_back_matter)
         if node.tag in blocks:
             chunks.append('\n')
 
@@ -182,17 +295,17 @@ def _html_sections(response, url, base, version):
     if (not body_sections or not any(len(node.text()) >= MIN_FULLTEXT_CHARS for node in body_sections)
             or sum(len(s['text']) for s in sections) < MIN_FULLTEXT_CHARS):
         raise SourceError('Official HTML has no sufficient readable paper body')
-    return sections, 'full_text', ['Text extraction does not verify figures, layout, or faithful mathematical rendering.']
+    return sections, 'full_text', ['Text extraction does not verify figures, layout, or faithful mathematical rendering.'], back_matter
 
 
-def _pdf_sections(response, url, base, version):
+def _pdf_sections(response, url, base, version, legacy=False):
     _check_response(response, url, base, version, 'pdf')
     raw = response.get('body')
     if (response.get('content_type', 'application/pdf') != 'application/pdf'
             or not isinstance(raw, bytes) or not raw.startswith(b'%PDF-')):
         raise SourceError('Official PDF response is not a PDF document')
     if len(raw) > 20_000_000:
-        raise SourceError('Official PDF exceeds the bounded download limit')
+        raise PaperInputTooLarge('Official PDF exceeds the bounded download limit')
     try:
         from pypdf import PdfReader
     except ImportError as exc:
@@ -201,13 +314,19 @@ def _pdf_sections(response, url, base, version):
         reader = PdfReader(BytesIO(raw), strict=False)
         if reader.is_encrypted:
             raise SourceError('Encrypted PDF is not supported')
-        if not 0 < len(reader.pages) <= MAX_PDF_PAGES:
-            raise SourceError('PDF exceeds the bounded page limit or has no pages')
+        if len(reader.pages) > MAX_PDF_PAGES:
+            raise PaperInputTooLarge('PDF exceeds the bounded page limit')
+        if not reader.pages:
+            raise SourceError('PDF has no pages')
         sections, empty_pages, total, previous_heading = [], [], 0, None
 
         def heading(line):
             # PDF has no reliable semantic DOM. Split only standalone, short
             # conventional titles; otherwise retain explicit page locations.
+            if not legacy and len(line) <= 160 and (
+                    _back_matter_heading(line) or _paper_body_heading(line)
+                    or _lettered_pdf_appendix(line, allow_bare_letter=True)):
+                return True
             if len(line) > 160 or len(line.split()) > 18 or line.endswith(('.', ';', '?')):
                 return False
             return bool(re.fullmatch(r'\d+(?:\.\d+)*[.)]?\s+[A-Z][^\n]*', line)
@@ -224,12 +343,13 @@ def _pdf_sections(response, url, base, version):
             lines = [_clean(line) for line in text.splitlines() if _clean(line)]
             text = '\n'.join(lines)
             readable = '\n'.join(line for line in lines if not re.match(r'^arxiv:', line, re.I))
-            if len(re.findall(r'[A-Za-z\u3400-\u9fff]', readable)) < 30:
+            if (len(re.findall(r'[A-Za-z\u3400-\u9fff]', readable)) < 30
+                    and (legacy or not any(_back_matter_heading(line) for line in lines))):
                 empty_pages.append(number)
                 continue
             total += len(text)
             if total > MAX_EXTRACT_CHARS:
-                raise SourceError('Extracted PDF exceeds the bounded extraction limit')
+                raise PaperInputTooLarge('Extracted PDF exceeds the bounded extraction limit')
             title = previous_heading + ' (continued)' if previous_heading else 'Page %d' % number
             segment = []
 
@@ -260,10 +380,10 @@ def _pdf_sections(response, url, base, version):
                    'Column order, equations, figures, and layout may be imperfect.']
     if empty_pages:
         limitations.append('No text extracted from PDF pages: ' + ', '.join(map(str, empty_pages)))
-    return sections, 'excerpt' if empty_pages else 'full_text', limitations
+    return sections, 'excerpt' if empty_pages else 'full_text', limitations, []
 
 
-def acquire_paper(record, fetcher, expected_format=None, require_full=False):
+def acquire_paper(record, fetcher, expected_format=None, require_full=False, legacy=False):
     """Get official HTML, then PDF, otherwise the already parsed abstract.
 
     ``expected_format`` replays a previously bound input. A failed full-text
@@ -276,7 +396,7 @@ def acquire_paper(record, fetcher, expected_format=None, require_full=False):
         raise SourceError('Full text is required; an abstract-only binding cannot be used')
     base, version = _identity(record)
     abstract_url = 'https://arxiv.org/abs/' + base + version
-    attempts = []
+    attempts, size_error, other_error = [], None, False
     formats = [expected_format] if expected_format else ['html', 'pdf']
     for fmt in formats:
         if fmt == 'abstract':
@@ -286,12 +406,14 @@ def acquire_paper(record, fetcher, expected_format=None, require_full=False):
             if fmt == 'pdf' and not callable(getattr(fetcher, 'fetch_pdf', None)):
                 raise SourceError('Transport does not support bounded PDF fetching')
             response = fetcher.fetch(url) if fmt == 'html' else fetcher.fetch_pdf(url)
-            sections, coverage, limitations = (_html_sections(response, url, base, version) if fmt == 'html'
-                                                else _pdf_sections(response, url, base, version))
+            extract = _html_sections if fmt == 'html' else _pdf_sections
+            sections, coverage, limitations, back_matter = extract(response, url, base, version, legacy=legacy)
             if require_full and coverage != 'full_text':
                 raise SourceError('Full text is required; one or more PDF pages have no readable text')
             attempts.append({'format': fmt, 'url': url, 'status': 'success', 'reason': 'extracted'})
             result = _result(sections, fmt, coverage, url, attempts, limitations)
+            if back_matter:
+                result['back_matter_sections'] = back_matter
             result['http'] = {key: response[key] for key in (
                 'url', 'requested_url', 'content_type', 'fetched_at', 'sha256') if key in response}
             return result
@@ -299,10 +421,19 @@ def acquire_paper(record, fetcher, expected_format=None, require_full=False):
             raise
         except SourceError as exc:
             attempts.append({'format': fmt, 'url': url, 'status': 'failed', 'reason': str(exc)[:240]})
+            is_size = isinstance(exc, (PaperInputTooLarge, SourceResponseTooLarge))
+            if not legacy and is_size:
+                size_error = exc
+            elif not re.fullmatch(r'Public source HTTP (?:404|410)', str(exc)):
+                other_error = True
             if expected_format:
+                if not legacy and is_size:
+                    raise PaperInputTooLarge(str(exc)) from exc
                 raise SourceError('Pinned %s extraction failed: %s' % (fmt, str(exc))) from exc
-    if require_full:
+    if require_full or size_error:
         reasons = '; '.join('%s: %s' % (attempt['format'], attempt['reason']) for attempt in attempts)
+        if size_error and not other_error:
+            raise PaperInputTooLarge('Paper exceeds acquisition limits: ' + reasons) from size_error
         raise SourceError('Full text required; official HTML/PDF unavailable: ' + reasons)
     abstract = _clean(record.get('body_text', ''))
     if len(abstract) < 30:

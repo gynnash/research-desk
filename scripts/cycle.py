@@ -18,6 +18,7 @@ import batch_inputs as common
 import batch as research
 import insight
 import cycle_discovery as discovery
+from fulltext import PaperInputTooLarge
 from sources import SafeFetcher, SourceError
 
 
@@ -105,10 +106,11 @@ def load_config(root, path, snapshot=None):
         common.positive(config['history']['lookback_days'], 90, 180, 'history.lookback_days')
     common.positive(config['history']['max_documents'], 1,
                     40 if 'lookback_days' in config['history'] else 10, 'max_documents')
-    common.fields(config['discovery'], {'max_candidates', 'max_documents', 'max_per_source', 'evidence_max_chars', 'sources'}, '资料发现')
-    expanded = config['window'].get('mode') == 'rolling'
-    for key, bounds in {'max_candidates': (1,100 if expanded else 20), 'max_documents': (1,5),
-                        'max_per_source': (1,5 if expanded else 2), 'evidence_max_chars': (200,10000)}.items():
+    limits = discovery.discovery_limits(config['window'].get('mode') == 'rolling')
+    if 'max_per_kind' in config['discovery']:
+        limits['max_per_kind'] = (1, 5)
+    common.fields(config['discovery'], set(limits) | {'sources'}, '资料发现')
+    for key, bounds in limits.items():
         common.positive(config['discovery'][key], *bounds, key)
     sources = config['discovery']['sources']
     if not isinstance(sources, list) or not 1 <= len(sources) <= 12:
@@ -254,7 +256,7 @@ class CycleFetcher:
         return dict(self.responses[url])
 
 
-def plan_candidates(root, config, cycle_id, snapshot, fetcher):
+def plan_candidates(root, config, cycle_id, snapshot, fetcher, collection_base=None):
     base = base_path(config, cycle_id)
     path = base + '/selection.yaml'
     if store.safe_path(root,path).exists():
@@ -266,7 +268,7 @@ def plan_candidates(root, config, cycle_id, snapshot, fetcher):
             if pending_path.parent.name != cycle_id:
                 pool += [item for item in store.checked_yaml(root,pending_path.relative_to(root)).get('items',[]) if item.get('source')]
     pool += snapshot['candidates'] + [item for item in snapshot.get('deferred',[]) if item.get('source')
-        and (not rolling or item.get('reason') in {'per_source_limit', 'cycle_document_limit'})]
+        and (not rolling or item.get('reason') in {'per_source_limit', 'cycle_document_limit', 'per_kind_limit'})]
     # Prefer the newest discovery for a stable identity. Otherwise an old
     # version left in a previous pending list could hide every later update.
     latest = {}
@@ -282,10 +284,10 @@ def plan_candidates(root, config, cycle_id, snapshot, fetcher):
                   and discovery._instant(snapshot['window_start']) <= discovery._instant(item['published_at'])
                       < discovery._instant(snapshot['window_end'])}
         if 'selection' in config:
-            latest = dict(sorted(latest.items(), key=lambda pair: (
-                -pair[1].get('attention', {}).get('community_attention_score', 0),
-                pair[1].get('published_at', ''), pair[0])))
-    selected, skipped, pending, per_source, seen = [], [], [], {}, set()
+            latest = dict(sorted(latest.items(), key=lambda pair: discovery.attention_order(pair[1])))
+    selected, skipped, pending, per_source, per_kind, seen = [], [], [], {}, {}, set()
+    limits = config['discovery']
+    kind_limit = limits.get('max_per_kind', limits['max_documents'])
     child_config = {'topic':config['topic']}
     for item in list(latest.values())[:1000]:
         source = dict(item['source'])
@@ -305,14 +307,24 @@ def plan_candidates(root, config, cycle_id, snapshot, fetcher):
             source.update(reading={'mode': 'full_text_required'},
                           evidence_max_chars=config['reading'].get('blog_max_chars', 200000))
         item = dict(item, source=source)
-        if len(selected)>=config['discovery']['max_documents'] or per_source.get(per_source_key,0)>=config['discovery']['max_per_source']:
+        kind = source['kind']
+        if (len(selected) >= limits['max_documents'] or per_source.get(per_source_key, 0) >= limits['max_per_source']
+                or per_kind.get(kind, 0) >= kind_limit):
             pending.append(dict(item,reason='cycle_capacity'))
             continue
         try:
-            candidate, _ = common.fetch_candidate(root,child_config,source,fetcher)
+            if collection_base and kind == 'paper':
+                from archive import check_size
+                capture = {}
+                candidate, material = common.fetch_candidate(root, child_config, source, fetcher, capture=capture)
+                check_size(collection_base, candidate, material, source, capture)
+            else:
+                candidate, _ = common.fetch_candidate(root, child_config, source, fetcher)
             action = research.classify(root,'reports/test/%s/research-batches/%s'%(config['topic'],cycle_id),candidate,'chatgpt_plan',seen)
+        except PaperInputTooLarge:
+            skipped.append({'source': source, 'action': 'skipped', 'reason': research.PAPER_INPUT_SKIP})
+            continue
         except Exception as exc:
-            from sources import SourceError
             details = {'error_reason': str(exc)[:600]} if isinstance(exc, SourceError) else {}
             pending.append(dict(item,reason='preflight_source_failed',error_type=type(exc).__name__, **details))
             continue
@@ -321,9 +333,17 @@ def plan_candidates(root, config, cycle_id, snapshot, fetcher):
             continue
         selected.append(item)
         per_source[per_source_key]=per_source.get(per_source_key,0)+1
+        per_kind[kind] = per_kind.get(kind, 0) + 1
     result={'candidates':selected,'skipped':skipped,'pending':pending}
     store.save_yaml(root,path,result)
     return result
+
+
+def _source_failures(snapshot, selection):
+    failed_discovery = sum(source.get('status') == 'failed' or bool(source.get('error_types'))
+                           for source in snapshot.get('source_status', []))
+    failed_preflight = sum(item.get('reason') == 'preflight_source_failed' for item in selection.get('pending', []))
+    return failed_discovery + failed_preflight
 
 
 def collect_originals(root, config_path, cycle_id, fetcher=None, fail_after=None):
@@ -361,10 +381,10 @@ def collect_originals(root, config_path, cycle_id, fetcher=None, fail_after=None
                 or config.get('reading', {}).get('mode') != 'full_text_required'
                 or config.get('window', {}).get('mode') != 'rolling'):
             raise store.OfflineError('旧轮次未绑定完整原文采集策略，不能重新解释')
-        selection = (store.checked_yaml(root, base + '/selection.yaml') if previous is not None
-                     else plan_candidates(root, config, cycle_id, snapshot, transport))
         batch_base = 'reports/test/%s/research-batches/%s' % (config['topic'], cycle_id)
         collection_base = 'collection/%s/%s' % (config['topic'], cycle_id)
+        selection = (store.checked_yaml(root, base + '/selection.yaml') if previous is not None
+                     else plan_candidates(root, config, cycle_id, snapshot, transport, collection_base=collection_base))
         records, output_hashes, seen = [], {}, set()
         for item in selection['candidates']:
             source = item['source']
@@ -415,6 +435,12 @@ def collect_originals(root, config_path, cycle_id, fetcher=None, fail_after=None
             'writing_started': False, 'production_accepted': False, 'publish_authorized': False,
             'input_hashes': {path: store.digest(store.safe_path(root, path).read_bytes()) for path in inputs},
             'output_hashes': output_hashes}
+        skipped_papers = sum(item.get('reason') == research.PAPER_INPUT_SKIP for item in selection.get('skipped', []))
+        source_failures = _source_failures(snapshot, selection)
+        if skipped_papers:
+            receipt['skipped_papers'] = skipped_papers
+        if source_failures and (previous is None or 'source_failures' in previous):
+            receipt['source_failures'] = source_failures
         # The collection index points to this authoritative receipt, avoiding a
         # circular index/receipt hash. Old completed batches keep their exact
         # receipts and layout rather than being silently migrated on replay.
@@ -463,7 +489,8 @@ def run(root, config_path, cycle_id, client=None, fetcher=None, fail_after=None)
         input_hashes[base+'/selection.yaml']=store.digest((root/base/'selection.yaml').read_bytes())
         results, outputs, pending = {}, {}, list(snapshot.get('deferred', [])) + selection['pending']
         candidates = selection['candidates']
-        status = {'complete': 'no_new', 'failed': 'discovery_failed'}.get(snapshot.get('status'), 'partial')
+        source_failed = snapshot.get('status') == 'failed' or bool(_source_failures(snapshot, selection))
+        status = 'discovery_failed' if source_failed else 'no_new'
         if candidates:
             history_path = base + '/history.yaml'
             if store.safe_path(root, history_path).exists():
@@ -485,17 +512,26 @@ def run(root, config_path, cycle_id, client=None, fetcher=None, fail_after=None)
                 budget = config['budget']
                 monthly_cap = research.membership_monthly_limit(root) or 10
                 per_item = budget.get('max_calls_per_item', 4)
+                research_path = base + '/configs/research.yaml'
+                if config.get('reading', {}).get('mode') == 'full_text_required':
+                    version = research.ADVISORY_PROMPT
+                    frozen_config = store.safe_path(root, research_path)
+                    if frozen_config.exists():
+                        previous = store.load_yaml(frozen_config).get('prompts', {}).get('version')
+                        if previous in research.SECTIONED_PROMPT_VERSIONS:
+                            version = previous
+                elif config.get('presentation') == 'technical_article':
+                    version = 'research-batch-v3'
+                else:
+                    version = 'research-batch-v2' if 'reading' in config else 'research-batch-v1'
                 research_cfg = {'schema_version':1, 'mode':'research_batch_test', 'backend':'chatgpt_plan',
                     'topic':config['topic'], 'topics_file':config['topics_file'],
                     'models':{'research':config['models']['research'], 'review':config['models']['review']},
                     'budget':{'max_documents':len(candidates), 'max_calls_per_item':per_item,
                         'max_calls_per_batch':min(budget['research_max_calls'],len(candidates)*per_item,monthly_cap), 'month_max_calls':monthly_cap,
                         **{key:budget[key] for key in ('max_input_chars','max_output_chars','timeout_seconds','max_revisions')}},
-                    'prompts':{'version':'research-batch-v4' if config.get('reading', {}).get('mode') == 'full_text_required' else
-                                        'research-batch-v3' if config.get('presentation') == 'technical_article' else
-                                        'research-batch-v2' if 'reading' in config else 'research-batch-v1'},
+                    'prompts':{'version':version},
                     'sources':[item['source'] for item in candidates]}
-                research_path = base + '/configs/research.yaml'
                 store.save_yaml(root, research_path, research_cfg)
                 result_path = base + '/research-result.yaml'
                 if store.safe_path(root, result_path).exists():
@@ -528,7 +564,7 @@ def run(root, config_path, cycle_id, client=None, fetcher=None, fail_after=None)
                     raise store.SimulatedInterruption('Research已保存；同轮补跑只继续Insight')
                 keys = [item['key'] for item in research_result['items'] if item['status']=='test_accepted']
                 for item in research_result['items']:
-                    if item['status'] not in {'test_accepted','duplicate','rejected','reject','revise'}:
+                    if item['status'] not in {'test_accepted','duplicate','rejected','reject','revise','skipped'}:
                         source = next(candidate for candidate in candidates if candidate['source']['id']==item['key'])
                         pending.append(dict(source, reason=item.get('reason',item['status'])))
                 insight_limit = min(budget['insight_max_calls'],
@@ -539,7 +575,7 @@ def run(root, config_path, cycle_id, client=None, fetcher=None, fail_after=None)
                         'topics_file':config['topics_file'],'models':{'generation':config['models']['insight'],'review':config['models']['review']},
                         'budget':{'max_calls':insight_limit,'month_max_calls':monthly_cap,
                                   **{key:budget[key] for key in ('max_input_chars','max_output_chars','timeout_seconds','max_revisions')}},
-                        'prompts':{'version':'insight-v6' if config.get('reading', {}).get('mode') == 'full_text_required' else
+                        'prompts':{'version':insight.inputs.ADVISORY_PROMPT if config.get('reading', {}).get('mode') == 'full_text_required' else
                                             'insight-v5' if config.get('presentation') == 'technical_article' else
                                             'insight-v4' if 'lookback_days' in config['history'] else
                                             'insight-v3' if 'reading' in config else 'insight-v2'},
@@ -552,7 +588,7 @@ def run(root, config_path, cycle_id, client=None, fetcher=None, fail_after=None)
                         # still rejects changes to any other bound input.
                         previous = store.checked_yaml(root, insight_path)
                         version = previous.get('prompts', {}).get('version')
-                        if version not in {'insight-v1', 'insight-v2', 'insight-v3', 'insight-v4', 'insight-v5', 'insight-v6'}:
+                        if version not in insight.inputs.PROMPT_VERSIONS:
                             raise store.OfflineError('已有 Insight 配置的提示词版本无效')
                         insight_cfg['prompts']['version'] = version
                     store.save_yaml(root, insight_path, insight_cfg)
@@ -568,9 +604,13 @@ def run(root, config_path, cycle_id, client=None, fetcher=None, fail_after=None)
                     if (root/child_receipt).is_file():input_hashes[child_receipt]=store.digest((root/child_receipt).read_bytes())
                     outputs=insight_result.get('output_hashes',{})
                     status='completed' if insight_result['status']=='test_accepted' else 'insight_blocked'
-                    if status=='completed' and snapshot.get('status')!='complete':status='partial'
+                    if status == 'completed' and source_failed:
+                        status = 'partial'
                 else:
-                    status='insight_blocked' if keys else 'no_accepted_research'
+                    if keys:
+                        status = 'insight_blocked'
+                    elif research_result['status'] != 'skipped':
+                        status = 'no_accepted_research'
         research.verify_notes(root, manifest['protected_notes'])
         store.save_yaml(root,base+'/pending.yaml',{'items':pending})
         receipt={'schema_version':1,'mode':'research_cycle_test','backend':'chatgpt_plan','topic':config['topic'],
@@ -617,7 +657,8 @@ def main():
         print('研究轮次停止：'+type(exc).__name__,file=sys.stderr);return 2
     print(yaml.safe_dump(result,allow_unicode=True,sort_keys=False))
     if args.command == 'collect':
-        return 0 if result['discovery_status'] != 'failed' else 1
+        return 1 if result['discovery_status'] == 'failed' or (
+            result['status'] == 'empty' and result.get('source_failures')) else 0
     return 0 if result.get('status') in {'completed','no_new','partial','complete'} else 1
 
 

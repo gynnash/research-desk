@@ -5,6 +5,7 @@ Only the orchestrator persists the returned snapshot. A single public listing
 is a bounded observation, never a claim that an entire publisher was scanned.
 """
 
+from collections import Counter
 from datetime import datetime, timezone
 from pathlib import Path
 import re
@@ -23,6 +24,19 @@ DEFAULT_ENTRIES = {
     'letta': 'https://www.letta.com/blog/',
     'langchain': 'https://www.langchain.com/blog',
 }
+ATTENTION_FALLBACK_REASONS = {'attention_below_minimum', 'attention_unknown'}
+
+
+def discovery_limits(rolling):
+    return {'max_candidates': (1, 100 if rolling else 20),
+            'max_documents': (1, 10 if rolling else 5),
+            'max_per_source': (1, 5 if rolling else 2),
+            'evidence_max_chars': (200, 10000)}
+
+
+def attention_order(item):
+    score = item.get('attention', {}).get('community_attention_score')
+    return score is None, -(score or 0), item.get('published_at', ''), item['source']['id']
 
 
 def _instant(value):
@@ -249,7 +263,7 @@ def discover(root, config, cycle_id, fetcher=None):
 
     ``config`` supplies topic/topics_file, window_start/window_end, and a
     ``discovery`` mapping with max_candidates, max_documents, max_per_source,
-    evidence_max_chars and optional sources [{id, adapter, entry_url}].
+    evidence_max_chars, optional max_per_kind and sources [{id, adapter, entry_url}].
     No dates, cursors, candidates or credentials are written by this function.
     """
     root = Path(root).resolve()
@@ -261,8 +275,9 @@ def discover(root, config, cycle_id, fetcher=None):
     if start >= end:
         raise store.OfflineError('Cycle 时间窗必须递增')
     rolling = config.get('window', {}).get('mode') == 'rolling'
-    bounds = {'max_candidates': (1, 100 if rolling else 20), 'max_documents': (1, 5),
-              'max_per_source': (1, 5 if rolling else 2), 'evidence_max_chars': (200, 10000)}
+    bounds = discovery_limits(rolling)
+    if 'max_per_kind' in limits:
+        bounds['max_per_kind'] = (1, 5)
     values = {}
     for key, (low, high) in bounds.items():
         value = limits.get(key, 6000 if key == 'evidence_max_chars' else None)
@@ -473,40 +488,43 @@ def discover(root, config, cycle_id, fetcher=None):
             status.update(status='failed', complete_window=False)
             status['error_types'].append(type(exc).__name__)
             status['error_type'] = type(exc).__name__
-    # Source order is deliberate: one paper and one publisher by default. Each
-    # source sorts by newest explicit publication/update, with URL as a tie-break.
+    groups = [[item for item in eligible if item['source_id'] == key] for key in source_ids]
     attention_summary = None
     if 'selection' in config:
         from attention import rank_candidates
         # Alternate publishers before applying a shared lookup budget.
-        groups = [[item for item in eligible if item['source_id'] == key] for key in source_ids]
         from itertools import zip_longest
         balanced = [item for row in zip_longest(*groups) for item in row if item is not None]
         ranked, attention_summary = rank_candidates(balanced, fetcher, config['selection'],
                                                     start.isoformat(), end.isoformat())
-        deferred.extend(attention_summary.pop('deferred'))
-        counts = {}
-        for item in ranked:
-            source_id = item['source_id']
-            if counts.get(source_id, 0) >= values['max_per_source']:
-                deferred.append(dict(item, reason='per_source_limit'))
-            elif len(candidates) >= values['max_documents']:
-                deferred.append(dict(item, reason='cycle_document_limit'))
+        fallbacks = []
+        for item in attention_summary.pop('deferred'):
+            if 'max_per_kind' in values and item['reason'] in ATTENTION_FALLBACK_REASONS:
+                fallback = dict(item)
+                fallback['attention_fallback_reason'] = fallback.pop('reason')
+                fallbacks.append(fallback)
             else:
-                candidates.append(item)
-                counts[source_id] = counts.get(source_id, 0) + 1
-                next(s for s in statuses if s['id'] == source_id)['selected'] += 1
-    for source_id in source_ids if 'selection' not in config else []:
-        items = [item for item in eligible if item['source_id'] == source_id]
-        items.sort(key=lambda item: (item.get('upstream_updated_at') or item['published_at'], item['url']), reverse=True)
-        for index, item in enumerate(items):
-            if index >= values['max_per_source']:
-                deferred.append(dict(item, reason='per_source_limit'))
-            elif len(candidates) >= values['max_documents']:
-                deferred.append(dict(item, reason='cycle_document_limit'))
-            else:
-                candidates.append(item)
-                next(status for status in statuses if status['id'] == source_id)['selected'] += 1
+                deferred.append(item)
+        ranked.extend(sorted(fallbacks, key=attention_order))
+    else:
+        ranked = [item for group in groups for item in sorted(group, key=lambda item: (
+            item.get('upstream_updated_at') or item['published_at'], item['url']), reverse=True)]
+    source_status = {status['id']: status for status in statuses}
+    per_kind = Counter()
+    kind_limit = values.get('max_per_kind', values['max_documents'])
+    for item in ranked:
+        status = source_status[item['source_id']]
+        kind = item['kind']
+        if status['selected'] >= values['max_per_source']:
+            deferred.append(dict(item, reason='per_source_limit'))
+        elif len(candidates) >= values['max_documents']:
+            deferred.append(dict(item, reason='cycle_document_limit'))
+        elif per_kind[kind] >= kind_limit:
+            deferred.append(dict(item, reason='per_kind_limit'))
+        else:
+            candidates.append(item)
+            status['selected'] += 1
+            per_kind[kind] += 1
     failures = [status for status in statuses if status['status'] == 'failed']
     state = ('failed' if len(failures) == len(statuses) else 'partial' if failures or any(
         status['status'] == 'truncated' for status in statuses) else 'complete')

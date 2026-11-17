@@ -32,7 +32,7 @@ PYTHONPATH=tests python3 -B -m unittest test_codex_adapter test_codex_inputs tes
 
 新入口读取本人生成的 `config/local/codex-insight.yaml`，公开字段可参考[示例](../config/examples/codex-insight.yaml)。`insight --config config/local/codex-insight.yaml --cycle-id <已完成逐篇研究的批次>` 会读取该批在 `summary/<主题>/` 下的总结及其原文与通过回执。没有本批资料时返回 `empty`，未安装 SDK 或不支持当前隔离平台时返回 `blocked`。原始通过结果新增到 `insights/test/<主题>/<批次>/report.md`、`articles/test/<主题>/<批次>/topic-N.md`，候选、准确性审阅和回执在 `reports/test/<主题>/codex-insight/<批次>/`。
 
-真实且已通过独立准确性审阅的结果可以零模型调用正式准入；模拟结果不能准入：
+真实结果凭保存的运行证明完成正式准入，准入步骤消耗零模型调用。
 
 ```sh
 python3 -B scripts/insight_admission.py admit --topic agent_memory --cycle-id '<已通过审阅的批次>'
@@ -68,7 +68,7 @@ python3 -B scripts/cycle.py collect --config config/cycles/default.yaml --cycle-
 python3 -B scripts/research.py --cycle-id agent-memory-manual-001
 ```
 
-只有独立审阅通过的详细总结会新增到 `summary/<主题>/`。预算、失败补跑与人工修改保护见[Research 说明](research.md)；该入口不执行 Insight 或 Writing。
+整体结构可读的总结会新增到 `summary/<主题>/`，缺失或不支持结论的证据在对应段落标注。预算、失败补跑与人工修改保护详见[Research 说明](research.md)。
 
 知乎来源先按[官方 API 接入说明](zhihu-api.md)验证本人凭证、额度和搜索候选。该独立客户端不运行模型、不自动保存资料；搜索摘要不能直接进入全文研究批次。
 
@@ -88,13 +88,13 @@ gh workflow run researchdesk-manual.yml --ref main -f operation=health
 gh workflow run researchdesk-manual.yml --ref main -f operation=run -f cycle_id=agent-memory-manual-001
 ```
 
-`health` 只检查授权、模型和 SDK 环境，不推理；`collect` 只获取原文；`run` 串联采集、逐篇 Research 和 SDK Insight。设置 `admission.enabled: true` 后，真实 Insight 审阅通过即新增正式报告、选题和准入证明，并与原文、总结、test 检查点一同回存；关闭时仍留在测试区。研究任务不启动 Writing，也不发布公众号。
+`health` 检查授权、模型和 SDK 环境，`collect` 获取原文，`run` 串联采集、逐篇 Research 和 SDK Insight。设置 `admission.enabled: true` 后，真实 Insight 凭运行证明新增正式报告、选题和准入记录，并回存原文、总结和检查点。写作仍从人工确认的选题启动。
 
 全文模式只研究完整可用正文。论文使用固定版本官方 HTML 或 PDF；博客提取公开主文。获取失败、正文不完整或超预算时跳过，获取记录说明原因。研究正文采用连贯技术文章，证据关联与审阅记录单独保存。
 
 ## 定时与恢复
 
-用户 YAML 的 `automation.enabled` 默认 `false`。GitHub 工作流初始时段为每周二、周五北京时间 03:00。通过 `./setup` 的「定时研究」创建日程，可以选择星期、时间和时区。GitHub 保存触发时间，Mac 使用本地配置执行对应批次。
+用户 YAML 的 `automation.enabled` 默认 `false`。GitHub 工作流初始时段为每周一北京时间 09:00。通过 `./setup` 的「定时研究」创建日程，可以选择星期、时间和时区。GitHub 保存触发时间，Mac 使用本地配置执行对应批次。
 
 每次新运行自动合并系统默认和用户覆盖；本地用户文件与本地已修改的系统文件直接生效。系统文件未手改时，会安全加载 GitHub 最新 `main` 的系统配置，不拉取覆盖人工笔记。运行中的批次固定快照；未完成旧批次遇到配置变化会停止混用。更换解释器、runner 身份或安装路径时需要重新执行 `start`。
 
@@ -121,9 +121,9 @@ python3 scripts/confirmation.py serve --open-browser
 
 确认页面的独立 Git checkout 只绑定持久工作台路径，从原工作台读取私有设置，不复制 OAuth 或要求兼容 YAML 进入 Git。新版 Writing Actions 使用执行器绑定的同一工作台和解释器；云端回存只接收本次已确认任务的证据及审阅检查点，并再次核对确认、撤回状态与内容散列。
 
-Writing 生成大纲、初稿和候选稿，每阶段独立审阅。文风在本地统一 YAML 的 `writing_style` 配置，工具生成 `config/writing_style.md`；用户可在确认时补充真实经历与判断。未提供的个人经历不会自行编造。
+Writing 生成大纲、初稿和候选稿，每阶段保留独立审阅意见并提示证据缺口。文风可在本地 `writing_style` 配置调整，用户可在确认选题时补充真实经历与判断。
 
-已有三阶段结果通过后，可使用已保存的确认 ID 正式准入，不重新生成：
+三阶段结果已保存时，可使用确认 ID 复用检查点进行正式准入。
 
 ```sh
 python3 scripts/writing_admission.py run --approval-id '<真实确认 ID>'

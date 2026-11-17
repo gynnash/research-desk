@@ -16,9 +16,9 @@ codex:
   auth_source: researchdesk_siwc
   max_requests_per_task: 100  # Actual upstream requests, including retries/failures.
   timeout_seconds: 240
-review_policy: accuracy_only
+review_policy: advisory_review
 prompts:
-  version: codex-insight-v2
+  version: codex-insight-v3
 history:
   lookback_days: 180
 generation:

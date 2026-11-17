@@ -278,14 +278,13 @@ class RealMemberWriting(unittest.TestCase):
         self.assertEqual(self.hashes(), after)
         self.assert_test_only(before)
 
-    def test_rejected_review_produces_no_markdown_artifacts(self):
+    def test_review_rejection_is_advisory_and_keeps_markdown_artifacts(self):
         record = self.confirm()
         self.client.decisions[('outline', 0)] = 'reject'
         result = self.run_writing(record)
-        self.assertEqual(result['status'], 'rejected')
-        self.assertEqual(len(self.client.calls), 2)
-        self.assertFalse(result['output_hashes'])
-        self.assert_no_articles()
+        self.assertEqual(result['status'], 'test_accepted')
+        self.assertEqual(len(self.client.calls), 6)
+        self.assertEqual(len(result['output_hashes']), 3)
         self.assert_original_unchanged()
 
     def test_v2_author_opening_is_frozen_reviewed_and_replayed(self):
@@ -329,16 +328,15 @@ class RealMemberWriting(unittest.TestCase):
         self.assertEqual(len(self.client.calls), 6)
         self.assert_original_unchanged()
 
-    def test_one_revision_is_bounded_and_reuses_explicit_review_feedback(self):
+    def test_review_revision_suggestion_does_not_trigger_extra_calls(self):
         record = self.confirm()
         self.client.decisions[('outline', 0)] = 'revise'
         result = self.run_writing(record, max_new_calls=8)
         self.assertEqual(result['status'], 'test_accepted')
-        self.assertEqual(len(self.client.calls), 8)
+        self.assertEqual(len(self.client.calls), 6)
         outline = [call for call in self.client.calls if call['stage'] == 'outline']
-        self.assertEqual([call['revision'] for call in outline], [0, 0, 1, 1])
-        self.assertIn('previous_review', outline[2]['request'])
-        self.assertEqual(result['stages']['outline']['revision_count'], 1)
+        self.assertEqual([call['revision'] for call in outline], [0, 0])
+        self.assertEqual(result['stages']['outline']['revision_count'], 0)
         self.assert_original_unchanged()
 
     def test_shared_100_call_budget_includes_research_insight_and_unknown_reservations(self):

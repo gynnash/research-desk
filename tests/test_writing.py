@@ -146,7 +146,7 @@ class OfflineWritingLoop(unittest.TestCase):
 
     def assert_ledger_attack_stopped(self):
         self.assert_blocked()
-        self.assertEqual(len(self.client.calls), 8)
+        self.assertEqual(len(self.client.calls), 6)
         self.assertFalse(any(self.articles().glob('*.md')))
 
     def test_manifest_cannot_change_bound_fields_while_retaining_fingerprint(self):
@@ -238,7 +238,7 @@ class OfflineWritingLoop(unittest.TestCase):
         articles = {path: path.read_bytes() for path in self.articles().glob('*.md')}
         self.assert_blocked()
         self.assertEqual(receipt.read_bytes(), before)
-        self.assertEqual(len(self.client.calls), 8)
+        self.assertEqual(len(self.client.calls), 6)
         for path, payload in articles.items():
             self.assertEqual(path.read_bytes(), payload)
 
@@ -265,9 +265,9 @@ class OfflineWritingLoop(unittest.TestCase):
         self.assertIs(result['real_topic_approved'], False)
         self.assertIs(result['production_accepted'], False)
         self.assertIs(result['publish_authorized'], False)
-        self.assertEqual(len(self.client.calls), 8)
+        self.assertEqual(len(self.client.calls), 6)
         self.assertEqual([call['model'] for call in self.client.calls],
-                         ['mock-writer', 'mock-reviewer'] * 4)
+                         ['mock-writer', 'mock-reviewer'] * 3)
         self.assert_unique_calls()
         for name in ('outline', 'draft', 'candidate'):
             path = self.articles() / (name + '.md')
@@ -314,7 +314,7 @@ class OfflineWritingLoop(unittest.TestCase):
         before = {path: path.read_bytes() for path in self.articles().glob('*.md')}
         self.writing().revoke_fixture_confirmation(self.root, self.config_path, '模拟撤回，保留已有测试稿。')
         self.assert_blocked()
-        self.assertEqual(len(self.client.calls), 8)
+        self.assertEqual(len(self.client.calls), 6)
         for path, payload in before.items():
             self.assertEqual(path.read_bytes(), payload)
 
@@ -353,11 +353,11 @@ class OfflineWritingLoop(unittest.TestCase):
         original = copy.deepcopy(self.config)
         self.config['models']['writing'] = 'mock-another-writer'
         self.assert_blocked()
-        self.assertEqual(len(self.client.calls), 8)
+        self.assertEqual(len(self.client.calls), 6)
         self.config = copy.deepcopy(original)
         self.config['budget']['max_calls'] = 10
         self.assert_blocked()
-        self.assertEqual(len(self.client.calls), 8)
+        self.assertEqual(len(self.client.calls), 6)
 
     def test_same_writer_and_reviewer_models_cannot_start(self):
         self.config['models']['review'] = self.config['models']['writing']
@@ -402,7 +402,7 @@ class OfflineWritingLoop(unittest.TestCase):
         first = self.run_writing()
         second = self.run_writing()
         self.assertEqual(first['status'], second['status'])
-        self.assertEqual(len(self.client.calls), 8)
+        self.assertEqual(len(self.client.calls), 6)
         self.assert_unique_calls()
 
     def test_default_fixture_backend_needs_no_membership_client(self):
@@ -411,7 +411,7 @@ class OfflineWritingLoop(unittest.TestCase):
             result = self.writing().run(self.root, self.config_path, 'default-mock', client=None)
         self.assertEqual(result['backend'], 'mock')
         self.assertEqual(result['status'], 'test_accepted')
-        self.assertEqual(result['completed_calls'], 8)
+        self.assertEqual(result['completed_calls'], 6)
         self.assertEqual(self.client.calls, [])
 
     def test_each_controlled_interruption_resumes_without_duplicate_requests(self):
@@ -423,7 +423,7 @@ class OfflineWritingLoop(unittest.TestCase):
         self.assertTrue(any(event['type'] == 'stage_accepted' and event['stage'] == 'outline'
                             for event in events))
         self.run_writing()
-        self.assertEqual(len(self.client.calls), 8)
+        self.assertEqual(len(self.client.calls), 6)
         self.assert_unique_calls()
 
     def test_interruption_after_review_resumes_without_new_review_requests(self):
@@ -431,7 +431,7 @@ class OfflineWritingLoop(unittest.TestCase):
         with self.assertRaises(store.SimulatedInterruption):
             self.run_writing(fail_after='after_review')
         self.run_writing()
-        self.assertEqual(len(self.client.calls), 8)
+        self.assertEqual(len(self.client.calls), 6)
         self.assert_unique_calls()
 
     def test_interruption_after_first_output_preserves_written_output(self):
@@ -443,7 +443,7 @@ class OfflineWritingLoop(unittest.TestCase):
         self.run_writing()
         for path, payload in existing.items():
             self.assertEqual(path.read_bytes(), payload)
-        self.assertEqual(len(self.client.calls), 8)
+        self.assertEqual(len(self.client.calls), 6)
         self.assert_unique_calls()
 
     def test_unknown_mock_request_outcome_is_reserved_and_never_reissued(self):
@@ -458,88 +458,121 @@ class OfflineWritingLoop(unittest.TestCase):
         self.assert_blocked()
         self.assertEqual(len(self.client.calls), 1)
 
-    def test_unknown_paragraph_evidence_cannot_be_reviewed_or_published(self):
+    def test_unknown_paragraph_evidence_is_reported_without_stopping_article(self):
         self.confirm()
         self.client.generation_mutator = lambda stage, candidate: candidate['sections'][0]['paragraphs'][0].update(
             evidence_ids=['E999'])
-        self.assert_blocked()
-        self.assertEqual(len(self.client.calls), 1)
-        self.assertFalse((self.articles() / 'candidate.md').exists())
+        self.assertEqual(self.run_writing()['status'], 'test_accepted')
+        self.assertIn('引用无法在本次材料中找到', (self.articles() / 'candidate.md').read_text())
+        self.assertEqual(len(self.client.calls), 6)
 
-    def test_writer_cannot_return_approval_or_publication_authorization(self):
+    def test_writer_cannot_grant_approval_or_publication_authorization(self):
         self.confirm()
         self.client.generation_mutator = lambda stage, candidate: candidate.update(publish_authorized=True)
-        self.assert_blocked()
-        self.assertEqual(len(self.client.calls), 1)
+        result = self.run_writing()
+        self.assertEqual(result['status'], 'test_accepted')
+        self.assertFalse(result['publish_authorized'])
+        self.assertFalse(result['real_topic_approved'])
+        self.assertEqual(len(self.client.calls), 6)
 
-    def test_inference_evidence_cannot_be_relabelled_as_original_fact(self):
+    def test_inference_evidence_does_not_support_a_fact(self):
         self.confirm()
         self.client.generation_mutator = lambda stage, candidate: candidate['sections'][0]['paragraphs'][0].update(
             kind='fact', evidence_ids=['E3'])
-        self.assert_blocked()
-        self.assertEqual(len(self.client.calls), 1)
+        self.assertEqual(self.run_writing()['status'], 'test_accepted')
+        output = (self.articles() / 'candidate.md').read_text()
+        self.assertIn('证据引用未支持该结论', output)
+        self.assertIn('**待核实**', output)
 
-    def test_actual_response_must_respect_output_character_budget(self):
+    def test_response_over_character_target_reaches_independent_review(self):
         self.config['budget']['max_output_chars'] = 1000
         self.confirm()
-        self.client.generation_mutator = lambda stage, candidate: candidate.update(summary='x' * 2000)
-        self.assert_blocked()
-        self.assertEqual(len(self.client.calls), 1)
+        summary = '文章摘要。' * 1001
+        self.client.generation_mutator = lambda stage, candidate: candidate.update(summary=summary)
+        self.assertEqual(self.run_writing()['status'], 'test_accepted')
+        self.assertEqual(self.client.calls[1]['payload']['candidate']['summary'], summary)
+        self.assertTrue(self.run_writing()['cached'])
 
-    def test_review_must_check_every_paragraph(self):
+    def test_missed_review_check_is_reported_on_that_paragraph(self):
         self.confirm()
         self.client.review_mutator = lambda stage, review: review['checks'].pop()
-        self.assert_blocked()
-        self.assertEqual(len(self.client.calls), 2)
+        self.assertEqual(self.run_writing()['status'], 'test_accepted')
+        self.assertIn('引用对该结论的支持情况尚未核实', (self.articles() / 'candidate.md').read_text())
 
-    def test_blocking_issue_prevents_pass(self):
+    def test_blocking_issue_is_preserved_without_preventing_later_stages(self):
         self.confirm()
         self.client.review_mutator = lambda stage, review: review['issues'].append({
             'severity': 'blocking', 'location': 'sections.0', 'reason': '证据不支持这一段。',
             'suggestion': '删除或缩小主张。'})
-        self.assert_blocked()
-        self.assertEqual(len(self.client.calls), 2)
+        self.assertEqual(self.run_writing()['status'], 'test_accepted')
+        state = store.checked_yaml(self.root, self.directory().relative_to(self.root) / 'stages/outline.yaml')
+        self.assertEqual(state['review']['issues'][-1]['severity'], 'blocking')
 
-    def test_reject_does_not_start_later_stages(self):
+    def test_reject_review_does_not_block_later_stages(self):
         self.confirm()
         self.client.review_mutator = lambda stage, review: review.update(decision='reject')
-        self.assert_blocked()
-        self.assertEqual(len(self.client.calls), 2)
-        self.assertFalse((self.articles() / 'draft.md').exists())
-        self.assertFalse((self.articles() / 'candidate.md').exists())
+        self.assertEqual(self.run_writing()['status'], 'test_accepted')
+        self.assertEqual(len(self.client.calls), 6)
+        self.assertTrue((self.articles() / 'draft.md').exists())
+        self.assertTrue((self.articles() / 'candidate.md').exists())
 
-    def test_repeated_revision_request_stops_at_one_revision(self):
+    def test_revision_suggestion_does_not_trigger_an_extra_call(self):
         self.confirm()
         self.client.review_mutator = lambda stage, review: review.update(decision='revise')
-        self.assert_blocked()
-        self.assertEqual(len(self.client.calls), 4)
-        self.assertTrue(all(call['payload']['stage'] == 'outline' for call in self.client.calls))
+        self.assertEqual(self.run_writing()['status'], 'test_accepted')
+        self.assertEqual(len(self.client.calls), 6)
+        self.assertTrue(all(call['payload']['revision'] == 0 for call in self.client.calls))
         self.run_writing()
-        self.assertEqual(len(self.client.calls), 4)
+        self.assertEqual(len(self.client.calls), 6)
 
     def test_total_call_budget_stops_without_creating_partial_articles(self):
-        self.config['budget']['max_calls'] = 6
+        self.config['budget']['max_calls'] = 4
         self.confirm()
         self.assert_blocked()
-        self.assertLessEqual(len(self.client.calls), 6)
+        self.assertLessEqual(len(self.client.calls), 4)
         self.assertFalse(any(self.articles().glob('*.md')))
         before = len(self.client.calls)
         self.assert_blocked()
         self.assertEqual(len(self.client.calls), before)
 
-    def test_per_stage_budget_stops_before_unauthorized_revision(self):
+    def test_per_stage_budget_for_one_pair_is_sufficient(self):
         self.config['budget']['max_calls_per_stage'] = 2
         self.config['budget']['max_calls'] = 6
         self.confirm()
-        self.assert_blocked()
-        self.assertEqual(len(self.client.calls), 4)
-        self.assertFalse(any(call['payload']['stage'] == 'candidate' for call in self.client.calls))
+        self.assertEqual(self.run_writing()['status'], 'test_accepted')
+        self.assertEqual(len(self.client.calls), 6)
 
-    def test_zero_revision_policy_does_not_revise_rejected_draft(self):
+    def test_zero_revision_policy_keeps_review_as_information(self):
         self.config['budget']['max_revisions'] = 0
         self.confirm()
-        self.assert_blocked()
-        self.assertEqual(len(self.client.calls), 4)
+        self.assertEqual(self.run_writing()['status'], 'test_accepted')
+        self.assertEqual(len(self.client.calls), 6)
+
+    def test_readable_object_can_omit_fields_and_mix_supported_and_missing_evidence(self):
+        self.confirm()
+
+        def candidate_fields(stage, candidate):
+            candidate.clear()
+            candidate.update(title={'wrong': 'type'}, sections=[{'paragraphs': [
+                {'text': '缺少证据的段落。', 'kind': 'fact'},
+                {'text': '有引用但结论未获支持。', 'evidence_ids': 'E1'},
+                {'text': '仍可核实的段落。', 'kind': 'fact', 'evidence_ids': ['E1']}]}])
+
+        def review_fields(stage, review):
+            review.clear()
+            review.update(decision={'unrecognized': True}, checks=[
+                {'section_index': 0, 'paragraph_index': 1, 'verdict': 'unsupported'},
+                {'section_index': 0, 'paragraph_index': 2, 'verdict': 'supported', 'evidence_ids': ['E1']}])
+
+        self.client.generation_mutator = candidate_fields
+        self.client.review_mutator = review_fields
+        self.assertEqual(self.run_writing()['status'], 'test_accepted')
+        output = (self.articles() / 'candidate.md').read_text()
+        self.assertIn('没有提供可追溯的证据', output)
+        self.assertIn('证据引用未支持该结论', output)
+        self.assertIn('仍可核实的段落。', output)
+        self.assertIn(self.fixture['topic_card']['title'], output)
+        self.assertTrue(self.run_writing()['cached'])
 
     def test_config_escape_cross_topic_and_duplicate_yaml_are_rejected(self):
         original = copy.deepcopy(self.config)
@@ -614,7 +647,7 @@ class OfflineWritingLoop(unittest.TestCase):
         before = path.read_bytes()
         self.assert_blocked()
         self.assertEqual(path.read_bytes(), before)
-        self.assertEqual(len(self.client.calls), 8)
+        self.assertEqual(len(self.client.calls), 6)
 
     def test_preexisting_formal_and_test_notes_are_unchanged(self):
         self.confirm()

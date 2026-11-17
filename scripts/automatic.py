@@ -26,7 +26,8 @@ import schedule
 import workbench
 
 
-SUCCESS_STATUSES = {'healthy', 'skipped', 'cached', 'complete', 'collected', 'no_new', 'no_insight', 'empty'}
+SUCCESS_STATUSES = {'healthy', 'skipped', 'cached', 'complete', 'collected', 'no_new', 'no_insight', 'empty',
+                    'research_rejected', 'insight_rejected'}
 
 
 def _now():
@@ -192,12 +193,27 @@ def _model_budget_change(effective, context):
 
 def _compare_frozen_insight_defaults(effective, frozen):
     """Keep old batches on their pinned prompts after a default upgrade."""
-    if ('prompts' in frozen or effective['insight'].get('prompts')
-            != {'version': harness.CONCISE_PROMPT_VERSION}):
+    advertised = effective['insight'].get('prompts')
+    supported_previous = {
+        harness.CONCISE_PROMPT_VERSION: {None},
+        harness.ADVISORY_PROMPT_VERSION: {None, harness.LEGACY_PROMPT_VERSION, harness.CONCISE_PROMPT_VERSION},
+    }
+    version = advertised.get('version') if isinstance(advertised, dict) else None
+    frozen_prompts = frozen.get('prompts', {})
+    frozen_version = frozen_prompts.get('version') if isinstance(frozen_prompts, dict) else None
+    if frozen_version not in supported_previous.get(version, ()):
         return effective
     comparison = deepcopy(effective)
     insight = comparison['insight']
-    insight.pop('prompts')
+    if 'prompts' in frozen:
+        insight['prompts'] = deepcopy(frozen_prompts)
+    else:
+        insight.pop('prompts')
+    if insight.get('review_policy') == harness.ADVISORY_REVIEW:
+        if 'review_policy' in frozen:
+            insight['review_policy'] = frozen['review_policy']
+        else:
+            insight.pop('review_policy')
     frozen_targets = frozen.get('generation', {}).get('target_words')
     generation = insight.get('generation', {})
     if (frozen_targets == [3000, 4500]
@@ -381,8 +397,11 @@ def _run_topic(root, effective, identity, operation, publisher_context, collecto
         result['collection_count'] = len(collected.get('records', []))
         result['stages']['collection'] = {'status': collected['status'],
                                          'count': result['collection_count']}
+        for field in ('skipped_papers', 'source_failures'):
+            if collected.get(field):
+                result['stages']['collection'][field] = collected[field]
         if collected['status'] == 'empty':
-            incomplete = collected.get('discovery_status') not in (None, 'complete')
+            incomplete = bool(collected.get('source_failures')) or collected.get('discovery_status') == 'failed'
             return _finish(root, base, dict(result,
                 status='collection_incomplete' if incomplete else 'no_new', terminal=not incomplete))
         if collected['status'] != 'collected':
@@ -399,12 +418,15 @@ def _run_topic(root, effective, identity, operation, publisher_context, collecto
         result['research_reserved_calls'] = studied.get('reserved_calls')
         result['research_completed_calls'] = studied.get('completed_calls')
         finished_items = studied.get('items', [])
+        skipped_papers = sum(item.get('reason') == request_budget.PAPER_INPUT_SKIP for item in finished_items)
+        if skipped_papers:
+            result['stages']['research']['skipped_papers'] = skipped_papers
         max_revisions = context['research_config']['budget']['max_revisions']
         settled = bool(finished_items) and all(
-            item.get('status') in {'summarized', 'reject', 'rejected'}
-            or item.get('status') == 'revise' and item.get('revision_count') == max_revisions
-            for item in finished_items)
+            research.settled_item(item, max_revisions) for item in finished_items)
         if not result['summary_count']:
+            if settled and all(item.get('status') in {'skipped', 'duplicate'} for item in finished_items):
+                return _finish(root, base, dict(result, status='no_insight', terminal=True))
             return _finish(root, base, dict(result,
                 status='research_rejected' if settled else 'research_incomplete', terminal=settled))
         if studied['status'] != 'complete' and not settled:

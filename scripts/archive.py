@@ -132,7 +132,8 @@ def _validate(snapshot, candidate, source=None, config=None):
                 or document.get('coverage') not in {'full_text', 'excerpt', 'abstract_only'}
                 or document.get('attempts') != candidate.get('acquisition_attempts')):
             raise store.OfflineError('归档完整正文、获取记录或范围不一致')
-    evidence, material, content_hash = project_material(record, document, selected)
+    evidence, material, content_hash = project_material(
+        record, document, selected, reading_profile=candidate['evidence'].get('reading_profile'))
     if (evidence != candidate['evidence'] or content_hash != candidate['content_hash']
             or material != snapshot.get('material')
             or store.digest(material.encode()) != candidate['evidence'].get('evidence_sha256')):
@@ -212,15 +213,38 @@ def render_markdown(snapshot, formal=False):
     return '\n'.join(lines).rstrip() + '\n'
 
 
+def _snapshot(candidate, material, source, capture):
+    return {'schema_version': 1, 'mode': 'extracted_original', 'source': deepcopy(source),
+        'candidate': _without_archive(candidate), 'material': material,
+        'record': deepcopy(capture.get('record')), 'document': deepcopy(capture.get('document')),
+        'responses': deepcopy(capture.get('responses')),
+        'captured_at': datetime.now(timezone.utc).isoformat(timespec='microseconds')}
+
+
+def _serialized(snapshot, candidate, source, yaml_path):
+    _validate(snapshot, candidate, source=source)
+    payload = yaml.safe_dump(snapshot, allow_unicode=True, sort_keys=False).encode()
+    markdown = render_markdown(snapshot, formal=yaml_path.startswith('collection/')).encode()
+    if max(len(payload), len(markdown)) > MAX_BYTES:
+        if candidate['kind'] == 'paper':
+            from fulltext import PaperInputTooLarge
+            raise PaperInputTooLarge('Paper original exceeds the archive transfer size limit')
+        raise store.OfflineError('原文归档超过可传输文件上限')
+    return payload, markdown
+
+
+def check_size(base, candidate, material, source, capture):
+    """Check the bound on both archive files before freezing a collection selection."""
+    yaml_path, _ = _paths(candidate, base)
+    _serialized(_snapshot(candidate, material, source, capture), candidate, source, yaml_path)
+
+
 def save(root, base, candidate, material, source, capture):
     """Create both replay and reading views before the first model request."""
     if 'archive' in candidate:
         return load(root, candidate, source=source)[0]
     yaml_path, markdown_path = _paths(candidate, base)
-    snapshot = {'schema_version': 1, 'mode': 'extracted_original', 'source': deepcopy(source),
-        'candidate': _without_archive(candidate), 'material': material,
-        'record': deepcopy(capture.get('record')), 'document': deepcopy(capture.get('document')),
-        'responses': deepcopy(capture.get('responses')), 'captured_at': datetime.now(timezone.utc).isoformat()}
+    snapshot = _snapshot(candidate, material, source, capture)
     # Reuse an interrupted create-only snapshot, never replace its timestamp or
     # prose. Its candidate and source must still match before being adopted.
     target = store.safe_path(Path(root).resolve(), yaml_path)
@@ -231,11 +255,7 @@ def save(root, base, candidate, material, source, capture):
         # plan. Only the newly allocated UUID may differ on the next fetch.
         if dict(_without_archive(candidate), source_id=prior.get('source_id')) == prior:
             candidate = deepcopy(prior)
-    _validate(snapshot, candidate, source=source)
-    payload = yaml.safe_dump(snapshot, allow_unicode=True, sort_keys=False).encode()
-    markdown = render_markdown(snapshot, formal=yaml_path.startswith('collection/')).encode()
-    if max(len(payload), len(markdown)) > MAX_BYTES:
-        raise store.OfflineError('原文归档超过可传输文件上限')
+    payload, markdown = _serialized(snapshot, candidate, source, yaml_path)
     # This runs before the first Research/model request can be reserved.
     check_public_tokens(payload.decode('utf-8'))
     check_public_tokens(markdown.decode('utf-8'))

@@ -408,10 +408,12 @@ class InsightLoop(unittest.TestCase):
         self.assertIn('abstract_only', serialized)
         self.assertIn('excerpt', serialized)
 
-    def test_member_response_must_respect_configured_output_limit(self):
+    def test_member_response_over_character_target_can_be_reviewed_and_replayed(self):
         self.config['budget']['max_output_chars'] = 1000
-        self.assert_blocked()
-        self.assertEqual(len(self.client.calls), 1)
+        self.client.research_mutator = lambda result: result['report'].update(summary='研究发现。' * 1001)
+        self.assertEqual(self.run_insight()['status'], 'test_accepted')
+        self.assertTrue(self.run_insight()['cached'])
+        self.assertEqual(len(self.client.calls), 2)
 
     def test_completed_replay_spends_no_additional_calls(self):
         first = self.run_insight()
@@ -579,6 +581,31 @@ class InsightLoop(unittest.TestCase):
         self.run_insight()
         self.assertLessEqual(len(self.client.calls), 4)
 
+    def test_advisory_version_keeps_other_claims_when_review_rejects_one(self):
+        self.config['prompts']['version'] = 'insight-v7'
+        self.config['historical_inputs'] = []
+
+        def generation(value):
+            value['outcome'] = 1
+            value['report'].pop('title')
+            value['report']['comparisons'][0]['evidence_ids'] = ['R99']
+
+        def review(value):
+            value['decision'] = 'reject'
+            value['issues'] = [{'location': 'report.comparisons.0', 'evidence_status': 'unsupported',
+                                'reason': '该样本未支持这个判断。'}]
+
+        self.client.research_mutator = generation
+        self.client.review_mutator = review
+        result = self.run_insight()
+        self.assertEqual(result['status'], 'test_accepted')
+        self.assertEqual(result['review_decision'], 'reject')
+        self.assertEqual(result['completed_calls'], 2)
+        report = (self.root / result['outputs']['report']).read_text()
+        for phrase in ('博客节选描述持久记忆块', '所引证据未支持该结论', '该样本未支持这个判断'):
+            self.assertIn(phrase, report)
+        self.assertTrue(self.run_insight()['cached'])
+
     def test_two_call_budget_does_not_begin_a_revision(self):
         self.config['budget']['max_calls'] = 2
         self.client.review_decisions = ['revise', 'pass']
@@ -679,17 +706,17 @@ class InsightLoop(unittest.TestCase):
         self.assert_blocked()
         self.assertEqual(len(self.client.calls), 1)
 
-    def test_more_than_two_insights_is_rejected(self):
+    def test_more_than_two_insights_are_independently_reviewed(self):
         self.client.research_mutator = lambda result: result['insights'].extend(
             [copy.deepcopy(result['insights'][0]), copy.deepcopy(result['insights'][0])])
-        self.assert_blocked()
-        self.assertEqual(len(self.client.calls), 1)
+        self.assertEqual(len(self.run_insight()['outputs']['insights']), 3)
+        self.assertEqual(len(self.client.calls), 2)
 
-    def test_more_than_two_topic_cards_is_rejected(self):
+    def test_more_than_two_topic_cards_are_independently_reviewed(self):
         self.client.research_mutator = lambda result: result['topics'].extend(
             [copy.deepcopy(result['topics'][0]), copy.deepcopy(result['topics'][0])])
-        self.assert_blocked()
-        self.assertEqual(len(self.client.calls), 1)
+        self.assertEqual(len(self.run_insight()['outputs']['topics']), 3)
+        self.assertEqual(len(self.client.calls), 2)
 
     def test_unknown_claim_kind_is_rejected(self):
         self.client.research_mutator = lambda result: result['report']['comparisons'][0].update(kind='proven')

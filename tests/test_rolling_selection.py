@@ -10,6 +10,7 @@ from urllib.parse import parse_qs, urlsplit
 
 import yaml
 
+from test_blog_archive_discovery import article, feed
 import test_cycle as fixtures
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
@@ -122,6 +123,71 @@ class RollingSelectionAcceptance(unittest.TestCase):
         self.assertTrue(all(query['sortBy'] == ['submittedDate'] for query in queries))
         self.assertEqual(result['source_status'][0]['inspected'], 21)
         self.assertTrue(result['source_status'][0]['complete_window'])
+
+    def test_weekly_selection_fills_both_kind_quotas_and_backfills_from_same_kind(self):
+        config = copy.deepcopy(self.config)
+        config.update(window_start=START, window_end=END)
+        limits = config['discovery']
+        limits.update(max_documents=10, max_per_kind=5)
+        limits['sources'] = limits['sources'][:1]
+        responses = {}
+        for publisher in ('first', 'second'):
+            entry = f'https://www.letta.com/{publisher}.xml'
+            urls = [f'https://www.letta.com/blog/{publisher}-{index}/' for index in range(4)]
+            limits['sources'].append({'id': publisher, 'adapter': 'rss', 'entry_url': entry,
+                                      'publisher': publisher, 'allowed_hosts': ['www.letta.com']})
+            responses[entry] = ('application/rss+xml', feed(urls))
+            responses.update({url: ('text/html', article()) for url in urls})
+
+        class MixedFetcher(DiscoveryFetcher):
+            def fetch(self, url):
+                if url in responses:
+                    content_type, body = responses[url]
+                    return {'url': url, 'content_type': content_type, 'text': body}
+                return super().fetch(url)
+
+        def rank(items, *args):
+            ordered = sorted(items, key=lambda item: item['kind'])
+            ranked, deferred = [], []
+            for index, item in enumerate(ordered):
+                if 3 <= index < 8:
+                    score = 0 if index < 5 else None
+                    reason = 'attention_below_minimum' if score is not None else 'attention_unknown'
+                    deferred.append(dict(item, attention={'community_attention_score': score}, reason=reason))
+                else:
+                    ranked.append(dict(item, attention={'community_attention_score': len(ordered) - index}))
+            return ranked, {'status': 'partial', 'deferred': deferred}
+
+        fetcher = MixedFetcher([('2610.%05d' % value, '2026-10-15') for value in range(10000, 10006)])
+        with mock.patch('attention.rank_candidates', side_effect=lambda items, *args: (
+                sorted(items, key=lambda item: item['kind']), {'status': 'complete', 'deferred': []})):
+            full = REAL_DISCOVER(self.root, config, 'weekly-full', fetcher)
+        self.assertEqual([item['kind'] for item in full['candidates']], ['blog'] * 5 + ['paper'] * 5)
+        self.assertTrue(any(item['reason'] == 'per_kind_limit' for item in full['deferred']))
+
+        with mock.patch('attention.rank_candidates', side_effect=rank):
+            snapshot = REAL_DISCOVER(self.root, config, 'weekly', fetcher)
+        self.assertEqual([item['kind'] for item in snapshot['candidates']], ['blog'] * 3 + ['paper'] * 5 + ['blog'] * 2)
+        self.assertEqual([item.get('attention_fallback_reason') for item in snapshot['candidates'][-2:]],
+                         ['attention_below_minimum'] * 2)
+        replacement = next(item for item in snapshot['deferred']
+                           if item.get('attention_fallback_reason') == 'attention_unknown')
+        first = snapshot['candidates'][0]['source']['id']
+
+        def preflight(root, config, source, fetcher):
+            if source['id'] == first:
+                raise SourceError('Fixture article unavailable')
+            return {}, 'unused'
+
+        with mock.patch.object(self.cycle.common, 'fetch_candidate', side_effect=preflight), \
+                mock.patch.object(self.cycle.research, 'classify', return_value={'action': 'research'}):
+            plan = self.cycle.plan_candidates(self.root, config, 'weekly', snapshot, fetcher)
+        self.assertEqual([item['kind'] for item in plan['candidates']], ['blog'] * 2 + ['paper'] * 5 + ['blog'] * 3)
+        selected = {item['source']['id']: item for item in plan['candidates']}
+        self.assertNotIn(first, selected)
+        backfill = selected[replacement['source']['id']]
+        self.assertEqual(backfill['attention_fallback_reason'], 'attention_unknown')
+        self.assertIsNone(backfill['attention']['community_attention_score'])
 
     def test_global_attention_beats_publication_date_and_unknown_does_not_become_hot(self):
         config = copy.deepcopy(self.config)

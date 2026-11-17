@@ -310,9 +310,12 @@ def _verify_insight(root, context, topic, cycle):
             raise PublishError('insight_has_no_accepted_receipt')
         return
     receipt = _checked(root, base + 'accepted.yaml')
+    policy = receipt.get('review_policy')
+    advisory = policy == harness.ADVISORY_REVIEW
     if (receipt.get('topic') != topic or receipt.get('cycle_id') != cycle
             or receipt.get('status') not in {'complete', 'no_insight'}
-            or receipt.get('review_policy') != 'accuracy_only' or receipt.get('review_decision') != 'pass'
+            or policy not in ('accuracy_only', harness.ADVISORY_REVIEW)
+            or (not advisory and receipt.get('review_decision') != 'pass')
             or receipt.get('writing_started') is not False or receipt.get('production_accepted') is not False):
         raise PublishError('insight_receipt_invalid')
     hashes = receipt.get('input_hashes')
@@ -343,10 +346,10 @@ def _verify_insight(root, context, topic, cycle):
     # accepted receipt itself has a separate SHA marker in existing harnesses.
     candidate = _plain_yaml(root, base + 'candidate.yaml')
     review = _plain_yaml(root, base + 'review.yaml')
-    if review.get('policy') != 'accuracy_only' or review.get('candidate_sha256') != harness._sha(candidate):
+    if review.get('policy') != policy or review.get('candidate_sha256') != harness._sha(candidate):
         raise PublishError('insight_review_candidate_changed')
-    decision = harness._review(json.dumps(review.get('review'), ensure_ascii=False))
-    if decision.get('decision') != 'pass':
+    decision = harness._review(json.dumps(review.get('review'), ensure_ascii=False), advisory)
+    if not advisory and decision.get('decision') != 'pass':
         raise PublishError('insight_accuracy_review_not_passed')
     config = context.get('insight_config', {})
     models = config.get('models', {})
@@ -357,10 +360,10 @@ def _verify_insight(root, context, topic, cycle):
     known = [actual_models.get(role, {}).get('observed_model') for role in ('generation', 'review')]
     if all(known) and known[0] == known[1]:
         raise PublishError('insight_independent_model_collision')
-    checked_candidate = harness._candidate(json.dumps(candidate, ensure_ascii=False), bundle)
+    checked_candidate = harness._candidate(json.dumps(candidate, ensure_ascii=False), bundle, advisory)
     if checked_candidate != candidate:
         raise PublishError('insight_candidate_invalid')
-    state = {'backend': receipt['backend'], 'review': decision, 'tasks': {'review': {'result': {
+    state = {'backend': receipt['backend'], 'review': decision, 'review_policy': policy, 'tasks': {'review': {'result': {
         'requested_model': review.get('requested_model'), 'observed_model': review.get('observed_model'),
         'thread_id': review.get('thread_id'), 'turn_id': review.get('turn_id'), 'final_response': '{}'}}}}
     rendered = harness._render(candidate, bundle, state, receipt.get('simulation') is True)
@@ -398,15 +401,23 @@ def _overlay(root, files, topic, cycle):
         yield overlay
 
 
-def _guard(payload, relative, root):
+def _guard(payload, relative, root, execution_root=None):
     if len(payload) > MAX_BYTES:
         raise PublishError('transfer_file_too_large')
     text = payload.decode('utf-8')
     archive.check_public_tokens(text)
-    # Fully verified public originals may contain literal code paths. All other
-    # records must not accidentally carry the execution host's private paths.
-    if not relative.startswith('collection/') and re.search(r'(?<![\w:])/(?:Users|home|private|var|root)/', text):
-        raise PublishError('private_host_path_in_transfer')
+    # Check known host locations at export while allowing paths quoted from technical sources.
+    if execution_root is not None and not relative.startswith('collection/'):
+        home = Path.home()
+        temporary = Path(tempfile.gettempdir()).resolve()
+        private_paths = {execution_root}
+        if home.parent.name in {'Users', 'home'}:
+            private_paths.add(home)
+        if len(temporary.parts) > 3:
+            private_paths.add(temporary)
+        if any(re.search(r'(?<![\w:/])' + re.escape(str(path)) + r'(?![\w.-])', text)
+               for path in private_paths):
+            raise PublishError('private_host_path_in_transfer')
     if relative.endswith('.yaml'):
         sdk_proof = '/codex-insight/' in relative and Path(relative).name in {'candidate.yaml', 'review.yaml'}
         value = _plain_yaml(root, relative) if sdk_proof else _checked(root, relative)
@@ -450,7 +461,7 @@ def export(root, destination, topic, cycle_id, base_commit):
             files[relative] = _read(root, relative)
     with _overlay(root, files, topic, cycle_id) as overlay:
         for relative, payload in files.items():
-            _guard(payload, relative, overlay)
+            _guard(payload, relative, overlay, execution_root=root)
     manifest = {'schema_version': 1, 'mode': 'scheduled_research_transfer', 'topic': topic,
                 'cycle_id': cycle_id, 'base_commit': base_commit,
                 'files': {relative: _hash(payload) for relative, payload in sorted(files.items())}}

@@ -43,8 +43,9 @@ research:
     max_requests: 240
   discovery:
     max_candidates: 80
-    max_documents: 5
+    max_documents: 10
     max_per_source: 5
+    max_per_kind: 5
     evidence_max_chars: 6000
     sources:
     - id: arxiv
@@ -110,9 +111,9 @@ insight:
     auth_source: researchdesk_siwc
     max_requests_per_task: 100
     timeout_seconds: 240
-  review_policy: accuracy_only
+  review_policy: advisory_review
   prompts:
-    version: codex-insight-v2
+    version: codex-insight-v3
   history:
     lookback_days: 180
   generation:
@@ -145,7 +146,12 @@ automation:
   schema_version: 1
   enabled: false
   timezone: Asia/Shanghai
+  # Legacy schedule fields remain part of the configuration schema.
   schedule_utc: 0 19 * * 1,4
+  weekly:
+    weekdays: [1]
+    time: '09:00'
+    timezone: Asia/Shanghai
   activated_at: '2000-01-01T00:00:00+00:00'
   cycle_config: config/cycles/default.yaml
   admission_config: config/admission.yaml
