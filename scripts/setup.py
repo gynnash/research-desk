@@ -22,11 +22,12 @@ from urllib.parse import parse_qs, urlsplit
 import webbrowser
 
 import automatic
+import confirmation
 from membership import MembershipClient, MembershipError
 import offline as store
 import runner
 import schedule
-from setup_github import GitHubSetup, GitHubSetupError
+from setup_github import GitHubSetup, GitHubSetupError, apply_system_github_proxy
 from setup_obsidian import ObsidianSetup, ObsidianSetupError
 import workbench
 
@@ -212,7 +213,7 @@ def configure_topics(root, choices):
     for identity, name in choices:
         if identity is not None:
             if identity not in definitions or topic_name(definitions[identity].get('name')).casefold() != name.casefold():
-                raise SetupError('已有研究方向已变化，请重新检查工作台后保存。')
+                raise SetupError('已有研究方向已变化，请点击右上角的「刷新」后再保存。')
         else:
             identity = by_name.get(name.casefold())
         if identity is None:
@@ -259,8 +260,6 @@ class SetupWizard:
             'obsidian': section('idle', 'GitHub 就绪后准备独立阅读库。'),
             'operation': None,
         }
-        self.confirmation_process = None
-        self.confirmation_url = None
 
     def snapshot(self):
         with self.lock:
@@ -421,7 +420,7 @@ class SetupWizard:
             self.notify('正在安装 Codex SDK、配置并启动 Mac 执行器…')
             with automatic.pipeline_lock(self.root):
                 if runner._repository(self.root).casefold() != repo.casefold():
-                    raise SetupError('工作台的 GitHub 远端已变化，请重新检查。')
+                    raise SetupError('工作台的 GitHub 远端已变化，请点击右上角的「刷新」。')
                 workbench.start(self.root)
             self.notify('等待 GitHub 健康检查完成…')
             self.github.health()
@@ -463,12 +462,10 @@ class SetupWizard:
     def open_confirmation(self):
         if self.snapshot()['deployment']['state'] != 'ready':
             raise SetupError('请先完成 GitHub 部署，正式选题回存后可在确认页查看。')
-        if self.confirmation_process is not None and self.confirmation_process.poll() is None:
-            webbrowser.open(self.confirmation_url, new=1)
-            return
         # Reuse the selected gh account in this subprocess only, including a
         # checkout originally cloned over SSH. Never change global Git config.
         env = dict(os.environ, GIT_TERMINAL_PROMPT='0', GH_PROMPT_DISABLED='1', GIT_CONFIG_COUNT='3')
+        apply_system_github_proxy(env)
         for index, (key, value) in enumerate([
             ('credential.https://github.com.helper', ''),
             ('credential.https://github.com.helper', '!gh auth git-credential'),
@@ -476,25 +473,27 @@ class SetupWizard:
         ]):
             env['GIT_CONFIG_KEY_' + str(index)] = key
             env['GIT_CONFIG_VALUE_' + str(index)] = value
-        command = [sys.executable, '-B', str(self.root / 'scripts/confirmation.py')]
-        configured = subprocess.run(command + ['setup'], cwd=self.root, env=env, stdin=subprocess.DEVNULL,
-                                    capture_output=True, check=False, timeout=90)
-        if configured.returncode:
-            raise SetupError('选题确认目录未能准备好。请检查 GitHub 权限和现有确认目录。')
-        process = subprocess.Popen(command + ['serve'], cwd=self.root, env=env, stdin=subprocess.DEVNULL,
+        command = [sys.executable, '-B', str(self.root / 'scripts/confirmation.py'), 'serve', '--prepare']
+        process = subprocess.Popen(command, cwd=self.root, env=env, stdin=subprocess.DEVNULL,
                                    stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, start_new_session=True)
+        message = '选题确认页未能启动。请检查本地配置后重试。'
         with process.stdout:
-            if select.select([process.stdout], [], [], 45)[0]:
-                prefix, separator, value = process.stdout.readline().decode('utf-8', 'replace').strip().partition('http://')
-                if (prefix == 'ResearchDesk 选题确认：' and separator and re.fullmatch(r'127\.0\.0\.1:[0-9]{4,5}', value)
-                        and process.stdout.readline().decode('utf-8', 'replace').startswith('页面已接通')):
-                    self.confirmation_process = process
-                    self.confirmation_url = 'http://' + value
-        if self.confirmation_process is not process:
-            if process.poll() is None:
-                process.terminate()
-            raise SetupError('确认页未能启动。请检查该端口是否已被占用，或返回已经打开的确认页。')
-        webbrowser.open(self.confirmation_url, new=1)
+            if select.select([process.stdout], [], [], 135)[0]:
+                line = process.stdout.readline().decode('utf-8', 'replace').strip()
+                url = line.removeprefix(confirmation.ADDRESS_PREFIX)
+                if line.startswith(confirmation.ADDRESS_PREFIX) and confirmation.is_confirmation_url(url):
+                    try:
+                        return url, webbrowser.open(url, new=1)
+                    except webbrowser.Error:
+                        return url, False
+                if line.startswith(confirmation.STARTUP_ERROR_PREFIX):
+                    code = line.removeprefix(confirmation.STARTUP_ERROR_PREFIX)
+                    message = confirmation.STARTUP_ERRORS.get(code, message)
+            else:
+                message = '选题确认页启动超时。请检查 GitHub 网络连接后重试。'
+        if process.poll() is None:
+            process.terminate()
+        raise SetupError(message)
 
     def perform(self, action, payload=None):
         stage = 'setup'
@@ -549,8 +548,12 @@ class SetupWizard:
                 return
             elif action == 'confirmation_open':
                 stage = 'notice'
-                self.open_confirmation()
-                self.update(stage, section('ready', '已请求打开选题确认页。正式选题回存后可在页面查看。'))
+                self.update(stage, {'action': action})
+                url, opened = self.open_confirmation()
+                if opened:
+                    self.update(stage, section('ready', '已打开选题确认页。', action=action))
+                else:
+                    self.update(stage, section('ready', '确认页已就绪，可点击链接打开。', action=action, url=url))
                 return
             elif action == 'create_schedule':
                 stage = 'deployment'

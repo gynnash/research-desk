@@ -3,6 +3,7 @@
 import base64
 from datetime import datetime, timedelta, timezone
 import http.client
+import io
 import json
 import os
 from pathlib import Path
@@ -51,6 +52,48 @@ class SetupWizardTest(unittest.TestCase):
         origin = mock.patch.object(setup.runner, '_repository', return_value='fixture/workbench')
         origin.start()
         self.addCleanup(origin.stop)
+
+    def test_confirmation_launch_requires_deployment_and_reports_browser_fallback(self):
+        with (mock.patch.object(setup.subprocess, 'Popen') as spawn,
+              mock.patch.object(setup.select, 'select') as ready,
+              mock.patch.object(setup, 'apply_system_github_proxy',
+                                side_effect=lambda env: env.update(HTTPS_PROXY='http://127.0.0.1:8888')),
+              mock.patch.object(setup.webbrowser, 'open', return_value=False) as open_browser):
+            self.wizard.perform('confirmation_open')
+            spawn.assert_not_called()
+            notice = self.wizard.snapshot()['notice']
+            self.assertEqual((notice['state'], notice['action']), ('blocked', 'confirmation_open'))
+
+            self.wizard.update('deployment', setup.section('ready', '定时研究已启用。'))
+            process = spawn.return_value
+            url = 'http://127.0.0.1:8765'
+            process.stdout = io.BytesIO(('ResearchDesk 选题确认：' + url + '\n').encode())
+            ready.return_value = ([process.stdout], [], [])
+            self.wizard.perform('confirmation_open')
+
+            command, = spawn.call_args.args
+            self.assertEqual(command[-2:], ['serve', '--prepare'])
+            self.assertEqual(spawn.call_args.kwargs['env']['GIT_CONFIG_VALUE_1'], '!gh auth git-credential')
+            self.assertEqual(spawn.call_args.kwargs['env']['HTTPS_PROXY'], 'http://127.0.0.1:8888')
+            open_browser.assert_called_once_with(url, new=1)
+            notice = self.wizard.snapshot()['notice']
+            self.assertEqual((notice['state'], notice['action'], notice['url']),
+                             ('ready', 'confirmation_open', url))
+
+    def test_confirmation_launch_reports_an_existing_legacy_service(self):
+        self.wizard.update('deployment', setup.section('ready', '定时研究已启用。'))
+        with (mock.patch.object(setup.subprocess, 'Popen') as spawn,
+              mock.patch.object(setup.select, 'select') as ready,
+              mock.patch.object(setup.webbrowser, 'open') as open_browser):
+            process = spawn.return_value
+            process.stdout = io.BytesIO((setup.confirmation.STARTUP_ERROR_PREFIX + 'service_starting\n').encode())
+            process.poll.return_value = 2
+            ready.return_value = ([process.stdout], [], [])
+            self.wizard.perform('confirmation_open')
+            open_browser.assert_not_called()
+        notice = self.wizard.snapshot()['notice']
+        self.assertEqual((notice['state'], notice['action']), ('blocked', 'confirmation_open'))
+        self.assertIn('旧版确认页仍在运行', notice['message'])
 
     def test_startup_overlaps_independent_checks_and_shows_the_schedule_before_the_vault(self):
         self.wizard.perform('check')

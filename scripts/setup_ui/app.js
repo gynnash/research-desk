@@ -12,9 +12,10 @@
     missing_tool: '待安装',
   };
   const actionLabels = {
-    check: '重新检查工作台', chatgpt_login: '等待 ChatGPT 授权', github_login: '等待 GitHub 授权',
+    check: '正在刷新向导状态…', chatgpt_login: '等待 ChatGPT 授权', github_login: '等待 GitHub 授权',
     github_workflow_auth: '等待 GitHub 补充授权',
     github_create: '创建私有 GitHub 仓库', create_schedule: '正在配置定时研究',
+    confirmation_open: '正在打开选题确认页…',
     obsidian_sync: '更新阅读库', obsidian_open: '打开 Vault 管理器',
     save_topics: '正在保存研究方向',
   };
@@ -487,13 +488,16 @@
     }
     const scheduleReady = notice?.action === 'create_schedule' && notice.state === 'ready'
       && snapshot?.deployment?.state === 'ready';
-    const showNotice = Boolean(valueOf(notice?.message)) && !isBusy() && !scheduleReady;
+    const confirmationNotice = notice?.action === 'confirmation_open';
+    const busy = isBusy();
+    const showNotice = Boolean(valueOf(notice?.message)) && !busy && !scheduleReady && !confirmationNotice;
     setText('result-notice', showNotice ? notice.message : '');
     setVisible('result-notice', showNotice);
     byId('result-notice').classList.toggle('error', problemStates.has(notice?.state));
     if (snapshot) {
       const {setup = {}, chatgpt = {}, github = {}, deployment = {}, obsidian = {}, operation} = snapshot;
       setSection('setup', setup);
+      setVisible('setup-message', setup.state !== 'ready');
       setSection('chatgpt', chatgpt, '已授权');
       const githubDisplay = github.state === 'ready' && github.workflow_scope === false
         ? {...github, state: 'needs_workflow_scope'} : github;
@@ -504,11 +508,25 @@
       renderObsidian(obsidian, github);
     }
     const activeAction = snapshot?.operation?.action || requestedAction;
+    const canOpenConfirmation = snapshot?.deployment?.state === 'ready';
+    setSection('confirmation', {state: canOpenConfirmation ? 'ready' : snapshot ? 'needs_setup' : ''}, '可打开');
+    setVisible('confirmation-hint', !canOpenConfirmation);
+    const openingConfirmation = busy && activeAction === 'confirmation_open';
+    const confirmationResult = openingConfirmation ? actionLabels.confirmation_open
+      : confirmationNotice && !busy ? valueOf(notice.message) : '';
+    const confirmationPort = confirmationNotice && !busy && notice.state === 'ready'
+      ? /^http:\/\/127\.0\.0\.1:([1-9][0-9]{3,4})$/.exec(valueOf(notice.url)) : null;
+    externalLink('confirmation-link', confirmationPort && Number(confirmationPort[1]) >= 1024
+      && Number(confirmationPort[1]) <= 65535 ? confirmationPort[0] : '');
+    setText('confirmation-result', confirmationResult);
+    setVisible('confirmation-feedback', Boolean(confirmationResult));
+    byId('confirmation-result').classList.toggle('field-error', !busy && confirmationNotice && problemStates.has(notice.state));
     const activeMessage = valueOf(snapshot?.operation?.message) || actionLabels[activeAction] || '正在处理当前步骤…';
     setText('operation-message', activeMessage);
-    setVisible('operation', isBusy() && activeAction !== 'obsidian_choose_path');
+    setVisible('operation', busy && activeAction !== 'obsidian_choose_path' && !openingConfirmation);
     for (const [action, button] of buttons) {
-      button.disabled = isBusy() || (!snapshot?.csrf && action !== 'check')
+      button.disabled = busy || (!snapshot?.csrf && action !== 'check')
+        || (action === 'confirmation_open' && !canOpenConfirmation)
         || (action === 'github_workflow_auth' && snapshot?.github?.can_authorize_workflow === false);
     }
     renderTopicControls();
@@ -526,7 +544,7 @@
         snapshot = data;
         connectionIssue = '';
       } catch {
-        connectionIssue = '暂时无法读取本地工作台。确认启动命令仍在运行，再点「重新检查」。';
+        connectionIssue = '暂时无法读取本地工作台。确认启动命令仍在运行，再点右上角的「刷新」。';
         snapshot = null;
       } finally {
         loadingStatus = null;

@@ -6,8 +6,11 @@ local test publisher; neither a passing decision nor the provenance verifier is
 replaced. No real topic in the user's vault is confirmed by these checks.
 """
 
+from contextlib import redirect_stderr, redirect_stdout
+import fcntl
 import http.client
 import importlib
+import io
 import json
 from pathlib import Path
 import shutil
@@ -24,6 +27,7 @@ import yaml
 
 REPOSITORY = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPOSITORY / 'scripts'))
+import confirmation
 import membership
 import offline as store
 import sources
@@ -32,6 +36,101 @@ TOPIC = 'agent-memory'
 CYCLE = 'cycle-agent-memory-gh-20261019'
 CARD = 'formal-topic-agent-memory-%s-1' % CYCLE
 BASE = 'reports/%s/admissions/%s' % (TOPIC, CYCLE)
+
+
+class ConfirmationLaunch(unittest.TestCase):
+    def setUp(self):
+        temporary = tempfile.TemporaryDirectory(prefix='researchdesk-confirmation-launch-')
+        self.addCleanup(temporary.cleanup)
+        self.directory = Path(temporary.name).resolve()
+        self.root = self.directory / 'workbench'
+        self.root.mkdir()
+        self.workspace = self.directory / 'confirmation'
+        self.remote = 'https://github.com/fixture/workbench.git'
+        self.config = {'workspace': str(self.workspace), '_config_path': confirmation.DEFAULT_CONFIG,
+                       'server': {'port': 8765}}
+        self.publisher = mock.Mock()
+        self.server = mock.MagicMock()
+        self.server.__enter__.return_value = self.server
+        self.server.server_port = 8765
+        for patcher in (
+            mock.patch.object(confirmation, 'load_config', return_value=self.config),
+            mock.patch.object(confirmation.tempfile, 'gettempdir', return_value=self.directory),
+            mock.patch.object(confirmation, 'GitPublisher', return_value=self.publisher),
+        ):
+            patcher.start()
+            self.addCleanup(patcher.stop)
+        self.git = mock.patch.object(confirmation, 'git', side_effect=self.fake_git)
+        self.git_calls = self.git.start()
+        self.addCleanup(self.git.stop)
+        self.create = mock.patch.object(confirmation, 'create_server', return_value=self.server)
+        self.create_server = self.create.start()
+        self.addCleanup(self.create.stop)
+
+    def fake_git(self, root, *args):
+        if args == ('remote', 'get-url', 'origin'):
+            return 'git@github.com:Fixture/Workbench.git' if root == self.workspace else self.remote
+        if args[:1] == ('clone',):
+            (self.workspace / '.git').mkdir(parents=True)
+            return ''
+        self.fail(f'unexpected Git command: {args}')
+
+    def launch(self, root=None):
+        stdout, stderr = io.StringIO(), io.StringIO()
+        with redirect_stdout(stdout), redirect_stderr(stderr):
+            result = confirmation.main(['serve', '--prepare', '--root', str(root or self.root)])
+        return result, stdout.getvalue(), stderr.getvalue()
+
+    def test_existing_service_is_reused_only_for_its_bound_root_and_repository(self):
+        def while_running():
+            result, stdout, stderr = self.launch()
+            self.assertEqual(result, 0, stderr)
+            self.assertIn('http://127.0.0.1:8765', stdout)
+            other = self.directory / 'other-workbench'
+            other.mkdir()
+            result, stdout, stderr = self.launch(other)
+            self.assertEqual(result, 2)
+            self.assertEqual(stdout.strip(), confirmation.STARTUP_ERROR_PREFIX + 'workspace_in_use')
+            self.assertIn('其他工作台', stderr)
+            self.remote = 'https://github.com/fixture/other.git'
+            result, stdout, stderr = self.launch()
+            self.assertEqual(result, 2)
+            self.assertEqual(stdout.strip(), confirmation.STARTUP_ERROR_PREFIX + 'workspace_in_use')
+            self.assertIn('其他工作台', stderr)
+
+        self.server.serve_forever.side_effect = while_running
+        result, stdout, stderr = self.launch()
+        self.assertEqual(result, 0, stderr)
+        self.assertIn('http://127.0.0.1:8765', stdout)
+        self.create_server.assert_called_once()
+        self.publisher.refresh.assert_called_once()
+
+    def test_prepare_reports_a_legacy_service_holding_an_empty_lock(self):
+        digest = store.digest(str(self.workspace).encode())[:24]
+        lock = self.directory / ('researchdesk-confirmation-' + digest + '.lock')
+        with lock.open('wb') as handle:
+            fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            result, stdout, stderr = self.launch()
+        self.assertEqual(result, 2)
+        self.assertEqual(stdout.strip(), confirmation.STARTUP_ERROR_PREFIX + 'service_starting')
+        self.assertIn('旧版确认页仍在运行', stderr)
+        self.create_server.assert_not_called()
+
+    def test_prepare_keeps_pending_confirmations_on_a_cold_restart(self):
+        (self.workspace / '.git').mkdir(parents=True)
+        self.publisher.refresh.side_effect = confirmation.ConfirmationError('workspace_dirty', 'dirty')
+        self.publisher.pending_files.return_value = ['pending-confirmation']
+        result, _, stderr = self.launch()
+        self.assertEqual(result, 0, stderr)
+        self.create_server.assert_called_once()
+        self.assertTrue(all(call.args[1:2] != ('clone',) for call in self.git_calls.call_args_list))
+        self.publisher.pending_files.return_value = []
+        self.create_server.reset_mock()
+        result, stdout, stderr = self.launch()
+        self.assertEqual(result, 2)
+        self.assertEqual(stdout.strip(), confirmation.STARTUP_ERROR_PREFIX + 'workspace_dirty')
+        self.assertIn('dirty', stderr)
+        self.create_server.assert_not_called()
 
 
 class RealTopicConfirmation(unittest.TestCase):

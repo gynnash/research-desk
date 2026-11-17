@@ -8,6 +8,7 @@ Run setup once, then serve from a separate checkout outside the Obsidian vault.
 
 import argparse
 from datetime import datetime, timezone
+import errno
 import fcntl
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
@@ -16,6 +17,7 @@ from pathlib import Path
 import re
 import secrets
 import shutil
+import stat
 import subprocess
 import sys
 import tempfile
@@ -35,6 +37,16 @@ import confirmation_inputs as inputs
 
 
 DEFAULT_CONFIG = 'config/confirmation-v2.yaml'
+ADDRESS_PREFIX = 'ResearchDesk 选题确认：'
+STARTUP_ERROR_PREFIX = 'ResearchDesk 选题确认未启动：'
+STARTUP_ERRORS = {
+    'service_starting': '选题确认页正在启动，或旧版确认页仍在运行。请稍后重试。若持续出现，请先停止旧版确认页服务。',
+    'workspace_in_use': '此确认工作目录正在由其他工作台或配置使用。',
+    'port_in_use': '确认页的本机端口已被占用。请释放端口后重试。',
+    'git_failed': '确认页未能同步 GitHub。请检查网络和「连接账号」里的 GitHub 授权，再重试。',
+    'workspace_dirty': '确认工作目录有未提交的改动。请检查独立确认目录后重试，现有文件已保留。',
+    'sync_conflict': '确认工作目录和 GitHub 的 main 分支发生冲突。请处理冲突后重试，现有文件已保留。',
+}
 
 
 class ConfirmationError(store.OfflineError):
@@ -633,73 +645,156 @@ def workspace_path(root, config):
     return result
 
 
-def setup(root, config):
-    target = workspace_path(root, config)
+def _confirmation_origin(root):
     remote = git(root, 'remote', 'get-url', 'origin')
     if remote.startswith(('http://', 'https://')) and (urlsplit(remote).username or urlsplit(remote).password):
         raise store.OfflineError('Git remote 不得包含账号或凭据')
-    if target.exists():
-        if not (target / '.git').is_dir() or git(target, 'remote', 'get-url', 'origin') != remote:
-            raise store.OfflineError('已有确认工作目录不属于当前仓库，保留而不修改')
+    return remote
+
+
+def _origin_key(remote):
+    # The wizard uses GitHub CLI over HTTPS even for workbenches cloned over SSH.
+    ssh = re.fullmatch(r'git@github\.com:(.+)', remote, re.IGNORECASE)
+    if ssh:
+        name = ssh[1]
     else:
+        url = urlsplit(remote)
+        name = (url.path.strip('/') if url.scheme == 'https' and url.hostname == 'github.com'
+                and url.port in {None, 443} and not (url.query or url.fragment) else '')
+    if re.fullmatch(r'[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+', name):
+        return 'github', name.casefold().removesuffix('.git')
+    return 'remote', remote
+
+
+def _workspace_matches(target, remote):
+    return (target / '.git').is_dir() and _origin_key(_confirmation_origin(target)) == _origin_key(remote)
+
+
+def _prepare_workspace(root, target, remote, *, create):
+    if target.exists():
+        if not _workspace_matches(target, remote):
+            raise store.OfflineError('已有确认工作目录不属于当前仓库，保留而不修改')
+    elif create:
         target.parent.mkdir(parents=True, exist_ok=True)
         git(root, 'clone', '--single-branch', '--branch', 'main', '--', remote, str(target))
+    else:
+        raise store.OfflineError('请先执行 setup 准备独立工作目录')
+    bind_workbench(root, target)
+
+
+def setup(root, config):
+    target = workspace_path(root, config)
+    _prepare_workspace(root, target, _confirmation_origin(root), create=True)
     # Existing workspaces may predate this configuration file. Refresh their
     # clean main checkout before trying to load a newly introduced version.
     GitPublisher(target, config).refresh()
-    bind_workbench(root, target)
     load_config(target, config['_config_path'])
     return target
 
 
-def main():
+def is_confirmation_url(url):
+    match = re.fullmatch(r'http://127\.0\.0\.1:([1-9][0-9]{3,4})', url) if isinstance(url, str) else None
+    return match is not None and 1024 <= int(match[1]) <= 65535
+
+
+def _running_address(fd, binding, port):
+    try:
+        existing = json.loads(os.read(fd, 4096))
+    except ValueError:
+        existing = {}
+    if not isinstance(existing, dict) or not is_confirmation_url(existing.get('url')):
+        raise ConfirmationError('service_starting', STARTUP_ERRORS['service_starting'])
+    if existing.get('binding') != binding:
+        raise ConfirmationError('workspace_in_use', STARTUP_ERRORS['workspace_in_use'])
+    url = existing['url']
+    if port is not None and urlsplit(url).port != port:
+        raise store.OfflineError('选题确认页已在其他端口运行。')
+    return url
+
+
+def _announce_address(url, open_browser):
+    # The launcher can close its pipe as soon as it reads the address.
+    sys.stdout.write(ADDRESS_PREFIX + url + '\n'
+                     '页面已接通真实资料、确认记录及 TEST Writing 派发；模型由独立执行器运行，不会发布公众号。\n')
+    sys.stdout.flush()
+    if open_browser:
+        webbrowser.open(url)
+
+
+def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('command', choices=['setup', 'serve'])
     parser.add_argument('--root', type=Path, default=Path(__file__).resolve().parents[1])
     parser.add_argument('--config', default=DEFAULT_CONFIG)
     parser.add_argument('--port', type=int)
+    parser.add_argument('--prepare', action='store_true', help='首次启动时准备独立确认目录')
     parser.add_argument('--open-browser', action='store_true')
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
     try:
         root = args.root.resolve()
         if (root / 'config/local/workbench.yaml').is_file():
             from workbench import apply
             apply(root)
         config = load_config(root, args.config)
-        if args.command == 'setup':
-            target = setup(root, config)
-            print('确认页面的独立工作目录已就绪；没有创建确认或调用模型。')
-            return 0
         target = workspace_path(root, config)
-        if not (target / '.git').is_dir():
-            raise store.OfflineError('请先执行 setup 准备独立工作目录')
+        remote = _confirmation_origin(root)
+        binding = store.digest(json.dumps([str(root), _origin_key(remote), config['_config_path']]).encode())
         # Keep one confirmation service per workspace; session capabilities are
         # in memory, not stored in the vault or exposed in the startup URL.
         path = Path(tempfile.gettempdir()) / ('researchdesk-confirmation-' + store.digest(str(target).encode())[:24] + '.lock')
-        fd = os.open(str(path), os.O_CREAT | os.O_RDWR | os.O_NOFOLLOW, 0o600)
-        fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        publisher = GitPublisher(target, config)
+        fd = os.open(str(path), os.O_CREAT | os.O_RDWR | os.O_NOFOLLOW | os.O_NONBLOCK, 0o600)
         try:
-            publisher.refresh()
-        except ConfirmationError:
-            if not publisher.pending_files():
-                raise
-        target_config = load_config(target, args.config)
-        port = args.port if args.port is not None else target_config['server']['port']
-        if not 1024 <= port <= 65535:
-            raise store.OfflineError('服务端口必须在 1024–65535')
-        server = create_server(target, target_config, port=port)
-        print('ResearchDesk 选题确认：http://127.0.0.1:%s' % server.server_port, flush=True)
-        print('页面已接通真实资料、确认记录及 TEST Writing 派发；模型由独立执行器运行，不会发布公众号。', flush=True)
-        if args.open_browser:
-            webbrowser.open('http://127.0.0.1:%s' % server.server_port)
-        try:
-            server.serve_forever()
+            info = os.fstat(fd)
+            if not stat.S_ISREG(info.st_mode) or info.st_uid != os.getuid():
+                raise store.OfflineError('选题确认页的本地锁文件无效。')
+            try:
+                fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            except BlockingIOError:
+                url = _running_address(fd, binding, args.port)
+                if not _workspace_matches(target, remote):
+                    raise store.OfflineError('已有确认工作目录不属于当前仓库，保留而不修改')
+                if args.command == 'setup':
+                    print('确认页面的独立工作目录已就绪。')
+                else:
+                    _announce_address(url, args.open_browser)
+                return 0
+
+            os.ftruncate(fd, 0)
+            if args.command == 'setup':
+                setup(root, config)
+                print('确认页面的独立工作目录已就绪；没有创建确认或调用模型。')
+                return 0
+            _prepare_workspace(root, target, remote, create=args.prepare)
+            publisher = GitPublisher(target, config)
+            try:
+                publisher.refresh()
+            except ConfirmationError:
+                if not publisher.pending_files():
+                    raise
+            target_config = load_config(target, args.config)
+            port = args.port if args.port is not None else target_config['server']['port']
+            if not 1024 <= port <= 65535:
+                raise store.OfflineError('服务端口必须在 1024–65535')
+            with create_server(target, target_config, port=port) as server:
+                try:
+                    url = 'http://127.0.0.1:%s' % server.server_port
+                    os.write(fd, json.dumps({'binding': binding, 'url': url}).encode())
+                    _announce_address(url, args.open_browser)
+                    server.serve_forever()
+                finally:
+                    os.ftruncate(fd, 0)
         finally:
-            server.server_close()
             os.close(fd)
     except (store.OfflineError, OSError, subprocess.TimeoutExpired) as exc:
         print('确认页面未启动：' + str(exc), file=sys.stderr)
+        if args.prepare:
+            code = getattr(exc, 'code', None)
+            if isinstance(exc, subprocess.TimeoutExpired):
+                code = 'git_failed'
+            elif isinstance(exc, OSError) and exc.errno == errno.EADDRINUSE:
+                code = 'port_in_use'
+            if code in STARTUP_ERRORS:
+                print(STARTUP_ERROR_PREFIX + code, flush=True)
         return 2
     return 0
 

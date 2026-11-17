@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>ResearchDesk · 工作台设置</title>
+  <title>设置 - 我的研究工作台</title>
   <link rel="stylesheet" href="/style.css">
   <script src="/app.js" defer></script>
 </head>
@@ -11,14 +11,17 @@
   <header class="masthead">
     <div class="shell masthead-inner">
       <div class="brand"><span class="brand-mark" aria-hidden="true">R</span> ResearchDesk</div>
-      <span class="local-badge">本地设置</span>
+      <div class="masthead-actions">
+        <span class="local-badge">本地设置</span>
+        <button type="button" class="button" id="check-button" data-action="check" aria-label="刷新向导状态" disabled>刷新</button>
+      </div>
     </div>
   </header>
 
   <main class="shell">
     <section class="hero" aria-labelledby="page-title">
-      <h1 id="page-title">设置研究工作台</h1>
-      <p class="lead">选好研究方向并连接账号后，创建每周日程。研究将在计划时间运行。</p>
+      <h1 id="page-title">设置 - 我的研究工作台</h1>
+      <p class="lead">选好研究方向并连接账号后，创建例行日程，研究将在计划时间运行。</p>
     </section>
 
     <div id="connection-error" class="notice error" role="alert" hidden></div>
@@ -32,20 +35,15 @@
         <section class="step" aria-labelledby="setup-heading">
           <div class="step-heading">
             <span class="step-number" aria-hidden="true">01</span>
-            <h2 id="setup-heading">工作台</h2>
+            <h2 id="setup-heading">研究方向</h2>
             <span class="status" id="setup-state">等待检查</span>
-            <button type="button" class="button" id="check-button" data-action="check" disabled>重新检查</button>
           </div>
           <div class="step-body">
             <p id="setup-message" class="message" aria-live="polite">正在读取本机配置…</p>
             <form id="topic-editor" class="topic-editor" hidden>
               <div class="topic-row">
-                <span class="field-label">研究方向</span>
                 <ul id="topic-tags" class="topic-tags" role="list" aria-label="已添加的研究方向"></ul>
-                <div class="topic-controls">
-                  <button type="button" class="button" id="topic-toggle" aria-controls="topic-entry" aria-expanded="false">添加方向</button>
-                  <button type="submit" class="button primary" id="topic-save" hidden disabled>保存研究方向</button>
-                </div>
+                <button type="button" class="button" id="topic-toggle" aria-controls="topic-entry" aria-expanded="false">添加方向</button>
               </div>
               <div id="topic-entry" hidden>
                 <div class="topic-entry">
@@ -56,6 +54,9 @@
                 <p id="topic-hint" class="detail">按 Enter 或点「添加」，保存时保留 1 至 8 个方向。</p>
               </div>
               <p id="topic-error" class="detail topic-error" role="alert" hidden></p>
+              <div class="topic-footer">
+                <button type="submit" class="button primary" id="topic-save" hidden disabled>保存研究方向</button>
+              </div>
             </form>
           </div>
         </section>
@@ -82,7 +83,7 @@
               <p id="github-repository-row" class="detail" hidden><span>资料仓库</span> <a id="github-repository" target="_blank" rel="noopener noreferrer"></a></p>
               <p id="github-workflow-detail" class="detail" aria-live="polite" hidden></p>
               <p id="github-create-detail" class="detail" hidden>此操作会把当前项目推送到你账号下的新私有仓库，并将它设为当前工作台的远端。</p>
-              <p id="github-connect-detail" class="detail" hidden>请选择有管理员权限的仓库，并将本版本代码放在其默认分支 <code>main</code>。用 <code>git remote set-url origin &lt;你的仓库地址&gt;</code> 连接后，返回本页重新检查。</p>
+              <p id="github-connect-detail" class="detail" hidden>请选择有管理员权限的仓库，并将本版本代码放在其默认分支 <code>main</code>。用 <code>git remote set-url origin &lt;你的仓库地址&gt;</code> 连接后，回到本页点击右上角的「刷新」。</p>
               <div class="account-footer">
                 <div id="github-device" class="device" hidden>
                   <p>在 GitHub 授权页输入设备码。向导确认授权后会更新状态，并在 3 秒后关闭授权页。</p>
@@ -161,7 +162,7 @@
                 <ol>
                   <li>进入自己的 GitHub 仓库，打开 <strong>Actions</strong>。如果 GitHub 提示工作流未启用，请按页面提示启用。</li>
                   <li>仓库需允许注册自托管 runner。工作流回存和选题确认还需要能够推送至 <code>main</code>。组织策略或分支规则拦截时，请按仓库的权限要求处理。</li>
-                  <li>回到本页选择「重新检查」。定时任务执行时，请保持这台 Mac 开机、联网并运行执行器。</li>
+                  <li>回到本页点击右上角的「刷新」。定时任务执行时，请保持这台 Mac 开机、联网并运行执行器。</li>
                 </ol>
                 <p><a id="github-actions-guide-link" target="_blank" rel="noopener noreferrer" hidden>打开当前仓库的 Actions <span aria-hidden="true">↗</span></a></p>
               </div>
@@ -169,11 +170,33 @@
           </div>
         </section>
 
+        <section class="step" aria-labelledby="confirmation-heading">
+          <div class="step-heading">
+            <span class="step-number" aria-hidden="true">04</span>
+            <h2 id="confirmation-heading">选题确认</h2>
+            <span class="status" id="confirmation-state">等待检查</span>
+          </div>
+          <div class="step-body">
+            <div class="confirmation-entry">
+              <div>
+                <p id="confirmation-message" class="message">研究生成的公众号选题回存后，会出现在确认页。</p>
+                <p class="detail">核对证据和写作要求后保存确认。同步完成后，在「确认记录」启动写作。</p>
+                <p id="confirmation-hint" class="detail">创建定时研究后即可打开。</p>
+              </div>
+              <button type="button" class="button primary" data-action="confirmation_open"
+                aria-describedby="confirmation-message" disabled>打开选题确认页</button>
+            </div>
+            <p id="confirmation-feedback" class="detail" role="status" hidden>
+              <span id="confirmation-result"></span>
+              <a id="confirmation-link" target="_blank" rel="noopener noreferrer" hidden>打开确认页 ↗</a>
+            </p>
+          </div>
+        </section>
+
         <details class="step disclosure" aria-labelledby="obsidian-heading">
           <summary class="step-heading">
-            <span class="step-number" aria-hidden="true">04</span>
-            <span id="obsidian-heading" class="step-title">Obsidian 阅读库</span>
-            <span class="optional">可选</span>
+            <span class="step-number" aria-hidden="true">05</span>
+            <span id="obsidian-heading" class="step-title">Obsidian 阅读库（可选）</span>
             <span class="status" id="obsidian-state">等待检查</span>
           </summary>
           <div class="step-body">
@@ -222,7 +245,6 @@
             <li><div><strong>比较本轮与历史资料</strong><span>洞察与证据 · <code>insights</code></span></div></li>
             <li><div><strong>提出公众号选题</strong><span>待确认选题卡 · <code>articles</code></span></div></li>
           </ol>
-          <p class="overview-note">你在选题确认页保存确认后，可以单独启动写作。大纲、初稿和候选稿也会保存到资料仓库。</p>
         </div>
       </details>
     </div>
