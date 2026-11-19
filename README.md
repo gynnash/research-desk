@@ -42,6 +42,20 @@ flowchart TD
 
 </details>
 
+## 本机运行诊断台
+
+Fork 后将自己的仓库克隆到本机，在仓库根目录执行：
+
+```sh
+./diagnose
+```
+
+需要 Python 3.7 或更新版本，仅使用标准库。命令自动在默认浏览器打开 <http://127.0.0.1:8765/>。诊断台免登录，只监听本机；无需先运行 `./setup`。终端按 Ctrl+C 停止服务。仓库按钮根据本地 Git 的 `origin` 指向自己的 GitHub fork。
+
+用「新增运行」开始记录，或导入原诊断台导出的 JSON 备份。数据按浏览器、端口和仓库保存。迁移电脑、浏览器或端口前，可从「运行档案」导出备份。诊断台只记录证据和恢复计划，验证命令由用户在对应仓库手动执行。
+
+端口冲突时可用 `./diagnose --port 8876`。无图形环境可用 `./diagnose --no-browser`。如需在任意目录直接输入 `diagnose`，可以把仓库根目录下的 `diagnose` 符号链接到自己的 PATH 目录。
+
 ## 运行与阅读
 
 **查看运行。** 点击向导中的「GitHub Action」。在运行详情查看 `save-checkpoints` 是否回存成果、`refresh-obsidian` 是否刷新阅读库。到点未运行时，到仓库 **Settings → Actions → Runners** 检查 Mac 是否在线。
